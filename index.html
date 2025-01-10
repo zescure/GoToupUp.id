@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compact Blackhole Loading</title>
+    <style>
+        :root {
+            --blackhole-size: min(30vmin, 150px);
+            --core-size: calc(var(--blackhole-size) * 0.33);
+            --accretion-size: calc(var(--blackhole-size) * 0.93);
+            --horizon-size: calc(var(--blackhole-size) * 0.67);
+            --ring1-size: calc(var(--blackhole-size) * 0.73);
+            --ring2-size: calc(var(--blackhole-size) * 0.8);
+            --ring3-size: calc(var(--blackhole-size) * 0.87);
+            --radiation-size: calc(var(--blackhole-size) * 1.33);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #00f0ff;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .loading-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 9999;
+            gap: 10px;
+        }
+
+        .blackhole-system {
+            position: relative;
+            width: var(--blackhole-size);
+            height: var(--blackhole-size);
+        }
+
+        .blackhole-core {
+            width: var(--core-size);
+            height: var(--core-size);
+            background: radial-gradient(circle at center, 
+                #000000 0%,
+                #1a0f1f 50%,
+                #000000 100%);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 
+                0 0 calc(var(--core-size) * 0.5) #4a0045,
+                0 0 calc(var(--core-size) * 1) #2e0029,
+                inset 0 0 calc(var(--core-size) * 0.3) #ff00dd;
+            animation: pulse 2s infinite;
+        }
+
+        .accretion-disk {
+            width: var(--accretion-size);
+            height: var(--accretion-size);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            background: transparent;
+            box-shadow: 
+                0 0 calc(var(--accretion-size) * 0.2) #ff00dd,
+                inset 0 0 calc(var(--accretion-size) * 0.15) #ff00dd;
+            animation: spin 10s linear infinite;
+        }
+
+        .event-horizon {
+            width: var(--horizon-size);
+            height: var(--horizon-size);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: min(1px, 0.2vmin) solid rgba(255, 0, 221, 0.3);
+            border-radius: 50%;
+            animation: pulse-ring 2s infinite;
+        }
+
+        .radiation-ring {
+            position: absolute;
+            border: min(1px, 0.2vmin) solid transparent;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+        }
+
+        .ring-1 {
+            width: var(--ring1-size);
+            height: var(--ring1-size);
+            border-top: min(1px, 0.2vmin) solid #ff00dd;
+            animation: spin 3s linear infinite;
+        }
+
+        .ring-2 {
+            width: var(--ring2-size);
+            height: var(--ring2-size);
+            border-bottom: min(1px, 0.2vmin) solid #9000ff;
+            animation: spin-reverse 4s linear infinite;
+        }
+
+        .ring-3 {
+            width: var(--ring3-size);
+            height: var(--ring3-size);
+            border-left: min(1px, 0.2vmin) solid #0099ff;
+            animation: spin 5s linear infinite;
+        }
+
+        .radiation {
+            position: absolute;
+            width: var(--radiation-size);
+            height: var(--radiation-size);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle at center,
+                rgba(255, 0, 221, 0.1) 0%,
+                rgba(144, 0, 255, 0.05) 50%,
+                transparent 70%
+            );
+            animation: radiation-pulse 3s infinite;
+        }
+
+        .loading-text {
+            color: #ff00dd;
+            font-size: clamp(0.8rem, 2vmin, 1rem);
+            text-align: center;
+            text-shadow: 0 0 5px #ff00dd;
+            animation: glow 1.5s infinite;
+            padding: 0 10px;
+            margin: 0;
+        }
+
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            animation: spin 8s linear infinite;
+        }
+
+        .particle {
+            position: absolute;
+            width: min(2px, 0.4vmin);
+            height: min(2px, 0.4vmin);
+            background: #fff;
+            border-radius: 50%;
+            animation: particle-float 3s infinite;
+        }
+
+        .main-content {
+            display: none;
+            color: white;
+            text-align: center;
+            padding: min(10px, 2vmin);
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        @keyframes spin-reverse {
+            0% { transform: translate(-50%, -50%) rotate(360deg); }
+            100% { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(0.8); }
+            50% { transform: translate(-50%, -50%) scale(1); }
+            100% { transform: translate(-50%, -50%) scale(0.8); }
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.8; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.4; }
+            100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.8; }
+        }
+
+        @keyframes glow {
+            0% { text-shadow: 0 0 5px #ff00dd; }
+            50% { text-shadow: 0 0 10px #ff00dd, 0 0 15px #ff00dd; }
+            100% { text-shadow: 0 0 5px #ff00dd; }
+        }
+
+        @keyframes particle-float {
+            0% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.5) rotate(180deg); }
+            100% { transform: scale(1) rotate(360deg); }
+        }
+
+        @keyframes radiation-pulse {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.3; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.6; }
+            100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-container" id="loadingScreen">
+        <div class="blackhole-system">
+            <div class="radiation"></div>
+            <div class="accretion-disk"></div>
+            <div class="event-horizon"></div>
+            <div class="radiation-ring ring-1"></div>
+            <div class="radiation-ring ring-2"></div>
+            <div class="radiation-ring ring-3"></div>
+            <div class="blackhole-core"></div>
+            <div class="particles">
+                <script>
+                    // Create particles dynamically
+                    for(let i = 0; i < 12; i++) {
+                        const particle = document.createElement('div');
+                        particle.className = 'particle';
+                        particle.style.top = Math.random() * 100 + '%';
+                        particle.style.left = Math.random() * 100 + '%';
+                        particle.style.animationDelay = Math.random() * 2 + 's';
+                        document.querySelector('.particles').appendChild(particle);
+                    }
+                </script>
+            </div>
+        </div>
+        <div class="loading-text">Sedang memuat konten...</div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const mainContent = document.getElementById('mainContent');
+            
+            setTimeout(function() {
+                loadingScreen.style.display = 'none';
+                mainContent.style.display = 'block';
+            }, 5000);
+        };
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fix Scroll</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow-y: auto; /* Pastikan scroll vertikal diaktifkan */
+    }
+
+    .scrollable {
+      height: 0.1px; /* Atur tinggi elemen */
+      overflow-y: scroll; /* Aktifkan scroll jika konten melebihi batas */
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+
+    .content {
+      height: 0.1px; /* Konten lebih tinggi dari container */
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+  <div class="scrollable">
+    <div class="content">
+    </div>
+  </div>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Top-up digital modern dan cepat untuk pulsa, item game, e-wallet, dan lainnya.">
+    <meta name="author" content="Your Brand">
+    <title>GoToupUp-Game | Layanan Lengkap & Futuristik</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+    <!-- AOS (Animate On Scroll) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* Background Animation */
+        .space-bg {
+            position: fixed;
+            top: 0;
+            left: 0%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0f2027, #00f0ff, #2c5364);
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 1.5s infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% {
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .shooting-star {
+            position: absolute;
+            width: 150px;
+            height: 5px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));
+            animation: shoot 4.5s infinite ease-in-out;
+        }
+
+        @keyframes shoot {
+            0% {
+                transform: translateX(-200px) translateY(-200px);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(800px) translateY(800px);
+                opacity: 0;
+            }
+        }
+
+        .navbar {
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .hero-section {
+            text-align: center;
+            padding: 120px 20px;
+        }
+
+        .hero-section h1 {
+            font-size: 3rem;
+            color: #fff;
+        }
+
+        .hero-section p {
+            color: #cce7ff;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+        }
+
+        .footer {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px 0;
+        }
+
+        .footer a {
+            color: #fff;
+        }
+
+        .btn-hover {
+            transition: transform 0.3s ease;
+        }
+
+        .btn-hover:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Space Background -->
+    <div class="space-bg">
+        <!-- Stars -->
+        <div class="star" style="top: 10%; right: 20%; down: 40%"></div>
+        <div class="star" style="top: 30%; right: 50%;"></div>
+        <div class="star" style="top: 70%; right: 80%;"></div>
+        <div class="star" style="top: 50%; right: 10%;"></div>
+        <div class="star" style="top: 90%; right: 30%;"></div>
+        <!-- Shooting Stars -->
+        <div class="shooting-star" style="top: 60%; right: 80% down: 40%;"></div>
+        <div class="shooting-star" style="top: 120%; right: 140%;"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">GoToupUp-Game</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Produk</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Tentang</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-primary text-white px-4" href="#">Login</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <h1 data-aos="fade-down">Migrasi ZESTORE.ZCN</h1>
+            <p data-aos="fade-up">Top-up pulsa, item game, e-wallet, dan lainnya dalam hitungan Mili-detik.</p>
+            <a href="#" class="btn btn-primary btn-lg px-4 btn-hover" data-aos="zoom-in">Apa Saja Produknya?</a>
+        </div>
+    </section>
+
+    <!-- Produk Section -->
+    <section class="container my-5">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold" data-aos="fade-right">Produk Kami</h2>
+            <p class="text-muted" data-aos="fade-left">Pilih layanan yang Anda butuhkan</p>
+        </div>
+        <div class="row g-4">
+            <!-- Pulsa -->
+            <div class="col-md-4" data-aos="flip-left">
+                <div class="card text-center p-3">
+                    <i class="fas fa-mobile-alt fa-3x mb-3"></i>
+                    <h5>Pulsa</h5>
+                    <p>Top-up pulsa berbagai operator luar dan lokal dengan mudah.</p>
+                                <a href="#" class="btn btn-primary btn-lg px-4 btn-hover" data-aos="zoom-in">Beli</a>
+                </div>
+            </div>
+            <!-- Item Game -->
+            <div class="col-md-4" data-aos="flip-right">
+                <div class="card text-center p-3">
+                    <i class="fas fa-gamepad fa-3x mb-3"></i>
+                    <h5>Item Game</h5>
+                    <p>Beli item game/akun game/voucer aplikasi favorit Anda dengan cepat.</p>
+                                <a href="#" class="btn btn-primary btn-lg px-4 btn-hover" data-aos="zoom-in">Beli</a>
+                </div>
+            </div>
+            <!-- Paket Data -->
+            <div class="col-md-4" data-aos="flip-up">
+                <div class="card text-center p-3">
+                    <i class="fas fa-wifi fa-3x mb-3"></i>
+                    <h5>Paket Data</h5>
+                    <p>Isi ulang paket data sesuai kebutuhan Anda.</p>
+                                <a href="#" class="btn btn-primary btn-lg px-4 btn-hover" data-aos="zoom-in">Beli</a>
+                </div>
+            </div>
+            <!-- E-Wallet -->
+            <div class="col-md-4" data-aos="flip-left">
+                <div class="card text-center p-3">
+                    <i class="fas fa-wallet fa-3x mb-3"></i>
+                    <h5>E-Wallet</h5>
+                    <p>Isi saldo e-wallet Anda secara instan tanpa biaya tersembunyi.</p>
+                                <a href="#" class="btn btn-primary btn-lg px-4 btn-hover" data-aos="zoom-in">Beli</a></a>
+                </div>
+            </div>
+            <!-- Pembayaran Tagihan -->
+            <div class="col-md-4" data-aos="flip-right">
+                <div class="card text-center p-3">
+                    <i class="fas fa-credit-card fa-3x mb-3"></i>
+                    <h5>Pembayaran Tagihan</h5>
+                    <p>Bayar tagihan listrik, air, finance dan lainnya tanpa repot.</p>
+                                <a href="#" class="btn btn-primary btn-lg px-4 btn-hover" data-aos="zoom-in">Beli</a>
+                </div>
+            </div>
+            <!-- Voucher & Gift Cards -->
+            <div class="col-md-4" data-aos="flip-up">
+                <div class="card text-center p-3">
+                    <i class="fas fa-gift fa-3x mb-3"></i>
+                    <h5>Voucher & Gift Cards</h5>
+                    <p>Beli voucher olshop dan gift cards pilihan Anda.</p>
+                                <a href="#" class="btn btn-primary btn-lg px-4 btn-hover" data-aos="zoom-in">Beli</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer text-center">
+        <div class="container">
+            <p>&copy; 2025 Top-Up Digital. All Rights Reserved.</p>
+            <p>
+                <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+
+    <!-- AOS JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script>
+        AOS.init();
+    </script>
+</body>
+
+</html>
