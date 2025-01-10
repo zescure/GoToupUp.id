@@ -1,1 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compact Blackhole Loading</title>
+    <style>
+        :root {
+            --blackhole-size: min(30vmin, 150px);
+            --core-size: calc(var(--blackhole-size) * 0.33);
+            --accretion-size: calc(var(--blackhole-size) * 0.93);
+            --horizon-size: calc(var(--blackhole-size) * 0.67);
+            --ring1-size: calc(var(--blackhole-size) * 0.73);
+            --ring2-size: calc(var(--blackhole-size) * 0.8);
+            --ring3-size: calc(var(--blackhole-size) * 0.87);
+            --radiation-size: calc(var(--blackhole-size) * 1.33);
+        }
 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #00f0ff;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .loading-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 9999;
+            gap: 10px;
+        }
+
+        .blackhole-system {
+            position: relative;
+            width: var(--blackhole-size);
+            height: var(--blackhole-size);
+        }
+
+        .blackhole-core {
+            width: var(--core-size);
+            height: var(--core-size);
+            background: radial-gradient(circle at center, 
+                #000000 0%,
+                #1a0f1f 50%,
+                #000000 100%);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 
+                0 0 calc(var(--core-size) * 0.5) #4a0045,
+                0 0 calc(var(--core-size) * 1) #2e0029,
+                inset 0 0 calc(var(--core-size) * 0.3) #ff00dd;
+            animation: pulse 2s infinite;
+        }
+
+        .accretion-disk {
+            width: var(--accretion-size);
+            height: var(--accretion-size);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            background: transparent;
+            box-shadow: 
+                0 0 calc(var(--accretion-size) * 0.2) #ff00dd,
+                inset 0 0 calc(var(--accretion-size) * 0.15) #ff00dd;
+            animation: spin 10s linear infinite;
+        }
+
+        .event-horizon {
+            width: var(--horizon-size);
+            height: var(--horizon-size);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: min(1px, 0.2vmin) solid rgba(255, 0, 221, 0.3);
+            border-radius: 50%;
+            animation: pulse-ring 2s infinite;
+        }
+
+        .radiation-ring {
+            position: absolute;
+            border: min(1px, 0.2vmin) solid transparent;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+        }
+
+        .ring-1 {
+            width: var(--ring1-size);
+            height: var(--ring1-size);
+            border-top: min(1px, 0.2vmin) solid #ff00dd;
+            animation: spin 3s linear infinite;
+        }
+
+        .ring-2 {
+            width: var(--ring2-size);
+            height: var(--ring2-size);
+            border-bottom: min(1px, 0.2vmin) solid #9000ff;
+            animation: spin-reverse 4s linear infinite;
+        }
+
+        .ring-3 {
+            width: var(--ring3-size);
+            height: var(--ring3-size);
+            border-left: min(1px, 0.2vmin) solid #0099ff;
+            animation: spin 5s linear infinite;
+        }
+
+        .radiation {
+            position: absolute;
+            width: var(--radiation-size);
+            height: var(--radiation-size);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle at center,
+                rgba(255, 0, 221, 0.1) 0%,
+                rgba(144, 0, 255, 0.05) 50%,
+                transparent 70%
+            );
+            animation: radiation-pulse 3s infinite;
+        }
+
+        .loading-text {
+            color: #00f0ff;
+            font-size: clamp(0.8rem, 2vmin, 1rem);
+            text-align: center;
+            text-shadow: 0 0 7px #ff00dd;
+            animation: glow 1.5s infinite;
+            padding: 0 15px;
+            margin: 0;
+        }
+
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            animation: spin 8s linear infinite;
+        }
+
+        .particle {
+            position: absolute;
+            width: min(2px, 0.4vmin);
+            height: min(2px, 0.4vmin);
+            background: #fff;
+            border-radius: 50%;
+            animation: particle-float 3s infinite;
+        }
+
+        .main-content {
+            display: none;
+            color: white;
+            text-align: center;
+            padding: min(10px, 2vmin);
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        @keyframes spin-reverse {
+            0% { transform: translate(-50%, -50%) rotate(360deg); }
+            100% { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(0.8); }
+            50% { transform: translate(-50%, -50%) scale(1); }
+            100% { transform: translate(-50%, -50%) scale(0.8); }
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.8; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.4; }
+            100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.8; }
+        }
+
+        @keyframes glow {
+            0% { text-shadow: 0 0 5px #ff00dd; }
+            50% { text-shadow: 0 0 10px #ff00dd, 0 0 15px #ff00dd; }
+            100% { text-shadow: 0 0 5px #ff00dd; }
+        }
+
+        @keyframes particle-float {
+            0% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.5) rotate(180deg); }
+            100% { transform: scale(1) rotate(360deg); }
+        }
+
+        @keyframes radiation-pulse {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.3; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.6; }
+            100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.3; }
+            
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-container" id="loadingScreen">
+        <div class="blackhole-system">
+            <div class="radiation"></div>
+            <div class="accretion-disk"></div>
+            <div class="event-horizon"></div>
+            <div class="radiation-ring ring-1"></div>
+            <div class="radiation-ring ring-2"></div>
+            <div class="radiation-ring ring-3"></div>
+            <div class="blackhole-core"></div>
+            <div class="particles">
+                <script>
+                    // Create particles dynamically
+                    for(let i = 0; i < 12; i++) {
+                        const particle = document.createElement('div');
+                        particle.className = 'particle';
+                        particle.style.top = Math.random() * 100 + '%';
+                        particle.style.left = Math.random() * 100 + '%';
+                        particle.style.animationDelay = Math.random() * 2 + 's';
+                        document.querySelector('.particles').appendChild(particle);
+                    }
+                </script>
+            </div>
+        </div>
+        <div class="loading-text">Sedang memuat konten...</div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const mainContent = document.getElementById('mainContent');
+            
+            setTimeout(function() {
+                loadingScreen.style.display = 'none';
+                mainContent.style.display = 'block';
+            }, 3678);
+        };
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fix Scroll</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow-y: auto; /* Pastikan scroll vertikal diaktifkan */
+    }
+
+    .scrollable {
+      height: 0.01px; /* Atur tinggi elemen */
+      overflow-y: scroll; /* Aktifkan scroll jika konten melebihi batas */
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+
+    .content {
+      height: 0.01px; /* Konten lebih tinggi dari container */
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+  <div class="scrollable">
+    <div class="content">
+    </div>
+  </div>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IndoTopUp - Platform Top Up Terlengkap</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+    
+   
+        body {
+            background: linear-gradient(to bottom, #0f172a, #1e293b);
+            min-height: 100vh;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle var(--duration) infinite;
+        }
+
+        .shooting-star {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            animation: shoot 3s linear infinite;
+            opacity: 0;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes shoot {
+            0% {
+                transform: translate(0, 0) rotate(-45deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(300px, 300px) rotate(-45deg);
+                opacity: 0;
+            }
+        }
+
+        .game-card {
+           
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .game-card:hover {
+            z-index: 2;
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .logo-container {
+            z-index: 2;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        
+        .gradient-text {
+            background: linear-gradient(45deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .text-selection {
+            z-index: 5;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .container {
+            margin-top: 20px;
+        }
+
+    </style>
+</head>
+
+    <!-- Stars Background -->
+    <div class="stars" id="stars"></div>
+
+    <!-- Main Content -->
+    <div class="content-wrapper">
+        <!-- Navbar -->
+        <nav class="bg-transparent text-white p-4 sticky top-0 z-50">
+            <div class="container mx-auto">
+                <h1 class="text-2xl font-bold text-center gradient-text">GoToupUp.id</h1>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <div class="py-8">
+            <div class="container mx-auto text-center px-4">
+                <h2 class="text-3xl font-bold text-white mb-2">Top Up Game & Digital</h2>
+                <p class="text-blue-200">Proses Instant • Harga Termurah • 100% Legal & Aman</p>
+            </div>
+        </div>
+        <div class="content-wrapper">
+        <div class="slideshow-container mx-auto my-8">
+  <!-- Slide 1 -->
+  <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjTUGBYK3zvHP2mrM19mxbgEARKXQIvT04LoLH6sPWK1B2E9_WmVuggXrZfoI8FuEeO4u24RQxTtUIdw9J1m7uML48kdx2FTkpy47o2pPXzLmiCJu0Gz6p11Q3BSbgLDAOZa84RtRDf_Eg_LN0HlpY42WGhQUAjOCZZxw32Yu0OZ6-rz-0uiCjJTAaK_TI/s730/ezgif-5-6c74ae3982.gif" alt="Banner 1">
+    </div>
+
+    <!-- Popular Games -->
+    <div class="text-selection">
+        <h3 class="text-xl font-bold text-white mb-4">Game Popular</h3>
+        
+        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+             <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+                 <a href="https://www.example.com">
+                <div class="logo-container mb-2">
+                    <img src="https://imgop.itemku.com/?url=https%3A%2F%2Fd1x91p7vw3vuq8.cloudfront.net%2Fhomepage_shortcut%2F202519%2Fvm41b2ehlqkdi07jdi67k.gif&w=140&q=75" class="w-full h-full object-contain">
+                </div>
+                <h4 class="text-center text-cyan text-sm font-medium">Mobile Legends</h4>
+                </a>
+            </div>
+
+            <!-- Free Fire -->
+            <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+                <a href="https://www.example.com">
+                <div class="logo-container mb-2">
+                    <img src="https://imgop.itemku.com/?url=https%3A%2F%2Fd1x91p7vw3vuq8.cloudfront.net%2Fhomepage_shortcut%2F202519%2Fma5kbiw1bug56ym7ion6n.gif&w=140&q=75" alt="Free Fire" class="w-full h-full object-contain">
+                </div>
+                <h4 class="text-center text-sm font-medium">Free Fire</h4>
+            </a>
+            </div>
+           
+
+            <!-- PUBG Mobile -->
+            <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+                <a href="https://www.example.com">
+                <div class="logo-container mb-2">
+                    <img src="https://imgop.itemku.com/?url=https%3A%2F%2Fd1x91p7vw3vuq8.cloudfront.net%2Fgame%2F20231116%2Fy4jqgkdbtbd3zfokbvtknb_thumbnail.jpg&w=96&q=75" alt="PUBG Mobile" class="w-full h-full object-contain">
+                </div>
+                <h4 class="text-center text-sm font-medium">PUBG Mobile</h4>
+                </a>
+            </div>
+
+            <!-- Genshin Impact -->
+            <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+                <a href="https://www.example.com">
+                <div class="logo-container mb-2">
+                    <img src="https://imgop.itemku.com/?url=https%3A%2F%2Fd1x91p7vw3vuq8.cloudfront.net%2Fimage_upload%2F20221213%2Fiqhrrrtrzpfid3iaqo1xh.png&w=96&q=75" alt="Genshin Impact" class="w-full h-full object-contain">
+                </div>
+                <h4 class="text-center text-sm font-medium">Genshin Impact</h4>
+                </a>
+            </div>
+
+            <!-- Honor Of King -->
+            <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+                <a href="https://www.example.com">
+                <div class="logo-container mb-2">
+                    <img src="https://imgop.itemku.com/?url=https%3A%2F%2Fd1x91p7vw3vuq8.cloudfront.net%2Fhomepage_shortcut%2F202519%2F1gs03kpelpww1xy7dqxsn.gif&w=140&q=75" alt="Valorant" class="w-full h-full object-contain">
+                    </a>
+                </div>
+                <h4 class="text-center text-sm font-medium">Honor Of King</h4>
+            </div>
+
+            <!-- Steam -->
+            <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+                <a href="https://www.example.com">
+                <div class="logo-container mb-2">
+                    <img src="https://imgop.itemku.com/?url=https%3A%2F%2Fd1x91p7vw3vuq8.cloudfront.net%2Fhomepage_shortcut%2F202519%2Fu0gqr1eergn9t0u9aofyjp.png&w=140&q=75" alt="Steam" class="w-full h-full object-contain">
+                    </a>
+                </div>
+                <h4 class="text-center text-sm font-medium">Steam</h4>
+            </div>
+
+            <!-- Super Sus -->
+            <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+                <a href="https://www.example.com">
+                <div class="logo-container mb-2">
+                    <img src="https://imgop.itemku.com/?url=https%3A%2F%2Fd1x91p7vw3vuq8.cloudfront.net%2Fgame%2F202421%2Fv63u1dahi1mp7o3nn21s2_thumbnail.webp&w=96&q=75" alt="Point Blank" class="w-full h-full object-contain">
+                </div>
+                <h4 class="text-center text-sm font-medium">Super Sus</h4>
+            </a>
+            </div>
+
+            <!-- Honkai Impact3 -->
+            <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+                <a href="https://www.example.com">
+                <div class="logo-container mb-2">
+                    <img src="https://imgop.itemku.com/?url=https%3A%2F%2Fd1x91p7vw3vuq8.cloudfront.net%2Fgame%2F20231129%2F3yfioi97y0hlki12x7k8bd_thumbnail.jpg&w=96&q=75" alt="Ragnarok" class="w-full h-full object-contain">
+                </div>
+                <h4 class="text-center text-sm font-medium">Honkai Impact3</h4>
+                </a>
+            </div>
+        </div>
+    </div>
+            <div class="content-wrapper">
+        <div class="slideshow-container mx-auto my-8">
+  <!-- Slide 1 -->
+  <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjmd2dTDkX2iuQ16ICqEOb304Wj_G1CQK_kRnqR98s5maDjZXRgbbxUqeqCA4rdGfHfi3i7CNflFdwUShlpH4slHL5x7-wm6lyu3_IXfobCOCBEK7MCgHkjvCiV6M1wy_4-D5ZleDaghJkXkUg3cvQFKGPxczdlktjqjr-wxkmEfWUNU2cqv2amcohOW04/s400/lv_0_20250110221805.gif" alt="Banner 1">
+    </div>
+
+    <!-- Pulsa & Data -->
+    <div class="container mx-auto mt-8 px-4">
+        <h3 class="text-xl font-bold mb-4">Pulsa & Paket Data</h3>
+        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+            <!-- Telkomsel -->
+            <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+                <a href="https://www.example.com">
+                <div class="logo-container mb-2">
+                    <img src="https://imgop.itemku.com/?url=https%3A%2F%2Fd1x91p7vw3vuq8.cloudfront.net%2Fgame%2F2024123%2Fikgh1w6qmdppe7un7jjpe.webp&w=140&q=75" alt="Telkomsel" class="w-full h-full object-contain">
+                </div>
+                <h4 class="text-center text-sm font-medium">Telkomsel</h4>
+            </a>
+            </div>
+
+            <!-- XL -->
+            <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+                <a href="https://www.example.com">
+                <div class="logo-container mb-2">
+                    <img src="https://imgop.itemku.com/?url=https%3A%2F%2Fd1x91p7vw3vuq8.cloudfront.net%2F20181017%2F5bc6efe070692.png&w=140&q=75" alt="XL" class="w-full h-full object-contain">
+                </div>
+                <h4 class="text-center text-sm font-medium">XL</h4>
+                </a>
+            </div>
+
+            <!-- Indosat -->
+            <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+                <a href="https://www.example.com">
+                <div class="logo-container mb-2">
+                    <img src="https://imgop.itemku.com/?url=https%3A%2F%2Fd1x91p7vw3vuq8.cloudfront.net%2F20181017%2F5bc6efc734623.png&w=140&q=75" alt="Indosat" class="w-full h-full object-contain">
+                </div>
+                <h4 class="text-center text-sm font-medium">Indosat</h4>
+                </a>
+            </div>
+
+            <!-- Tri -->
+            <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+                <a href="https://www.example.com">
+                <div class="logo-container mb-2">
+                    <img src="https://imgop.itemku.com/?url=https%3A%2F%2Fd1x91p7vw3vuq8.cloudfront.net%2F20181017%2F5bc6efdbd9d5e.png&w=140&q=75" alt="Tri" class="w-full h-full object-contain">
+                </div>
+                <h4 class="text-center text-sm font-medium">Tri</h4>
+           </a>
+            </div>
+
+            <!-- Smartfren -->
+            <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+                <a href="https://www.example.com">
+                <div class="logo-container mb-2">
+                    <img src="https://imgop.itemku.com/?url=https%3A%2F%2Fd1x91p7vw3vuq8.cloudfront.net%2Fgame%2F2020116%2Fny7of1ras8p834tdka3e4b.png&w=140&q=75" alt="Smartfren" class="w-full h-full object-contain">
+                </div>
+                <h4 class="text-center text-sm font-medium">Smartfren</h4>
+            </a>
+            </div>
+
+            <!-- By.U -->
+            <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+                <a href="https://www.example.com">
+                <div class="logo-container mb-2">
+                    <img src="https://imgop.itemku.com/?url=https%3A%2F%2Fd1x91p7vw3vuq8.cloudfront.net%2Fgame%2F2020116%2Fa5k7kz8mlssusv61mrvvsi.png&w=140&q=75" alt="By.U" class="w-full h-full object-contain">
+                </div>
+                <h4 class="text-center text-sm font-medium">By.U</h4>
+                </a>
+                </div>
+                            
+                            <!-- Axis -->
+            <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+                <a href="https://www.example.com">
+                <div class="logo-container mb-2">
+                    <img src="https://imgop.itemku.com/?url=https%3A%2F%2Fd1x91p7vw3vuq8.cloudfront.net%2Fgame%2F2020116%2Fj70n87bhjfb7nektvspqv8.png&w=140&q=75" alt="By.U" class="w-full h-full object-contain">
+                </div>
+                <h4 class="text-center text-sm font-medium">Axis</h4>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- E-Wallet -->
+    <div class="container mx-auto mt-8 px-4">
+        <h3 class="text-xl font-bold mb-4">E-Wallet</h3>
+        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+            <!-- DANA -->
+            <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+                <a href="https://www.example.com">
+                <div class="logo-container mb-2">
+                    <img src="https://cdn.mobilepulsa.net/img/product/operator_list/140119034905-Dana-01.png" alt="DANA" class="w-full h-full object-contain">
+                </div>
+                <h4 class="text-center text-sm font-medium">DANA</h4>
+                </a>
+            </div>
+
+            <!-- OVO -->
+            <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+                <a href="https://www.example.com">
+                <div class="logo-container mb-2">
+                    <img src="https://cdn.mobilepulsa.net/img/product/operator_list/140119040045-ovo-01.png" alt="OVO" class="w-full h-full object-contain">
+                </div>
+                <h4 class="text-center text-sm font-medium">OVO</h4>
+                </a>
+            </div>
+
+            <!-- GoPay -->
+            <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+                <a href="https://www.example.com">
+                <div class="logo-container mb-2">
+                    <img src="https://cdn.mobilepulsa.net/img/logo/pulsa/small/gopay.png" alt="GoPay" class="w-full h-full object-contain">
+                </div>
+                <h4 class="text-center text-sm font-medium">GoPay</h4>
+                </a>
+            </div>
+
+            <!-- ShopeePay -->
+            <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+                <a href="https://www.example.com">
+                <div class="logo-container mb-2">
+                    <img src="https://cdn.mobilepulsa.net/img/product/operator_list/021219030403-shopeepay.jpg" alt="ShopeePay" class="w-full h-full object-contain">
+                </div>
+                <h4 class="text-center text-sm font-medium">ShopeePay</h4>
+            </a>
+            </div>
+
+            <!-- LinkAja -->
+            <div class="game-card bg-white p-2 rounded-lg shadow-sm">
+                <div class="logo-container mb-2">
+                    <img src="https://cdn.mobilepulsa.net/img/product/operator_list/120619111757-040319020726-linkaja.png" alt="LinkAja" class="w-full h-full object-contain">
+                </div>
+                <h4 class="text-center text-sm font-medium">LinkAja</h4>
+            </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Methods -->
+    <div class="container mx-auto mt-8 px-4 mb-12">
+        <h3 class="text-xl font-bold mb-4">Metode Pembayaran</h3>
+        <div class="bg-white p-4 rounded-lg shadow-sm">
+            <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div class="p-3 border rounded-lg text-center hover:border-blue-500 transition-colors">
+                    <img src="https://xcashshop.com/_next/image?url=https%3A%2F%2Fsin1.contabostorage.com%2F8ea28123e3b44e7cbd4cf5ad976f428b%3Axc-assets%2Fmedia%2Ffile-1697903888-kcuk11g5-file-1674630269-jlqq820s-permata-logo-1-1.png&w=1920&q=50" alt="BCA" class="mx-auto mb-2">
+                    <p class="text-xs font-medium">Permata</p>
+                </div>
+                <div class="p-3 border rounded-lg text-center hover:border-blue-500 transition-colors">
+                    <img src="https://xcashshop.com/_next/image?url=https%3A%2F%2Fsin1.contabostorage.com%2F8ea28123e3b44e7cbd4cf5ad976f428b%3Axc-assets%2Fmedia%2Ffile-1697903331-rru92pvi-logo-mandiri-2-1.png&w=1920&q=50" alt="Mandiri" class="mx-auto mb-2">
+                    <p class="text-xs font-medium">Bank Mandiri</p>
+                </div>
+                <div class="p-3 border rounded-lg text-center hover:border-blue-500 transition-colors">
+                    <img src="https://xcashshop.com/_next/image?url=https%3A%2F%2Fsin1.contabostorage.com%2F8ea28123e3b44e7cbd4cf5ad976f428b%3Axc-assets%2Fmedia%2Ffile-1697903336-m4kldqee-logo-bni-1.png&w=1920&q=50" alt="BNI" class="mx-auto mb-2">
+                    <p class="text-xs font-medium">Bank BNI</p>
+                </div>
+                <div class="p-3 border rounded-lg text-center hover:border-blue-500 transition-colors">
+                    <img src="https://xcashshop.com/_next/image?url=https%3A%2F%2Fsin1.contabostorage.com%2F8ea28123e3b44e7cbd4cf5ad976f428b%3Axc-assets%2Fmedia%2Ffile-1697904048-h9mmfcin-file-1674630337-mjtfi32n-dana-logo-3-1.png&w=1920&q=50" alt="DANA" class="mx-auto mb-2">
+                    <p class="text-xs font-medium">DANA</p>
+                </div>
+                <div class="p-3 border rounded-lg text-center hover:border-blue-500 transition-colors">
+                    <img src="https://xcashshop.com/_next/image?url=https%3A%2F%2Fsin1.contabostorage.com%2F8ea28123e3b44e7cbd4cf5ad976f428b%3Axc-assets%2Fmedia%2Ffile-1697904050-0boqpmhc-file-1674630321-luib0a5d-ovo-logo-1-1.png&w=1080&q=50" alt="OVO" class="mx-auto mb-2">
+                    <p class="text-xs font-medium">OVO</p>
+                </div>
+                <div class="p-3 border rounded-lg text-center hover:border-blue-500 transition-colors">
+                    <img src="https://xcashshop.com/_next/image?url=https%3A%2F%2Fsin1.contabostorage.com%2F8ea28123e3b44e7cbd4cf5ad976f428b%3Axc-assets%2Fmedia%2Ffile-1708489657-oikc7v93-8ahnwvqz9stodjwstmbrrmfbcdx7kxyz4okxnmpn-1.png&w=1920&q=50" alt="GoPay" class="mx-auto mb-2">
+                    <p class="text-xs font-medium">GoPay</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h4 class="text-lg font-bold mb-4">GoToupUp</h4>
+                    <p class="text-gray-400 text-sm">Platform top up game dan layanan digital terpercaya di Indonesia Sejak 2019</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-4">Hubungi Kami</h4>
+                    <p class="text-gray-400 text-sm">Email: cs@GoToupUp.com</p>
+                    <p class="text-gray-400 text-sm">WhatsApp: 0838-1609-7956</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-4">Ikuti Kami</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white text-sm">Instagram</a>
+                        <a href="#" class="text-gray-400 hover:text-white text-sm">Facebook</a>
+                        <a href="#" class="text-gray-400 hover:text-white text-sm">Twitter</a>
+                    </div>
+            </div>
+        </div>
+
+        <!-- Same structure for other sections -->
+        <!-- Just update the styling to match the space theme -->
+    </div>
+
+    <script>
+        // Create stars
+        function createStars() {
+            const stars = document.getElementById('stars');
+            const numStars = 100;
+
+            for (let i = 0; i < numStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.setProperty('--duration', `${Math.random() * 3 + 1}s`);
+                stars.appendChild(star);
+            }
+        }
+
+        // Create shooting stars
+        function createShootingStars() {
+            const stars = document.getElementById('stars');
+            
+            setInterval(() => {
+                const shootingStar = document.createElement('div');
+                shootingStar.className = 'shooting-star';
+                shootingStar.style.left = `${Math.random() * 100}%`;
+                shootingStar.style.top = `${Math.random() * 50}%`;
+                stars.appendChild(shootingStar);
+
+                setTimeout(() => {
+                    shootingStar.remove();
+                }, 3000);
+            }, 2000);
+        }
+
+        // Initialize
+        createStars();
+        createShootingStars();
+    </script>
+</body>
+</html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pop-up Mengambang</title>
+    <style>
+        /* Styling untuk pop-up */
+        .floating-popup {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 1000;
+            display: none;
+        }
+
+        .popup-header {
+            background-color: #25d366; /* Warna WhatsApp */
+            color: #fff;
+            padding: 10px;
+            font-size: 16px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .popup-body {
+            padding: 15px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .popup-footer {
+            text-align: center;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+
+        .popup-footer a {
+            text-decoration: none;
+            color: #25d366;
+            font-weight: bold;
+        }
+
+        /* Tombol toggle pop-up */
+        .toggle-popup {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #25d366;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 50px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 1100;
+            display: flex;
+            align-items: center;
+        }
+
+        .toggle-popup img {
+            width: 24px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Tombol toggle pop-up -->
+    <div class="toggle-popup" onclick="togglePopup()">
+        <img src="https://img.icons8.com/ios-filled/50/ffffff/whatsapp.png" alt="WhatsApp">
+        Chat Kami
+    </div>
+
+    <!-- Pop-up panel -->
+    <div class="floating-popup" id="popup">
+        <div class="popup-header">
+            WhatsApp Support
+        </div>
+        <div class="popup-body">
+            <p>Halo! Butuh bantuan? Klik tombol di bawah untuk chat via WhatsApp.</p>
+        </div>
+        <div class="popup-footer">
+            <a href="https://wa.me/6281234567890" target="_blank">Chat Sekarang</a>
+        </div>
+    </div>
+
+    <script>
+        // Fungsi untuk menampilkan/menyembunyikan pop-up
+        function togglePopup() {
+            const popup = document.getElementById('popup');
+            if (popup.style.display === 'none' || popup.style.display === '') {
+                popup.style.display = 'block';
+            } else {
+                popup.style.display = 'none';
+            }
+        }
+        
+    </script>
+    </body>
+    </html>
+</body>
+  </html>
