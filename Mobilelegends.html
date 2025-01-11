@@ -405,3 +405,62 @@
 </script>
 </body>
       </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pop-up Button</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    /* Pop-up container */
+    .popup {
+      position: fixed;
+      bottom: 100px; /* Geser ke atas dengan meningkatkan nilai ini */
+      right: 20px;
+      width: 100px;
+      height: 100px;
+      background-color: transparent;
+      border-radius: 50%;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    /* Hover effect */
+    .popup:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Image styling */
+    .popup img {
+      width: 90%;
+      height: 90%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <!-- Pop-up button -->
+  <div class="popup" onclick="handleClick()">
+    <img src="https://media4.giphy.com/media/ZLg3UCRQDJUo6GtpqI/200w.webp?cid=82a1493bsqfxr7virnncm3l9siei85xglf9ghyoh3w9efv88&ep=v1_gifs_related&rid=200w.webp&ct=s" alt="Gift Icon">
+  </div>
+
+  <script>
+    function handleClick() {
+      alert("Akan Segera Tersedia");
+      // Tambahkan fungsi lain di sini (misalnya: buka URL, tampilkan modal, dll.)
+    }
+  </script>
+</body>
+</html>
