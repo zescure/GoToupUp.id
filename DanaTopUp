@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(45deg, #0f0c29, #302b63, #24243e);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: white;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        @keyframes shooting-star {
+            0% {
+                transform: translateX(0) translateY(0) rotate(-45deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(-1000px) translateY(1000px) rotate(-45deg);
+                opacity: 0;
+            }
+        }
+
+        .shooting-star {
+            position: absolute;
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(90deg, white, transparent);
+            animation: shooting-star 2s linear infinite;
+        }
+
+        .shooting-star:nth-child(1) { top: 10%; right: -100px; animation-delay: 0s; }
+        .shooting-star:nth-child(2) { top: 30%; right: -100px; animation-delay: 1.2s; }
+        .shooting-star:nth-child(3) { top: 50%; right: -100px; animation-delay: 2.4s; }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: #1DA1F2;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .title {
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .subtitle {
+            color: #ccc;
+            margin: 0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.5s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .card:hover::after {
+            transform: translateX(100%);
+        }
+
+        .amount {
+            font-size: 20px;
+            color: #00BFFF;
+            margin-bottom: 5px;
+        }
+
+        .points {
+            color: orange;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .discount {
+            background: rgba(255, 99, 99, 0.2);
+            color: #ff6b6b;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: inline-block;
+        }
+
+        .original-price {
+            color: #999;
+            text-decoration: line-through;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+
+        .final-price {
+            font-size: 18px;
+            margin-top: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .action-button {
+            background: #00BFFF;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="stars">
+        <div class="shooting-star"></div>
+        <div class="shooting-star"></div>
+        <div class="shooting-star"></div>
+    </div>
+
+    <div class="header">
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                <path d="M21 5H3v14h18V5z"/>
+                <path d="M3 7l9 6 9-6"/>
+            </svg>
+        </div>
+        <div>
+            <h1 class="title">DANA</h1>
+            <p class="subtitle">Isi E-Wallet DANA</p>
+        </div>
+    </div>
+
+    <div class="grid">
+        <a href="https://example.com/topup/10k" class="card" target="_blank">
+            <div class="amount">10K</div>
+            <div class="points">+25 ☻</div>
+            <span class="discount">-8%</span>
+            <span class="original-price">Rp11.250</span>
+            <div class="final-price">
+                Rp10.335
+                <div class="action-button">→</div>
+            </div>
+        </a>
+
+        <a href="https://example.com/topup/15k" class="card" target="_blank">
+            <div class="amount">15K</div>
+            <div class="points">+25 ☻</div>
+            <span class="discount">-6%</span>
+            <span class="original-price">Rp16.250</span>
+            <div class="final-price">
+                Rp15.335
+                <div class="action-button">→</div>
+            </div>
+        </a>
+
+        <a href="https://example.com/topup/20k" class="card" target="_blank">
+            <div class="amount">20K</div>
+            <div class="points">+25 ☻</div>
+            <span class="discount">-4%</span>
+            <span class="original-price">Rp21.250</span>
+            <div class="final-price">
+                Rp20.335
+                <div class="action-button">→</div>
+            </div>
+        </a>
+
+        <a href="https://example.com/topup/25k" class="card" target="_blank">
+            <div class="amount">25K</div>
+            <div class="points">+25 ☻</div>
+            <span class="discount">-3%</span>
+            <span class="original-price">Rp26.250</span>
+            <div class="final-price">
+                Rp25.335
+                <div class="action-button">→</div>
+            </div>
+        </a>
+
+        <a href="https://example.com/topup/50k" class="card" target="_blank">
+            <div class="amount">50K</div>
+            <div class="points">+25 ☻</div>
+            <span class="discount">-2%</span>
+            <span class="original-price">Rp51.250</span>
+            <div class="final-price">
+                Rp50.335
+                <div class="action-button">→</div>
+            </div>
+        </a>
+
+        <a href="https://example.com/topup/100k" class="card" target="_blank">
+            <div class="amount">100K</div>
+            <div class="points">+25 ☻</div>
+            <span class="discount">-1%</span>
+            <span class="original-price">Rp101.250</span>
+            <div class="final-price">
+                Rp100.335
+                <div class="action-button">→</div>
+            </div>
+        </a>
+    </div>
+</body>
+</html>
