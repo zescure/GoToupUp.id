@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Fire Top Up</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #000008;
+            color: #333;
+        }
+
+        /* Space Background */
+        .space-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+        }
+
+        .shooting-star {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(45deg, #00f7ff, transparent);
+            border-radius: 50%;
+            animation: shoot 3s ease-out infinite;
+        }
+
+        @keyframes shoot {
+            0% {
+                transform: translateX(0) translateY(0) rotate(215deg);
+                opacity: 1;
+                width: 0;
+            }
+            70% {
+                width: 100px;
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(1000px) translateY(1000px) rotate(215deg);
+                opacity: 0;
+                width: 150px;
+            }
+        }
+
+        /* Blockchain Animation */
+        .blockchain-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .block {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 247, 255, 0.05);
+            border: 2px solid rgba(0, 247, 255, 0.2);
+            border-radius: 10px;
+            animation: floatBlock 20s linear infinite;
+        }
+
+        .block::before {
+            content: attr(data-hash);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 8px;
+            color: rgba(0, 247, 255, 0.8);
+            white-space: nowrap;
+        }
+
+        @keyframes floatBlock {
+            0% {
+                transform: translate(0, -100%) rotate(0deg);
+            }
+            100% {
+                transform: translate(0, 100vh) rotate(360deg);
+            }
+        }
+
+        /* Main Content */
+        .container {
+            position: relative;
+            z-index: 3;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .game-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .game-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 15px;
+            object-fit: cover;
+        }
+
+        .game-info h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .game-info p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        /* User ID Input */
+        .user-id-section {
+            margin-bottom: 30px;
+        }
+
+        .user-id-section h2 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .user-id-input {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            background: #f5f6f7;
+        }
+
+        /* Product Selection */
+        .product-section h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .filter-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            background: white;
+            color: #333;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Product Grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .product-card {
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            padding: 15px;
+            position: relative;
+            background: white;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .diamond-amount {
+            color: #00bcd4;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .discount {
+            position: absolute;
+            top: 10px;
+            left: 250px;
+            background: #ffe5e5;
+            color: #ff4444;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .bonus-coins {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #FFB74D;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .original-price {
+            color: #999;
+            text-decoration: line-through;
+            font-size: 14px;
+        }
+
+        .final-price {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .price-per-diamond {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .buy-btn {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: #00bcd4;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 5px 12px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 480px) {
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Space Background -->
+    <div class="space-background" id="spaceBackground"></div>
+    
+    <!-- Blockchain Background -->
+    <div class="blockchain-background" id="blockchainBg"></div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="game-header">
+            <img src="https://buylink.s3.ap-southeast-3.amazonaws.com/default/logo-operator/freefire.svg" alt="Free Fire" class="game-icon">
+            <div class="game-info">
+                <h1>Free Fire</h1>
+                <p>Game Free Fire</p>
+            </div>
+        </div>
+
+        <div class="product-section">
+            <h2>Pilih Produk</h2>
+            <div class="filter-options">
+                <button class="filter-btn">
+                    Semua
+                    <span>▼</span>
+                </button>
+                <button class="filter-btn">
+                    Urutkan
+                    <span>↕</span>
+                </button>
+            </div>
+
+            <div class="products-grid">
+                <!-- 5 Diamonds -->
+                <div class="product-card">
+                    <a href="https://buylink.id/Zestore.zcn/share?product=freefire5">
+                    <span class="discount">-11%</span>
+                    <div class="diamond-amount">5 Diamonds</div>
+                    <div class="original-price">Rp1.000</div>
+                    <div class="final-price">Rp887</div>
+                    <div class="price-per-diamond">(Rp177/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 10 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire10">
+                    <span class="discount">-7%</span>
+                    <span class="bonus-coins">+1</span>
+                    <div class="diamond-amount">10 Diamonds</div>
+                    <div class="original-price">Rp1.900</div>
+                    <div class="final-price">Rp1.773</div>
+                    <div class="price-per-diamond">(Rp177/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 12 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire12">
+                    <span class="discount">-4%</span>
+                    <span class="bonus-coins">+1</span>
+                    <div class="diamond-amount">12 Diamonds</div>
+                    <div class="original-price">Rp2.000</div>
+                    <div class="final-price">Rp1.921</div>
+                    <div class="price-per-diamond">(Rp160/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 50 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire50">
+                    <span class="discount">-11%</span>
+                    <span class="bonus-coins">+7</span>
+                    <div class="diamond-amount">50 Diamonds</div>
+                    <div class="original-price">Rp8.000</div>
+                    <div class="final-price">Rp7.091</div>
+                    <div class="price-per-diamond">(Rp142/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 55 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire55">
+                    <span class="discount">-6%</span>
+                    <span class="bonus-coins">+8</span>
+                    <div class="diamond-amount">55 Diamonds</div>
+                    <div class="original-price">Rp8.500</div>
+                    <div class="final-price">Rp7.978</div>
+                    <div class="price-per-diamond">(Rp145/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 70 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire70">
+                    <span class="discount">-3%</span>
+                    <span class="bonus-coins">+9</span>
+                    <div class="diamond-amount">70 Diamonds</div>
+                    <div class="original-price">Rp10.000</div>
+                    <div class="final-price">Rp9.652</div>
+                    <div class="price-per-diamond">(Rp138/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+                            <div class="products-grid">
+                <!-- 80 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire80">
+                    <span class="bonus-coin">+11</span>
+                    <span class="discount">-5%</span>
+                    <div class="diamond-amount">80 Diamonds</div>
+                    <div class="original-price">Rp12.000</div>
+                    <div class="final-price">Rp11.425</div>
+                    <div class="price-per-diamond">(Rp143/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 100 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire100">
+                    <span class="discount">-10%</span>
+                    <span class="bonus-coins">+13</span>
+                    <div class="diamond-amount">100 Diamonds</div>
+                    <div class="original-price">Rp15.000</div>
+                    <div class="final-price">Rp13.500</div>
+                    <div class="price-per-diamond">(Rp135/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 120 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire120">
+                    <span class="discount">-7%</span>
+                    <span class="bonus-coins">+16</span>
+                    <div class="diamond-amount">120 Diamonds</div>
+                    <div class="original-price">Rp18.000</div>
+                    <div class="final-price">Rp16.743</div>
+                    <div class="price-per-diamond">(Rp140/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 130 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire130">
+                    <span class="discount">-5%</span>
+                    <span class="bonus-coins">+18</span>
+                    <div class="diamond-amount">130 Diamonds</div>
+                    <div class="original-price">Rp19.500</div>
+                    <div class="final-price">Rp18.591</div>
+                    <div class="price-per-diamond">(Rp142/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 140 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire140">
+                    <span class="discount">-3%</span>
+                    <span class="bonus-coins">+19</span>
+                    <div class="diamond-amount">140 Diamonds</div>
+                    <div class="original-price">Rp20.000</div>
+                    <div class="final-price">Rp19.304</div>
+                    <div class="price-per-diamond">(Rp145/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 145 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire145">
+                    <span class="discount">-4%</span>
+                    <span class="bonus-coins">+20</span>
+                    <div class="diamond-amount">145 Diamonds</div>
+                    <div class="original-price">Rp21.000</div>
+                    <div class="final-price">Rp20.190</div>
+                    <div class="price-per-diamond">(Rp138/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+                            <div class="products-grid">
+                <!-- 150 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire150">
+                    <span class="discount">-4%</span>
+                    <span class="bonus-coins">+21</span>
+                    <div class="diamond-amount">150 Diamonds</div>
+                    <div class="original-price">Rp22.000</div>
+                    <div class="final-price">Rp21.076</div>
+                    <div class="price-per-diamond">(Rp177/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 190 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire190">
+                    <span class="discount">-9%</span>
+                    <span class="bonus-coins">+25</span>
+                    <div class="diamond-amount">190 Diamonds</div>
+                    <div class="original-price">Rp27.500</div>
+                    <div class="final-price">Rp25.000</div>
+                    <div class="price-per-diamond">(Rp177/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 200 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire200">
+                    <span class="discount">-5%</span>
+                    <span class="bonus-coins">+28</span>
+                    <div class="diamond-amount">200 Diamonds</div>
+                    <div class="original-price">Rp29.500</div>
+                    <div class="final-price">Rp28.167</div>
+                    <div class="price-per-diamond">(Rp160/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 210 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire210">
+                    <span class="discount">-3%</span>
+                    <span class="bonus-coins">+29</span>
+                    <div class="diamond-amount">210 Diamonds</div>
+                    <div class="original-price">Rp30.000</div>
+                    <div class="final-price">Rp28.955</div>
+                    <div class="price-per-diamond">(Rp142/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- LM Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire7hr">
+                    <span class="discount">-2%</span>
+                    <span class="bonus-coins">+29</span>
+                    <div class="diamond-amount">Membership Mingguan</div>
+                    <div class="original-price">Rp30.000</div>
+                    <div class="final-price">Rp29.400</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 280 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire280">
+                    <span class="discount">-3%</span>
+                    <span class="bonus-coins">+38</span>
+                    <div class="diamond-amount">280 Diamonds</div>
+                    <div class="original-price">Rp40.000</div>
+                    <div class="final-price">Rp38.602</div>
+                    <div class="price-per-diamond">(Rp138/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+                <!-- 355 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire355">
+                    <span class="discount">-11%</span>
+                    <span class="bonus-coins">+43</span>
+                    <div class="diamond-amount">355 Diamonds</div>
+                    <div class="original-price">Rp50.000</div>
+                    <div class="final-price">Rp43.500</div>
+                    <div class="price-per-diamond">(Rp177/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 420 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire420">
+                    <span class="discount">-3%</span>
+                    <span class="bonus-coins">+57</span>
+                    <div class="diamond-amount">420 Diamonds</div>
+                    <div class="original-price">Rp60.100</div>
+                    <div class="final-price">Rp57.910</div>
+                    <div class="price-per-diamond">(Rp177/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 510 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire510">
+                    <span class="discount">-2%</span>
+                    <span class="bonus-coins">+70</span>
+                    <div class="diamond-amount">510 Diamonds</div>
+                    <div class="original-price">Rp72.000</div>
+                    <div class="final-price">Rp70.221</div>
+                    <div class="price-per-diamond">(Rp160/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 635 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire635">
+                    <span class="discount">-3%</span>
+                    <span class="bonus-coins">+86</span>
+                    <div class="diamond-amount">635 Diamonds</div>
+                    <div class="original-price">Rp90.000</div>
+                    <div class="final-price">Rp86.864</div>
+                    <div class="price-per-diamond">(Rp142/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- LB Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire30hr">
+                    <span class="discount">-2%</span>
+                    <span class="bonus-coins">+88</span>
+                    <div class="diamond-amount">Membership Bulanan</div>
+                    <div class="original-price">Rp90.000</div>
+                    <div class="final-price">Rp88.200</div>
+                    <div class="price-per-diamond">(Rp145/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 800 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire800">
+                    <span class="discount">-2%</span>
+                    <span class="bonus-coins">+107</span>
+                    <div class="diamond-amount">800 Diamonds</div>
+                    <div class="original-price">Rp110.000</div>
+                    <div class="final-price">Rp107.652</div>
+                    <div class="price-per-diamond">(Rp138/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+                            
+                <!-- 860 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire860">
+                    <span class="discount">-11%</span>
+                    <span class="bonus-coins">+115</span>
+                    <div class="diamond-amount">860 Diamonds</div>
+                    <div class="original-price">Rp120.000</div>
+                    <div class="final-price">Rp115.819</div>
+                    <div class="price-per-diamond">(Rp177/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 930 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire930">
+                    <span class="discount">-3%</span>
+                    <span class="bonus-coins">+125</span>
+                    <div class="diamond-amount">930 Diamonds</div>
+                    <div class="original-price">Rp130.900</div>
+                    <div class="final-price">Rp125.773</div>
+                    <div class="price-per-diamond">(Rp177/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 1050 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire1050">
+                    <span class="discount">-2%</span>
+                    <span class="bonus-coins">+142</span>
+                    <div class="diamond-amount">1050 Diamonds</div>
+                    <div class="original-price">Rp145.000</div>
+                    <div class="final-price">Rp141.989</div>
+                    <div class="price-per-diamond">(Rp160/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 1080 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire1080">
+                    <span class="discount">-3%</span>
+                    <span class="bonus-coins">+145</span>
+                    <div class="diamond-amount">1080 Diamonds</div>
+                    <div class="original-price">Rp150.000</div>
+                    <div class="final-price">Rp145.691</div>
+                    <div class="price-per-diamond">(Rp142/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 1450 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire1450">
+                    <span class="discount">-3%</span>
+                    <span class="bonus-coins">+193</span>
+                    <div class="diamond-amount">1450 Diamonds</div>
+                    <div class="original-price">Rp200.500</div>
+                    <div class="final-price">Rp192.978</div>
+                    <div class="price-per-diamond">(Rp145/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 2180 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire2180">
+                    <span class="discount">-3%</span>
+                    <span class="bonus-coins">+289</span>
+                    <div class="diamond-amount">2180 Diamonds</div>
+                    <div class="original-price">Rp300.000</div>
+                    <div class="final-price">Rp288.952</div>
+                    <div class="price-per-diamond">(Rp138/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+
+                <!-- 2200 Diamonds -->
+                <div class="product-card">
+                                        <a href="https://buylink.id/Zestore.zcn/share?product=freefire2200">
+                    <span class="discount">-3%</span>
+                    <span class="bonus-coins">+316</span>
+                    <div class="diamond-amount">2200 Diamonds</div>
+                    <div class="original-price">Rp322.000</div>
+                    <div class="final-price">Rp316.152</div>
+                    <div class="price-per-diamond">(Rp138/diamond)</div>
+                    <button class="buy-btn">→</button>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Space Background with Shooting Stars
+        function createShootingStars() {
+            const spaceBackground = document.getElementById('spaceBackground');
+            
+            function createStar() {
+                const star = document.createElement('div');
+                star.className = 'shooting-star';
+                star.style.left = `${Math.random() * window.innerWidth}px`;
+                star.style.top = `${Math.random() * window.innerHeight}px`;
+                star.style.animationDelay = `${Math.random() * 3}s`;
+                spaceBackground.appendChild(star);
+
+                setTimeout(() => {
+                    star.remove();
+                    createStar();
+                }, 3000);
+            }
+
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => createStar(), i * 600);
+            }
+        }
+
+        // Blockchain Background
+        function createBlockchainBackground() {
+            const container = document.getElementById('blockchainBg');
+            const blockCount = 15;
+            const blocks = [];
+
+            function createBlock() {
+                const block = document.createElement('div');
+                block.className = 'block';
+                block.setAttribute('data-hash', `0x${Math.random().toString(16).substr(2, 8)}`);
+                
+                const startX = Math.random() * window.innerWidth;
+                block.style.left = `${startX}px`;
+                
+                const duration = 15 + Math.random() * 10;
+                const delay = Math.random() * -20;
+                block.style.animationDuration = `${duration}s`;
+                block.style.animationDelay = `${delay}s`;
+
+                container.appendChild(block);
+                return block;
+            }
+
+            for (let i = 0; i < blockCount; i++) {
+                blocks.push(createBlock());
+            }
+
+            setInterval(() => {
+                blocks.forEach((block, index) => {
+                    const rect = block.getBoundingClientRect();
+                    if (rect.top > window.innerHeight) {
+                        container.removeChild(block);
+                        blocks[index] = createBlock();
+                    }
+                });
+            }, 1000);
+        }
+
+        createShootingStars();
+        createBlockchainBackground();
+    </script>
+</body>
+</html>
