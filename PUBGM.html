@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .app-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+        }
+
+        .title {
+            margin: 0;
+        }
+
+        .subtitle {
+            margin: 0;
+            color: #888;
+        }
+
+        .user-id {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .products {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .product {
+            background: rgba(200, 200, 200, 0.1);
+            padding: 15px;
+            border-radius: 12px;
+            position: relative;
+            backdrop-filter: blur(7px);
+        }
+
+        .uc-amount {
+            color: #00b8d4;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .price {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .original-price {
+            text-decoration: line-through;
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .discount {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff4444;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+
+        .projectile {
+            position: fixed;
+            pointer-events: none;
+            z-index: -1;
+            transform-origin: center;
+        }
+
+        .bullet {
+            width: 4px;
+            height: 15px;
+            background: linear-gradient(to bottom, #ffeb3b, #ff9800);
+            border-radius: 2px;
+            box-shadow: 0 0 10px #ff9800;
+        }
+
+        .bomb {
+            width: 20px;
+            height: 30px;
+            background: #333;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+
+        .buy-button {
+            background: #00b8d4;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            float: right;
+            cursor: pointer;
+            margin-top: -30px;
+        }
+
+        @keyframes explosion {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        .explosion {
+            position: fixed;
+            pointer-events: none;
+            z-index: -1;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            animation: explosion 0.5s ease-out forwards;
+        }
+
+        .bullet-explosion {
+            background: radial-gradient(circle, #ff9800, #ff4400, transparent);
+        }
+
+        .bomb-explosion {
+            background: radial-gradient(circle, #ff0000, #ff4400, #000000);
+            width: 100px;
+            height: 100px;
+        }
+
+        .shockwave {
+            position: fixed;
+            border: 12px solid rgba(255, 68, 0, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            animation: shockwave 0.5s ease-out forwards;
+        }
+
+        @keyframes shockwave {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header dan Products sections sama seperti sebelumnya -->
+    <div class="header">
+        <img src="https://buylink.s3.ap-southeast-3.amazonaws.com/default/logo-operator/pubg.svg" alt="PUBG Mobile" class="app-icon">
+        <div>
+            <h1 class="title">PUBG Mobile</h1>
+            <p class="subtitle">Game PUBG Mobile</p>
+        </div>
+    </div>
+
+    <div class="products">
+        <!-- Product cards sama seperti sebelumnya -->
+        <div class="product">
+            <a href="https://buylink.id/Zestore.zcn/share?product=pubgm30">
+            <span class="uc-amount">30 UC</span>
+            <span style="float: right">+6 🏷</span>
+            <div class="discount">-4%</div>
+            <div class="original-price">Rp7.000</div>
+            <div class="price">Rp6.722</div>
+            <div style="color: #888">(Rp224/UC)</div>
+            <button class="buy-button">➜</button>
+            </a>
+        </div>
+
+        <div class="product">
+            <a href="https://buylink.id/Zestore.zcn/share?product=pubgm60">
+            <span class="uc-amount">60 UC</span>
+            <span style="float: right">+13 🏷</span>
+            <div class="discount">-4%</div>
+            <div class="original-price">Rp14.000</div>
+            <div class="price">Rp13.444</div>
+            <div style="color: #888">(Rp224/UC)</div>
+            <button class="buy-button">➜</button>
+            </a>
+        </div>
+
+        <div class="product">
+            <a href="https://buylink.id/Zestore.zcn/share?product=pubgm210">
+            <span class="uc-amount">210 UC</span>
+            <span style="float: right">+47 🏷</span>
+            <div class="discount">-2%</div>
+            <div class="original-price">Rp48.000</div>
+            <div class="price">Rp47.052</div>
+            <div style="color: #888">(Rp224/UC)</div>
+            <button class="buy-button">➜</button>
+            </a>
+        </div>
+
+        <div class="product">
+            <a href="https://buylink.id/Zestore.zcn/share?product=pubgm325">
+            <span class="uc-amount">300 + 25 UC</span>
+            <span style="float: right">+67 🏷</span>
+            <div class="discount">-4%</div>
+            <div class="original-price">Rp70.000</div>
+            <div class="price">Rp67.217</div>
+            <div style="color: #888">(Rp207/UC)</div>
+            <button class="buy-button">➜</button>
+            </a>
+        </div>
+
+        <div class="product">
+            <a href="https://buylink.id/Zestore.zcn/share?product=pubgm660">
+            <span class="uc-amount">600 + 60 UC</span>
+            <span style="float: right">+134 🏷</span>
+            <div class="discount">-4%</div>
+            <div class="original-price">Rp140.000</div>
+            <div class="price">Rp134.433</div>
+            <div style="color: #888">(Rp204/UC)</div>
+            <button class="buy-button">➜</button>
+            </a>
+        </div>
+
+        <div class="product">
+            <a href="https://buylink.id/Zestore.zcn/share?product=pubgm720">
+            <span class="uc-amount">660 + 60 UC</span>
+            <span style="float: right">+147 🏷</span>
+            <div class="discount">-5%</div>
+            <div class="original-price">Rp155.000</div>
+            <div class="price">Rp147.875</div>
+            <div style="color: #888">(Rp205/UC)</div>
+            <button class="buy-button">➜</button>
+            </a>
+        </div>
+
+        <div class="product">
+            <a href="https://buylink.id/Zestore.zcn/share?product=pubgm810">
+            <span class="uc-amount">750 + 60 UC</span>
+            <span style="float: right">+168 🏷</span>
+            <div class="discount">-4%</div>
+            <div class="original-price">Rp185.000</div>
+            <div class="price">Rp177.577</div>
+            <div style="color: #888">(Rp206/UC)</div>
+            <button class="buy-button">➜</button>
+            </a>
+        </div>
+
+        <div class="product">
+            <a href="https://buylink.id/Zestore.zcn/share?product=pubgm985">
+            <span class="uc-amount">900 + 85 UC</span>
+            <span style="float: right">+201 🏷</span>
+            <div class="discount">-11%</div>
+            <div class="original-price">Rp227.000</div>
+            <div class="price">Rp201.740</div>
+            <div style="color: #888">(Rp205/UC)</div>
+            <button class="buy-button">➜</button>
+            </a>
+        </div>
+        <div class="product">
+            <a href="https://buylink.id/Zestore.zcn/share?product=pubgm1800">
+            <span class="uc-amount">1500 + 300 UC</span>
+            <span style="float: right">+336 🏷</span>
+            <div class="discount">-4%</div>
+            <div class="original-price">Rp350.000</div>
+            <div class="price">Rp336.057</div>
+            <div style="color: #888">(Rp206/UC)</div>
+            <button class="buy-button">➜</button>
+            </a>
+        </div>
+
+        <div class="product">
+            <a href="https://buylink.id/Zestore.zcn/share?product=pubgm2125">
+            <span class="uc-amount">1800 + 325 UC</span>
+            <span style="float: right">+403 🏷</span>
+            <div class="discount">-6%</div>
+            <div class="original-price">Rp430.000</div>
+            <div class="price">Rp403.340</div>
+            <div style="color: #888">(Rp205/UC)</div>
+            <button class="buy-button">➜</button>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function createProjectile(type) {
+            const projectile = document.createElement('div');
+            projectile.className = 'projectile ' + type;
+            
+            // Random starting position
+            const startX = Math.random() * window.innerWidth;
+            projectile.style.left = startX + 'px';
+            projectile.style.top = '-50px';
+            
+            document.body.appendChild(projectile);
+            
+            let posY = -50;
+            let posX = startX;
+            let rotation = 0;
+            const speed = type === 'bullet' ? 15 : 8;
+            
+            function animate() {
+                posY += speed;
+                posX += Math.sin(posY / 50) * (type === 'bullet' ? 1 : 3);
+                rotation += type === 'bullet' ? 0 : 2;
+                
+                projectile.style.transform = `translate(${posX}px, ${posY}px) rotate(${rotation}deg)`;
+                
+                if (posY < window.innerHeight + 50) {
+                    requestAnimationFrame(animate);
+                } else {
+                    createExplosion(posX, posY - 50, type);
+                    projectile.remove();
+                }
+            }
+            
+            requestAnimationFrame(animate);
+        }
+
+        function createExplosion(x, y, type) {
+            const explosion = document.createElement('div');
+            explosion.className = `explosion ${type}-explosion`;
+            explosion.style.left = (x - 25) + 'px';
+            explosion.style.top = (y - 25) + 'px';
+            document.body.appendChild(explosion);
+            
+            if (type === 'bomb') {
+                const shockwave = document.createElement('div');
+                shockwave.className = 'shockwave';
+                shockwave.style.left = (x - 25) + 'px';
+                shockwave.style.top = (y - 25) + 'px';
+                shockwave.style.width = '65px';
+                shockwave.style.height = '65px';
+                document.body.appendChild(shockwave);
+                
+                setTimeout(() => shockwave.remove(), 500);
+            }
+            
+            setTimeout(() => explosion.remove(), 500);
+        }
+
+        // Create projectiles periodically
+        setInterval(() => {
+            if (Math.random() > 0.7) {
+                createProjectile('bomb');
+            } else {
+                createProjectile('bullet');
+            }
+        }, 500);
+
+        // Start immediately
+        createProjectile('bullet');
+        setTimeout(() => createProjectile('bomb'), 250);
+    </script>
+</body>
+  </html>
