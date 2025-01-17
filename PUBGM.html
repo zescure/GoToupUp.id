@@ -4,7 +4,7 @@
     <style>
         body {
             margin: 0;
-            padding: 20px;
+            padding: 70px;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: #1a1a1a;
             color: white;
@@ -37,7 +37,7 @@
         .products {
             display: center;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 55px;
+            gap: 400px;
             position: relative;
             z-index: 5;
         }
@@ -52,12 +52,12 @@
 
         .uc-amount {
             color: #00b8d4;
-            font-size: 1.2em;
+            font-size: 17.2em;
             font-weight: bold;
         }
 
         .price {
-            font-size: 1.4em;
+            font-size: 17.4em;
             font-weight: bold;
             margin: 10px 0;
         }
@@ -65,7 +65,7 @@
         .original-price {
             text-decoration: line-through;
             color: #888;
-            font-size: 0.9em;
+            font-size: 6.9em;
         }
 
         .discount {
@@ -73,7 +73,7 @@
             color: #ff4444;
             padding: 2px 6px;
             border-radius: 4px;
-            font-size: 0.8em;
+            font-size: 6.8em;
         }
 
         .projectile {
@@ -84,16 +84,16 @@
         }
 
         .bullet {
-            width: 4px;
-            height: 15px;
+            width: 40px;
+            height: 30px;
             background: linear-gradient(to bottom, #ffeb3b, #ff9800);
             border-radius: 2px;
             box-shadow: 0 0 10px #ff9800;
         }
 
         .bomb {
-            width: 20px;
-            height: 30px;
+            width: 200px;
+            height: 300px;
             background: #333;
             border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
             box-shadow: 0 0 5px rgba(0,0,0,0.5);
@@ -151,7 +151,7 @@
         .shockwave {
             position: fixed;
             border: 12px solid rgba(255, 68, 0, 0.5);
-            border-radius: 50%;
+            border-radius: 200%;
             pointer-events: none;
             z-index: -1;
             animation: shockwave 0.5s ease-out forwards;
@@ -348,8 +348,8 @@
                 shockwave.className = 'shockwave';
                 shockwave.style.left = (x - 25) + 'px';
                 shockwave.style.top = (y - 25) + 'px';
-                shockwave.style.width = '65px';
-                shockwave.style.height = '65px';
+                shockwave.style.width = '250px';
+                shockwave.style.height = '250px';
                 document.body.appendChild(shockwave);
                 
                 setTimeout(() => shockwave.remove(), 500);
