@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kopi Kenangan Voucher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #472619;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .coffee-drops {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .drop {
+            position: absolute;
+            width: 20px;
+            height: 60px;
+            background: linear-gradient(#6f4e37, #3c1f0f);
+            border-radius: 0 0 10px 10px;
+            animation: fall 2s linear infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-100px) scale(0);
+            }
+            50% {
+                transform: translateY(50vh) scale(1);
+            }
+            100% {
+                transform: translateY(100vh) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .back-button {
+            font-size: 24px;
+            color: white;
+            text-decoration: none;
+            padding: 8px;
+        }
+
+        .title {
+            color: white;
+            font-size: 24px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .brand-logo {
+            width: 60px;
+            height: 60px;
+            background: #fff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .brand-info h2 {
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .brand-info p {
+            color: #ccc;
+        }
+
+        .product-section h3 {
+            color: white;
+            margin-bottom: 16px;
+        }
+
+        .sort-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+        }
+
+        .voucher-grid {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        }
+
+        .voucher-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 16px;
+            color: white;
+            transition: transform 0.2s;
+        }
+
+        .voucher-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .voucher-points {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .discount {
+            background: rgba(255, 0, 0, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .original-price {
+            text-decoration: line-through;
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        .final-price {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 8px 0;
+        }
+
+        .buy-button {
+            background: #00B6FF;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            float: right;
+        }
+
+        .inactive {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 12px;
+            }
+            
+            .voucher-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="coffee-drops" id="coffeeDrops"></div>
+    
+
+        <div class="brand">
+            <div class="brand-logo">
+                kopi<br>kenangan ❤️
+            </div>
+            <div class="brand-info">
+                <h2>Kopi Kenangan</h2>
+                <p>Voucher Kopi Kenangan</p>
+            </div>
+        </div>
+
+        <section class="product-section">
+            <h3>Pilih Produk</h3>
+            <button class="sort-button">Urutkan ↑↓</button>
+
+            <div class="voucher-grid">
+                <div class="voucher-card">
+                    <a href="buylink.id/Zestore.zcn/share?product=kenangan40">
+                    <div class="voucher-points">
+                        <span>25000</span>
+                        <span>+25 🎁</span>
+                    </div>
+                    <span class="discount">-2%</span>
+                    <div class="original-price">Rp25.500</div>
+                    <div class="final-price">Rp25.000</div>
+                    <button class="buy-button">→</button>
+                    </a>
+                </div>
+
+                <div class="voucher-card inactive">
+                    <a href="buylink.id/Zestore.zcn/share?product=kenangan40">
+                    <div class="voucher-points">
+                        <span>40000</span>
+                        <span>+40 🎁</span>
+                    </div>
+                    <span class="discount">-1%</span>
+                    <div class="original-price">Rp40.500</div>
+                    <div class="final-price">Rp40.000</div>
+                    <button class="buy-button">→</button>
+                    </a>
+                </div>
+
+                <div class="voucher-card">
+                    <a href="buylink.id/Zestore.zcn/share?product=kenangan40">
+                    <div class="voucher-points">
+                        <span>50000</span>
+                        <span>+50 🎁</span>
+                    </div>
+                    <span class="discount">-1%</span>
+                    <div class="original-price">Rp50.500</div>
+                    <div class="final-price">Rp50.000</div>
+                    <button class="buy-button">→</button>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        function createCoffeeDrops() {
+            const container = document.getElementById('coffeeDrops');
+            const drop = document.createElement('div');
+            drop.className = 'drop';
+            
+            // Random position and delay
+            drop.style.left = Math.random() * 100 + '%';
+            drop.style.animationDelay = Math.random() * 2 + 's';
+            
+            container.appendChild(drop);
+            
+            // Remove drop after animation
+            setTimeout(() => {
+                drop.remove();
+            }, 2000);
+        }
+
+        // Create drops periodically
+        setInterval(createCoffeeDrops, 200);
+    </script>
+</body>
+  </html>
