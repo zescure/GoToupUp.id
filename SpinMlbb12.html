@@ -312,7 +312,7 @@ function showPrize(prize) {
     } else {
         title.textContent = "Selamat gamers! 🎉";
         message.textContent = `Kamu Mendapatkan: ${prize.name}!`;
-        claimLink.href = `https://example.com/claim/${prize.name.toLowerCase().replace(' ', '-')}`;
+        claimLink.href = `https://zestore.netlify.app/${prize.name.toLowerCase().replace(' ', '-')}`;
         claimLink.style.display = "inline-block"; // Tampilkan tombol klaim hadiah
     }
 
