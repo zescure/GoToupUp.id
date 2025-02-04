@@ -98,20 +98,20 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Item</label>
                     <div class="relative">
                         <select 
-                            id="jenisHadiah" 
-                            name="jenisHadiah" 
+                            id="NominalDiamond" 
+                            name="NominalDiamond" 
                             required 
                             class="input-focus w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none"
                         >
                             <option value="">Pilih Nominal Diamond</option>
-                            <option value="33">MLBB 33💎  Rp.12.800 (+1 spin)</option>
-                            <option value="50">MLBB 50💎  Rp.15.800 (+1 spin)</option>
-                            <option value="60">MLBB 60💎  Rp.18.500 (+1 spin)</option>
-                            <option value="83">MLBB 83💎 Rp.26.800 (+2 spin)</option>
-                            <option value="220">MLBB 220💎 Rp.51.000 (+2 spin)</option>
-                            <option value="284">MLBB 284💎 Rp.79.800 (+1 Spin)</option>
-                            <option value="296">MLBB 296💎 Rp.86.880 (+3 Spin)</option>
-                            <option value="wdp">Weekly Diamond Pass Rp.28.200 (+1 Spin)</option>
+                            <option value="MLBB 33💎">MLBB 33💎  Rp.12.800 (+1 spin)</option>
+                            <option value="MLBB 50💎">MLBB 50💎  Rp.15.800 (+1 spin)</option>
+                            <option value="MLBB 60💎">MLBB 60💎  Rp.18.500 (+1 spin)</option>
+                            <option value="MLBB 83💎">MLBB 83💎 Rp.26.800 (+2 spin)</option>
+                            <option value="MLBB 220💎">MLBB 220💎 Rp.51.000 (+2 spin)</option>
+                            <option value="MLBB 284💎">MLBB 284💎 Rp.79.800 (+1 Spin)</option>
+                            <option value="MLBB 296💎">MLBB 296💎 Rp.86.880 (+3 Spin)</option>
+                            <option value="MLBB wdp💎">Weekly Diamond Pass Rp.28.200 (+1 Spin)</option>
                         </select>
                         <h6>*Harga Final Tanpa Biaya Admin*</h6>
                         <i class="fas fa-chevron-down absolute right-4 top-4 text-gray-400 pointer-events-none"></i>
@@ -153,11 +153,11 @@
             const nomorTelepon = document.getElementById('nomorTelepon').value;
             const idNumber = document.getElementById('idNumber').value;
             const metodepembayaran = document.getElementById('metodepembayaran').value;
-            const jenisHadiah = document.getElementById('jenisHadiah').value;
+            const NominalDiamond = document.getElementById('NominalDiamond').value;
             const email = document.getElementById('email').value;
 
             const whatsappUrl = `https://wa.me/6283816097956?text=${encodeURIComponent(
-                `*Formulir pembelian diamond*\n\nNomor Telepon: ${nomorTelepon}\nID Number: ${idNumber}\nMetode Pembayaran: ${metodepembayaran}\nJenis Hadiah: ${jenisHadiah}\nEmail: ${email}\n\nHarap segera diproses.`
+                `*Formulir pembelian diamond*\n\nNomor Telepon: ${nomorTelepon}\nID Number: ${idNumber}\nMetode Pembayaran: ${metodepembayaran}\nNominalDiamond: ${NominalDiamond}\nEmail: ${email}\n\nHarap segera diproses.`
             )}`;
 
             window.open(whatsappUrl, '_blank');
