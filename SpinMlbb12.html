@@ -205,6 +205,29 @@ button {
     color: red;
     font-weight: bold;
 }
+.total-prize-section {
+    margin-top: 20px;
+    padding: 15px;
+    border: 2px solid #FFD700; /* Warna emas */
+    border-radius: 8px;
+    background: rgba(255, 223, 0, 0.8); /* Latar belakang emas transparan */
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.total-prize-section h2 {
+    margin-bottom: 10px;
+    font-size: 20px;
+    color: #8B4513;
+}
+
+#totalPrize {
+    font-size: 24px;
+    font-weight: bold;
+    color: #8B4513;
+}
     </style>
 </head>
 <body>
@@ -223,6 +246,10 @@ button {
         <div class="winners-section">
     <h2>Daftar Pemenang</h2>
     <ul id="winnersList"></ul>
+        </div>
+        <div class="total-prize-section">
+    <h2>Total Hadiah Diberikan</h2>
+    <p id="totalPrize">0 💎</p>
         </div>
         <div id="prizePopup" class="prize-popup">
             <h2>Selamat! 🎉</h2>
@@ -414,6 +441,31 @@ function displayWinners() {
 // Perbarui daftar pemenang setiap 5 detik
 displayWinners();
 setInterval(displayWinners, 5000);
+   
+let totalPrizeAmount = 0; // Total hadiah awal dalam 💎
+
+// Fungsi untuk mendapatkan nominal 💎 dari hadiah
+function getDiamondValue(prizeName) {
+    const match = prizeName.match(/(\d+) 💎/); // Cari angka yang diikuti "💎"
+    return match ? parseInt(match[1], 10) : 0; // Kembalikan angka atau 0 jika tidak ada
+}
+
+// Perbarui total hadiah berdasarkan daftar pemenang baru
+function updateTotalPrize() {
+    const totalPrizeDisplay = document.getElementById("totalPrize");
+    const fakeWinners = generateFakeWinners();
+
+    fakeWinners.forEach(winner => {
+        totalPrizeAmount += getDiamondValue(winner.prize); // Tambah hanya hadiah 💎
+    });
+
+    // Perbarui tampilan total hadiah
+    totalPrizeDisplay.textContent = totalPrizeAmount + " 💎";
+}
+
+// Perbarui total hadiah setiap 5 detik
+updateTotalPrize();
+setInterval(updateTotalPrize, 5000);
     </script>
 </body>
   </html>
