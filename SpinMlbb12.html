@@ -228,6 +228,28 @@ button {
     font-weight: bold;
     color: #8B4513;
 }
+.total-money-selection {
+    text-align: center;
+    margin-top: 20px;
+    padding: 10px;
+    border: 2px solid #8B4513;
+    border-radius: 10px;
+    background: #FFF8DC;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+.total-money-selection h3 {
+    margin: 0;
+    color: #8B4513;
+    font-size: 20px;
+}
+
+#totalPrize, #totalPrizeRupiah {
+    font-size: 18px;
+    font-weight: bold;
+    color: #D2691E;
+    margin: 5px 0;
+}
     </style>
 </head>
 <body>
@@ -250,6 +272,13 @@ button {
         <div class="total-prize-section">
     <h2>Total Hadiah Diberikan</h2>
     <p id="totalPrize">0 💎</p>
+        </div>
+        <div class="total-money-selection">
+    <h3>Total Hadiah:</h3>
+    
+    <p id="totalPrizeRupiah">Rp. 0</p>
+            <p id="totalPrize">Tidak Untuk Sarana Berjudi Hanya Bentuk Apresiasi Pelanggan!!</p>
+        <h6>ZESTORE.ID Bersama GoTopUp Berkomitmen Untuk Melarang Bentuk Perjudian Apapun, Skema ponzi Ataupun yang Lainnya</h6>
         </div>
         <div id="prizePopup" class="prize-popup">
             <h2>Selamat! 🎉</h2>
@@ -466,6 +495,36 @@ function updateTotalPrize() {
 // Perbarui total hadiah setiap 5 detik
 updateTotalPrize();
 setInterval(updateTotalPrize, 5000);
+
+        document.addEventListener("DOMContentLoaded", function() {
+    let totalPrizeAmount = 0; // Total awal dalam 💎
+    const conversionRate = 1524 / 5; // Konversi 5 💎 = Rp. 1.524
+    const initialRupiah = Math.floor(Math.random() * (13500000 - 1000000 + 1)) + 1000000; // Awal Rp 1jt - Rp 13,5jt
+    let totalPrizeRupiah = initialRupiah;
+
+    // Ambil elemen tampilan
+    const totalPrizeDisplay = document.getElementById("totalPrize");
+    const totalPrizeRupiahDisplay = document.getElementById("totalPrizeRupiah");
+
+    function updateTotalMoney() {
+        const diamondPrizes = [5, 1220]; // Hanya 💎
+        const randomPrize = diamondPrizes[Math.floor(Math.random() * diamondPrizes.length)];
+
+        totalPrizeAmount += randomPrize; // Tambah total 💎
+        totalPrizeRupiah += (randomPrize * conversionRate); // Tambah total dalam Rupiah
+
+        totalPrizeDisplay.textContent = totalPrizeAmount + " 💎";
+        totalPrizeRupiahDisplay.textContent = "Rp. " + Math.floor(totalPrizeRupiah).toLocaleString("id-ID");
+    }
+
+    // Set angka awal sebelum update otomatis
+    totalPrizeDisplay.textContent = totalPrizeAmount + " 💎";
+    totalPrizeRupiahDisplay.textContent = "Rp. " + initialRupiah.toLocaleString("id-ID");
+
+    // Update pertama kali setelah 1 detik, lalu setiap 5 detik
+    setTimeout(updateTotalMoney, 1000);
+    setInterval(updateTotalMoney, 5000);
+});
     </script>
 </body>
   </html>
