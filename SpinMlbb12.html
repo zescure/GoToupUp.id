@@ -200,6 +200,11 @@ button {
 #winnersList li:last-child {
     border-bottom: none;
 }
+
+#winnersList li.zonk {
+    color: red;
+    font-weight: bold;
+}
     </style>
 </head>
 <body>
@@ -363,8 +368,8 @@ function showPrize(prize) {
         }
     };
 }
-        // Hadiah yang bisa dimenangkan (tanpa "Zonk")
-const prizeList = prizes.filter(prize => prize.name.trim() !== "ㅤㅤㅤZonk");
+// Semua hadiah termasuk "Zonk"
+const allPrizes = prizes; 
 
 // Fungsi untuk membuat nama acak dalam format "user*******"
 function generateRandomUsername() {
@@ -376,7 +381,7 @@ function generateFakeWinners(count = 5) {
     let winners = [];
     for (let i = 0; i < count; i++) {
         const randomName = generateRandomUsername();
-        const randomPrize = prizeList[Math.floor(Math.random() * prizeList.length)];
+        const randomPrize = allPrizes[Math.floor(Math.random() * allPrizes.length)];
         const timestamp = new Date().toLocaleString();
 
         winners.push({ name: randomName, prize: randomPrize.name, time: timestamp });
@@ -394,13 +399,20 @@ function displayWinners() {
 
     fakeWinners.forEach(winner => {
         const li = document.createElement("li");
+        
+        // Tambahkan warna khusus untuk Zonk
+        if (winner.prize.trim() === "ㅤㅤㅤZonk") {
+            li.style.color = "red";
+            li.style.fontWeight = "bold";
+        }
+
         li.textContent = `${winner.name} memenangkan ${winner.prize} pada ${winner.time}`;
         winnersList.appendChild(li);
     });
 }
 
 // Perbarui daftar pemenang setiap 5 detik
-displayWinners(); // Tampilkan pertama kali saat halaman dimuat
+displayWinners();
 setInterval(displayWinners, 5000);
     </script>
 </body>
