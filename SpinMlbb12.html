@@ -166,6 +166,40 @@ button {
             background: radial-gradient(circle at center, transparent 30%, rgba(139, 69, 19, 0.1) 31%);
             background-size: 30px 30px;
         }
+        .winners-section {
+    margin-top: 20px;
+    padding: 15px;
+    border: 2px solid #8B4513; /* Warna coklat */
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.8); /* Latar belakang putih transparan */
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.winners-section h2 {
+    margin-bottom: 10px;
+    font-size: 20px;
+    color: #8B4513;
+}
+
+#winnersList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#winnersList li {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    font-size: 16px;
+    color: #333;
+}
+
+#winnersList li:last-child {
+    border-bottom: none;
+}
     </style>
 </head>
 <body>
@@ -180,6 +214,10 @@ button {
             <button onclick="spin()" id="spinButton">ㅤㅤㅤㅤ</button>
             <h6>Top Up minimal 50💎 dan dapatkan 1x spin Pertama GRATISS!</h6>
             <h5>setiap Kelipatan 950💎 lalu dapatkan lagi 1x spin tambahan</h5>
+        </div>
+        <div class="winners-section">
+    <h2>Daftar Pemenang</h2>
+    <ul id="winnersList"></ul>
         </div>
         <div id="prizePopup" class="prize-popup">
             <h2>Selamat! 🎉</h2>
@@ -325,6 +363,45 @@ function showPrize(prize) {
         }
     };
 }
+        // Hadiah yang bisa dimenangkan (tanpa "Zonk")
+const prizeList = prizes.filter(prize => prize.name.trim() !== "ㅤㅤㅤZonk");
+
+// Fungsi untuk membuat nama acak dalam format "user*******"
+function generateRandomUsername() {
+    return "user" + Math.floor(1000000 + Math.random() * 9000000); // Angka 7 digit
+}
+
+// Fungsi untuk membuat data pemenang palsu
+function generateFakeWinners(count = 5) {
+    let winners = [];
+    for (let i = 0; i < count; i++) {
+        const randomName = generateRandomUsername();
+        const randomPrize = prizeList[Math.floor(Math.random() * prizeList.length)];
+        const timestamp = new Date().toLocaleString();
+
+        winners.push({ name: randomName, prize: randomPrize.name, time: timestamp });
+    }
+    return winners;
+}
+
+// Menampilkan daftar pemenang di HTML
+function displayWinners() {
+    const winnersList = document.getElementById("winnersList");
+    const fakeWinners = generateFakeWinners();
+
+    // Hapus isi sebelumnya agar tidak menumpuk
+    winnersList.innerHTML = "";
+
+    fakeWinners.forEach(winner => {
+        const li = document.createElement("li");
+        li.textContent = `${winner.name} memenangkan ${winner.prize} pada ${winner.time}`;
+        winnersList.appendChild(li);
+    });
+}
+
+// Perbarui daftar pemenang setiap 5 detik
+displayWinners(); // Tampilkan pertama kali saat halaman dimuat
+setInterval(displayWinners, 5000);
     </script>
 </body>
   </html>
