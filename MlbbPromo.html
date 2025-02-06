@@ -141,8 +141,8 @@
         }
 
         // Ambil nominal harga dari teks dalam opsi select
-        const nominalHargaMatch = NominalDiamond.match(/Rp\.([\d.]+)/);
-        const hargaFormatted = nominalHargaMatch ? `Rp. ${nominalHargaMatch[1]}` : "Rp. -";
+        const nominalHargaMatch = NominalDiamond.match(Rp\.([\d.]+));
+        const hargaFormatted = nominalHargaMatch ? `Rp. ${nominalHargaMatch[1]}` : "Rp. ";
 
         console.log("Nominal Harga Ditemukan:", hargaFormatted); // Debugging
 
