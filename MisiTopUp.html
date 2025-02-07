@@ -167,7 +167,7 @@
 
         <div class="tabs">
             <button class="tab active" onclick="showTab('missions')">Misi Top Up</button>
-            <button class="tab inactive" onclick="showCompleted()">Misi Utama</button>
+            <button class="tab inactive" id="completedTab">Misi Utama</button>
         </div>
 
         <div id="missions">
@@ -258,6 +258,15 @@
         let currentPoints = 5000;
         let currentProgress = 20;
 
+        document.addEventListener("DOMContentLoaded", function() {
+    const completedTab = document.getElementById("completedTab");
+
+    if (completedTab) {
+        completedTab.addEventListener("click", function() {
+            window.location.href = "https://example.com"; // Ganti dengan URL tujuan
+        });
+    }
+});
 function launchMission(url) {
     window.open(url, '_blank'); // Membuka URL di tab baru
 }
