@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Missions</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(to bottom, #0f172a, #581c87, #0f172a);
+            min-height: 100vh;
+            color: white;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .rank-card {
+            background: linear-gradient(to right, #b45309, #ca8a04);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+            border: 2px solid white;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 9999px;
+            margin-top: 0.5rem;
+            width: 100%;
+            position: relative;
+        }
+
+        .progress {
+            width: 20%;
+            height: 100%;
+            background: white;
+            border-radius: 9999px;
+        }
+
+        .view-benefits {
+            background: white;
+            color: #78350f;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 0.75rem;
+            border-radius: 9999px;
+            border: 2px solid white;
+            cursor: pointer;
+            color: white;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .tab.active {
+            background: #06b6d4;
+        }
+
+        .tab.inactive {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .mission-card {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 1rem;
+            border-radius: 1rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .launch-btn {
+            background: #06b6d4;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 0.875rem;
+            position: absolute;
+            right: 1rem;
+            bottom: 1rem;
+        }
+
+        .benefits-modal, #completedMissions {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1f2937;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 500px;
+            z-index: 1000;
+            color: white;
+        }
+
+        .close-modal {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+
+        .iframe-container {
+            width: 100%;
+            height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Top Up Misi Dan Dapatkan Spin GRATIS</h1>
+        </div>
+
+        <div class="rank-card">
+            <h2>Kode Yang Berhasil Ditukar</h2>
+            <p>Tertukar: <span id="stardust">2896/50.000</span> Kode</p>
+            <button class="view-benefits" onclick="showBenefits()">Apa Saja Benefitnya?</button>
+            <div class="progress-bar">
+                <div class="progress" id="rankProgress"></div>
+            </div>
+            <p>Progress: <span id="progressText">20%</span></p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('missions')">Misi Top Up</button>
+            <button class="tab inactive" onclick="showCompleted()">Misi Utama</button>
+        </div>
+
+        <div id="missions">
+            <div class="mission-card">
+                <h3>MLBB PROMO WDP 7H (RP.28.000)</h3>
+                <p>Selesaikan Misi ini dan dapatkan 1 kode penukaran</p>
+                <p>Earn: <strong>1x Spin</strong></p>
+<button class="launch-btn" onclick="launchMission('https://zestore.netlify.app/mlbbpromo')">Launch</button>
+            </div>
+
+            <div class="mission-card">
+                <h3>MLBB PROMO 296 DM (Rp.84.000)</h3>
+                <p>Selesaikan Misi ini dan dapatkan 3 kode penukaran</p>
+                <p>Earn: <strong>3x Spin</strong></p>
+<button class="launch-btn" onclick="launchMission('https://zestore.netlify.app/mlbbpromo')">Launch</button>
+            </div>
+        
+            <div class="mission-card">
+                <h3>MLBB PROMO 284 DM (Rp.79.000)</h3>
+                <p>Selesaikan Misi ini dan dapatkan 1 kode penukaran</p>
+                <p>Earn: <strong>1x Spin</strong></p>
+<button class="launch-btn" onclick="launchMission('https://zestore.netlify.app/mlbbpromo')">Launch</button>
+            </div>
+            
+            <div class="mission-card">
+                <h3>MLBB PROMO 220 DM (Rp.53.000)</h3>
+                <p>Selesaikan Misi ini dan dapatkan 2 kode penukaran</p>
+                <p>Earn: <strong>2x Spin</strong></p>
+<button class="launch-btn" onclick="launchMission('https://zestore.netlify.app/mlbbpromo')">Launch</button>
+            </div>
+            
+            <div class="mission-card">
+                <h3>MLBB PROMO 86 DM (Rp.26.000)</h3>
+                <p>Selesaikan Misi ini dan dapatkan 2 kode penukaran</p>
+                <p>Earn: <strong>2x Spin</strong></p>
+<button class="launch-btn" onclick="launchMission('https://zestore.netlify.app/mlbbpromo')">Launch</button>
+            </div>
+            
+            <div class="mission-card">
+                <h3>MLBB PROMO 50 DM (Rp.15.000)</h3>
+                <p>Selesaikan Misi ini dan dapatkan 1 kode penukaran</p>
+                <p>Earn: <strong>1x Spin</strong></p>
+<button class="launch-btn" onclick="launchMission('https://zestore.netlify.app/mlbbpromo')">Launch</button>
+            </div>
+            
+            <div class="mission-card">
+                <h3>Akumulasi Top Up total 2.5jt</h3>
+                <p>Selesaikan Misi ini dan dapatkan 12 kode penukaran</p>
+                <p>Earn: <strong>12x Spin</strong></p>
+<button class="launch-btn" onclick="launchMission('https://zestore.netlify.app/MobileLegends')">Launch</button>
+            </div>
+            
+            <div class="mission-card">
+                <h3>Akumulasi Top up MLBB PROMO Total 1.5jt</h3>
+                <p>Selesaikan Misi ini dan dapatkan 15 kode penukaran</p>
+                <p>Earn: <strong>15x Spin</strong></p>
+<button class="launch-btn" onclick="launchMission('https://zestore.netlify.app/mlbbpromo')">Launch</button>
+            </div>
+            
+            <div class="mission-card">
+                <h3>Akumulasi Top up WDP PROMO Total 10X</h3>
+                <p>Selesaikan Pembelian ini dan dapatkan 7 kode penukaran</p>
+                <p>Earn: <strong>7x Spin</strong></p>
+<button class="launch-btn" onclick="launchMission('https://zestore.netlify.app/mlbbpromo')">Launch</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Benefits -->
+    <div id="benefitsModal" class="benefits-modal">
+        <button class="close-modal" onclick="hideBenefits()"><i class="fas fa-times"></i></button>
+        <h2>Asteroid Belt Benefits</h2>
+        <ul>
+            <li>⭐ Stardust Boost: Earn 2x Stardust</li>
+            <li>🚀 Special Missions Access</li>
+            <li>🌌 Quantum Priority Access</li>
+        </ul>
+    </div>
+
+    <!-- Completed Missions Pop-up -->
+    <div id="completedMissions">
+        <button class="close-modal" onclick="hideCompleted()"><i class="fas fa-times"></i></button>
+        <h2>Completed Missions</h2>
+        <iframe src="https://buylink.id/Zestore.zcn/mission" class="iframe-container"></iframe>
+    </div>
+
+    <script>
+        let currentPoints = 5000;
+        let currentProgress = 20;
+
+function launchMission(url) {
+    window.open(url, '_blank'); // Membuka URL di tab baru
+}
+
+        function showBenefits() {
+            document.getElementById('benefitsModal').style.display = 'block';
+        }
+
+        function hideBenefits() {
+            document.getElementById('benefitsModal').style.display = 'none';
+        }
+
+        function showTab(tab) {
+            document.getElementById('missions').style.display = 'block';
+        }
+
+        function showCompleted() {
+            document.getElementById('completedMissions').style.display = 'block';
+        }
+
+        function hideCompleted() {
+            document.getElementById('completedMissions').style.display = 'none';
+        }
+
+        function earnPoints(points) {
+            currentPoints += points;
+            currentProgress += 10;
+            document.getElementById('stardust').innerText = currentPoints;
+            document.getElementById('rankProgress').style.width = currentProgress + '%';
+            document.getElementById('progressText').innerText = currentProgress + '%';
+        }
+    </script>
+</body>
+  </html>
