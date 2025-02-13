@@ -357,4 +357,49 @@
             document.getElementById('modal-userid').textContent = userId;
             document.getElementById('modal-diamond').textContent = `${selectedDiamond.value} 💎`;
             document.getElementById('modal-price').textContent = `Rp ${price.toLocaleString('id-ID')}`;
-            document.getElementById('modal-total').textContent = `Rp ${t
+            document.getElementById('modal-total').textContent = `Rp ${total.toLocaleString('id-ID')}`;
+            document.getElementById('qris-image').src = selectedPaymentQris;
+
+            modal.classList.remove('hidden');
+        });
+
+        // Modal controls
+        closeModal.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+
+        confirmPayment.addEventListener('click', () => {
+            const userId = document.getElementById('userId').value;
+            const whatsapp = document.getElementById('whatsapp').value;
+            const selectedDiamond = document.querySelector('input[name="diamond"]:checked');
+            const price = parseInt(selectedDiamond.dataset.price);
+            const total = price + 1500;
+
+            const message = `Halo Admin, saya telah melakukan pembayaran!%0A%0A` +
+                            `📌 *Detail Transaksi* %0A` +
+                            `🆔 ID Akun: ${userId}%0A` +
+                            `💎 Diamond: ${selectedDiamond.value} 💎%0A` +
+                            `💰 Harga: Rp ${price.toLocaleString('id-ID')}%0A` +
+                            `📢 Biaya Admin: Rp 1.500%0A` +
+                            `💳 Total Pembayaran: Rp ${total.toLocaleString('id-ID')}%0A` +
+                            `💰 Metode Pembayaran: ${selectedPaymentValue}%0A%0A` +
+                            `Mohon segera diproses ya! Terima kasih 🙏`;
+
+            const whatsappURL = `https://wa.me/6285697747768
+            
+            
+            ?text=${message}`;
+            window.open(whatsappURL, '_blank');
+
+            modal.classList.add('hidden');
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+    });
+</script>
+</body>
+</html>
