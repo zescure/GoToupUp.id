@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Legends Top Up</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .animated-bg {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .option-card {
+            transition: all 0.3s ease;
+        }
+
+        .option-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .selected-card {
+            border-color: #4f46e5;
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+
+        .payment-select {
+            position: relative;
+        }
+
+        .payment-options {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 0.5rem;
+            margin-top: 0.5rem;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 50;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .payment-options.show {
+            display: block;
+        }
+
+        .payment-option {
+            padding: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .payment-option:hover {
+            background-color: #f3f4f6;
+        }
+
+        .payment-option.selected {
+            background-color: #eef2ff;
+        }
+    </style>
+</head>
+<body class="animated-bg min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-2xl">
+        <div class="glass-effect rounded-lg shadow-xl p-6 floating">
+            <h1 class="text-3xl font-bold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500">
+                Mobile Legends FEAST C
+            </h1>
+            
+            <form id="topupForm" class="space-y-6">
+                <!-- User ID Input -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">ID AKUN (SERVER)</label>
+                    <input type="text" id="userId" required 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                           placeholder="Contoh: 12345678 (1234)">
+                </div>
+
+                <!-- Diamond Selection -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">NOMINAL DIAMOND</label>
+                    <div class="grid grid-cols-2 gap-4 mt-2">
+                        <label class="relative">
+                            <input type="radio" name="diamond" value="3" class="hidden" data-price="1300">
+                            <div class="option-card cursor-pointer border rounded-lg p-4 hover:border-blue-500 transition-all duration-300">
+                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNgWw27UE7l5Zuk9N7_-jkpEre0f-rJ4GXiA&usqp=CAU" alt="86 Diamonds" class="w-16 mx-auto mb-2">
+                                <p class="text-center">3 💎</p>
+                                <p class="text-center text-sm">Rp 1.300</p>
+                            </div>
+                        </label>
+                        <label class="relative">
+                            <input type="radio" name="diamond" value="66" class="hidden" data-price="19400">
+                            <div class="option-card cursor-pointer border rounded-lg p-4 hover:border-blue-500 transition-all duration-300">
+                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNgWw27UE7l5Zuk9N7_-jkpEre0f-rJ4GXiA&usqp=CAU" alt="172 Diamonds" class="w-16 mx-auto mb-2">
+                                <p class="text-center">66 💎</p>
+                                <p class="text-center text-sm">Rp 19.400</p>
+                            </div>
+                        </label>
+                        <label class="relative">
+                            <input type="radio" name="diamond" value="239" class="hidden" data-price="65100">
+                            <div class="option-card cursor-pointer border rounded-lg p-4 hover:border-blue-500 transition-all duration-300">
+                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNgWw27UE7l5Zuk9N7_-jkpEre0f-rJ4GXiA&usqp=CAU" alt="172 Diamonds" class="w-16 mx-auto mb-2">
+                                <p class="text-center">239 💎</p>
+                                <p class="text-center text-sm">Rp 65.099</p>
+                            </div>
+                        </label>
+                        <label class="relative">
+                            <input type="radio" name="diamond" value="345" class="hidden" data-price="88500">
+                            <div class="option-card cursor-pointer border rounded-lg p-4 hover:border-blue-500 transition-all duration-300">
+                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNgWw27UE7l5Zuk9N7_-jkpEre0f-rJ4GXiA&usqp=CAU" alt="172 Diamonds" class="w-16 mx-auto mb-2">
+                                <p class="text-center">345 💎</p>
+                                <p class="text-center text-sm">Rp 88.500</p>
+                            </div>
+                        </label>
+                        <label class="relative">
+                            <input type="radio" name="diamond" value="WDP X2" class="hidden" data-price="58500">
+                            <div class="option-card cursor-pointer border rounded-lg p-4 hover:border-blue-500 transition-all duration-300">
+                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNgWw27UE7l5Zuk9N7_-jkpEre0f-rJ4GXiA&usqp=CAU" alt="172 Diamonds" class="w-16 mx-auto mb-2">
+                                <p class="text-center">WDP X2 14H</p>
+                                <p class="text-center text-sm">Rp 58.500</p>
+                            </div>
+                        </label>
+                        <label class="relative">
+                            <input type="radio" name="diamond" value="TW PASS" class="hidden" data-price="148800">
+                            <div class="option-card cursor-pointer border rounded-lg p-4 hover:border-blue-500 transition-all duration-300">
+                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNgWw27UE7l5Zuk9N7_-jkpEre0f-rJ4GXiA&usqp=CAU" alt="172 Diamonds" class="w-16 mx-auto mb-2">
+                                <p class="text-center">TWILIGHT PASS</p>
+                                <p class="text-center text-sm">Rp 148.500</p>
+                            </div>
+                        </label>
+                        <label class="relative">
+                            <input type="radio" name="diamond" value="600" class="hidden" data-price="160700">
+                            <div class="option-card cursor-pointer border rounded-lg p-4 hover:border-blue-500 transition-all duration-300">
+                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNgWw27UE7l5Zuk9N7_-jkpEre0f-rJ4GXiA&usqp=CAU" alt="172 Diamonds" class="w-16 mx-auto mb-2">
+                                <p class="text-center">600+30 💎</p>
+                                <p class="text-center text-sm">Rp 160.500</p>
+                            </div>
+                        </label>
+                        <label class="relative">
+                            <input type="radio" name="diamond" value="758" class="hidden" data-price="203700">
+                            <div class="option-card cursor-pointer border rounded-lg p-4 hover:border-blue-500 transition-all duration-300">
+                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNgWw27UE7l5Zuk9N7_-jkpEre0f-rJ4GXiA&usqp=CAU" alt="172 Diamonds" class="w-16 mx-auto mb-2">
+                                <p class="text-center">758 💎</p>
+                                <p class="text-center text-sm">Rp 203.500</p>
+                            </div>
+                        </label>
+                        <label class="relative">
+                            <input type="radio" name="diamond" value="4026" class="hidden" data-price="971600">
+                            <div class="option-card cursor-pointer border rounded-lg p-4 hover:border-blue-500 transition-all duration-300">
+                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNgWw27UE7l5Zuk9N7_-jkpEre0f-rJ4GXiA&usqp=CAU" alt="172 Diamonds" class="w-16 mx-auto mb-2">
+                                <p class="text-center">4026 💎</p>
+                                <p class="text-center text-sm">Rp 970.500</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">METODE PEMBAYARAN</label>
+                    <div class="payment-select mt-1">
+                        <div id="paymentHeader" class="cursor-pointer border rounded-md p-3 flex items-center justify-between bg-white">
+                            <div class="flex items-center gap-3">
+                                <img id="selectedIcon" src="https://i.pinimg.com/originals/75/7c/f2/757cf2944edb87314287b95cd98fd731.gif" alt="Payment" class="w-8 h-8">
+                                <span id="selectedText">Pilih Metode Pembayaran</span>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+                        <div id="paymentOptions" class="payment-options">
+                            <div class="payment-option" data-value="DANA" data-qris="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png">
+                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwtRpAICKjKIeUmkSVYsuBa0Is2ILtR-gIqDAwtpITkEpoYe77eL_MkFeU&s=10" alt="DANA" class="w-8 h-8">
+                                <span>DANA</span>
+                            </div>
+                            <div class="payment-option" data-value="SHOPEE" data-qris="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjL8xRyiYxTJJCxDisZZJqBpMuBMpq1K7Z_uoTTb1fo-YRCCn4S3UXvYHG3eqjAF8ZFy1ouRKa4S4hHQfbAi_VBlKUWt8nV7ThT8ZzFB_Bw5jrn8stCQ_5oK15Pxd9DjsGUmG7TEmeuW5XApanfO_DeYcWNoMsmhe3uk9_r3zHDvqmVTOTdHXRXL7Y2wPLJ/s320/20250206_101339.jpg">
+                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQj59M90YyJISqGMOLqfowYhJBcdXS0Kdc8sw&usqp=CAU" alt="SHOPEE" class="w-8 h-8">
+                                <span>SHOPEE</span>
+                            </div>
+                            <div class="payment-option" data-value="GOPAY" data-qris="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg8_2RYyIoEhSvxVdfI5Op2U0c2Tku6yY0xyyfmyi4-NMd09G4dnGGOCVY7w4WDZzkKSJvVsBM32C_xVE_5Y5Q-YmaTeWBi52Raq3tND8_LFamk76vIVHqrAx84egbI04wvr3DoKLkqM3YuAaPSP-GjV0W4KsJRMQyth_8fcgDk4cUx1ZTWAXoTYAfYU0Mj/s320/20250205_163848.jpg">
+                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZFWac3q1eIf390vB0eAnX9gRbB_afi1czyReIkVhuEaBVoWuK2ivLFvNr&s=10" alt="GOPAY" class="w-8 h-8">
+                                <span>GOPAY</span>
+                            </div>
+                            <div class="payment-option" data-value="QRIS" data-qris="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhj0oxiL06a62xk-VaZNcbWGLbeYqMKe0YUgwEDy8WHq6XItvFzOr3xiQS8CbvYND12xsammdmyUAPVUjmzZHxgNXlIDuVbBbgmwXKewWmqOo8H7evQHwlma4xYlr0UfEsZpToWC5TV3m2pMFLYbKSX_ZKrH-h_GjajQnmI3x8yN6hYKbd1_ijuWG5uLQqy/w352-h481/20250206_115124.jpg">
+                                <img src="https://c.tenor.com/cgoYGj4rhcUAAAAM/qr-code-codigo-qr.gif" alt="QRIS" class="w-8 h-8">
+                                <span>QRIS</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- WhatsApp Input -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">NOMOR WHATSAPP</label>
+                    <input type="tel" id="whatsapp" required 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                           placeholder="Contoh: 08123456789">
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" 
+                        class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-md py-3 px-4 hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300">
+                    Bayar Sekarang
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center">
+        <div class="glass-effect rounded-lg p-6 max-w-md w-full mx-4">
+            <h2 class="text-2xl font-bold mb-4">Rincian Pembayaran</h2>
+            <div class="space-y-4">
+                <div class="flex justify-between">
+                    <span>ID Akun:</span>
+                    <span id="modal-userid"></span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Diamond:</span>
+                    <span id="modal-diamond"></span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Harga:</span>
+                    <span id="modal-price"></span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Biaya Admin:</span>
+                    <span>Rp 999</span>
+                </div>
+                <div class="flex justify-between font-bold">
+                    <span>Total Pembayaran:</span>
+                    <span id="modal-total"></span>
+                </div>
+                <div class="text-center">
+                    <img id="qris-image" src="" alt="QRIS Code" class="mx-auto my-4 rounded-lg">
+                    <p class="text-sm text-gray-600">Scan QR code di atas untuk melakukan pembayaran</p>
+                </div>
+                <button id="confirmPayment" 
+                        class="w-full bg-green-500 text-white rounded-md py-3 px-4 hover:bg-green-600 transition-all duration-300 mb-2">
+                    Sudah Bayar
+                </button>
+                <button id="closeModal" 
+                        class="w-full bg-gray-500 text-white rounded-md py-3 px-4 hover:bg-gray-600 transition-all duration-300">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const paymentHeader = document.getElementById('paymentHeader');
+        const paymentOptions = document.getElementById('paymentOptions');
+        const selectedIcon = document.getElementById('selectedIcon');
+        const selectedText = document.getElementById('selectedText');
+        const modal = document.getElementById('paymentModal');
+        const closeModal = document.getElementById('closeModal');
+        const confirmPayment = document.getElementById('confirmPayment');
+        let selectedPaymentValue = '';
+        let selectedPaymentQris = '';
+
+        // Diamond selection
+        document.querySelectorAll('input[name="diamond"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('.option-card').forEach(card => {
+                    card.classList.remove('selected-card');
+                });
+                this.parentElement.querySelector('.option-card').classList.add('selected-card');
+            });
+        });
+
+        // Payment dropdown
+        paymentHeader.addEventListener('click', () => {
+            paymentOptions.classList.toggle('show');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!paymentHeader.contains(e.target) && !paymentOptions.contains(e.target)) {
+                paymentOptions.classList.remove('show');
+            }
+        });
+
+        // Payment option selection
+        document.querySelectorAll('.payment-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const value = this.dataset.value;
+                const qris = this.dataset.qris;
+                const icon = this.querySelector('img').src;
+                const text = this.querySelector('span').textContent;
+
+                selectedPaymentValue = value;
+                selectedPaymentQris = qris;
+                selectedIcon.src = icon;
+                selectedText.textContent = text;
+
+                document.querySelectorAll('.payment-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                this.classList.add('selected');
+                paymentOptions.classList.remove('show');
+            });
+        });
+
+        // Form submission
+        document.getElementById('topupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            if (!selectedPaymentValue) {
+                alert('Silakan pilih metode pembayaran');
+                return;
+            }
+
+            const userId = document.getElementById('userId').value;
+            const selectedDiamond = document.querySelector('input[name="diamond"]:checked');
+            
+            if (!selectedDiamond) {
+                alert('Silakan pilih nominal diamond');
+                return;
+            }
+
+            const price = parseInt(selectedDiamond.dataset.price);
+            const adminFee = 999;
+            const total = price + adminFee;
+
+            document.getElementById('modal-userid').textContent = userId;
+            document.getElementById('modal-diamond').textContent = `${selectedDiamond.value} 💎`;
+            document.getElementById('modal-price').textContent = `Rp ${price.toLocaleString('id-ID')}`;
+            document.getElementById('modal-total').textContent = `Rp ${t
