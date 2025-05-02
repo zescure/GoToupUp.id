@@ -70,15 +70,17 @@
     let autoStartGame = true;
     let waitNextRound = false;
 
-        function updateFakePlayers(multiplier) {
-      const fakeList = document.getElementById("fakePlayers");
-      fakeList.innerHTML = '';
-      for (let i = 0; i < 5; i++) {
-        let name = "User" + Math.floor(Math.random() * 1000);
-        let win = Math.floor(Math.random() * 200 + 50) * multiplier;
-        fakeList.innerHTML += `<li>${name}: $${fakeWin}</li>`;
-      }
-        }
+
+    function updateFakePlayers() {
+      let names = ['perkiraan crash=', 'Whale', 'player82634', 'player84626', 'player24725'];
+      let html = '<h3>Fake Players</h3>';
+      names.forEach(name => {
+        let fakewin = (Math.random() * 100 + 1000).toFixed(2)
+        let fakeMult = (Math.random() * 5 + 1).toFixed(2);
+        html += `${name}: x${fakewin} x${fakeMult}<br>`;
+      });
+      document.getElementById("fakePlayers").innerHTML = html;
+    }
 
     function startGame() {
       if (isCooldown) return;
@@ -89,7 +91,7 @@
       updateFakePlayers();
 
       let interval = setInterval(() => {
-        multiplier += 0.01;
+        multiplier += 0.02;
         document.getElementById("multiplier").textContent = `🚀 x${multiplier.toFixed(2)}`;
 
         if (playerIn && autoCashoutTarget && multiplier >= autoCashoutTarget) {
