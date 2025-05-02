@@ -70,15 +70,15 @@
     let autoStartGame = true;
     let waitNextRound = false;
 
-    function updateFakePlayers() {
-      let names = ['Anna', 'Ben', 'Cory', 'Dina', 'Eli'];
-      let html = '<h3>Fake Players</h3>';
-      names.forEach(name => {
-        let fakeMult = (Math.random() * 5 + 1).toFixed(2);
-        html += `${name}: x${fakeMult}<br>`;
-      });
-      document.getElementById("fakePlayers").innerHTML = html;
-    }
+        function updateFakePlayers(multiplier) {
+      const fakeList = document.getElementById("fakePlayers");
+      fakeList.innerHTML = '';
+      for (let i = 0; i < 5; i++) {
+        let name = "User" + Math.floor(Math.random() * 1000);
+        let win = Math.floor(Math.random() * 200 + 50) * multiplier;
+        fakeList.innerHTML += `<li>${name}: $${win.toFixed(2)}</li>`;
+      }
+    
 
     function startGame() {
       if (isCooldown) return;
