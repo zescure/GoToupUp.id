@@ -117,6 +117,12 @@
   <div class="total-claimed">
     Total hadiah diklaim minggu ini: <span id="randomClaimed">🔔$0</span>
   </div>
+
+    <audio id="bg-music" autoplay loop style="display:none;">
+      <source src="https://www.fesliyanstudios.com/royalty-free-music/downloads-c/presentations-music/55" type="audio/mpeg">
+      Your browser does not support the audio element.
+    </audio>
+    
 </div>
 
   <script>
@@ -247,10 +253,8 @@ document.getElementById("randomClaimed").innerText = "$" + claimed.toLocaleStrin
       
 
    
-    <audio id="bg-music" autoplay loop style="display:none;">
-      <source src="https://www.fesliyanstudios.com/royalty-free-music/downloads-c/presentations-music/55" type="audio/mpeg">
-      Your browser does not support the audio element.
-    
+
+      
 
     
       document.addEventListener('DOMContentLoaded', function () {
