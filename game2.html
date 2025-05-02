@@ -35,6 +35,44 @@
     .fake-players, .biggest-win {
       margin-top: 20px;
     }
+
+    #reward-section {
+  text-align: center;
+  margin-top: 40px;
+  color: white;
+}
+.reward {
+  background: #222;
+  margin: 15px auto;
+  padding: 15px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 0 10px #444;
+}
+.reward h3 {
+  margin-bottom: 5px;
+}
+.reward p {
+  margin: 5px 0;
+}
+.reward button {
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  background: #28a745;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+.reward button:disabled {
+  background: #555;
+  cursor: not-allowed;
+}
+.total-claimed {
+  margin-top: 30px;
+  font-size: 18px;
+}
   </style>
 </head>
 <body>
@@ -56,6 +94,25 @@
     <div class="fake-players" id="fakePlayers"></div>
     <div class="biggest-win" id="biggestWin">Kemenangan Terbesar: -</div>
   </div>
+  <div id="reward-section">
+  <h2>Penukaran Hadiah</h2>
+
+  <div class="reward">
+    <h3>Weekly Diamond Pass</h3>
+    <p>Harga: $30,000</p>
+    <button id="claim1" disabled onclick="window.open('https://example.com/diamond-pass', '_blank')">Klaim Hadiah</button>
+  </div>
+
+  <div class="reward">
+    <h3>💎 250 Diamond</h3>
+    <p>Harga: $81,000</p>
+    <button id="claim2" disabled onclick="window.open('https://example.com/diamonds', '_blank')">Klaim Hadiah</button>
+  </div>
+
+  <div class="total-claimed">
+    Total hadiah diklaim minggu ini: <span id="randomClaimed">$0</span>
+  </div>
+</div>
 
   <script>
     let balance = 1000.00;
@@ -171,6 +228,18 @@
         document.body.innerHTML = "<h2>Akses ditolak!</h2>";
       }
     };
+    // Simulasi saldo (ganti dengan var game utama kalo mau real)
+let userBalance = balance;
+
+if (userBalance >= 30000) {
+  document.getElementById("claim1").disabled = false;
+}
+if (userBalance >= 81000) {
+  document.getElementById("claim2").disabled = false;
+}
+
+let claimed = Math.floor(Math.random() * 500000 + 100000);
+document.getElementById("randomClaimed").innerText = "$" + claimed.toLocaleString();
   </script>
 </body>
 </html>
