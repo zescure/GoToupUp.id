@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Crash Game 🚀</title>
+  <style>
+    body {
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: white;
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    .game {
+      font-size: 48px;
+      margin: 30px 0;
+    }
+
+    .controls input {
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    .controls button {
+      padding: 10px 20px;
+      margin: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #rocket {
+      animation: float 1s infinite alternate;
+    }
+
+    @keyframes float {
+      from { transform: translateY(0); }
+      to { transform: translateY(-20px); }
+    }
+
+    .modal {
+      position: fixed;
+      z-index: 999;
+      background: rgba(0,0,0,0.8);
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: #222;
+      padding: 30px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="authModal" class="modal">
+    <div class="modal-content">
+      <h2>Masukkan Kode Akses</h2>
+      <input type="text" id="accessCode" placeholder="Kode Rahasia">
+      <button onclick="checkAccess()">Submit</button>
+    </div>
+  </div>
+
+  <div class="container" style="display:none">
+    <h1>Crash Game 🚀</h1>
+    <div class="game">
+      <div id="rocket">🚀</div>
+      <div id="multiplier">1.00x</div>
+    </div>
+
+    <div class="controls">
+      <input type="number" id="betAmount" placeholder="Taruhan ($)" />
+      <button id="placeBetBtn">Place Bet</button>
+      <button id="cashOutBtn" disabled>Cash Out</button>
+    </div>
+
+    <div id="status">Status: Menunggu game mulai...</div>
+    <div id="balance">Saldo: $1000</div>
+    <div id="highWin">Kemenangan Tertinggi: $0</div>
+
+    <h3>Fake Players</h3>
+    <ul id="fakePlayers"></ul>
+  </div>
+
+  <script>
+    let balance = 1000;
+    let inGame = false;
+    let multiplier = 1.00;
+    let interval;
+    let highestWin = 0;
+    let playerIn = false;
+
+    function checkAccess() {
+      const code = document.getElementById("accessCode").value;
+      if (code === "CRASH123") {
+        document.getElementById("authModal").style.display = "none";
+        document.querySelector(".container").style.display = "block";
+      } else {
+        alert("Kode salah!");
+      }
+    }
+
+    function updateFakePlayers(multiplier) {
+      const fakeList = document.getElementById("fakePlayers");
+      fakeList.innerHTML = '';
+      for (let i = 0; i < 5; i++) {
+        let name = "User" + Math.floor(Math.random() * 1000);
+        let win = Math.floor(Math.random() * 200 + 50) * multiplier;
+        fakeList.innerHTML += `<li>${name}: $${win.toFixed(2)}</li>`;
+      }
+    }
+
+    function startGame() {
+      if (inGame) return;
+
+      inGame = true;
+      multiplier = 1.00;
+      document.getElementById("multiplier").textContent = `${multiplier.toFixed(2)}x`;
+      document.getElementById("status").textContent = "Game Dimulai!";
+      document.getElementById("rocket").style.color = "white";
+      updateFakePlayers(multiplier);
+
+      let crashPoint = (Math.random() * 5 + 1).toFixed(2); // contoh 1.00x - 6.00x
+
+      interval = setInterval(() => {
+        multiplier += 0.01;
+        document.getElementById("multiplier").textContent = `${multiplier.toFixed(2)}x`;
+        updateFakePlayers(multiplier);
+
+        if (playerIn && multiplier >= crashPoint) {
+          endGame(false);
+        }
+
+        if (multiplier >= crashPoint) {
+          endGame(true);
+        }
+      }, 100);
+    }
+
+    function endGame(crashed) {
+      clearInterval(interval);
+      inGame = false;
+      document.getElementById("rocket").style.color = crashed ? "red" : "green";
+      document.getElementById("status").textContent = crashed ? "CRASH!" : "Berhasil!";
+      playerIn = false;
+
+      setTimeout(() => startGame(), 3000);
+    }
+
+    document.getElementById("placeBetBtn").onclick = () => {
+      let bet = parseFloat(document.getElementById("betAmount").value);
+      if (bet > 0 && bet <= balance && !playerIn && !inGame) {
+        playerIn = true;
+        balance -= bet;
+        document.getElementById("balance").textContent = `Saldo: $${balance.toFixed(2)}`;
+        document.getElementById("status").textContent = "Menunggu crash...";
+        document.getElementById("cashOutBtn").disabled = false;
+      }
+    };
+
+    document.getElementById("cashOutBtn").onclick = () => {
+      if (playerIn && inGame) {
+        let bet = parseFloat(document.getElementById("betAmount").value);
+        let win = bet * multiplier;
+        balance += win;
+        playerIn = false;
+        document.getElementById("cashOutBtn").disabled = true;
+        document.getElementById("balance").textContent = `Saldo: $${balance.toFixed(2)}`;
+        document.getElementById("status").textContent = `CASH OUT: $${win.toFixed(2)}`;
+        if (win > highestWin) {
+          highestWin = win;
+          document.getElementById("highWin").textContent = `Kemenangan Tertinggi: $${win.toFixed(2)}`;
+        }
+      }
+    };
+
+    // Otomatis mulai saat selesai crash
+    setTimeout(() => startGame(), 2000);
+  </script>
+</body>
+</html>
