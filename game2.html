@@ -41,7 +41,7 @@
   <div class="container">
     <h1>Crash Game 🚀</h1>
     <div class="game-info">
-      <div id="balance">Saldo: $1000.00</div>
+      <div id="balance">Saldo: 🔔1000.00</div>
       <div id="multiplier">🚀 x1.00</div>
       <div id="status">Menunggu mulai...</div>
     </div>
@@ -77,7 +77,7 @@
       names.forEach(name => {
         let fakewin = (Math.random() * 100 + 1000).toFixed(2)
         let fakeMult = (Math.random() * 5 + 1).toFixed(2);
-        html += `${name}: ( x${fakewin} ) x${fakeMult}<br>`;
+        html += `${name}: ( 🔔${fakewin} ) x${fakeMult}<br>`;
       });
       document.getElementById("fakePlayers").innerHTML = html;
     }
@@ -153,7 +153,7 @@
           biggestWin = win;
           document.getElementById("biggestWin").textContent = `Kemenangan Terbesar: $${win.toFixed(2)}`;
         }
-        document.getElementById("balance").textContent = `Saldo: $${balance.toFixed(2)}`;
+        document.getElementById("balance").textContent = `Saldo: 🔔${balance.toFixed(2)}`;
         document.getElementById("status").textContent = `Keluar di x${multiplier.toFixed(2)} - Menang $${win.toFixed(2)}`;
         playerIn = false;
         document.getElementById("cashOutBtn").disabled = true;
