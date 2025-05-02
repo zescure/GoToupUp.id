@@ -85,8 +85,8 @@
       <div id="status">Menunggu mulai...</div>
     </div>
     <div class="controls">
-      <input type="number" id="betAmount" placeholder="Taruhan ($)" step="0.01">
-      <input type="number" id="autoCashout" placeholder="Auto Cashout (misal 2.00)" step="0.01">
+      <input type="number" id="betAmount" placeholder="Terbangkan (🔔)" step="0.01">
+      <input type="number" id="autoCashout" placeholder="Auto klaim (misal x2.00)" step="0.01">
       <br>
       <button id="placeBetBtn">Place Bet</button>
       <button id="cashOutBtn" disabled>Cash Out</button>
@@ -235,18 +235,23 @@
       }
     };
     // Simulasi saldo (ganti dengan var game utama kalo mau real)
-let userBalance = balance;
 
-if (userBalance >= 30000) {
-  document.getElementById("claim1").disabled = false;
-}
-if (userBalance >= 81000) {
-  document.getElementById("claim2").disabled = false;
-}
-if (userBalance >= 3500) {
-  document.getElementById("claim3").disabled = false;
-}
+window.onload = function () {
+  let balance = balance; // Pastikan balance ini dari game utama
 
+  if (userbalance >= 30000) {
+    document.getElementById("claim1").disabled = false;
+  }
+  if (userbalance >= 81000) {
+    document.getElementById("claim2").disabled = false;
+  }
+  if (userbalance >= 3500) {
+    document.getElementById("claim3").disabled = false;
+  }
+  
+  let claimed = Math.floor(Math.random() * 500000 + 100000);
+  document.getElementById("randomClaimed").innerText = "$" + claimed.toLocaleString();
+};
 let claimed = Math.floor(Math.random() * 500000 + 100000);
 document.getElementById("randomClaimed").innerText = "$" + claimed.toLocaleString();
   </script>
