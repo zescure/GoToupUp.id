@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Crash GOOGLE 🚀</title>
+  <title>Crash Game 🚀</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -35,7 +35,6 @@
     .fake-players, .biggest-win {
       margin-top: 20px;
     }
-
     #reward-section {
   text-align: center;
   margin-top: 40px;
@@ -77,16 +76,15 @@
 </head>
 <body>
   <div class="container">
-    <h1>Crash GOOGLE 🚀</h1>
-    <h5>Gandakan Lonceng Anda Dan Tukar Dengan Hadiah Tersedia</h5>
+    <h1>Crash Game 🚀</h1>
     <div class="game-info">
-      <div id="balance">Saldo: 🔔1000.00</div>
+      <div id="balance">Saldo: $1000.00</div>
       <div id="multiplier">🚀 x1.00</div>
       <div id="status">Menunggu mulai...</div>
     </div>
     <div class="controls">
-      <input type="number" id="betAmount" placeholder="Terbangkan ($)" step="0.01">
-      <input type="number" id="autoCashout" placeholder="Auto klaim (misal x2.00)" step="0.01">
+      <input type="number" id="betAmount" placeholder="Taruhan ($)" step="0.01">
+      <input type="number" id="autoCashout" placeholder="Auto Cashout (misal 2.00)" step="0.01">
       <br>
       <button id="placeBetBtn">Place Bet</button>
       <button id="cashOutBtn" disabled>Cash Out</button>
@@ -99,20 +97,14 @@
 
   <div class="reward">
     <h3>Weekly Diamond Pass</h3>
-    <p>Harga: 🔔30,000</p>
+    <p>Harga: $30,000</p>
     <button id="claim1" disabled onclick="window.open('https://example.com/diamond-pass', '_blank')">Klaim Hadiah</button>
   </div>
 
   <div class="reward">
     <h3>💎 250 Diamond</h3>
-    <p>Harga: 🔔81,000</p>
+    <p>Harga: $81,000</p>
     <button id="claim2" disabled onclick="window.open('https://example.com/diamonds', '_blank')">Klaim Hadiah</button>
-  </div>
-
-  <div class="reward">
-    <h3>💎 5 Diamond</h3>
-    <p>Harga: 🔔3,500</p>
-    <button id="claim3" disabled onclick="window.open('https://example.com/diamonds', '_blank')">Klaim Hadiah</button>
   </div>
 
   <div class="total-claimed">
@@ -134,14 +126,12 @@
     let autoStartGame = true;
     let waitNextRound = false;
 
-
     function updateFakePlayers() {
-      let names = ['perkiraan crash=', 'Whale', 'player82634', 'player84626', 'player24725'];
+      let names = ['Anna', 'Ben', 'Cory', 'Dina', 'Eli'];
       let html = '<h3>Fake Players</h3>';
       names.forEach(name => {
-        let fakewin = (Math.random() * 100 + 1000).toFixed(2)
         let fakeMult = (Math.random() * 5 + 1).toFixed(2);
-        html += `${name}: ( 🔔${fakewin} ) x${fakeMult}<br>`;
+        html += `${name}: x${fakeMult}<br>`;
       });
       document.getElementById("fakePlayers").innerHTML = html;
     }
@@ -155,7 +145,7 @@
       updateFakePlayers();
 
       let interval = setInterval(() => {
-        multiplier += 0.02;
+        multiplier += 0.01;
         document.getElementById("multiplier").textContent = `🚀 x${multiplier.toFixed(2)}`;
 
         if (playerIn && autoCashoutTarget && multiplier >= autoCashoutTarget) {
@@ -215,10 +205,10 @@
         balance += win;
         if (win > biggestWin) {
           biggestWin = win;
-          document.getElementById("biggestWin").textContent = `Kemenangan Terbesar: 🔔$${win.toFixed(2)}`;
+          document.getElementById("biggestWin").textContent = `Kemenangan Terbesar: $${win.toFixed(2)}`;
         }
-        document.getElementById("balance").textContent = `Saldo: 🔔$${balance.toFixed(2)}`;
-        document.getElementById("status").textContent = `Keluar di x${multiplier.toFixed(2)} - Menang 🔔$${win.toFixed(2)}`;
+        document.getElementById("balance").textContent = `Saldo: $${balance.toFixed(2)}`;
+        document.getElementById("status").textContent = `Keluar di x${multiplier.toFixed(2)} - Menang $${win.toFixed(2)}`;
         playerIn = false;
         document.getElementById("cashOutBtn").disabled = true;
       }
@@ -233,27 +223,19 @@
         alert("Kode salah. Tidak bisa main.");
         document.body.innerHTML = "<h2>Akses ditolak!</h2>";
       }
-    };
-    // Simulasi saldo (ganti dengan var game utama kalo mau real)
+      // Simulasi saldo (ganti dengan var game utama kalo mau real)
+let userBalance = balance;
 
+if (userBalance >= 30000) {
+  document.getElementById("claim1").disabled = false;
+}
+if (userBalance >= 81000) {
+  document.getElementById("claim2").disabled = false;
+}
 
-  let userBalance = balance; // Pastikan balance ini dari game utama
-
-  if (userBalance >= 30000) {
-    document.getElementById("claim1").disabled = false;
-  }
-  if (userBalance >= 81000) {
-    document.getElementById("claim2").disabled = false;
-  }
-  if (userBalance >= 3500) {
-    document.getElementById("claim3").disabled = false;
-  }
-  
-  let claimed = Math.floor(Math.random() * 500000 + 100000);
-  document.getElementById("randomClaimed").innerText = "$" + claimed.toLocaleString();
-};
 let claimed = Math.floor(Math.random() * 500000 + 100000);
 document.getElementById("randomClaimed").innerText = "$" + claimed.toLocaleString();
+    };
   </script>
 </body>
 </html>
