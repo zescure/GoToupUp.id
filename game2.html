@@ -72,6 +72,9 @@
   margin-top: 30px;
   font-size: 18px;
 }
+
+   
+    
   </style>
 </head>
 <body>
@@ -242,5 +245,29 @@ document.getElementById("randomClaimed").innerText = "$" + claimed.toLocaleStrin
 
     };
       </script>
+
+   <!-- TEMPATIN KODE MUSIK DI SINI -->
+    <audio id="bg-music" autoplay loop style="display:none;">
+      <source src="https://dl.dropboxusercontent.com/s/64r0h0zd0qj6vti/bgm.mp3" type="audio/mpeg">
+      Your browser does not support the audio element.
+    </audio>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var audio = document.getElementById('bg-music');
+        var started = false;
+
+        function tryPlay() {
+          if (!started) {
+            audio.play().catch(() => {});
+            started = true;
+          }
+        }
+
+        document.body.addEventListener('click', tryPlay);
+        document.body.addEventListener('touchstart', tryPlay);
+      });
+    </script>
+  
 </body>
 </html>
