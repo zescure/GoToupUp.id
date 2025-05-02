@@ -250,9 +250,9 @@ document.getElementById("randomClaimed").innerText = "$" + claimed.toLocaleStrin
     <audio id="bg-music" autoplay loop style="display:none;">
       <source src="https://www.fesliyanstudios.com/royalty-free-music/downloads-c/presentations-music/55" type="audio/mpeg">
       Your browser does not support the audio element.
-    </audio>
+    
 
-    <script>
+    
       document.addEventListener('DOMContentLoaded', function () {
         var audio = document.getElementById('bg-music');
         var started = false;
@@ -267,6 +267,7 @@ document.getElementById("randomClaimed").innerText = "$" + claimed.toLocaleStrin
         document.body.addEventListener('click', tryPlay);
         document.body.addEventListener('touchstart', tryPlay);
       });
+  
     </script>
   
 </body>
