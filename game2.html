@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Crash Game 🚀</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #1e3c72, #2a5298);
+      color: white;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    .container { padding: 20px; }
+    .game-info, .controls { margin: 10px 0; }
+    input[type=number] {
+      padding: 5px;
+      width: 120px;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      background-color: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+    #multiplier {
+      font-size: 2rem;
+      margin: 20px 0;
+    }
+    .fake-players, .biggest-win {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Crash Game 🚀</h1>
+    <div class="game-info">
+      <div id="balance">Saldo: $1000.00</div>
+      <div id="multiplier">🚀 x1.00</div>
+      <div id="status">Menunggu mulai...</div>
+    </div>
+    <div class="controls">
+      <input type="number" id="betAmount" placeholder="Taruhan ($)" step="0.01">
+      <input type="number" id="autoCashout" placeholder="Auto Cashout (misal 2.00)" step="0.01">
+      <br>
+      <button id="placeBetBtn">Place Bet</button>
+      <button id="cashOutBtn" disabled>Cash Out</button>
+    </div>
+    <div class="fake-players" id="fakePlayers"></div>
+    <div class="biggest-win" id="biggestWin">Kemenangan Terbesar: -</div>
+  </div>
+
+  <script>
+    let balance = 1000.00;
+    let playerIn = false;
+    let betAmount = 0;
+    let multiplier = 1.00;
+    let crashPoint = (Math.random() * 10 + 1).toFixed(2);
+    let inGame = false;
+    let autoCashoutTarget = null;
+    let biggestWin = 0;
+    let cooldown = 5000;
+    let isCooldown = false;
+    let autoStartGame = true;
+    let waitNextRound = false;
+
+    function updateFakePlayers() {
+      let names = ['Anna', 'Ben', 'Cory', 'Dina', 'Eli'];
+      let html = '<h3>Fake Players</h3>';
+      names.forEach(name => {
+        let fakeMult = (Math.random() * 5 + 1).toFixed(2);
+        html += `${name}: x${fakeMult}<br>`;
+      });
+      document.getElementById("fakePlayers").innerHTML = html;
+    }
+
+    function startGame() {
+      if (isCooldown) return;
+      inGame = true;
+      multiplier = 1.00;
+      document.getElementById("multiplier").textContent = `🚀 x${multiplier.toFixed(2)}`;
+      document.getElementById("status").textContent = "Roket terbang...";
+      updateFakePlayers();
+
+      let interval = setInterval(() => {
+        multiplier += 0.01;
+        document.getElementById("multiplier").textContent = `🚀 x${multiplier.toFixed(2)}`;
+
+        if (playerIn && autoCashoutTarget && multiplier >= autoCashoutTarget) {
+          document.getElementById("cashOutBtn").click();
+        }
+
+        if (multiplier >= crashPoint) {
+          clearInterval(interval);
+          inGame = false;
+          document.getElementById("status").textContent = `Crash di x${multiplier.toFixed(2)}`;
+
+          if (playerIn) {
+            document.getElementById("status").textContent += " - Kamu kalah!";
+            playerIn = false;
+            document.getElementById("cashOutBtn").disabled = true;
+          }
+
+          isCooldown = true;
+          setTimeout(() => {
+            isCooldown = false;
+            crashPoint = (Math.random() * 10 + 1).toFixed(2);
+            if (waitNextRound) {
+              waitNextRound = false;
+              playerIn = true;
+              balance -= betAmount;
+              document.getElementById("balance").textContent = `Saldo: $${balance.toFixed(2)}`;
+              document.getElementById("cashOutBtn").disabled = false;
+            }
+            if (autoStartGame) startGame();
+          }, cooldown);
+        }
+      }, 100);
+    }
+
+    document.getElementById("placeBetBtn").onclick = () => {
+      let bet = parseFloat(document.getElementById("betAmount").value);
+      autoCashoutTarget = parseFloat(document.getElementById("autoCashout").value);
+      if (bet > 0 && bet <= balance && !playerIn) {
+        if (!inGame) {
+          playerIn = true;
+          betAmount = bet;
+          balance -= bet;
+          document.getElementById("balance").textContent = `Saldo: $${balance.toFixed(2)}`;
+          document.getElementById("status").textContent = "Menunggu crash...";
+          document.getElementById("cashOutBtn").disabled = false;
+        } else {
+          waitNextRound = true;
+          betAmount = bet;
+          document.getElementById("status").textContent = "Akan ikut ronde selanjutnya...";
+        }
+      }
+    };
+
+    document.getElementById("cashOutBtn").onclick = () => {
+      if (playerIn && inGame) {
+        let win = betAmount * multiplier;
+        balance += win;
+        if (win > biggestWin) {
+          biggestWin = win;
+          document.getElementById("biggestWin").textContent = `Kemenangan Terbesar: $${win.toFixed(2)}`;
+        }
+        document.getElementById("balance").textContent = `Saldo: $${balance.toFixed(2)}`;
+        document.getElementById("status").textContent = `Keluar di x${multiplier.toFixed(2)} - Menang $${win.toFixed(2)}`;
+        playerIn = false;
+        document.getElementById("cashOutBtn").disabled = true;
+      }
+    };
+
+    window.onload = () => {
+      alert("Masukkan kode akses untuk dapat saldo $1000!");
+      let code = prompt("Masukkan kode:");
+      if (code === "CRASH100") {
+        startGame();
+      } else {
+        alert("Kode salah. Tidak bisa main.");
+        document.body.innerHTML = "<h2>Akses ditolak!</h2>";
+      }
+    };
+  </script>
+</body>
+</html>
