@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Penukaran Hadiah MLBB - 5 Diamond = 🔔 6000</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 400px;
+      margin: 50px auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .price-box {
+      background: #e8f5e9;
+      padding: 10px;
+      margin-top: 20px;
+      text-align: center;
+      border-radius: 5px;
+      color: #2e7d32;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .btn {
+      margin-top: 20px;
+      display: block;
+      width: 100%;
+      padding: 12px;
+      background: #25D366;
+      color: white;
+      text-align: center;
+      font-weight: bold;
+      border: none;
+      border-radius: 5px;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Penukaran Hadiah MLBB</h2>
+  <form id="redeemForm" onsubmit="sendToWhatsApp(); return false;">
+    <label for="whatsapp">Nomor WhatsApp</label>
+    <input type="tel" id="whatsapp" placeholder="08xxxxxxxxxx" required>
+
+    <label for="idserver">ID + Server MLBB</label>
+    <input type="text" id="idserver" placeholder="Contoh: 12345678(1234)" required>
+
+    <div class="price-box">5 Diamond - 🔔 6.000</div>
+
+    <button type="submit" class="btn">Kirim via WhatsApp</button>
+  </form>
+</div>
+
+<script>
+  function sendToWhatsApp() {
+    const phone = document.getElementById("whatsapp").value;
+    const idserver = document.getElementById("idserver").value;
+
+    const message = `Halo, saya ingin menukarkan hadiah 5 Diamond MLBB menggunakan Lonceng.\n\nNomor WhatsApp: ${phone}\nID + Server: ${idserver}`;
+
+    const encodedMessage = encodeURIComponent(message);
+    const adminNumber = '6285697747768'; // Ganti dengan nomor admin
+
+    window.open(`https://wa.me/${adminNumber}?text=${encodedMessage}`, '_blank');
+  }
+</script>
+
+</body>
+</html>
