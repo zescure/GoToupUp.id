@@ -99,14 +99,20 @@
 
   <div class="reward">
     <h3>Weekly Diamond Pass</h3>
-    <p>Harga: $30,000</p>
+    <p>Harga: 🔔30,000</p>
     <button id="claim1" disabled onclick="window.open('https://example.com/diamond-pass', '_blank')">Klaim Hadiah</button>
   </div>
 
   <div class="reward">
     <h3>💎 250 Diamond</h3>
-    <p>Harga: $81,000</p>
+    <p>Harga: 🔔81,000</p>
     <button id="claim2" disabled onclick="window.open('https://example.com/diamonds', '_blank')">Klaim Hadiah</button>
+  </div>
+
+  <div class="reward">
+    <h3>💎 5 Diamond</h3>
+    <p>Harga: 🔔3,500</p>
+    <button id="claim3" disabled onclick="window.open('https://example.com/diamonds', '_blank')">Klaim Hadiah</button>
   </div>
 
   <div class="total-claimed">
@@ -235,7 +241,10 @@ if (userBalance >= 30000) {
   document.getElementById("claim1").disabled = false;
 }
 if (userBalance >= 81000) {
-  document.getElementById("claim2").disabled = false;
+  document.getElementById("claim2").disabled = 
+}
+if (userBalance >= 3500) {
+  document.getElementById("claim3").disabled = false;
 }
 
 let claimed = Math.floor(Math.random() * 500000 + 100000);
