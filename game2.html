@@ -230,13 +230,9 @@
     window.onload = () => {
       alert("beli saldo/top up game dan dapatkan kode akses untuk ditukar saldo 🔔1000!");
       let code = prompt("Masukkan kode:");
- const allowedPasswords = ["CRASH100", "ROKET777", "BONUS50", "DIAMOND999", "JACKPOT21", "WINNERX", "SKYHIGH", "SPACEGO", "XCRASH", "ROKETMAX", "LUCKYPASS"];
+if (code === "CRASH100" "BONUS50" "CRASH50" "BONUS100" ) {
   
-  function verifyCode() {
-    const userInput = document.getElementById("codeInput").value.trim();
-    if (allowedPasswords.includes(userInput)) {
-      document.getElementById("popup").style.display = "none";
-      startGame();
+   startGame();
       } else {
         alert("Kode salah. Tidak bisa main.");
         document.body.innerHTML = "<h2>Akses ditolak!</h2>";
