@@ -177,16 +177,7 @@
 
       let forceCrash = false;
 
-if (balance > 3000) {
-  forceCrash = true;
-}
 
-if (forceCrash) {
-  crashPoint = (Math.random() * 1.5 + 0.5).toFixed(2); // crash antara 0.5x - 2x
-} else {
-  crashPoint = (Math.random() * 10 + 1).toFixed(2); // normal crash acak antara 1x - 11x
-}
-      
       let interval = setInterval(() => {
         multiplier += 0.02;
         document.getElementById("multiplier").textContent = `🚀 x${multiplier.toFixed(2)}`;
