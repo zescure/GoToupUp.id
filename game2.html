@@ -83,7 +83,7 @@
     <h7>Gandakan Lonceng Anda Dan Tukar Dengan Hadiah Dibawah</h7>
     <div class="game-info">
       <h5>Saldo Lonceng Anda Dibawah Ini Yang Akan Ditukar Hadiah⬇️!</h5>
-      <div id="balance">Saldo: 🔔1000.00</div>
+      <div id="balance">Saldo: 🔔100.00</div>
       <div id="multiplier">🚀 x1.00</div>
       <div id="status">Menunggu mulai...</div>
     </div>
@@ -103,14 +103,32 @@
 <h4>WAJIB SS(screensoot) HASIL SALDO ANDA SESUAI NOMINAL PENUKARAN</h4>
  <h6>Jika Saldo Anda Kurang Dan MengKLAIM Hadiah Maka Kami Tetap Akan Meminta Bukti SS lonceng Anda</h6>
   <div class="reward">
-    <h3>Weekly Diamond Pass</h3>
+    <h3>Weekly Diamond Pass MLBB</h3>
     <p>Harga: 🔔30,000</p>
     <button id="claim1" disabled onclick="window.open('https://example.com/diamond-pass', '_blank')">Klaim Hadiah</button>
   </div>
 
   <div class="reward">
+    <h3>💎27.864 MLBB</h3>
+    <p>Harga: 🔔7,757,730</p>
+    <button id="claim1" disabled onclick="window.open('https://example.com/diamond-pass', '_blank')">Klaim Hadiah</button>
+  </div>  
+  
+  <div class="reward">
+    <h3>💎4.020 MLBB</h3>
+    <p>Harga: 🔔1,020,878</p>
+    <button id="claim1" disabled onclick="window.open('https://example.com/diamond-pass', '_blank')">Klaim Hadiah</button>
+  </div>
+
+  <div class="reward">
+    <h3>💎2.010 MLBB</h3>
+    <p>Harga: 🔔546,428</p>
+    <button id="claim1" disabled onclick="window.open('https://example.com/diamond-pass', '_blank')">Klaim Hadiah</button>
+  </div>
+    
+  <div class="reward">
     <h3>💎 5 Diamond</h3>
-    <p>Harga: 🔔8,000</p>
+    <p>Harga: 🔔2,760</p>
     <button id="claim2" disabled onclick="window.open('penukarangamecrash5', '_blank')">Klaim Hadiah</button>
   </div>
 
@@ -126,12 +144,10 @@
 </div>
 
   <script>
-    let balance = 1000.00;
+    let balance = 100.00;
     let playerIn = false;
     let betAmount = 0;
     let multiplier = 1.00;
-    let winstreak = 0;
-    let lastWinAmount = 0;
     let crashPoint = (Math.random() * 10 + 1).toFixed(2);
     let inGame = false;
     let autoCashoutTarget = null;
@@ -159,20 +175,16 @@
       document.getElementById("status").textContent = "Roket terbang...";
       updateFakePlayers();
 
-      let isAllIn = (betAmount === balance + betAmount);
-      let forceLose = false;
+      let forceCrash = false;
 
-      if (isAllIn && Math.random() < 0.8) {
-        forceLose = true;
-      }
-      if (winstreak >= 3) {
-        forceLose = true;
-      }
+if (balance > 3000) {
+  forceCrash = true;
+}
 
-
-      crashPoint = forceLose ? (Math.random() * 1.5 + 0.5).toFixed(2) : (Math.random() * 10 + 1).toFixed(2);
-
-
+if (forceCrash) {
+  crashPoint = (Math.random() * 1.5 + 0.5).toFixed(2); // crash antara 0.5x - 2x
+} else {
+  crashPoint = (Math.random() * 10 + 1).toFixed(2); // normal crash acak antara 1x - 11x
 }
       
       let interval = setInterval(() => {
@@ -202,7 +214,7 @@
               waitNextRound = false;
               playerIn = true;
               balance -= betAmount;
-              document.getElementById("balance").textContent = `Saldo: ${balance.toFixed(2)}`;
+              document.getElementById("balance").textContent = `Saldo: 🔔${balance.toFixed(2)}`;
               document.getElementById("cashOutBtn").disabled = false;
             }
             if (autoStartGame) startGame();
@@ -219,7 +231,7 @@
           playerIn = true;
           betAmount = bet;
           balance -= bet;
-          document.getElementById("balance").textContent = `Saldo: $${balance.toFixed(2)}`;
+          document.getElementById("balance").textContent = `Saldo: 🔔${balance.toFixed(2)}`;
           document.getElementById("status").textContent = "Menunggu crash...";
           document.getElementById("cashOutBtn").disabled = false;
         } else {
@@ -229,32 +241,24 @@
         }
       }
     };
-    
 
     document.getElementById("cashOutBtn").onclick = () => {
       if (playerIn && inGame) {
         let win = betAmount * multiplier;
-        if (win > lastWinAmount) {
-          winstrike++;
-        } else {
-          winstrike = 0;
-        }
-        lastWinAmount = win;
-        
         balance += win;
         if (win > biggestWin) {
           biggestWin = win;
-          document.getElementById("biggestWin").textContent = `Kemenangan Terbesar: $${win.toFixed(2)}`;
+          document.getElementById("biggestWin").textContent = `pendapatan loceng terbesar: 🔔${win.toFixed(2)}`;
         }
-        document.getElementById("balance").textContent = `Saldo: $${balance.toFixed(2)}`;
-        document.getElementById("status").textContent = `Keluar di x${multiplier.toFixed(2)} - Menang $${win.toFixed(2)}`;
+        document.getElementById("balance").textContent = `Saldo: 🔔${balance.toFixed(2)}`;
+        document.getElementById("status").textContent = `Keluar di x${multiplier.toFixed(2)} - pendapatan 🔔${win.toFixed(2)}`;
         playerIn = false;
         document.getElementById("cashOutBtn").disabled = true;
       }
     };
 
     window.onload = () => {
-      alert("beli saldo/top up game dan dapatkan kode akses untuk ditukar saldo 🔔1000!");
+      alert("beli saldo/top up game dan dapatkan kode akses untuk ditukar saldo 🔔100 s/d 🔔600.000!");
       let code = prompt("Masukkan kode:");
 if (code === "BONUS100" ) {
   
@@ -303,3 +307,5 @@ document.getElementById("randomClaimed").innerText = "$" + claimed.toLocaleStrin
   
 </body>
 </html>
+
+Mana ga ada?
