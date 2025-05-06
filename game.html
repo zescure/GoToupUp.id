@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Crash Game 🚀</title>
+  <title>Crash GOOGLE 🚀</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -72,48 +72,79 @@
   margin-top: 30px;
   font-size: 18px;
 }
+
+   
+    
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Crash Game 🚀</h1>
+    <h1>Crash GOOGLE 🚀</h1>
+    <h7>Gandakan Lonceng Anda Dan Tukar Dengan Hadiah Dibawah</h7>
     <div class="game-info">
-      <div id="balance">Saldo: $1000.00</div>
+      <h5>Saldo Lonceng Anda Dibawah Ini Yang Akan Ditukar Hadiah⬇️!</h5>
+      <div id="balance">Saldo: 🔔100.00</div>
       <div id="multiplier">🚀 x1.00</div>
       <div id="status">Menunggu mulai...</div>
     </div>
     <div class="controls">
-      <input type="number" id="betAmount" placeholder="Taruhan ($)" step="0.01">
-      <input type="number" id="autoCashout" placeholder="Auto Cashout (misal 2.00)" step="0.01">
+      <input type="number" id="betAmount" placeholder="Terbangkan (🔔)" step="0.01">
+      <input type="number" id="autoCashout" placeholder="Auto klaim (misal x2.00)" step="0.01">
       <br>
-      <button id="placeBetBtn">Place Bet</button>
-      <button id="cashOutBtn" disabled>Cash Out</button>
+      <button id="placeBetBtn">Ikut Terbang</button>
+      <button id="cashOutBtn" disabled>Klaim/Terjun</button>
     </div>
     <div class="fake-players" id="fakePlayers"></div>
-    <div class="biggest-win" id="biggestWin">Kemenangan Terbesar: -</div>
+    <h6>Statistik Penerbangan</h6>
+    <div class="biggest-win" id="biggestWin">Penerbangan Lonceng Terjauh: -</div>
   </div>
   <div id="reward-section">
   <h2>Penukaran Hadiah</h2>
-
+<h4>WAJIB SS(screensoot) HASIL SALDO ANDA SESUAI NOMINAL PENUKARAN</h4>
+ <h6>Jika Saldo Anda Kurang Dan MengKLAIM Hadiah Maka Kami Tetap Akan Meminta Bukti SS lonceng Anda</h6>
   <div class="reward">
-    <h3>Weekly Diamond Pass</h3>
-    <p>Harga: $30,000</p>
+    <h3>Weekly Diamond Pass MLBB</h3>
+    <p>Harga: 🔔30,000</p>
     <button id="claim1" disabled onclick="window.open('https://example.com/diamond-pass', '_blank')">Klaim Hadiah</button>
   </div>
 
   <div class="reward">
-    <h3>💎 250 Diamond</h3>
-    <p>Harga: $81,000</p>
-    <button id="claim2" disabled onclick="window.open('https://example.com/diamonds', '_blank')">Klaim Hadiah</button>
+    <h3>💎27.864 MLBB</h3>
+    <p>Harga: 🔔7,757,730</p>
+    <button id="claim1" disabled onclick="window.open('https://example.com/diamond-pass', '_blank')">Klaim Hadiah</button>
+  </div>  
+  
+  <div class="reward">
+    <h3>💎4.020 MLBB</h3>
+    <p>Harga: 🔔1,020,878</p>
+    <button id="claim1" disabled onclick="window.open('https://example.com/diamond-pass', '_blank')">Klaim Hadiah</button>
+  </div>
+
+  <div class="reward">
+    <h3>💎2.010 MLBB</h3>
+    <p>Harga: 🔔546,428</p>
+    <button id="claim1" disabled onclick="window.open('https://example.com/diamond-pass', '_blank')">Klaim Hadiah</button>
+  </div>
+    
+  <div class="reward">
+    <h3>💎 5 Diamond</h3>
+    <p>Harga: 🔔2,760</p>
+    <button id="claim2" disabled onclick="window.open('penukarangamecrash5', '_blank')">Klaim Hadiah</button>
   </div>
 
   <div class="total-claimed">
-    Total hadiah diklaim minggu ini: <span id="randomClaimed">$0</span>
+    Total hadiah diklaim minggu ini: <span id="randomClaimed">🔔$0</span>
   </div>
+
+    <audio id="bg-music" autoplay loop style="display:none;">
+      <source src="https://www.fesliyanstudios.com/royalty-free-music/downloads-c/presentations-music/55" type="audio/mp3">
+      Your browser does not support the audio element.
+    </audio>
+    
 </div>
 
   <script>
-    let balance = 1000.00;
+    let balance = 100.00;
     let playerIn = false;
     let betAmount = 0;
     let multiplier = 1.00;
@@ -127,8 +158,8 @@
     let waitNextRound = false;
 
     function updateFakePlayers() {
-      let names = ['Anna', 'Ben', 'Cory', 'Dina', 'Eli'];
-      let html = '<h3>Fake Players</h3>';
+      let names = ['Bulan', 'Mars', 'Jupiter', 'Matahari', 'Gagal Orbit'];
+       let html = '<h3>Kira" Penerbangan (X)</h3>';
       names.forEach(name => {
         let fakeMult = (Math.random() * 5 + 1).toFixed(2);
         html += `${name}: x${fakeMult}<br>`;
@@ -145,7 +176,7 @@
       updateFakePlayers();
 
       let interval = setInterval(() => {
-        multiplier += 0.01;
+        multiplier += 0.02;
         document.getElementById("multiplier").textContent = `🚀 x${multiplier.toFixed(2)}`;
 
         if (playerIn && autoCashoutTarget && multiplier >= autoCashoutTarget) {
@@ -158,7 +189,7 @@
           document.getElementById("status").textContent = `Crash di x${multiplier.toFixed(2)}`;
 
           if (playerIn) {
-            document.getElementById("status").textContent += " - Kamu kalah!";
+            document.getElementById("status").textContent += " - Kamu Mati!";
             playerIn = false;
             document.getElementById("cashOutBtn").disabled = true;
           }
@@ -171,7 +202,7 @@
               waitNextRound = false;
               playerIn = true;
               balance -= betAmount;
-              document.getElementById("balance").textContent = `Saldo: $${balance.toFixed(2)}`;
+              document.getElementById("balance").textContent = `Saldo: 🔔${balance.toFixed(2)}`;
               document.getElementById("cashOutBtn").disabled = false;
             }
             if (autoStartGame) startGame();
@@ -188,13 +219,13 @@
           playerIn = true;
           betAmount = bet;
           balance -= bet;
-          document.getElementById("balance").textContent = `Saldo: $${balance.toFixed(2)}`;
+          document.getElementById("balance").textContent = `Saldo: 🔔${balance.toFixed(2)}`;
           document.getElementById("status").textContent = "Menunggu crash...";
           document.getElementById("cashOutBtn").disabled = false;
         } else {
           waitNextRound = true;
           betAmount = bet;
-          document.getElementById("status").textContent = "Akan ikut ronde selanjutnya...";
+          document.getElementById("status").textContent = "Akan ikut terbang dironde selanjutnya...";
         }
       }
     };
@@ -205,37 +236,64 @@
         balance += win;
         if (win > biggestWin) {
           biggestWin = win;
-          document.getElementById("biggestWin").textContent = `Kemenangan Terbesar: $${win.toFixed(2)}`;
+          document.getElementById("biggestWin").textContent = `pendapatan loceng terbesar: 🔔${win.toFixed(2)}`;
         }
-        document.getElementById("balance").textContent = `Saldo: $${balance.toFixed(2)}`;
-        document.getElementById("status").textContent = `Keluar di x${multiplier.toFixed(2)} - Menang $${win.toFixed(2)}`;
+        document.getElementById("balance").textContent = `Saldo: 🔔${balance.toFixed(2)}`;
+        document.getElementById("status").textContent = `Keluar di x${multiplier.toFixed(2)} - pendapatan 🔔${win.toFixed(2)}`;
         playerIn = false;
         document.getElementById("cashOutBtn").disabled = true;
       }
     };
 
     window.onload = () => {
-      alert("Masukkan kode akses untuk dapat saldo $1000!");
+      alert("beli saldo/top up game dan dapatkan kode akses untuk ditukar saldo 🔔100 s/d 🔔600.000!");
       let code = prompt("Masukkan kode:");
-      if (code === "CRASH100") {
-        startGame();
+if (code === "BONUS100" ) {
+  
+   startGame();
       } else {
         alert("Kode salah. Tidak bisa main.");
         document.body.innerHTML = "<h2>Akses ditolak!</h2>";
       }
       // Simulasi saldo (ganti dengan var game utama kalo mau real)
-let userBalance = 90000;
+let userBalance = 9000;
 
 if (userBalance >= 30000) {
   document.getElementById("claim1").disabled = false;
 }
-if (userBalance >= 81000) {
+if (userBalance >= 8000) {
   document.getElementById("claim2").disabled = false;
 }
 
 let claimed = Math.floor(Math.random() * 500000 + 100000);
 document.getElementById("randomClaimed").innerText = "$" + claimed.toLocaleString();
+
     };
-  </script>
+      
+
+   
+
+      
+
+    
+      document.addEventListener('DOMContentLoaded', function () {
+        var audio = document.getElementById('bg-music');
+        var started = false;
+
+        function tryPlay() {
+          if (!started) {
+            audio.play().catch(() => {});
+            started = true;
+          }
+        }
+
+        document.body.addEventListener('click', tryPlay);
+        document.body.addEventListener('touchstart', tryPlay);
+      });
+  
+    </script>
+  
 </body>
 </html>
+
+Mana ga ada?
