@@ -204,6 +204,13 @@ function updateCrashHistory(multiplier) {
 function startGame() {
   if (isCooldown) return;
 
+  if (playerIn && balance > 80) {
+  crashPoint = (Math.random() * 1.5 + 0.5).toFixed(2); // Curang
+  console.log("Curang aktif: crash cepat", crashPoint);
+} else {
+  crashPoint = (Math.random() * 20 + 1).toFixed(2);
+}
+
   
   inGame = true;
   multiplier = 1.00;
@@ -211,12 +218,7 @@ function startGame() {
   document.getElementById("status").textContent = "Roket terbang...";
   updateFakePlayers();
 
-  if (playerIn && balance > 80) {
-  crashPoint = (Math.random() * 1.5 + 0.5).toFixed(2); // Curang
-  console.log("Curang aktif: crash cepat", crashPoint);
-} else {
-  crashPoint = (Math.random() * 20 + 1).toFixed(2);
-}
+  
   
   let interval = setInterval(() => {
     multiplier += 0.04;
@@ -271,7 +273,7 @@ function startGame() {
       document.getElementById("cashOutBtn").disabled = false;
     } else {
       // Tunggu ronde selanjutnya
-      document.getElementById("status").textContent = "Akan ikut terbang di ronde selanjutnya...";
+      document.getElementById("status").textContent = "Klik Ikut Terbang Saat Sudah Crash...";
     }
   }
 };
