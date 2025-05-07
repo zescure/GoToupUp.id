@@ -163,6 +163,25 @@
   height: 100%;
   object-fit: cover;
 }
+/* overlay teks, awalnya tersembunyi */
+.game-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: .5rem;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-weight: bold;
+  text-align: center;
+  opacity: 0;
+  transition: opacity .2s;
+}
+
+/* tampilkan overlay saat hover */
+.game-card:hover .game-overlay {
+  opacity: 1;
+}
     /* ===== FOOTER ===== */
     footer {
       background-color: #011627;
@@ -255,61 +274,70 @@
     <h3>Semua List Game Mobile</h3>
     <div class="games">
       <div class="game-card">
-        <h4>Mobile Legends Murah</h4>
         <a href="mlbbnew.html">
           <img src="https://imgop.itemku.com/?url=https%3A%2F%2Fd1x91p7vw3vuq8.cloudfront.net%2Fhomepage_shortcut%2F202519%2Fvm41b2ehlqkdi07jdi67k.gif&w=140&q=75" alt="Mobile Legends Promo">
+          <div class="game-overlay">MOBILE LEGENDS MURAH</div>
         </a>
       </div>
       <div class="game-card">
-        <h4>MLBB Event TopUp</h4>
         <a href="mlbbevent.html">
           <img src="https://cdn1.codashop.com/S/content/mobile/images/product-tiles/MLBB-2025-tiles-178x178.jpg" alt="mlbb event">
+          <div class="game-overlay">MLBB EVENT TOPUP</div>
         </a>
       </div>
       <div class="game-card">
         <a href="mobilelegends.html">
           <img src="https://imgop.itemku.com/?url=https%3A%2F%2Fd1x91p7vw3vuq8.cloudfront.net%2Fhomepage_shortcut%2F202519%2Fvm41b2ehlqkdi07jdi67k.gif&w=140&q=75" alt="mobile legends">
+          <div class="game-overlay">MOBILE LEGENDS</div>
         </a>
       </div>
       <div class="game-card">
         <a href="FreeFire.html">
           <img src="https://imgop.itemku.com/?url=https%3A%2F%2Fd1x91p7vw3vuq8.cloudfront.net%2Fhomepage_shortcut%2F202519%2Fma5kbiw1bug56ym7ion6n.gif&w=140&q=75" alt="Free Fire">
+          <div class="game-overlay">FREE FIRE</div>
         </a>
       </div>
       <div class="game-card">
         <a href="PUBGM.html">
           <img src="https://imgop.itemku.com/?url=https%3A%2F%2Fd1x91p7vw3vuq8.cloudfront.net%2Fgame%2F20231116%2Fy4jqgkdbtbd3zfokbvtknb_thumbnail.jpg&w=96&q=75" alt="Honor of Kings">
+          <div class="game-overlay">PUBG Mobile</div>
         </a>
       </div>
       <div class="game-card">
         <a href="genshinipmact.html">
           <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS65SXg_FKzvzKsAFUzQvhur6DD9F-HANwHjA&usqp=CAU" alt="genshin">
+          <div class="game-overlay">GENSHIN IMPACT</div>
         </a>
       </div>
       <div class="game-card">
         <a href="hok.html">
           <img src="https://imgop.itemku.com/?url=https%3A%2F%2Fd1x91p7vw3vuq8.cloudfront.net%2Fhomepage_shortcut%2F202519%2F1gs03kpelpww1xy7dqxsn.gif&w=140&q=75" alt="Free Fire Max">
+          <div class="game-overlay">HONOR OF KING</div>
         </a>
       </div>
       <div class="game-card">
         <a href="supersus.html">
           <img src="https://imgop.itemku.com/?url=https%3A%2F%2Fd1x91p7vw3vuq8.cloudfront.net%2Fgame%2F202421%2Fv63u1dahi1mp7o3nn21s2_thumbnail.webp&w=96&q=75" alt="Free Fire Max">
+          <div class="game-overlay">SUPERSUS</div>
         </a>
       </div>
       <div class="game-card">
         <a href="MCGG.html">
           <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8jzd-vAWwhklQcMTbpQEtJj_12ByL8aXAoNMMQ_goRmRV85HChrO7gKQ&s=10" alt="MCGG">
+          <div class="game-overlay">MAGIC CHESS GOGO</div>
         </a>
       </div>
       <div class="game-card">
         <a href="freefiremax.html">
           <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQthzbcsOjsCsykuN4uk6-pzsnZLoRzcg-pfTpZL-nVYKgcK7eYinXZx78&s=10" alt="Free Fire Max">
+          <div class="game-overlay">FREE FIRE MAX</div>
         </a>
       </div>
         
       <div class="game-card">
         <a href="CODM.html">
           <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCTrkIfW1COaYXrlEnZAyEikcjQs9SFM6SMw&usqp=CAU" alt="CODM">
+          <div class="game-overlay">CALL OF DUTY Mobile</div>
         </a>
       </div>
         </div>
@@ -325,21 +353,25 @@
       <div class="game-card">
         <a href="OvoTopup.html">
           <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSdwwVM1hSxTmNvyMp77-MIj5aJ_LMhRqbI-8bZSu314HWax0z5YgbWTnEo&s=10" alt="Mobile Legends Promo">
+          <div class="game-overlay">DANA</div>
         </a>
       </div>
       <div class="game-card">
         <a href="GopayTopup.html">
           <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTv6vSSxxyXWMqmK35AONac3m1A6smSuoBZUPowFGxPvYuTlwYjLb7jRDI&s=10" alt="Mobile Legends Promo">
+          <div class="game-overlay">GOPAY</div>
         </a>
       </div>
       <div class="game-card">
         <a href="SpayTopup.html">
           <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcReMUxazQD1HTr1N-1JbcMYQfVPK_mxkHxE-vXAU4_CXftvHhcB3q2HdOE_&s=10" alt="Mobile Legends Promo">
+          <div class="game-overlay">SHOPEE PAY</div>
         </a>
       </div>
       <div class="game-card">
         <a href="LinkAjaTopup.html">
           <img src="https://images.seeklogo.com/logo-png/36/1/link-aja-logo-png_seeklogo-363129.png" alt="Mobile Legends Promo">
+          <div class="game-overlay">LINK AJA</div>
         </a>
       </div>
     </div>
