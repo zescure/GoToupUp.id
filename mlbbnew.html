@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Checkout - SipGalaxy</title>
+  <style>
+    /* ===== RESET & BASE ===== */
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family:'Segoe UI',sans-serif;
+      background: radial-gradient(ellipse at top, #001f3f, #000);
+      color:#fff;
+      counter-reset:step;
+    }
+    a { text-decoration:none; color:inherit; }
+    .container {
+      max-width:480px;
+      margin:2rem auto;
+      padding:1rem;
+    }
+    h2 { margin-bottom:1rem; color:#00bfff; }
+
+    /* ===== HEADER ===== */
+    header {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:1rem; background:#011627; position:relative; z-index:1001;
+    }
+    .menu-btn, .login-btn {
+      background:none; border:none;
+      color:#00bfff; font-size:1.6rem; cursor:pointer;
+    }
+    .logo { color:#00bfff; font-size:1.6rem; letter-spacing:2px; }
+
+    /* ===== MOBILE MENU ===== */
+    .mobile-menu {
+      position:fixed; top:0; left:-100%;
+      width:80%; max-width:300px; height:100%;
+      background:#011627; padding:2rem 1rem;
+      transition:left .3s ease; z-index:1000;
+    }
+    .mobile-menu.open { left:0; }
+    .mobile-menu ul { list-style:none; margin-top:2rem; }
+    .mobile-menu li { margin:1.2rem 0; }
+    .mobile-menu a { color:#fff; font-size:1.1rem; }
+
+    /* ===== FORM STEP ===== */
+    .step {
+      background:#022c43; border-radius:6px;
+      margin-bottom:1.5rem; overflow:hidden;
+    }
+    .step-header {
+      background:#00bfff; padding:.8rem 1rem; position:relative;
+    }
+    .step-header::before {
+      content:counter(step); counter-increment:step;
+      position:absolute; left:-18px; top:50%; transform:translateY(-50%);
+      background:#fff; color:#011627;
+      width:28px; height:28px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-weight:bold;
+    }
+    .step-content { padding:1rem; }
+    .step-content label {
+      display:block; margin:.5rem 0 .2rem; font-weight:600;
+    }
+    .step-content input,
+    .step-content select {
+      width:100%; padding:.6rem; border:none;
+      border-radius:4px; font-size:1rem;
+    }
+
+    /* ===== BUTTON ===== */
+    .btn {
+      display:inline-block;
+      background:#00bfff; color:#011627;
+      padding:.7rem 1.5rem; border:none; border-radius:4px;
+      font-size:1rem; cursor:pointer; margin-top:1rem;
+    }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.6); display:none;
+      align-items:center; justify-content:center; z-index:1002;
+    }
+    .modal {
+      background:#fff; color:#011627;
+      border-radius:6px; width:90%; max-width:400px;
+      overflow:hidden;
+    }
+    .modal-header {
+      background:#00bfff; padding:.8rem 1rem;
+      color:#011627; font-weight:bold;
+    }
+    .modal-body { padding:1rem; }
+    .modal-body p { margin:.4rem 0; }
+    .modal-body .total { font-weight:bold; margin-top:.6rem; }
+    .modal-body img {
+      display:block; max-width:200px;
+      margin:1rem auto;
+    }
+    .modal-footer {
+      display:flex; gap:1rem; padding:1rem;
+      justify-content:center;
+    }
+    .modal-footer button {
+      flex:1; padding:.6rem; border:none; border-radius:4px;
+      font-size:1rem; cursor:pointer;
+    }
+    .pay-done { background:#28a745; color:#fff; }
+    .pay-close { background:#6c757d; color:#fff; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <button class="menu-btn">&#9776;</button>
+    <div class="logo">SIPGALAXY</div>
+    <button class="login-btn">Login</button>
+  </header>
+
+  <!-- MOBILE MENU -->
+  <nav class="mobile-menu" id="mobileMenu">
+    <ul>
+      <li><a href="#">Home</a></li>
+      <li><a href="#">Game Mobile</a></li>
+      <li><a href="#">Daftar Harga</a></li>
+      <li><a href="#">Blog</a></li>
+      <li><a href="#">Contact Us</a></li>
+    </ul>
+  </nav>
+
+  <!-- MAIN FORM -->
+  <div class="container">
+    <h2>Checkout Top Up</h2>
+
+    <!-- STEP 1: Data -->
+    <div class="step">
+      <div class="step-header">Masukan Data</div>
+      <div class="step-content">
+        <label for="userId">ID Akun</label>
+        <input type="text" id="userId" placeholder="Masukkan ID">
+        <label for="server">Server</label>
+        <input type="text" id="server" placeholder="Masukkan Server">
+        <label for="whatsapp">No. WhatsApp</label>
+        <input type="text" id="whatsapp" placeholder="628xxxxxxxxxx">
+      </div>
+    </div>
+
+    <!-- STEP 2: Nominal -->
+    <div class="step">
+      <div class="step-header">Pilih Nominal</div>
+      <div class="step-content">
+        <label for="nominal">Diamond</label>
+        <select id="nominal">
+          <option value="12" data-price="3355">12 Diamonds – Rp 3.355</option>
+          <option value="19" data-price="4825">19 Diamonds – Rp 4.825</option>
+          <option value="28" data-price="7241">28 Diamonds – Rp 7.241</option>
+          <option value="44" data-price="9653">44 Diamonds – Rp 9.653</option>
+          <option value="59" data-price="13132">59 Diamonds – Rp 13.132</option>
+          <option value="85" data-price="19162">85 Diamonds – Rp 19.162</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- STEP 3: Pembayaran -->
+    <div class="step">
+      <div class="step-header">Metode Pembayaran</div>
+      <div class="step-content">
+        <select id="payment">
+          <option value="QRIS" data-admin="999">QRIS</option>
+          <option value="BCA" data-admin="500">BCA</option>
+          <option value="ShopeePay" data-admin="0">ShopeePay</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn" id="btnCheckout">Lanjutkan Pembayaran</button>
+  </div>
+
+  <!-- MODAL RINCIAN -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">Rincian Pembayaran</div>
+      <div class="modal-body">
+        <p>ID Akun: <span id="outId"></span></p>
+        <p>Diamond: <span id="outDiam"></span> 💎</p>
+        <p>Harga: Rp <span id="outPrice"></span></p>
+        <p>Biaya Admin: Rp <span id="outAdmin"></span></p>
+        <p class="total">Total: Rp <span id="outTotal"></span></p>
+        <!-- Ganti src dengan QR code yang diinginkan -->
+        <img id="qrCode" src="qris-placeholder.png" alt="QR Code Pembayaran">
+      </div>
+      <div class="modal-footer">
+        <button class="pay-done" id="btnDone">Sudah Bayar</button>
+        <button class="pay-close" id="btnClose">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Toggle mobile menu
+    const menuBtn = document.querySelector('.menu-btn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    menuBtn.addEventListener('click', ()=> mobileMenu.classList.toggle('open'));
+
+    // Checkout → tampilkan modal
+    const btnCheckout = document.getElementById('btnCheckout');
+    const modal = document.getElementById('modalOverlay');
+    btnCheckout.addEventListener('click', ()=>{
+      const id = document.getElementById('userId').value.trim();
+      const server = document.getElementById('server').value.trim();
+      const wa = document.getElementById('whatsapp').value.trim();
+      if(!id||!server||!wa) {
+        return alert('Lengkapi semua data dulu ya.');
+      }
+      // nominal & harga
+      const nomEl = document.getElementById('nominal');
+      const diam = nomEl.value;
+      const price = +nomEl.selectedOptions[0].dataset.price;
+      // payment & admin
+      const payEl = document.getElementById('payment');
+      const pay   = payEl.value;
+      const admin = +payEl.selectedOptions[0].dataset.admin;
+      // isi modal
+      document.getElementById('outId').textContent    = `${id} (Srv: ${server})`;
+      document.getElementById('outDiam').textContent  = diam;
+      document.getElementById('outPrice').textContent = price.toLocaleString('id');
+      document.getElementById('outAdmin').textContent = admin.toLocaleString('id');
+      document.getElementById('outTotal').textContent = (price+admin).toLocaleString('id');
+      // (opsional) ganti QR berdasarkan metode:
+      // document.getElementById('qrCode').src = pay==='BCA'?'bca-qr.png':'qris-placeholder.png';
+      modal.style.display = 'flex';
+    });
+
+    // Tutup modal
+    document.getElementById('btnClose').onclick = ()=>{
+      modal.style.display = 'none';
+    };
+
+    // “Sudah Bayar” → WhatsApp
+    document.getElementById('btnDone').onclick = ()=>{
+      const idVal     = document.getElementById('userId').value.trim();
+      const serverVal = document.getElementById('server').value.trim();
+      const waVal     = document.getElementById('whatsapp').value.trim();
+      const diamVal   = document.getElementById('nominal').value;
+      const payVal    = document.getElementById('payment').value;
+      const priceVal  = +document.getElementById('nominal')
+                             .selectedOptions[0].dataset.price;
+      const adminVal  = +document.getElementById('payment')
+                             .selectedOptions[0].dataset.admin;
+      const totalVal  = priceVal + adminVal;
+
+      const msg = 
+        `Saya sudah order *${diamVal} Diamonds*` +
+        `\nID: ${idVal} (Server: ${serverVal})` +
+        `\nNo. WA: ${waVal}` +
+        `\nMetode: ${payVal}` +
+        `\nTotal bayar: Rp ${totalVal.toLocaleString('id')}`;
+
+      // ganti dengan nomor WA bisnis kamu (format: 628xxx…)
+      const businessWa = '6281234567890';
+      const url = `https://wa.me/${businessWa}?text=` + encodeURIComponent(msg);
+      window.open(url, '_blank');
+    };
+  </script>
+</body>
+</html>
