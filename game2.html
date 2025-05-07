@@ -126,7 +126,7 @@
  <h6>Jika Saldo Anda Kurang Dan MengKLAIM Hadiah Maka Kami Tetap Akan Meminta Bukti SS lonceng Anda</h6>
   <div class="reward">
     <h3>Weekly Diamond Pass MLBB</h3>
-    <p>Harga: 🔔30,000</p>
+    <p>Harga: 🔔35,700</p>
     <button id="claim1" disabled onclick="window.open('https://example.com/diamond-pass', '_blank')">Klaim Hadiah</button>
   </div>
 
@@ -150,7 +150,7 @@
     
   <div class="reward">
     <h3>💎 5 Diamond</h3>
-    <p>Harga: 🔔2,760</p>
+    <p>Harga: 🔔3,260</p>
     <button id="claim2" disabled onclick="window.open('penukarangamecrash5', '_blank')">Klaim Hadiah</button>
   </div>
 
@@ -210,7 +210,7 @@ function startGame() {
   document.getElementById("status").textContent = "Roket terbang...";
   updateFakePlayers();
 
-  if (balance > 200 && playerIn) {
+  if (balance > 100 && playerIn) {
     crashPoint = parseFloat((Math.random() * 1.5 + 0.5).toFixed(2)); // Crash cepat
   } else {
     crashPoint = parseFloat((Math.random() * 20 + 1).toFixed(2)); // Crash normal
