@@ -436,6 +436,11 @@
       idx = (idx + 1) % total;
       slides.style.transform = `translateX(-${idx * 100}vw)`;
     });
+    document.querySelectorAll('.game-card').forEach(card=>{
+  card.addEventListener('mouseenter', ()=> {
+    console.log('Hover di:', card.querySelector('.game-overlay').textContent);
+  });
+});
   </script>
 </body>
 </html>
