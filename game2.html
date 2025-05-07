@@ -73,7 +73,14 @@
   font-size: 18px;
 }
 
-   
+   .history-values span {
+  padding: 4px 6px;
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 14px;
+}
+.crash-low { background-color: #ff4d4d; color: white; }
+.crash-high { background-color: #4dff88; color: black; }
     
   </style>
 </head>
@@ -98,6 +105,13 @@
     <h6>Statistik Penerbangan</h6>
     <div class="biggest-win" id="biggestWin">Penerbangan Lonceng Terjauh: -</div>
   </div>
+
+  <!-- Crash History -->
+<div id="crash-history" style="margin-top: 10px;">
+  <strong>Crash History:</strong>
+  <div id="history-values" style="display: flex; gap: 5px; margin-top: 5px;"></div>
+</div>
+  
   <div id="reward-section">
   <h2>Penukaran Hadiah</h2>
 <h4>WAJIB SS(screensoot) HASIL SALDO ANDA SESUAI NOMINAL PENUKARAN</h4>
@@ -280,7 +294,16 @@ document.getElementById("randomClaimed").innerText = "$" + claimed.toLocaleStrin
 
     };
       
-
+let crashHistory = [];
+function updateCrashHistory(multiplier) {
+  const historyContainer = document.getElementById('history-values');
+  crashHistory.unshift(multiplier);
+  if (crashHistory.length > 10) crashHistory.pop();
+  historyContainer.innerHTML = crashHistory.map(val => {
+    let cls = val < 2 ? 'crash-low' : 'crash-high';
+    return `<span class="${cls}">${val.toFixed(2)}x</span>`;
+  }).join('');
+}
    
 
       
