@@ -207,7 +207,7 @@ function startGame() {
   if (balance > 80 && playerIn) {
   crashPoint = parseFloat((Math.random() * 1.5 + 0.5).toFixed(2)); // Crash cepat
 } else {
-  crashPoint = parseFloat((Math.random() * 5 + 1).toFixed(2)); // Crash normal
+  crashPoint = parseFloat((Math.random() * 5.4 + 1).toFixed(2)); // Crash normal
 }
   
   inGame = true;
@@ -267,7 +267,7 @@ function startGame() {
           betAmount = bet;
           balance -= bet;
           document.getElementById("balance").textContent = `Saldo: 🔔${balance.toFixed(2)}`;
-          document.getElementById("status").textContent = "Menunggu crash...";
+          document.getElementById("status").textContent = "Anda Ikut Terbang...";
           document.getElementById("cashOutBtn").disabled = false;
         } else {
           waitNextRound = true;
