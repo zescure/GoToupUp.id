@@ -126,26 +126,33 @@
       display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem;
     }
     /* CSS */
-.games-grid {
+/* Parent container grid */
+.games {
   display: grid;
-  /* 3 kolom sama lebar */
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.8rem;            /* jarak antar kartu */
-  width: 100%;            /* full lebar parent */
+  grid-template-columns: repeat(3, 1fr); /* 3 kolom rata */
+  gap: 0.5rem;                           /* jarak antar kartu */
+  width: 100%;
+  padding: 0 0.5rem;                     /* optional: sisi container */
+  box-sizing: border-box;
 }
 
+/* Kartu kotak 1:1 */
 .game-card {
-  /* HAPUS width dan max-width */
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;      /* selalu square */
   background: #022c43;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 0 8px rgba(0,191,255,0.3);
 }
 
+/* Gambar memenuhi kotak */
 .game-card img {
-  display: block;
-  width: 100%;            /* memenuhi 1fr */
-  height: auto;
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
     /* ===== FOOTER ===== */
