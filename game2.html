@@ -181,50 +181,8 @@
       document.getElementById("fakePlayers").innerHTML = html;
     }
 
-    function startGame() {
-      if (isCooldown) return;
-      inGame = true;
-      multiplier = 1.00;
-      document.getElementById("multiplier").textContent = `🚀 x${multiplier.toFixed(2)}`;
-      document.getElementById("status").textContent = "Roket terbang...";
-      updateFakePlayers();
+    let crashHistory = [];
 
-      let forceCrash = false;
-
-
-      let interval = setInterval(() => {
-        multiplier += 0.02;
-        document.getElementById("multiplier").textContent = `🚀 x${multiplier.toFixed(2)}`;
-
-        if (playerIn && autoCashoutTarget && multiplier >= autoCashoutTarget) {
-          document.getElementById("cashOutBtn").click();
-        }
-
-        if (multiplier >= crashPoint) {
-          clearInterval(interval);
-        
-          inGame = false;
-          document.getElementById("status").textContent = `Crash di x${multiplier.toFixed(2)}`;
-
-          if (playerIn) {
-            document.getElementById("status").textContent += " - Kamu Mati!";
-            playerIn = false;
-            document.getElementById("cashOutBtn").disabled = true;
-          }
-
-          updateCrashHistory(multiplier);
-          
-          isCooldown = true;
-          setTimeout(() => {
-            isCooldown = false;
-
-            if (balance > 1100 && playerIn) {
-  crashPoint = (Math.random() * 1.5 + 0.5).toFixed(2); // Crash cepat hanya saat user ikut taruhan
-} else {
-  crashPoint = (Math.random() * 10 + 1).toFixed(2); // Crash normal
-}
-
-        let crashHistory = [];
 function updateCrashHistory(multiplier) {
   const historyContainer = document.getElementById('history-values');
   crashHistory.unshift(multiplier);
@@ -234,20 +192,60 @@ function updateCrashHistory(multiplier) {
     return `<span class="${cls}">${val.toFixed(2)}x</span>`;
   }).join('');
 }
-            
-            if (waitNextRound) {
-              waitNextRound = false;
-              playerIn = true;
-              balance -= betAmount;
-              document.getElementById("balance").textContent = `Saldo: 🔔${balance.toFixed(2)}`;
-              document.getElementById("cashOutBtn").disabled = false;
-            }
-            if (autoStartGame) startGame();
-          }, cooldown);
-        }
-      }, 100);
+
+function startGame() {
+  if (isCooldown) return;
+
+  inGame = true;
+  multiplier = 1.00;
+  document.getElementById("multiplier").textContent = `🚀 x${multiplier.toFixed(2)}`;
+  document.getElementById("status").textContent = "Roket terbang...";
+  updateFakePlayers();
+
+  let interval = setInterval(() => {
+    multiplier += 0.02;
+    document.getElementById("multiplier").textContent = `🚀 x${multiplier.toFixed(2)}`;
+
+    if (playerIn && autoCashoutTarget && multiplier >= autoCashoutTarget) {
+      document.getElementById("cashOutBtn").click();
     }
 
+    if (multiplier >= crashPoint) {
+      clearInterval(interval);
+      inGame = false;
+      document.getElementById("status").textContent = `Crash di x${multiplier.toFixed(2)}`;
+
+      if (playerIn) {
+        document.getElementById("status").textContent += " - Kamu Mati!";
+        playerIn = false;
+        document.getElementById("cashOutBtn").disabled = true;
+      }
+
+      updateCrashHistory(multiplier);
+
+      isCooldown = true;
+      setTimeout(() => {
+        isCooldown = false;
+
+        if (balance > 1100 && playerIn) {
+          crashPoint = parseFloat((Math.random() * 1.5 + 0.5).toFixed(2));
+        } else {
+          crashPoint = parseFloat((Math.random() * 10 + 1).toFixed(2));
+        }
+
+        if (waitNextRound) {
+          waitNextRound = false;
+          playerIn = true;
+          balance -= betAmount;
+          document.getElementById("balance").textContent = `Saldo: 🔔${balance.toFixed(2)}`;
+          document.getElementById("cashOutBtn").disabled = false;
+        }
+
+        if (autoStartGame) startGame();
+      }, cooldown);
+    }
+  }, 100);
+}
     document.getElementById("placeBetBtn").onclick = () => {
       let bet = parseFloat(document.getElementById("betAmount").value);
       autoCashoutTarget = parseFloat(document.getElementById("autoCashout").value);
