@@ -94,7 +94,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>Crash by:GOOGLE2 🚀</h1>
+    <h1>Crash by:GOOGLE3 🚀</h1>
     <h7>Gandakan Lonceng Anda Dan Tukar Dengan Hadiah Dibawah</h7>
     <div class="game-info">
       <h5>Saldo Lonceng Anda Dibawah Ini Yang Akan Ditukar Hadiah⬇️!</h5>
@@ -204,11 +204,6 @@ function updateCrashHistory(multiplier) {
 function startGame() {
   if (isCooldown) return;
 
-  if (balance > 80 && waitNextRound) {
-  crashPoint = parseFloat((Math.random() * 1.5 + 0.5).toFixed(2)); // Crash cepat
-} else {
-  crashPoint = parseFloat((Math.random() * 20 + 1).toFixed(2)); // Crash normal
-}
   
   inGame = true;
   multiplier = 1.00;
@@ -216,7 +211,12 @@ function startGame() {
   document.getElementById("status").textContent = "Roket terbang...";
   updateFakePlayers();
 
-  
+  if (playerIn && balance > 80) {
+  crashPoint = (Math.random() * 1.5 + 0.5).toFixed(2); // Curang
+  console.log("Curang aktif: crash cepat", crashPoint);
+} else {
+  crashPoint = (Math.random() * 200 + 1).toFixed(2);
+}
   
   let interval = setInterval(() => {
     multiplier += 0.04;
@@ -245,13 +245,11 @@ function startGame() {
 
     
 
-        if (waitNextRound) {
-          waitNextRound = false;
-          playerIn = true;
-          balance -= betAmount;
-          document.getElementById("balance").textContent = `Saldo: 🔔${balance.toFixed(2)}`;
-          document.getElementById("cashOutBtn").disabled = false;
-        }
+        if (playerIn) {
+  balance -= betAmount;
+  document.getElementById("balance").textContent = `Saldo: 🔔${balance.toFixed(2)}`;
+  document.getElementById("cashOutBtn").disabled = false;
+}
 
         if (autoStartGame) startGame();
       }, cooldown);
@@ -259,23 +257,24 @@ function startGame() {
   }, 100);
 }
     document.getElementById("placeBetBtn").onclick = () => {
-      let bet = parseFloat(document.getElementById("betAmount").value);
-      autoCashoutTarget = parseFloat(document.getElementById("autoCashout").value);
-      if (bet > 0 && bet <= balance && !playerIn) {
-        if (!inGame) {
-          playerIn = true;
-          betAmount = bet;
-          balance -= bet;
-          document.getElementById("balance").textContent = `Saldo: 🔔${balance.toFixed(2)}`;
-          document.getElementById("status").textContent = "Menunggu crash...";
-          document.getElementById("cashOutBtn").disabled = false;
-        } else {
-          waitNextRound = true;
-          betAmount = bet;
-          document.getElementById("status").textContent = "Akan ikut terbang dironde selanjutnya...";
-        }
-      }
-    };
+  let bet = parseFloat(document.getElementById("betAmount").value);
+  autoCashoutTarget = parseFloat(document.getElementById("autoCashout").value);
+
+  if (bet > 0 && bet <= balance && !playerIn) {
+    playerIn = true;              // Tetapkan player ikut, meskipun roket belum jalan
+    betAmount = bet;
+
+    if (!inGame) {
+      balance -= betAmount;
+      document.getElementById("balance").textContent = `Saldo: 🔔${balance.toFixed(2)}`;
+      document.getElementById("status").textContent = "Menunggu crash...";
+      document.getElementById("cashOutBtn").disabled = false;
+    } else {
+      // Tunggu ronde selanjutnya
+      document.getElementById("status").textContent = "Akan ikut terbang di ronde selanjutnya...";
+    }
+  }
+};
 
     document.getElementById("cashOutBtn").onclick = () => {
       if (playerIn && inGame) {
