@@ -64,10 +64,34 @@
     .step-content label {
       display:block; margin:.5rem 0 .2rem; font-weight:600;
     }
-    .step-content input,
-    .step-content select {
+    .step-content input {
       width:100%; padding:.6rem; border:none;
       border-radius:4px; font-size:1rem;
+    }
+
+    /* ===== NOMINAL GRID ===== */
+    .nominal-grid {
+      display:flex; flex-wrap:wrap; gap:1rem;
+      justify-content:center;
+    }
+    .nominal-card {
+      width:100px; background:#022c43;
+      border:2px solid transparent; border-radius:6px;
+      padding:.8rem .5rem; text-align:center;
+      cursor:pointer; box-shadow:0 0 6px rgba(0,191,255,0.3);
+      transition:border .2s;
+    }
+    .nominal-card.selected {
+      border-color:#00bfff;
+    }
+    .nominal-card img {
+      width:40px; height:40px; margin-bottom:.5rem;
+    }
+    .nominal-card .count {
+      font-size:1.1rem; font-weight:bold; margin-bottom:.3rem;
+    }
+    .nominal-card .price {
+      font-size:.85rem; color:#ddd;
     }
 
     /* ===== BUTTON ===== */
@@ -153,15 +177,39 @@
     <div class="step">
       <div class="step-header">Pilih Nominal</div>
       <div class="step-content">
-        <label for="nominal">Diamond</label>
-        <select id="nominal">
-          <option value="12" data-price="3355">12 Diamonds – Rp 3.355</option>
-          <option value="19" data-price="4825">19 Diamonds – Rp 4.825</option>
-          <option value="28" data-price="7241">28 Diamonds – Rp 7.241</option>
-          <option value="44" data-price="9653">44 Diamonds – Rp 9.653</option>
-          <option value="59" data-price="13132">59 Diamonds – Rp 13.132</option>
-          <option value="85" data-price="19162">85 Diamonds – Rp 19.162</option>
-        </select>
+        <div class="nominal-grid" id="nominalGrid">
+          <!-- contoh: ganti src dengan ikon diamond kamu -->
+          <div class="nominal-card" data-value="12" data-price="3355">
+            <img src="https://via.placeholder.com/40?text=💎" alt="Diamond">
+            <div class="count">12</div>
+            <div class="price">Rp 3.355</div>
+          </div>
+          <div class="nominal-card" data-value="19" data-price="4825">
+            <img src="https://via.placeholder.com/40?text=💎" alt="Diamond">
+            <div class="count">19</div>
+            <div class="price">Rp 4.825</div>
+          </div>
+          <div class="nominal-card" data-value="28" data-price="7241">
+            <img src="https://via.placeholder.com/40?text=💎" alt="Diamond">
+            <div class="count">28</div>
+            <div class="price">Rp 7.241</div>
+          </div>
+          <div class="nominal-card" data-value="44" data-price="9653">
+            <img src="https://via.placeholder.com/40?text=💎" alt="Diamond">
+            <div class="count">44</div>
+            <div class="price">Rp 9.653</div>
+          </div>
+          <div class="nominal-card" data-value="59" data-price="13132">
+            <img src="https://via.placeholder.com/40?text=💎" alt="Diamond">
+            <div class="count">59</div>
+            <div class="price">Rp 13.132</div>
+          </div>
+          <div class="nominal-card" data-value="85" data-price="19162">
+            <img src="https://via.placeholder.com/40?text=💎" alt="Diamond">
+            <div class="count">85</div>
+            <div class="price">Rp 19.162</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -190,7 +238,6 @@
         <p>Harga: Rp <span id="outPrice"></span></p>
         <p>Biaya Admin: Rp <span id="outAdmin"></span></p>
         <p class="total">Total: Rp <span id="outTotal"></span></p>
-        <!-- Ganti src dengan QR code yang diinginkan -->
         <img id="qrCode" src="qris-placeholder.png" alt="QR Code Pembayaran">
       </div>
       <div class="modal-footer">
@@ -201,69 +248,69 @@
   </div>
 
   <script>
-    // Toggle mobile menu
+    // toggle mobile menu
     const menuBtn = document.querySelector('.menu-btn');
     const mobileMenu = document.getElementById('mobileMenu');
     menuBtn.addEventListener('click', ()=> mobileMenu.classList.toggle('open'));
 
-    // Checkout → tampilkan modal
-    const btnCheckout = document.getElementById('btnCheckout');
-    const modal = document.getElementById('modalOverlay');
-    btnCheckout.addEventListener('click', ()=>{
-      const id = document.getElementById('userId').value.trim();
-      const server = document.getElementById('server').value.trim();
-      const wa = document.getElementById('whatsapp').value.trim();
-      if(!id||!server||!wa) {
-        return alert('Lengkapi semua data dulu ya.');
-      }
-      // nominal & harga
-      const nomEl = document.getElementById('nominal');
-      const diam = nomEl.value;
-      const price = +nomEl.selectedOptions[0].dataset.price;
-      // payment & admin
+    // nominal selection
+    const cards = document.querySelectorAll('.nominal-card');
+    cards.forEach(card=> card.addEventListener('click', ()=>{
+      cards.forEach(c=> c.classList.remove('selected'));
+      card.classList.add('selected');
+    }));
+
+    // checkout → modal
+    document.getElementById('btnCheckout').onclick = ()=>{
+      const id     = document.getElementById('userId').value.trim();
+      const srv    = document.getElementById('server').value.trim();
+      const wa     = document.getElementById('whatsapp').value.trim();
+      const sel    = document.querySelector('.nominal-card.selected');
+      if(!id||!srv||!wa) return alert('Lengkapi data dulu ya.');
+      if(!sel)       return alert('Pilih nominal diamonds dulu ya.');
+
+      const diam  = sel.dataset.value;
+      const price = +sel.dataset.price;
       const payEl = document.getElementById('payment');
       const pay   = payEl.value;
       const admin = +payEl.selectedOptions[0].dataset.admin;
-      // isi modal
-      document.getElementById('outId').textContent    = `${id} (Srv: ${server})`;
+
+      document.getElementById('outId').textContent    = `${id} (Srv: ${srv})`;
       document.getElementById('outDiam').textContent  = diam;
       document.getElementById('outPrice').textContent = price.toLocaleString('id');
       document.getElementById('outAdmin').textContent = admin.toLocaleString('id');
       document.getElementById('outTotal').textContent = (price+admin).toLocaleString('id');
-      // (opsional) ganti QR berdasarkan metode:
+      // (opsi ganti QR per metode)
       // document.getElementById('qrCode').src = pay==='BCA'?'bca-qr.png':'qris-placeholder.png';
-      modal.style.display = 'flex';
-    });
-
-    // Tutup modal
-    document.getElementById('btnClose').onclick = ()=>{
-      modal.style.display = 'none';
+      document.getElementById('modalOverlay').style.display = 'flex';
     };
 
-    // “Sudah Bayar” → WhatsApp
+    // tutup modal
+    document.getElementById('btnClose').onclick = ()=>{
+      document.getElementById('modalOverlay').style.display = 'none';
+    };
+
+    // sudah bayar → WA
     document.getElementById('btnDone').onclick = ()=>{
       const idVal     = document.getElementById('userId').value.trim();
-      const serverVal = document.getElementById('server').value.trim();
+      const srvVal    = document.getElementById('server').value.trim();
       const waVal     = document.getElementById('whatsapp').value.trim();
-      const diamVal   = document.getElementById('nominal').value;
+      const sel       = document.querySelector('.nominal-card.selected');
+      const diamVal   = sel.dataset.value;
       const payVal    = document.getElementById('payment').value;
-      const priceVal  = +document.getElementById('nominal')
-                             .selectedOptions[0].dataset.price;
-      const adminVal  = +document.getElementById('payment')
-                             .selectedOptions[0].dataset.admin;
+      const priceVal  = +sel.dataset.price;
+      const adminVal  = +document.getElementById('payment').selectedOptions[0].dataset.admin;
       const totalVal  = priceVal + adminVal;
 
-      const msg = 
+      const msg =
         `Saya sudah order *${diamVal} Diamonds*` +
-        `\nID: ${idVal} (Server: ${serverVal})` +
+        `\nID: ${idVal} (Server: ${srvVal})` +
         `\nNo. WA: ${waVal}` +
         `\nMetode: ${payVal}` +
         `\nTotal bayar: Rp ${totalVal.toLocaleString('id')}`;
 
-      // ganti dengan nomor WA bisnis kamu (format: 628xxx…)
-      const businessWa = '6281234567890';
-      const url = `https://wa.me/${businessWa}?text=` + encodeURIComponent(msg);
-      window.open(url, '_blank');
+      const businessWa = '6281234567890'; 
+      window.open(`https://wa.me/${businessWa}?text=`+encodeURIComponent(msg), '_blank');
     };
   </script>
 </body>
