@@ -128,15 +128,14 @@
     /* CSS */
 .games-grid {
   display: grid;
-  /* 3 kolom sama lebar */
+  width: 100%;            /* pastikan grid full lebar container */
   grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;               /* jarak antar kartu */
-  justify-items: center;   /* tiap item di-center-kan */
+  gap: 0.5rem;            /* jarak antar kartu */
 }
 
 .game-card {
-  width: 100%;
-  max-width: 140px;        /* lebar maksimum kartu */
+  width: 100%;            /* kartu mengisi 1fr */
+  /* buang max-width */
   background: #022c43;
   border-radius: 8px;
   overflow: hidden;
