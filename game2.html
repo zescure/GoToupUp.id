@@ -73,20 +73,28 @@
   font-size: 18px;
 }
 
-   .history-values span {
-  padding: 4px 6px;
-  border-radius: 3px;
-  font-weight: bold;
-  font-size: 14px;
-}
-.crash-low { background-color: #ff4d4d; color: white; }
-.crash-high { background-color: #4dff88; color: black; }
+
+  .crash-history {
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  #history-values {
+    display: flex;
+    flex-wrap: wrap; /* Ini bikin isi pindah ke bawah kalau kepanjangan */
+    gap: 5px;
+  }
+
+  .crash-low { color: red; }
+  .crash-high { color: green; }
+
     
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Crash by:GOOGLE3 🚀</h1>
+    <h1>Crash by:GOOGLE4 🚀</h1>
     <h7>Gandakan Lonceng Anda Dan Tukar Dengan Hadiah Dibawah</h7>
     <div class="game-info">
       <h5>Saldo Lonceng Anda Dibawah Ini Yang Akan Ditukar Hadiah⬇️!</h5>
