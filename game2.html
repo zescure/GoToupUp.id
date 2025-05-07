@@ -94,7 +94,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>Crash by:GOOGLE7 🚀</h1>
+    <h1>Crash by:GOOGLE2 🚀</h1>
     <h7>Gandakan Lonceng Anda Dan Tukar Dengan Hadiah Dibawah</h7>
     <div class="game-info">
       <h5>Saldo Lonceng Anda Dibawah Ini Yang Akan Ditukar Hadiah⬇️!</h5>
@@ -204,17 +204,11 @@ function updateCrashHistory(multiplier) {
 function startGame() {
   if (isCooldown) return;
 
-  if (balance > 1100 && playerIn) {
-  crashPoint = (Math.random() * 1.5 + 0.5).toFixed(2);
+  if (balance > 80 && waitNextRound) {
+  crashPoint = parseFloat((Math.random() * 1.5 + 0.5).toFixed(2)); // Crash cepat
 } else {
-  crashPoint = (Math.random() * 10 + 1).toFixed(2);
+  crashPoint = parseFloat((Math.random() * 20 + 1).toFixed(2)); // Crash normal
 }
-  crashPoint = (Math.random() * 1.5 + 0.5).toFixed(2); // Curang
-  console.log("Curang aktif: crash cepat", crashPoint);
-} else {
-  crashPoint = (Math.random() * 20 + 1).toFixed(2);
-}
-
   
   inGame = true;
   multiplier = 1.00;
@@ -255,7 +249,7 @@ function startGame() {
           waitNextRound = false;
           playerIn = true;
           balance -= betAmount;
-          document.getElementById("balance").textContent = Saldo: 🔔${balance.toFixed(2)};
+          document.getElementById("balance").textContent = `Saldo: 🔔${balance.toFixed(2)}`;
           document.getElementById("cashOutBtn").disabled = false;
         }
 
@@ -272,13 +266,13 @@ function startGame() {
           playerIn = true;
           betAmount = bet;
           balance -= bet;
-          document.getElementById("balance").textContent = Saldo: 🔔${balance.toFixed(2)};
+          document.getElementById("balance").textContent = `Saldo: 🔔${balance.toFixed(2)}`;
           document.getElementById("status").textContent = "Menunggu crash...";
           document.getElementById("cashOutBtn").disabled = false;
         } else {
           waitNextRound = true;
           betAmount = bet;
-          document.getElementById("status").textContent = "Klik Ikut Terbang Setelah Game Ini Crash...";
+          document.getElementById("status").textContent = "Klik Ikut Terbang Saat Game Ini Crash(jangan sekarang)...";
         }
       }
     };
@@ -348,5 +342,3 @@ document.getElementById("randomClaimed").innerText = "$" + claimed.toLocaleStrin
   
 </body>
 </html>
-
-
