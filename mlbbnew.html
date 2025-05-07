@@ -238,7 +238,7 @@
             <div class="fee">Admin Rp 999</div>
           </div>
           <div class="payment-card" data-value="QRIS GPN" data-admin="0">
-            <img src="eror404" alt="ShopeePay">
+            <img src="https://c.tenor.com/cgoYGj4rhcUAAAAM/qr-code-codigo-qr.gif" alt="ShopeePay">
             <div class="name">QRIS (gangguan)</div>
             <div class="fee">Admin Rp 0</div>
         </div>
@@ -319,6 +319,8 @@ if (pay === 'DANA') {
   qrCode.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png';
 } else if (pay === 'SHOPEE') {
   qrCode.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjL8xRyiYxTJJCxDisZZJqBpMuBMpq1K7Z_uoTTb1fo-YRCCn4S3UXvYHG3eqjAF8ZFy1ouRKa4S4hHQfbAi_VBlKUWt8nV7ThT8ZzFB_Bw5jrn8stCQ_5oK15Pxd9DjsGUmG7TEmeuW5XApanfO_DeYcWNoMsmhe3uk9_r3zHDvqmVTOTdHXRXL7Y2wPLJ/s320/20250206_101339.jpg';
+} else if (pay === 'GOPAY') {
+  qrCode.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg8_2RYyIoEhSvxVdfI5Op2U0c2Tku6yY0xyyfmyi4-NMd09G4dnGGOCVY7w4WDZzkKSJvVsBM32C_xVE_5Y5Q-YmaTeWBi52Raq3tND8_LFamk76vIVHqrAx84egbI04wvr3DoKLkqM3YuAaPSP-GjV0W4KsJRMQyth_8fcgDk4cUx1ZTWAXoTYAfYU0Mj/s320/20250205_163848.jpg';
 } else {
   qrCode.src = 'qris-placeholder.png';
 }
@@ -351,7 +353,7 @@ if (pay === 'DANA') {
         `\nNo. WA: ${waVal}` +
         `\nMetode: ${payVal}` +
         `\nTotal bayar: Rp ${totalVal.toLocaleString('id')}`;
-      const businessWa = '6281234567890';
+      const businessWa = '6285697747768';
       window.open(`https://wa.me/${businessWa}?text=`+encodeURIComponent(msg),'_blank');
     };
   </script>
