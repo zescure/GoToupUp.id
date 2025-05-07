@@ -128,14 +128,14 @@
     /* CSS */
 .games-grid {
   display: grid;
-  width: 100%;            /* pastikan grid full lebar container */
+  /* 3 kolom sama lebar */
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;            /* jarak antar kartu */
+  gap: 0.8rem;            /* jarak antar kartu */
+  width: 100%;            /* full lebar parent */
 }
 
 .game-card {
-  width: 100%;            /* kartu mengisi 1fr */
-  /* buang max-width */
+  /* HAPUS width dan max-width */
   background: #022c43;
   border-radius: 8px;
   overflow: hidden;
@@ -144,11 +144,10 @@
 
 .game-card img {
   display: block;
-  width: 100%;
+  width: 100%;            /* memenuhi 1fr */
   height: auto;
   object-fit: cover;
 }
-
     /* ===== FOOTER ===== */
     footer {
       background-color: #011627;
