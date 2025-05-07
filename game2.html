@@ -202,6 +202,7 @@
 
         if (multiplier >= crashPoint) {
           clearInterval(interval);
+        
           inGame = false;
           document.getElementById("status").textContent = `Crash di x${multiplier.toFixed(2)}`;
 
@@ -211,6 +212,8 @@
             document.getElementById("cashOutBtn").disabled = true;
           }
 
+          updateCrashHistory(multiplier);
+          
           isCooldown = true;
           setTimeout(() => {
             isCooldown = false;
@@ -221,6 +224,16 @@
   crashPoint = (Math.random() * 10 + 1).toFixed(2); // Crash normal
 }
 
+        let crashHistory = [];
+function updateCrashHistory(multiplier) {
+  const historyContainer = document.getElementById('history-values');
+  crashHistory.unshift(multiplier);
+  if (crashHistory.length > 10) crashHistory.pop();
+  historyContainer.innerHTML = crashHistory.map(val => {
+    let cls = val < 2 ? 'crash-low' : 'crash-high';
+    return `<span class="${cls}">${val.toFixed(2)}x</span>`;
+  }).join('');
+}
             
             if (waitNextRound) {
               waitNextRound = false;
@@ -294,16 +307,7 @@ document.getElementById("randomClaimed").innerText = "$" + claimed.toLocaleStrin
 
     };
       
-let crashHistory = [];
-function updateCrashHistory(multiplier) {
-  const historyContainer = document.getElementById('history-values');
-  crashHistory.unshift(multiplier);
-  if (crashHistory.length > 10) crashHistory.pop();
-  historyContainer.innerHTML = crashHistory.map(val => {
-    let cls = val < 2 ? 'crash-low' : 'crash-high';
-    return `<span class="${cls}">${val.toFixed(2)}x</span>`;
-  }).join('');
-}
+
    
 
       
