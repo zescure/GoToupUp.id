@@ -261,24 +261,23 @@ function startGame() {
   }, 100);
 }
     document.getElementById("placeBetBtn").onclick = () => {
-  let bet = parseFloat(document.getElementById("betAmount").value);
-  autoCashoutTarget = parseFloat(document.getElementById("autoCashout").value);
-
-  if (bet > 0 && bet <= balance && !playerIn) {
-    playerIn = true;              // Tetapkan player ikut, meskipun roket belum jalan
-    betAmount = bet;
-
-    if (!inGame) {
-      balance -= betAmount;
-      document.getElementById("balance").textContent = `Saldo: 🔔${balance.toFixed(2)}`;
-      document.getElementById("status").textContent = "Menunggu crash...";
-      document.getElementById("cashOutBtn").disabled = false;
-    } else {
-      // Tunggu ronde selanjutnya
-      document.getElementById("status").textContent = "Klik Ikut Terbang Saat Sudah Crash...";
-    }
-  }
-};
+      let bet = parseFloat(document.getElementById("betAmount").value);
+      autoCashoutTarget = parseFloat(document.getElementById("autoCashout").value);
+      if (bet > 0 && bet <= balance && !playerIn) {
+        if (!inGame) {
+          playerIn = true;
+          betAmount = bet;
+          balance -= bet;
+          document.getElementById("balance").textContent = Saldo: 🔔${balance.toFixed(2)};
+          document.getElementById("status").textContent = "Menunggu crash...";
+          document.getElementById("cashOutBtn").disabled = false;
+        } else {
+          waitNextRound = true;
+          betAmount = bet;
+          document.getElementById("status").textContent = "Klik Ikut Terbang Setelah Game Ini Crash...";
+        }
+      }
+    };
 
     document.getElementById("cashOutBtn").onclick = () => {
       if (playerIn && inGame) {
