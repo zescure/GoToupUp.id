@@ -210,10 +210,10 @@ function startGame() {
   document.getElementById("status").textContent = "Roket terbang...";
   updateFakePlayers();
 
-  if (balance > 400 && playerIn) {
+  if (balance > 200 && playerIn) {
     crashPoint = parseFloat((Math.random() * 1.5 + 0.5).toFixed(2)); // Crash cepat
   } else {
-    crashPoint = parseFloat((Math.random() * 10 + 1).toFixed(2)); // Crash normal
+    crashPoint = parseFloat((Math.random() * 20 + 1).toFixed(2)); // Crash normal
   }
   
   let interval = setInterval(() => {
