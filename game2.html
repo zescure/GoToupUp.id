@@ -247,11 +247,13 @@ function startGame() {
 
     
 
-        if (playerIn) {
-  balance -= betAmount;
-  document.getElementById("balance").textContent = `Saldo: 🔔${balance.toFixed(2)}`;
-  document.getElementById("cashOutBtn").disabled = false;
-}
+        if (waitNextRound) {
+          waitNextRound = false;
+          playerIn = true;
+          balance -= betAmount;
+          document.getElementById("balance").textContent = Saldo: 🔔${balance.toFixed(2)};
+          document.getElementById("cashOutBtn").disabled = false;
+        }
 
         if (autoStartGame) startGame();
       }, cooldown);
