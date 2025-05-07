@@ -210,6 +210,12 @@ function startGame() {
   document.getElementById("status").textContent = "Roket terbang...";
   updateFakePlayers();
 
+  if (balance > 900 && playerIn) {
+    crashPoint = parseFloat((Math.random() * 1.5 + 0.5).toFixed(2)); // Crash cepat
+  } else {
+    crashPoint = parseFloat((Math.random() * 10 + 1).toFixed(2)); // Crash normal
+  
+  
   let interval = setInterval(() => {
     multiplier += 0.02;
     document.getElementById("multiplier").textContent = `🚀 x${multiplier.toFixed(2)}`;
@@ -235,11 +241,7 @@ function startGame() {
       setTimeout(() => {
         isCooldown = false;
 
-        if (balance > 1100 && playerIn) {
-          crashPoint = parseFloat((Math.random() * 1.5 + 0.5).toFixed(2));
-        } else {
-          crashPoint = parseFloat((Math.random() * 10 + 1).toFixed(2));
-        }
+    
 
         if (waitNextRound) {
           waitNextRound = false;
