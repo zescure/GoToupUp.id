@@ -79,20 +79,21 @@
   object-fit: cover;      /* tetap cover, tetapi rasio sesuai → minim crop */
 }
     .slider-btn {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(0,0,0,0.5);
-      border: none;
-      color: #fff;
-      font-size: 2rem;
-      padding: 0.5rem 0.8rem;
-      cursor: pointer;
-      z-index: 1002;
-      border-radius: 50%;
-    }
-    .slider-btn.prev { left: 1rem; }
-    .slider-btn.next { right: 1rem; }
+  position: absolute;      /* penting agar tombol berada di atas .slider */
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,0.5);
+  border: none;
+  color: #fff;
+  font-size: 2rem;
+  padding: 0.5rem 0.8rem;
+  cursor: pointer;
+  z-index: 10;
+  border-radius: 50%;
+}
+
+.slider-btn.prev { left: 10px; }
+.slider-btn.next { right: 10px; }
 
     /* ===== PROMO ===== */
     .promo {
