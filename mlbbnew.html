@@ -148,7 +148,7 @@
   <header>
     <button class="menu-btn">&#9776;</button>
     <div class="logo">ZESTORE.id</div>
-    <button class="login-btn">mlbb3</button>
+    <button class="login-btn">mlbb4</button>
   </header>
 
   <!-- MOBILE MENU -->
@@ -313,9 +313,15 @@
       document.getElementById('outPrice').textContent = price.toLocaleString('id');
       document.getElementById('outAdmin').textContent = admin.toLocaleString('id');
       document.getElementById('outTotal').textContent = (price+admin).toLocaleString('id');
-      document.getElementById('qrCode').src = pay==='DANA'?'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png':'qris-placeholder.png':
-      pay==='SHOPEE'?'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjL8xRyiYxTJJCxDisZZJqBpMuBMpq1K7Z_uoTTb1fo-YRCCn4S3UXvYHG3eqjAF8ZFy1ouRKa4S4hHQfbAi_VBlKUWt8nV7ThT8ZzFB_Bw5jrn8stCQ_5oK15Pxd9DjsGUmG7TEmeuW5XApanfO_DeYcWNoMsmhe3uk9_r3zHDvqmVTOTdHXRXL7Y2wPLJ/s320/20250206_101339.jpg':'qris-placeholder.png';
-      
+      const qrCode = document.getElementById('qrCode');
+
+if (pay === 'DANA') {
+  qrCode.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png';
+} else if (pay === 'SHOPEE') {
+  qrCode.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjL8xRyiYxTJJCxDisZZJqBpMuBMpq1K7Z_uoTTb1fo-YRCCn4S3UXvYHG3eqjAF8ZFy1ouRKa4S4hHQfbAi_VBlKUWt8nV7ThT8ZzFB_Bw5jrn8stCQ_5oK15Pxd9DjsGUmG7TEmeuW5XApanfO_DeYcWNoMsmhe3uk9_r3zHDvqmVTOTdHXRXL7Y2wPLJ/s320/20250206_101339.jpg';
+} else {
+  qrCode.src = 'qris-placeholder.png';
+}
       // bisa diganti per metode:
       // document.getElementById('qrCode').src = pay==='BCA'?'bca-qr.png':'qris-placeholder.png';
       document.getElementById('modalOverlay').style.display = 'flex';
