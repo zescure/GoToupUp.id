@@ -200,11 +200,14 @@
           isCooldown = true;
           setTimeout(() => {
             isCooldown = false;
-            if (balance > 3000) {
-  crashPoint = (Math.random() * 1.5 + 0.5).toFixed(2); // Crash cepat
+
+            if (balance > 2000 && playerIn) {
+  crashPoint = (Math.random() * 1.5 + 0.5).toFixed(2); // Crash cepat hanya saat user ikut taruhan
 } else {
   crashPoint = (Math.random() * 10 + 1).toFixed(2); // Crash normal
 }
+
+            
             if (waitNextRound) {
               waitNextRound = false;
               playerIn = true;
