@@ -94,7 +94,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>Crash by:GOOGLE5 🚀</h1>
+    <h1>Crash by:GOOGLE7 🚀</h1>
     <h7>Gandakan Lonceng Anda Dan Tukar Dengan Hadiah Dibawah</h7>
     <div class="game-info">
       <h5>Saldo Lonceng Anda Dibawah Ini Yang Akan Ditukar Hadiah⬇️!</h5>
@@ -204,7 +204,11 @@ function updateCrashHistory(multiplier) {
 function startGame() {
   if (isCooldown) return;
 
-  if (playerIn && balance > 80) {
+  if (balance > 1100 && playerIn) {
+  crashPoint = (Math.random() * 1.5 + 0.5).toFixed(2);
+} else {
+  crashPoint = (Math.random() * 10 + 1).toFixed(2);
+}
   crashPoint = (Math.random() * 1.5 + 0.5).toFixed(2); // Curang
   console.log("Curang aktif: crash cepat", crashPoint);
 } else {
