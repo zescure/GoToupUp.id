@@ -217,7 +217,7 @@ function startGame() {
   }
   
   let interval = setInterval(() => {
-    multiplier += 0.02;
+    multiplier += 0.04;
     document.getElementById("multiplier").textContent = `🚀 x${multiplier.toFixed(2)}`;
 
     if (playerIn && autoCashoutTarget && multiplier >= autoCashoutTarget) {
