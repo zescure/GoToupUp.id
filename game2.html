@@ -94,7 +94,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>Crash by:GOOGLE2 🚀</h1>
+    <h1>Crash by:GOOGLE3 🚀</h1>
     <h7>Gandakan Lonceng Anda Dan Tukar Dengan Hadiah Dibawah</h7>
     <div class="game-info">
       <h5>Saldo Lonceng Anda Dibawah Ini Yang Akan Ditukar Hadiah⬇️!</h5>
@@ -204,10 +204,10 @@ function updateCrashHistory(multiplier) {
 function startGame() {
   if (isCooldown) return;
 
-  if (balance > 80 && waitNextRound) {
+  if (balance > 80 && playerIn) {
   crashPoint = parseFloat((Math.random() * 1.5 + 0.5).toFixed(2)); // Crash cepat
 } else {
-  crashPoint = parseFloat((Math.random() * 20 + 1).toFixed(2)); // Crash normal
+  crashPoint = parseFloat((Math.random() * 5 + 1).toFixed(2)); // Crash normal
 }
   
   inGame = true;
