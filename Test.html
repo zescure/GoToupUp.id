@@ -42,53 +42,47 @@
     .mobile-menu {
       position: fixed;
       top: 0; left: -100%;
-      width: 80%;
-      max-width: 300px;
+      width: 80%; max-width: 300px;
       height: 100%;
       background-color: #011627;
       transition: left 0.3s ease;
       z-index: 1000;
       padding: 2rem 1rem;
     }
-    .mobile-menu.open {
-      left: 0;
-    }
-    .mobile-menu ul {
-      list-style: none;
-      margin-top: 2rem;
-    }
-    .mobile-menu ul li {
-      margin: 1.2rem 0;
-    }
-    .mobile-menu ul li a {
-      color: #fff;
-      font-size: 1.1rem;
-    }
+    .mobile-menu.open { left: 0; }
+    .mobile-menu ul { list-style: none; margin-top: 2rem; }
+    .mobile-menu ul li { margin: 1.2rem 0; }
+    .mobile-menu ul li a { color: #fff; font-size: 1.1rem; }
 
-    /* ===== SLIDER ===== */
+    /* ===== MANUAL SLIDER ===== */
     .slider {
       position: relative;
-      width: 100vw;
-      height: 50vh;
+      width: 100vw; height: 50vh;
       overflow: hidden;
     }
     .slides {
       display: flex;
-      width: 300%;
+      transition: transform 0.5s ease;
       height: 100%;
-      animation: slideAnim 15s infinite;
     }
     .slides img {
-      width: 100vw;
-      height: 100%;
-      object-fit: cover;
+      width: 100vw; height: 100%; object-fit: cover;
     }
-    @keyframes slideAnim {
-      0%   { transform: translateX(0%); }
-      33.333%  { transform: translateX(-100%); }
-      66.666%  { transform: translateX(-200%); }
-      100% { transform: translateX(0%); }
+    .slider-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.5);
+      border: none;
+      color: #fff;
+      font-size: 2rem;
+      padding: 0.5rem 0.8rem;
+      cursor: pointer;
+      z-index: 1002;
+      border-radius: 50%;
     }
+    .slider-btn.prev { left: 1rem; }
+    .slider-btn.next { right: 1rem; }
 
     /* ===== PROMO ===== */
     .promo {
@@ -99,17 +93,14 @@
       border-bottom: 1px solid #00bfff;
     }
     .promo h2 {
-      font-size: 1.5rem;
-      margin-bottom: .5rem;
-      color: #00bfff;
+      font-size: 1.5rem; margin-bottom: .5rem; color: #00bfff;
     }
     .promo p { font-size: 1rem; }
     .promo strong { color: #fff; }
 
     /* ===== MENU GAME MOBILE ===== */
     .game-menu {
-      text-align: center;
-      margin: 1.5rem 0;
+      text-align: center; margin: 1.5rem 0;
     }
     .game-menu button {
       padding: .6rem 1.2rem;
@@ -126,32 +117,23 @@
       padding: 0 1rem 2rem;
     }
     .game-list h3 {
-      text-align: center;
-      margin-bottom: 1rem;
-      color: #00bfff;
+      text-align: center; margin-bottom: 1rem; color: #00bfff;
     }
     .games {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 1rem;
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem;
     }
     .game-card {
-      width: 140px;
-      height: 190px;
+      width: 140px; height: 190px;
       background-color: #022c43;
       border-radius: 10px;
       overflow: hidden;
       box-shadow: 0 0 10px #00bfff;
     }
     .game-card a {
-      display: block;
-      width:100%; height:100%;
+      display: block; width:100%; height:100%;
     }
     .game-card img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+      width: 100%; height: 100%; object-fit: cover;
     }
 
     /* ===== FOOTER ===== */
@@ -162,15 +144,11 @@
       font-size: 0.9rem;
     }
     .footer-top {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2rem;
-      justify-content: space-between;
+      display: flex; flex-wrap: wrap;
+      gap: 2rem; justify-content: space-between;
       margin-bottom: 2rem;
     }
-    .footer-top > div {
-      flex: 1; min-width: 200px;
-    }
+    .footer-top > div { flex: 1; min-width: 200px; }
     .footer-top h2, .footer-top h3 {
       color: #00bfff; margin-bottom: .5rem;
     }
@@ -178,24 +156,21 @@
     .footer-top ul { list-style: none; }
     .footer-top ul li { margin: .3rem 0; }
     .social-icons { display: flex; gap: .5rem; }
-    .social-icons img { width:32px; height:32px; object-fit:contain; }
+    .social-icons img {
+      width:32px; height:32px; object-fit:contain;
+    }
 
     .payment { margin-bottom: 1.5rem; }
     .payment h3 {
-      text-align: center;
-      color: #00bfff;
-      margin-bottom: 1rem;
+      text-align: center; color: #00bfff; margin-bottom: 1rem;
     }
     .pay-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(80px,1fr));
-      gap: 1rem;
-      justify-items: center;
-      align-items: center;
+      gap: 1rem; justify-items: center; align-items: center;
     }
     .pay-grid img {
-      max-width: 80px;
-      filter: brightness(1.1);
+      max-width: 80px; filter: brightness(1.1);
     }
 
     .copyright {
@@ -228,9 +203,13 @@
 
   <!-- SLIDER -->
   <section class="slider">
-    <div class="slides">
+    <button class="slider-btn prev" id="prevBtn">&#8249;</button>
+    <div class="slides" id="slides">
       <img src="https://source.unsplash.com/1600x900/?space,galaxy" alt="Slide 1">
-      </div>
+      <img src="https://source.unsplash.com/1600x900/?nebula" alt="Slide 2">
+      <img src="https://source.unsplash.com/1600x900/?stars" alt="Slide 3">
+    </div>
+    <button class="slider-btn next" id="nextBtn">&#8250;</button>
   </section>
 
   <!-- PROMO -->
@@ -337,8 +316,19 @@
     // Toggle mobile menu
     const btn = document.querySelector('.menu-btn');
     const menu = document.getElementById('mobileMenu');
-    btn.addEventListener('click', () => {
-      menu.classList.toggle('open');
+    btn.addEventListener('click', () => menu.classList.toggle('open'));
+
+    // Manual slider
+    const slides = document.getElementById('slides');
+    const total = slides.children.length;
+    let idx = 0;
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      idx = (idx - 1 + total) % total;
+      slides.style.transform = `translateX(-${idx * 100}vw)`;
+    });
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      idx = (idx + 1) % total;
+      slides.style.transform = `translateX(-${idx * 100}vw)`;
     });
   </script>
 </body>
