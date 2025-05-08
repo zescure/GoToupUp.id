@@ -3,132 +3,140 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kalkulator Win Rate MLBB</title>
+  <title>Kalkulator MLBB</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 50px;
-      /* background space yang sama */
-      background: radial-gradient(ellipse at top, #001f3f, #000);
+      background: radial-gradient(circle at top, #001f3f, #000);
       color: #fff;
-      min-height: 100vh;
       margin: 0;
+      padding: 2rem;
+    }
+    .container {
+      max-width: 500px;
+      margin: 1rem auto;
+      background: rgba(255,255,255,0.05);
+      padding: 1.5rem;
+      border-radius: 8px;
     }
     h2 {
-      margin-bottom: 1.5rem;
       color: #00bfff;
+      margin-bottom: 1rem;
+      text-align: center;
     }
-    input, button {
-      padding: 10px;
-      margin: 10px;
+    .section {
+      margin-bottom: 2rem;
+    }
+    .section:last-child {
+      margin-bottom: 0;
+    }
+    .section input[type="number"],
+    .section input[type="range"],
+    .section button {
+      width: calc(100% - 2rem);
+      padding: 0.6rem 1rem;
+      margin: 0.5rem 0;
       border: none;
       border-radius: 4px;
       font-size: 1rem;
     }
-    input {
-      width: 200px;
+    .section input[type="number"] {
       background: rgba(255,255,255,0.1);
       color: #fff;
     }
-    input::placeholder {
+    .section input::placeholder {
       color: rgba(255,255,255,0.6);
     }
-    button {
+    .section button {
       background: #00bfff;
       color: #011627;
       cursor: pointer;
       transition: background .2s;
     }
-    button:hover {
+    .section button:hover {
       background: #0094d6;
     }
-    #hasilWR {
-      margin-top: 1.5rem;
-      font-size: 1.2rem;
+    .result {
+      margin-top: 1rem;
       font-weight: bold;
+      white-space: pre-line;
+    }
+    /* override range slider color */
+    input[type="range"] {
+      -webkit-appearance: none;
+      background: transparent;
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 8px;
+      background: #00bfff;
+      border-radius: 4px;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px; height: 20px;
+      background: #fff; border-radius: 50%;
+      margin-top: -6px;
     }
   </style>
 </head>
+<body>
 
-<!-- HTML -->
-<div class="wr-container">
-  <h2>Kalkulator Target Win Rate MLBB</h2>
-  <div class="wr-form">
+  <div class="container section" id="wr-section">
+    <h2>Target Win Rate MLBB</h2>
     <input id="totalMatch" type="number" placeholder="Total Match Saat Ini"><br>
     <input id="currentWR" type="number" placeholder="Win Rate Saat Ini (%)"><br>
     <input id="targetWR" type="number" placeholder="Target Win Rate (%)"><br>
-    <button id="btnCalc">Hitung Kebutuhan Menang</button>
+    <button id="btnCalcWR">Hitung Kebutuhan Menang</button>
+    <div class="result" id="resultWR"></div>
   </div>
-  <h3 id="resultReq"></h3>
-</div>
 
-<!-- CSS (embed atau di file style.css) -->
-<style>
-  .wr-container {
-    max-width: 400px;
-    margin: 2rem auto;
-    padding: 1rem;
-    background: radial-gradient(ellipse at top, #001f3f, #000);
-    color: #fff;
-    text-align: center;
-    border-radius: 8px;
-  }
-  .wr-container h2 {
-    color: #00bfff;
-    margin-bottom: 1rem;
-  }
-  .wr-form input,
-  .wr-form button {
-    width: calc(100% - 2rem);
-    padding: 10px;
-    margin: 0.5rem 0;
-    border: none;
-    border-radius: 4px;
-    font-size: 1rem;
-  }
-  .wr-form input {
-    background: rgba(255,255,255,0.1);
-    color: #fff;
-  }
-  .wr-form input::placeholder {
-    color: rgba(255,255,255,0.6);
-  }
-  .wr-form button {
-    background: #00bfff;
-    color: #011627;
-    cursor: pointer;
-    transition: background .2s;
-  }
-  .wr-form button:hover {
-    background: #0094d6;
-  }
-  #resultReq {
-    margin-top: 1.5rem;
-    font-size: 1.1rem;
-    font-weight: bold;
-  }
-</style>
+  <div class="container section" id="zodiak-section">
+    <h2>Zodiak Skin MLBB</h2>
+    <label for="progress">Progress saat ini: <span id="progressVal">0</span>/100</label>
+    <input type="range" id="progress" min="0" max="100" value="0"><br>
+    <div class="result" id="resultZodiak"></div>
+  </div>
 
-<!-- JavaScript -->
-<script>
-  document.getElementById('btnCalc').onclick = () => {
-    const M = parseFloat(document.getElementById('totalMatch').value);
-    const current = parseFloat(document.getElementById('currentWR').value) / 100;
-    const target  = parseFloat(document.getElementById('targetWR').value)  / 100;
-    const out = document.getElementById('resultReq');
+  <script>
+    // ==== Kalkulator WR ====
+    document.getElementById('btnCalcWR').onclick = () => {
+      const M = parseFloat(document.getElementById('totalMatch').value);
+      const current = parseFloat(document.getElementById('currentWR').value) / 100;
+      const target  = parseFloat(document.getElementById('targetWR').value)  / 100;
+      const out = document.getElementById('resultWR');
+      if (isNaN(M) || isNaN(current) || isNaN(target) ||
+          M <= 0 || current < 0 || current > 1 || target <= current || target > 1) {
+        out.innerText = "Masukkan data valid:\n- Total > 0\n- 0 ≤ Win Rate saat ini < Target ≤ 100";
+        return;
+      }
+      const W = current * M;
+      const x = Math.ceil((target * M - W) / (1 - target));
+      out.innerText = `Kamu perlu menang ${x} match lagi\nuntuk mencapai ${ (target*100).toFixed(2) }%`;
+    };
 
-    if (isNaN(M) || isNaN(current) || isNaN(target) ||
-        M <= 0 || current < 0 || current > 1 || target <= current || target > 1) {
-      out.innerText = "Masukkan data valid: Target harus > Win Rate saat ini, dan semua angka positif.";
-      return;
+    // ==== Kalkulator Zodiak ====
+    const prog = document.getElementById('progress');
+    const progVal = document.getElementById('progressVal');
+    const outZ = document.getElementById('resultZodiak');
+    function updateZodiak() {
+      const val = parseInt(prog.value);
+      progVal.innerText = val;
+      const sisa = 100 - val;
+      if (sisa <= 0) {
+        outZ.innerText = "Kamu sudah bisa klaim skin Zodiak!";
+        return;
+      }
+      const harga1 = 20, harga5 = 100;
+      const cnt5 = Math.floor(sisa / 5);
+      const cnt1 = sisa % 5;
+      const totalAC = cnt5 * harga5 + cnt1 * harga1;
+      outZ.innerText =
+        `Progress kurang ${sisa} poin\n` +
+        `= ${cnt5} x 5-spin + ${cnt1} x 1-spin\n` +
+        `Total: ${totalAC} Aurora Crystal`;
     }
-
-    // hitung wins sekarang
-    const W = current * M;
-    // x = (t*M - W) / (1 - t)
-    const x = Math.ceil((target * M - W) / (1 - target));
-
-    out.innerText = `Kamu perlu menang *${x}* match lagi untuk mencapai ${ (target*100).toFixed(2) }%`;
-  };
-</script>
+    prog.addEventListener('input', updateZodiak);
+    updateZodiak();
+  </script>
+</body>
+</html>
