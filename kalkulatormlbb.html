@@ -27,12 +27,9 @@
     .section {
       margin-bottom: 2rem;
     }
-    .section:last-child {
-      margin-bottom: 0;
-    }
-    .section input[type="number"],
-    .section input[type="range"],
-    .section button {
+    input[type="number"],
+    input[type="range"],
+    button {
       width: calc(100% - 2rem);
       padding: 0.6rem 1rem;
       margin: 0.5rem 0;
@@ -40,20 +37,20 @@
       border-radius: 4px;
       font-size: 1rem;
     }
-    .section input[type="number"] {
+    input[type="number"] {
       background: rgba(255,255,255,0.1);
       color: #fff;
     }
-    .section input::placeholder {
+    input::placeholder {
       color: rgba(255,255,255,0.6);
     }
-    .section button {
+    button {
       background: #00bfff;
       color: #011627;
       cursor: pointer;
       transition: background .2s;
     }
-    .section button:hover {
+    button:hover {
       background: #0094d6;
     }
     .result {
@@ -61,7 +58,6 @@
       font-weight: bold;
       white-space: pre-line;
     }
-    /* override range slider color */
     input[type="range"] {
       -webkit-appearance: none;
       background: transparent;
@@ -81,6 +77,7 @@
 </head>
 <body>
 
+  <!-- Kalkulator Win Rate -->
   <div class="container section" id="wr-section">
     <h2>Target Win Rate MLBB</h2>
     <input id="totalMatch" type="number" placeholder="Total Match Saat Ini"><br>
@@ -90,6 +87,7 @@
     <div class="result" id="resultWR"></div>
   </div>
 
+  <!-- Kalkulator Zodiak -->
   <div class="container section" id="zodiak-section">
     <h2>Zodiak Skin MLBB</h2>
     <label for="progress">Progress saat ini: <span id="progressVal">0</span>/100</label>
@@ -97,8 +95,16 @@
     <div class="result" id="resultZodiak"></div>
   </div>
 
+  <!-- Kalkulator Skin Legends -->
+  <div class="container section" id="legends-section">
+    <h2>Legends Skin MLBB</h2>
+    <label for="legendProg">Magic Core saat ini: <span id="legendVal">0</span>/200</label>
+    <input type="range" id="legendProg" min="0" max="200" value="0"><br>
+    <div class="result" id="resultLegends"></div>
+  </div>
+
   <script>
-    // ==== Kalkulator WR ====
+    // === Kalkulator WR ===
     document.getElementById('btnCalcWR').onclick = () => {
       const M = parseFloat(document.getElementById('totalMatch').value);
       const current = parseFloat(document.getElementById('currentWR').value) / 100;
@@ -106,15 +112,15 @@
       const out = document.getElementById('resultWR');
       if (isNaN(M) || isNaN(current) || isNaN(target) ||
           M <= 0 || current < 0 || current > 1 || target <= current || target > 1) {
-        out.innerText = "Masukkan data valid:\n- Total > 0\n- 0 ≤ Win Rate saat ini < Target ≤ 100";
+        out.innerText = "Masukkan data valid:\n- Total > 0\n- 0 ≤ WR saat ini < Target ≤ 100";
         return;
       }
       const W = current * M;
       const x = Math.ceil((target * M - W) / (1 - target));
-      out.innerText = `Kamu perlu menang ${x} match lagi\nuntuk mencapai ${ (target*100).toFixed(2) }%`;
+      out.innerText = `Kamu perlu menang ${x} match lagi\nuntuk mencapai ${(target*100).toFixed(2)}%`;
     };
 
-    // ==== Kalkulator Zodiak ====
+    // === Kalkulator Zodiak ===
     const prog = document.getElementById('progress');
     const progVal = document.getElementById('progressVal');
     const outZ = document.getElementById('resultZodiak');
@@ -137,6 +143,38 @@
     }
     prog.addEventListener('input', updateZodiak);
     updateZodiak();
+
+    // === Kalkulator Legends ===
+    const legendSlider = document.getElementById('legendProg');
+    const legendVal = document.getElementById('legendVal');
+    const resultLegend = document.getElementById('resultLegends');
+    function updateLegends() {
+      const val = parseInt(legendSlider.value);
+      legendVal.innerText = val;
+      const sisaCore = 200 - val;
+      if (sisaCore <= 0) {
+        resultLegend.innerText = "Kamu sudah bisa klaim skin Legends!";
+        return;
+      }
+
+      // Probabilitas 5 core tiap spin = 20%
+      // 1 spin berpotensi 1 core = 0.2 * 5 = 1 core per 5-spin
+      // Maka rata-rata 1 core = 1x5spin
+      const avgSpinPerCore = 1 / (0.2 * 5); // 1 core = 1 spin
+      const totalSpin = Math.ceil(sisaCore * avgSpinPerCore);
+
+      const cnt5 = Math.floor(totalSpin / 5);
+      const cnt1 = totalSpin % 5;
+      const totalAC = cnt5 * 270 + cnt1 * 60;
+
+      resultLegend.innerText =
+        `Kurang ${sisaCore} Magic Core\n` +
+        `Estimasi: ${cnt5} x 5-spin + ${cnt1} x 1-spin\n` +
+        `Total: ${totalAC} Aurora Crystal (perkiraan)`;
+    }
+    legendSlider.addEventListener('input', updateLegends);
+    updateLegends();
   </script>
+
 </body>
 </html>
