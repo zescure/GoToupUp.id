@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kalkulator Win Rate MLBB</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+      /* background space yang sama */
+      background: radial-gradient(ellipse at top, #001f3f, #000);
+      color: #fff;
+      min-height: 100vh;
+      margin: 0;
+    }
+    h2 {
+      margin-bottom: 1.5rem;
+      color: #00bfff;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+    input {
+      width: 200px;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+    input::placeholder {
+      color: rgba(255,255,255,0.6);
+    }
+    button {
+      background: #00bfff;
+      color: #011627;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    button:hover {
+      background: #0094d6;
+    }
+    #hasilWR {
+      margin-top: 1.5rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>Kalkulator Win Rate MLBB</h2>
+  <input id="menang" type="number" placeholder="Jumlah Menang"><br>
+  <input id="total" type="number" placeholder="Total Match"><br>
+  <button onclick="hitungWR()">Hitung</button>
+  <h3 id="hasilWR"></h3>
+
+  <script>
+    function hitungWR() {
+      const menang = parseInt(document.getElementById('menang').value);
+      const total = parseInt(document.getElementById('total').value);
+      const out = document.getElementById('hasilWR');
+      if (total > 0 && menang >= 0 && menang <= total) {
+        const wr = ((menang / total) * 100).toFixed(2);
+        out.innerText = `Win Rate: ${wr}%`;
+      } else if (total <= 0) {
+        out.innerText = "Total match harus lebih dari 0.";
+      } else {
+        out.innerText = "Jumlah menang harus antara 0 dan total match.";
+      }
+    }
+  </script>
+</body>
+</html>
