@@ -73,10 +73,108 @@
       background: #fff; border-radius: 50%;
       margin-top: -6px;
     }
+      /* ===== HEADER ===== */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background-color: #011627;
+      position: relative;
+      z-index: 1001;
+    }
+    .menu-btn, .login-btn {
+      background: none;
+      border: none;
+      color: #00bfff;
+      font-size: 1.6rem;
+      cursor: pointer;
+    }
+    .logo {
+      font-size: 1.6rem;
+      color: #00bfff;
+      letter-spacing: 2px;
+    }
+
+    /* ===== MOBILE MENU ===== */
+    .mobile-menu {
+      position: fixed;
+      top: 0; left: -100%;
+      width: 80%; max-width: 300px;
+      height: 100%;
+      background-color: #011627;
+      transition: left 0.3s ease;
+      z-index: 1000;
+      padding: 2rem 1rem;
+    }
+    .mobile-menu.open { left: 0; }
+    .mobile-menu ul { list-style: none; margin-top: 2rem; }
+    .mobile-menu ul li { margin: 1.2rem 0; }
+    .mobile-menu ul li a { color: #fff; font-size: 1.1rem; }
+
+    /* ===== FOOTER ===== */
+    footer {
+      background-color: #011627;
+      color: #fff;
+      padding: 2rem 1rem 1rem;
+      font-size: 0.9rem;
+    }
+    .footer-top {
+      display: flex; flex-wrap: wrap;
+      gap: 2rem; justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+    .footer-top > div { flex: 1; min-width: 200px; }
+    .footer-top h2, .footer-top h3 {
+      color: #00bfff; margin-bottom: .5rem;
+    }
+    .footer-top p { line-height: 1.5; }
+    .footer-top ul { list-style: none; }
+    .footer-top ul li { margin: .3rem 0; }
+    .social-icons { display: flex; gap: .5rem; }
+    .social-icons img {
+      width:32px; height:32px; object-fit:contain;
+    }
+
+    .payment { margin-bottom: 1.5rem; }
+    .payment h3 {
+      text-align: center; color: #00bfff; margin-bottom: 1rem;
+    }
+    .pay-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(80px,1fr));
+      gap: 1rem; justify-items: center; align-items: center;
+    }
+    .pay-grid img {
+      max-width: 80px; filter: brightness(1.1);
+    }
+
+    .copyright {
+      text-align: center;
+      border-top: 1px solid #00bfff;
+      padding-top: .5rem;
+      font-size: .8rem;
+    }
   </style>
 </head>
 <body>
+<!-- HEADER -->
+  <header>
+    <button class="menu-btn">&#9776;</button>
+    <div class="logo">ZESTORE.id</div>
+    <button class="login-btn">Login</button>
+  </header>
 
+  <!-- MOBILE MENU -->
+  <nav class="mobile-menu" id="mobileMenu">
+    <ul>
+      <li><a href="home.html">Home</a></li>
+      <li><a href="MisiTopUp.html">Casback Event</a></li>
+      <li><a href="SpinMlbb12.html">Event Spin Keberuntungan</a></li>
+      <li><a href="TentangZestore.id.html">Tentang Kami</a></li>
+      <li><a href="game2.html">Crash Game by:GOOGLE (Baru)</a></li>
+    </ul>
+  </nav>
   <!-- Kalkulator Win Rate -->
   <div class="container section" id="wr-section">
     <h2>Target Win Rate MLBB</h2>
@@ -102,6 +200,46 @@
     <input type="range" id="legendProg" min="0" max="200" value="0"><br>
     <div class="result" id="resultLegends"></div>
   </div>
+<!-- FOOTER -->
+  <footer>
+    <div class="footer-top">
+      <div class="about">
+        <h2>ZESTORE.id</h2>
+        <p>ZESTORE.id Super Web adalah situs top up game termurah se-Indonesia: flash sale setiap hari, garansi termurah, proses cepat, aman, dan terpercaya.</p>
+      </div>
+      <div class="links">
+        <h3>INFORMASI</h3>
+        <ul>
+          <li><a href="https://wa.me/6283816097956">Contact Us</a></li>
+          <li><a href="misitopup.html">Event</a></li>
+          <li><a href="SpinMlbb12.html">Spin Keberuntungan</a></li>
+          <li><a href="TentangZestore.id.html">Tentang Kami</a></li>
+        </ul>
+      </div>
+      <div class="social">
+        <h3>SOCIAL MEDIA</h3>
+        <div class="social-icons">
+          <a href="https://www.instagram.com/zestore.zcn?igsh=MXMxYnczZmZma255cA=="><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8lv-iEOWtRxGDqsOR-Pa1kIiqN298569zVA&s" alt="Instagram"></a>
+          <a href="https://wa.me/6285697747768"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQz80kPHYo-24g41h-GSvKUa-QJpPlg10aG28ovzacrhlagYU5PevbB6lU6&s=10" alt="WhatsApp"></a>
+          <a href="https://www.tiktok.com/@zeeyaza12?_t=ZS-8w9sxhH5YgC&_r=1"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjQT_Dyh40TZUX8jAmuw8rhrs50YB7fh8qcw&s" alt="Tiktok"></a>
+        </div>
+      </div>
+    </div>
+    <div class="payment">
+      <h3>METODE PEMBAYARAN</h3>
+      <div class="pay-grid">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjBQVrjCixCVpTHx3c6JFYDZR7sIU8XuxFtK02qu4UN6d9YYa9Yxy5jc4o&s=10" alt="BANK TRANSFER">
+        <img src="https://cdn.mobilepulsa.net/img/product/operator_list/140119034905-Dana-01.png" alt="DANA">
+        <img src="https://cdn.mobilepulsa.net/img/logo/pulsa/small/gopay.png" alt="GOPAY">
+        <img src="https://cdn.mobilepulsa.net/img/product/operator_list/140119040045-ovo-01.png" alt="OVO">
+        <img src="https://cdn.mobilepulsa.net/img/product/operator_list/021219030403-shopeepay.jpg" alt="SHOPEEPAY">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJFvJRhLVMS5jVoyiVxDyIbyPBr3xpRlcbRLpYERezodnY8pYLpYRnSns&s=10" alt="ALL QRIS PAYMENT">
+      </div>
+    </div>
+    <div class="copyright">
+      <p>Copyright &copy;2025 Cv.Kreativitas tanpa batas. All rights reserved.</p>
+    </div>
+  </footer>
 
   <script>
     // === Kalkulator WR ===
@@ -174,6 +312,29 @@
     }
     legendSlider.addEventListener('input', updateLegends);
     updateLegends();
+
+      // Toggle mobile menu
+    const btn = document.querySelector('.menu-btn');
+    const menu = document.getElementById('mobileMenu');
+    btn.addEventListener('click', () => menu.classList.toggle('open'));
+
+    // Manual slider
+    const slides = document.getElementById('slides');
+    const total = slides.children.length;
+    let idx = 0;
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      idx = (idx - 1 + total) % total;
+      slides.style.transform = `translateX(-${idx * 100}vw)`;
+    });
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      idx = (idx + 1) % total;
+      slides.style.transform = `translateX(-${idx * 100}vw)`;
+    });
+    document.querySelectorAll('.game-card').forEach(card=>{
+  card.addEventListener('mouseenter', ()=> {
+    console.log('Hover di:', card.querySelector('.game-overlay').textContent);
+  });
+});
   </script>
 
 </body>
