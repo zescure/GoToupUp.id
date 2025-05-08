@@ -1,76 +1,81 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kalkulator Win Rate MLBB</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 50px;
-      /* background space yang sama */
-      background: radial-gradient(ellipse at top, #001f3f, #000);
-      color: #fff;
-      min-height: 100vh;
-      margin: 0;
-    }
-    h2 {
-      margin-bottom: 1.5rem;
-      color: #00bfff;
-    }
-    input, button {
-      padding: 10px;
-      margin: 10px;
-      border: none;
-      border-radius: 4px;
-      font-size: 1rem;
-    }
-    input {
-      width: 200px;
-      background: rgba(255,255,255,0.1);
-      color: #fff;
-    }
-    input::placeholder {
-      color: rgba(255,255,255,0.6);
-    }
-    button {
-      background: #00bfff;
-      color: #011627;
-      cursor: pointer;
-      transition: background .2s;
-    }
-    button:hover {
-      background: #0094d6;
-    }
-    #hasilWR {
-      margin-top: 1.5rem;
-      font-size: 1.2rem;
-      font-weight: bold;
-    }
-  </style>
-</head>
-<body>
-  <h2>Kalkulator Win Rate MLBB</h2>
-  <input id="menang" type="number" placeholder="Jumlah Menang"><br>
-  <input id="total" type="number" placeholder="Total Match"><br>
-  <button onclick="hitungWR()">Hitung</button>
-  <h3 id="hasilWR"></h3>
+<!-- HTML -->
+<div class="wr-container">
+  <h2>Kalkulator Target Win Rate MLBB</h2>
+  <div class="wr-form">
+    <input id="totalMatch" type="number" placeholder="Total Match Saat Ini"><br>
+    <input id="currentWR" type="number" placeholder="Win Rate Saat Ini (%)"><br>
+    <input id="targetWR" type="number" placeholder="Target Win Rate (%)"><br>
+    <button id="btnCalc">Hitung Kebutuhan Menang</button>
+  </div>
+  <h3 id="resultReq"></h3>
+</div>
 
-  <script>
-    function hitungWR() {
-      const menang = parseInt(document.getElementById('menang').value);
-      const total = parseInt(document.getElementById('total').value);
-      const out = document.getElementById('hasilWR');
-      if (total > 0 && menang >= 0 && menang <= total) {
-        const wr = ((menang / total) * 100).toFixed(2);
-        out.innerText = `Win Rate: ${wr}%`;
-      } else if (total <= 0) {
-        out.innerText = "Total match harus lebih dari 0.";
-      } else {
-        out.innerText = "Jumlah menang harus antara 0 dan total match.";
-      }
+<!-- CSS (embed atau di file style.css) -->
+<style>
+  .wr-container {
+    max-width: 400px;
+    margin: 2rem auto;
+    padding: 1rem;
+    background: radial-gradient(ellipse at top, #001f3f, #000);
+    color: #fff;
+    text-align: center;
+    border-radius: 8px;
+  }
+  .wr-container h2 {
+    color: #00bfff;
+    margin-bottom: 1rem;
+  }
+  .wr-form input,
+  .wr-form button {
+    width: calc(100% - 2rem);
+    padding: 10px;
+    margin: 0.5rem 0;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+  .wr-form input {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+  }
+  .wr-form input::placeholder {
+    color: rgba(255,255,255,0.6);
+  }
+  .wr-form button {
+    background: #00bfff;
+    color: #011627;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .wr-form button:hover {
+    background: #0094d6;
+  }
+  #resultReq {
+    margin-top: 1.5rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+  }
+</style>
+
+<!-- JavaScript -->
+<script>
+  document.getElementById('btnCalc').onclick = () => {
+    const M = parseFloat(document.getElementById('totalMatch').value);
+    const current = parseFloat(document.getElementById('currentWR').value) / 100;
+    const target  = parseFloat(document.getElementById('targetWR').value)  / 100;
+    const out = document.getElementById('resultReq');
+
+    if (isNaN(M) || isNaN(current) || isNaN(target) ||
+        M <= 0 || current < 0 || current > 1 || target <= current || target > 1) {
+      out.innerText = "Masukkan data valid: Target harus > Win Rate saat ini, dan semua angka positif.";
+      return;
     }
-  </script>
-</body>
-</html>
+
+    // hitung wins sekarang
+    const W = current * M;
+    // x = (t*M - W) / (1 - t)
+    const x = Math.ceil((target * M - W) / (1 - target));
+
+    out.innerText = `Kamu perlu menang *${x}* match lagi untuk mencapai ${ (target*100).toFixed(2) }%`;
+  };
+</script>
