@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Checkout - Mlbb Zestore</title>
+  <style>
+    /* ===== RESET & BASE ===== */
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family:'Segoe UI',sans-serif;
+      background: radial-gradient(ellipse at top, #001f3f, #000);
+      color:#fff;
+      counter-reset:step;
+    }
+    a { text-decoration:none; color:inherit; }
+    .container {
+      max-width:480px;
+      margin:2rem auto;
+      padding:1rem;
+    }
+    h2 { margin-bottom:1rem; color:#00bfff; }
+
+    /* ===== HEADER ===== */
+    header {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:1rem; background:#011627; position:relative; z-index:1001;
+    }
+    .menu-btn, .login-btn {
+      background:none; border:none;
+      color:#00bfff; font-size:1.6rem; cursor:pointer;
+    }
+    .logo { color:#00bfff; font-size:1.6rem; letter-spacing:2px; }
+
+    /* ===== MOBILE MENU ===== */
+    .mobile-menu {
+      position:fixed; top:0; left:-100%;
+      width:80%; max-width:300px; height:100%;
+      background:#011627; padding:2rem 1rem;
+      transition:left .3s ease; z-index:1000;
+    }
+    .mobile-menu.open { left:0; }
+    .mobile-menu ul { list-style:none; margin-top:2rem; }
+    .mobile-menu li { margin:1.2rem 0; }
+    .mobile-menu a { color:#fff; font-size:1.1rem; }
+
+    /* ===== FORM STEP ===== */
+    .step {
+      background:#022c43; border-radius:6px;
+      margin-bottom:1.5rem; overflow:hidden;
+    }
+    .step-header {
+      background:#00bfff; padding:.8rem 1rem; position:relative;
+    }
+    .step-header::before {
+      content:counter(step); counter-increment:step;
+      position:absolute; left:-18px; top:50%; transform:translateY(-50%);
+      background:#fff; color:#011627;
+      width:28px; height:28px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-weight:bold;
+    }
+    .step-content { padding:1rem; }
+    .step-content label {
+      display:block; margin:.5rem 0 .2rem; font-weight:600;
+    }
+    .step-content input {
+      width:100%; padding:.6rem; border:none;
+      border-radius:4px; font-size:1rem;
+    }
+
+    /* ===== NOMINAL GRID ===== */
+    .nominal-grid,
+    .payment-grid {
+      display:flex; flex-wrap:wrap; gap:1rem;
+      justify-content:center;
+    }
+    .nominal-card,
+    .payment-card {
+      width:100px; background:#022c43;
+      border:2px solid transparent; border-radius:6px;
+      padding:.8rem .5rem; text-align:center;
+      cursor:pointer; box-shadow:0 0 6px rgba(0,191,255,0.3);
+      transition:border .2s;
+    }
+    .nominal-card.selected,
+    .payment-card.selected {
+      border-color:#00bfff;
+    }
+    .nominal-card img,
+    .payment-card img {
+      width:40px; height:40px; margin-bottom:.5rem;
+    }
+    .nominal-card .count,
+    .payment-card .name {
+      font-size:1.1rem; font-weight:bold; margin-bottom:.3rem;
+    }
+    .nominal-card .price,
+    .payment-card .fee {
+      font-size:.85rem; color:#ddd;
+    }
+
+    /* ===== BUTTON ===== */
+    .btn {
+      display:inline-block;
+      background:#00bfff; color:#011627;
+      padding:.7rem 1.5rem; border:none; border-radius:4px;
+      font-size:1rem; cursor:pointer; margin-top:1rem;
+    }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.6); display:none;
+      align-items:center; justify-content:center; z-index:1002;
+    }
+    .modal {
+      background:#fff; color:#011627;
+      border-radius:6px; width:90%; max-width:400px;
+      overflow:hidden;
+    }
+    .modal-header {
+      background:#00bfff; padding:.8rem 1rem;
+      color:#011627; font-weight:bold;
+    }
+    .modal-body { padding:1rem; }
+    .modal-body p { margin:.4rem 0; }
+    .modal-body .total { font-weight:bold; margin-top:.6rem; }
+    .modal-body img {
+      display:block; max-width:200px;
+      margin:1rem auto;
+    }
+    .modal-footer {
+      display:flex; gap:1rem; padding:1rem;
+      justify-content:center;
+    }
+    .modal-footer button {
+      flex:1; padding:.6rem; border:none; border-radius:4px;
+      font-size:1rem; cursor:pointer;
+    }
+    .pay-done { background:#28a745; color:#fff; }
+    .pay-close { background:#6c757d; color:#fff; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <button class="menu-btn">&#9776;</button>
+    <div class="logo">ZESTORE.id</div>
+    <button class="login-btn">mlbb3</button>
+  </header>
+
+  <!-- MOBILE MENU -->
+  <nav class="mobile-menu" id="mobileMenu">
+    <ul>
+      <li><a href="home.html">Home</a></li>
+      
+    </ul>
+  </nav>
+
+  <!-- MAIN FORM -->
+  <div class="container">
+    <h2>Diamonds Mobile Legends Misi Top Up</h2>
+
+    <h5>Top Up Diamond Mobile Legend Kamu Di ZESTORE.id Super Lengkap Super Murah Dan Tanpa Biaya Pajak 11%</h5>
+    <h6>PRODUK INI DIKHUSUSKAN UNTUK EVENT TOP-UP, ARTINYA NOMINAL DIAMOND YANG MASUK SEMUANYA AKAN DI HITUNG TOP UP TANPA BONUS</h6>
+    <h2>.</h2>
+    
+    <!-- STEP 1: Data -->
+    <div class="step">
+      <div class="step-header">Masukan Data</div>
+      <div class="step-content">
+        <label for="userId">ID Akun: contoh1234567890</label>
+        <input type="text" id="userId" placeholder="Masukkan ID">
+        <label for="server">Server: contoh(1234)</label>
+        <input type="text" id="server" placeholder="Masukkan Server">
+        <label for="whatsapp">No. WhatsApp</label>
+        <input type="text" id="whatsapp" placeholder="628xxxxxxxxxx">
+      </div>
+    </div>
+
+    <!-- STEP 2: Nominal -->
+    <div class="step">
+      <div class="step-header">Pilih Nominal</div>
+      <div class="step-content">
+        <div class="nominal-grid" id="nominalGrid">
+          <!-- ganti src dengan ikon actual -->
+          <div class="nominal-card" data-value="20" data-price="8700">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNgWw27UE7l5Zuk9N7_-jkpEre0f-rJ4GXiA&usqp=CAU" alt="Diamond">
+            <div class="count">💎20 full</div>
+            <div class="price">Rp 8.700</div>
+          </div>
+          <div class="nominal-card" data-value="50" data-price="16800">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNgWw27UE7l5Zuk9N7_-jkpEre0f-rJ4GXiA&usqp=CAU" alt="Diamond">
+            <div class="count">💎50 full</div>
+            <div class="price">Rp 16.800</div>
+          </div>
+          <div class="nominal-card" data-value="100" data-price="32000">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNgWw27UE7l5Zuk9N7_-jkpEre0f-rJ4GXiA&usqp=CAU" alt="Diamond">
+            <div class="count">💎100 full</div>
+            <div class="price">Rp 32.000</div>
+          </div>
+          <div class="nominal-card" data-value="250" data-price="76200">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNgWw27UE7l5Zuk9N7_-jkpEre0f-rJ4GXiA&usqp=CAU" alt="Diamond">
+            <div class="count">💎250 full</div>
+            <div class="price">Rp 76.200</div>
+          </div>
+          <div class="nominal-card" data-value="500" data-price="149310">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNgWw27UE7l5Zuk9N7_-jkpEre0f-rJ4GXiA&usqp=CAU" alt="Diamond">
+            <div class="count">💎500 full</div>
+            <div class="price">Rp 149.310</div>
+          </div>
+          <div class="nominal-card" data-value="1000" data-price="292499">
+            <img src="" alt="Diamond">
+            <div class="count">💎1000 full</div>
+            <div class="price">Rp 292.499</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Pembayaran -->
+    <div class="step">
+      <div class="step-header">Metode Pembayaran</div>
+      <div class="step-content">
+        <div class="payment-grid" id="paymentGrid">
+          <!-- ganti src dengan ikon actual -->
+          <div class="payment-card" data-value="DANA" data-admin="0">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwtRpAICKjKIeUmkSVYsuBa0Is2ILtR-gIqDAwtpITkEpoYe77eL_MkFeU&s=10" alt="QRIS">
+            <div class="name">DANA</div>
+            <div class="fee">Admin Rp 0</div>
+          </div>
+          <div class="payment-card" data-value="SHOPEE" data-admin="0">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQj59M90YyJISqGMOLqfowYhJBcdXS0Kdc8sw&usqp=CAU" alt="BCA">
+            <div class="name">SHOPEE</div>
+            <div class="fee">Admin Rp 0</div>
+          </div>
+          <div class="payment-card" data-value="GOPAY" data-admin="0">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZFWac3q1eIf390vB0eAnX9gRbB_afi1czyReIkVhuEaBVoWuK2ivLFvNr&s=10" alt="ShopeePay">
+            <div class="name">GOPAY</div>
+            <div class="fee">Admin Rp 0</div>
+          </div>
+          <div class="payment-card" data-value="QRIS GPN" data-admin="0">
+            <img src="https://c.tenor.com/cgoYGj4rhcUAAAAM/qr-code-codigo-qr.gif" alt="ShopeePay">
+            <div class="name">QRIS (gangguan)</div>
+            <div class="fee">Admin Rp 0</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn" id="btnCheckout">Lanjutkan Pembayaran</button>
+  </div>
+
+  <!-- MODAL RINCIAN -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">Rincian Pembayaran</div>
+      <div class="modal-body">
+        <p>ID Akun: <span id="outId"></span></p>
+        <p>Diamond: <span id="outDiam"></span> 💎</p>
+        <p>Harga: Rp <span id="outPrice"></span></p>
+        <p>Biaya Admin: Rp <span id="outAdmin"></span></p>
+        <p class="total">Total: Rp <span id="outTotal"></span></p>
+        <img id="qrCode" src="qris-placeholder.png" alt="QR Code Pembayaran">
+        <p class="text-sm text-gray-600">Scan QR code di atas untuk melakukan pembayaran</p>  
+      </div>
+      <div class="modal-footer">
+        <button class="pay-done" id="btnDone">Sudah Bayar</button>
+        <button class="pay-close" id="btnClose">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // toggle mobile menu
+    document.querySelector('.menu-btn').onclick = ()=>{
+      document.getElementById('mobileMenu').classList.toggle('open');
+    };
+
+    // pilih nominal
+    document.querySelectorAll('.nominal-card').forEach(c=>{
+      c.onclick = ()=>{
+        document.querySelectorAll('.nominal-card')
+                .forEach(x=> x.classList.remove('selected'));
+        c.classList.add('selected');
+      };
+    });
+
+    // pilih payment
+    document.querySelectorAll('.payment-card').forEach(c=>{
+      c.onclick = ()=>{
+        document.querySelectorAll('.payment-card')
+                .forEach(x=> x.classList.remove('selected'));
+        c.classList.add('selected');
+      };
+    });
+
+    // Lanjutkan → modal
+    document.getElementById('btnCheckout').onclick = ()=>{
+      const id  = document.getElementById('userId').value.trim();
+      const srv = document.getElementById('server').value.trim();
+      const wa  = document.getElementById('whatsapp').value.trim();
+      if(!id||!srv||!wa) return alert('Lengkapi data dulu ya.');
+      const nomSel = document.querySelector('.nominal-card.selected');
+      if(!nomSel) return alert('Pilih nominal diamonds dulu ya.');
+      const paySel = document.querySelector('.payment-card.selected');
+      if(!paySel) return alert('Pilih metode pembayaran dulu ya.');
+
+      const diam  = nomSel.dataset.value;
+      const price = +nomSel.dataset.price;
+      const pay   = paySel.dataset.value;
+      const admin = +paySel.dataset.admin;
+
+      document.getElementById('outId').textContent    = `${id} (Srv: ${srv})`;
+      document.getElementById('outDiam').textContent  = diam;
+      document.getElementById('outPrice').textContent = price.toLocaleString('id');
+      document.getElementById('outAdmin').textContent = admin.toLocaleString('id');
+      document.getElementById('outTotal').textContent = (price+admin).toLocaleString('id');
+      const qrCode = document.getElementById('qrCode');
+
+if (pay === 'DANA') {
+  qrCode.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png';
+} else if (pay === 'SHOPEE') {
+  qrCode.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjL8xRyiYxTJJCxDisZZJqBpMuBMpq1K7Z_uoTTb1fo-YRCCn4S3UXvYHG3eqjAF8ZFy1ouRKa4S4hHQfbAi_VBlKUWt8nV7ThT8ZzFB_Bw5jrn8stCQ_5oK15Pxd9DjsGUmG7TEmeuW5XApanfO_DeYcWNoMsmhe3uk9_r3zHDvqmVTOTdHXRXL7Y2wPLJ/s320/20250206_101339.jpg';
+} else if (pay === 'GOPAY') {
+  qrCode.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg8_2RYyIoEhSvxVdfI5Op2U0c2Tku6yY0xyyfmyi4-NMd09G4dnGGOCVY7w4WDZzkKSJvVsBM32C_xVE_5Y5Q-YmaTeWBi52Raq3tND8_LFamk76vIVHqrAx84egbI04wvr3DoKLkqM3YuAaPSP-GjV0W4KsJRMQyth_8fcgDk4cUx1ZTWAXoTYAfYU0Mj/s320/20250205_163848.jpg';
+} else {
+  qrCode.src = 'qris-placeholder.png';
+}
+      // bisa diganti per metode:
+      // document.getElementById('qrCode').src = pay==='BCA'?'bca-qr.png':'qris-placeholder.png';
+      document.getElementById('modalOverlay').style.display = 'flex';
+    };
+
+    // tutup modal
+    document.getElementById('btnClose').onclick = ()=>{
+      document.getElementById('modalOverlay').style.display = 'none';
+    };
+
+    // Sudah Bayar → WA
+    document.getElementById('btnDone').onclick = ()=>{
+      const idVal   = document.getElementById('userId').value.trim();
+      const srvVal  = document.getElementById('server').value.trim();
+      const waVal   = document.getElementById('whatsapp').value.trim();
+      const nomSel  = document.querySelector('.nominal-card.selected');
+      const paySel  = document.querySelector('.payment-card.selected');
+      const diamVal  = nomSel.dataset.value;
+      const payVal   = paySel.dataset.value;
+      const priceVal = +nomSel.dataset.price;
+      const adminVal = +paySel.dataset.admin;
+      const totalVal = priceVal + adminVal;
+
+      const msg =
+        `Saya sudah order Misi Top Up *${diamVal} Diamonds*` +
+        `\nID: ${idVal} (Server: ${srvVal})` +
+        `\nNo. WA: ${waVal}` +
+        `\nMetode: ${payVal}` +
+        `\nTotal bayar: Rp ${totalVal.toLocaleString('id')}`;
+      const businessWa = '6285697747768';
+      window.open(`https://wa.me/${businessWa}?text=`+encodeURIComponent(msg),'_blank');
+    };
+  </script>
+</body>
+</html>
