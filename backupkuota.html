@@ -54,7 +54,9 @@
     }
 
     .nominal-grid, .payment-grid {
-      display:flex; flex-wrap:wrap; gap:1rem; justify-content:center;
+      display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
     }
     .nominal-card, .payment-card {
       width:100px; background:#022c43; border:2px solid transparent;
