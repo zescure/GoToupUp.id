@@ -146,13 +146,18 @@
       <div class="step-header">Pilih Nominal</div>
       <div class="step-content">
         <div class="nominal-grid" id="nominalGrid">
-          <!-- contoh -->
+          <!-- contoh nominal -->
           <div class="nominal-card" data-value="12" data-price="3355">
             <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNgWw27UE7l5Zuk9N7_-jkpEre0f-rJ4GXiA&usqp=CAU" alt="Diamond">
             <div class="count">12</div>
             <div class="price">Rp 3.355</div>
           </div>
-          <!-- tambahkan lainnya -->
+          <div class="nominal-card" data-value="28" data-price="7241">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNgWw27UE7l5Zuk9N7_-jkpEre0f-rJ4GXiA&usqp=CAU" alt="Diamond">
+            <div class="count">28</div>
+            <div class="price">Rp 7.241</div>
+          </div>
+          <!-- tambahkan lainnya sesuai kebutuhan -->
         </div>
       </div>
     </div>
@@ -163,11 +168,25 @@
       <div class="step-content">
         <div class="payment-grid" id="paymentGrid">
           <div class="payment-card" data-value="DANA" data-admin="999">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwtRpAICKjKIeUmkSVYsuBa0Is2ILtR-gIqDAwtpITkEpoYe77eL_MkFeU&s=10" alt="DANA">
+            <img src="https://example.com/dana.png" alt="DANA">
             <div class="name">DANA</div>
             <div class="fee">Admin Rp 999</div>
           </div>
-          <!-- tambah metode lain -->
+          <div class="payment-card" data-value="SHOPEE" data-admin="999">
+            <img src="https://example.com/shopee.png" alt="ShopeePay">
+            <div class="name">SHOPEE</div>
+            <div class="fee">Admin Rp 999</div>
+          </div>
+          <div class="payment-card" data-value="GOPAY" data-admin="999">
+            <img src="https://example.com/gopay.png" alt="GOPAY">
+            <div class="name">GOPAY</div>
+            <div class="fee">Admin Rp 999</div>
+          </div>
+          <div class="payment-card" data-value="QRIS GPN" data-admin="0">
+            <img src="https://example.com/qris.gif" alt="QRIS">
+            <div class="name">QRIS (gangguan)</div>
+            <div class="fee">Admin Rp 0</div>
+          </div>
         </div>
       </div>
     </div>
@@ -201,25 +220,27 @@
       document.getElementById('mobileMenu').classList.toggle('open');
     };
 
-    // pilih nominal & payment
-    document.querySelectorAll('.nominal-card').forEach(c=>{
-      c.onclick = ()=>{
-        document.querySelectorAll('.nominal-card').forEach(x=>x.classList.remove('selected'));
-        c.classList.add('selected');
-      };
-    });
-    document.querySelectorAll('.payment-card').forEach(c=>{
-      c.onclick = ()=>{
-        document.querySelectorAll('.payment-card').forEach(x=>x.classList.remove('selected'));
+    // pilih nominal
+    document.querySelectorAll('.nominal-card').forEach(c => {
+      c.onclick = () => {
+        document.querySelectorAll('.nominal-card').forEach(x => x.classList.remove('selected'));
         c.classList.add('selected');
       };
     });
 
-    // Checkout → tampilkan modal
-    document.getElementById('btnCheckout').onclick = ()=>{
-      const id  = document.getElementById('userId').value.trim();
-      const wa  = document.getElementById('whatsapp').value.trim();
-      if (!id||!wa) return alert('Lengkapi data ID & WhatsApp dulu ya.');
+    // pilih payment
+    document.querySelectorAll('.payment-card').forEach(c => {
+      c.onclick = () => {
+        document.querySelectorAll('.payment-card').forEach(x => x.classList.remove('selected'));
+        c.classList.add('selected');
+      };
+    });
+
+    // Checkout → modal
+    document.getElementById('btnCheckout').onclick = () => {
+      const id    = document.getElementById('userId').value.trim();
+      const wa    = document.getElementById('whatsapp').value.trim();
+      if (!id || !wa) return alert('Lengkapi data ID & WhatsApp dulu ya.');
       const nomSel = document.querySelector('.nominal-card.selected');
       if (!nomSel) return alert('Pilih nominal diamonds dulu ya.');
       const paySel = document.querySelector('.payment-card.selected');
@@ -239,22 +260,26 @@
       // set QR berdasarkan metode
       const pay = paySel.dataset.value;
       const qr  = document.getElementById('qrCode');
-      if (pay==='DANA') {
+      if (pay === 'DANA') {
         qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png';
+      } else if (pay === 'SHOPEE') {
+        qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjL8xRyiYxTJJCxDisZZJqBpMuBMpq1K7Z_uoTTb1fo-YRCCn4S3UXvYHG3eqjAF8ZFy1ouRKa4S4hHQfbAi_VBlKUWt8nV7ThT8ZzFB_Bw5jrn8stCQ_5oK15Pxd9DjsGUmG7TEmeuW5XApanfO_DeYcWNoMsmhe3uk9_r3zHDvqmVTOTdHXRXL7Y2wPLJ/s320/20250206_101339.jpg';
+      } else if (pay === 'GOPAY') {
+        qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg8_2RYyIoEhSvxVdfI5Op2U0c2Tku6yY0xyyfmyi4-NMd09G4dnGGOCVY7w4WDZzkKSJvVsBM32C_xVE_5Y5Q-YmaTeWBi52Raq3tND8_LFamk76vIVHqrAx84egbI04wvr3DoKLkM3YuAaPSP-GjV0W4KsJRMQyth_8fcgDk4cUx1ZTWAXoTYAfYU0Mj/s320/20250205_163848.jpg';
       } else {
-        qr.src = 'qris-placeholder.png';
+        qr.src = 'https://example.com/qris.gif';
       }
 
       document.getElementById('modalOverlay').style.display = 'flex';
     };
 
     // tutup modal
-    document.getElementById('btnClose').onclick = ()=>{
+    document.getElementById('btnClose').onclick = () => {
       document.getElementById('modalOverlay').style.display = 'none';
     };
 
     // Sudah Bayar → WA
-    document.getElementById('btnDone').onclick = ()=>{
+    document.getElementById('btnDone').onclick = () => {
       const idVal   = document.getElementById('userId').value.trim();
       const waVal   = document.getElementById('whatsapp').value.trim();
       const nomSel  = document.querySelector('.nominal-card.selected');
@@ -265,10 +290,10 @@
       const adminVal= +paySel.dataset.admin;
       const totalVal= priceVal + adminVal;
       const msg =
-        `Saya sudah order *${diamVal} Diamonds*`+
-        `\nID: ${idVal}`+
-        `\nNo. WA: ${waVal}`+
-        `\nMetode: ${payVal}`+
+        `Saya sudah order *${diamVal} Diamonds*` +
+        `\nID: ${idVal}` +
+        `\nNo. WA: ${waVal}` +
+        `\nMetode: ${payVal}` +
         `\nTotal bayar: Rp ${totalVal.toLocaleString('id')}`;
       window.open(
         `https://wa.me/6285697747768?text=` + encodeURIComponent(msg),
