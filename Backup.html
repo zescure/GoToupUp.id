@@ -238,10 +238,10 @@
             <div class="name">GOPAY</div>
             <div class="fee">Admin Rp 999</div>
           </div>
-          <div class="payment-card" data-value="QRIS GPN" data-admin="0">
+          <div class="payment-card" data-value="QRIS GPN" data-admin="670" data-percent="1">
             <img src="https://c.tenor.com/cgoYGj4rhcUAAAAM/qr-code-codigo-qr.gif" alt="ShopeePay">
             <div class="name">QRIS (gangguan)</div>
-            <div class="fee">Admin Rp 0</div>
+            <div class="fee">Admin Rp 670</div>
         </div>
       </div>
     </div>
@@ -307,13 +307,19 @@
       const diam  = nomSel.dataset.value;
       const price = +nomSel.dataset.price;
       const pay   = paySel.dataset.value;
-      const admin = +paySel.dataset.admin;
+      const flatAdmin = parseFloat(paySel.dataset.admin);        // 999
+const percent   = parseFloat(paySel.dataset.percent) / 100; // 1% → 0.01
+// harga diamonds
+const price     = +nomSel.dataset.price;
+// hitung admin fee
+const adminCalc = Math.ceil(flatAdmin + price * percent);
+const total    = price + adminCalc;
 
       document.getElementById('outId').textContent    = `${id} (Srv: ${srv})`;
       document.getElementById('outDiam').textContent  = diam;
       document.getElementById('outPrice').textContent = price.toLocaleString('id');
-      document.getElementById('outAdmin').textContent = admin.toLocaleString('id');
-      document.getElementById('outTotal').textContent = (price+admin).toLocaleString('id');
+      document.getElementById('outAdmin').textContent = adminCalc.toLocaleString('id');
+      document.getElementById('outTotal').textContent = total.toLocaleString('id');
       const qrCode = document.getElementById('qrCode');
 
 if (pay === 'DANA') {
