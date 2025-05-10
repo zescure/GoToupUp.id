@@ -413,26 +413,30 @@
       <div class="step-header">Metode Pembayaran</div>
       <div class="step-content">
         <div class="payment-grid" id="paymentGrid">
-          <!-- ganti src dengan ikon actual -->
-          <div class="payment-card" data-value="DANA" data-admin="999">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwtRpAICKjKIeUmkSVYsuBa0Is2ILtR-gIqDAwtpITkEpoYe77eL_MkFeU&s=10" alt="QRIS">
+          <!-- DANA: flat 999 -->
+          <div class="payment-card" data-value="DANA" data-admin="999" data-percent="0">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwtRpAICKjKIeUmkSVYsuBa0Is2ILtR-gIqDAwtpITkEpoYe77eL_MkFeU&s=10" alt="DANA QR">
             <div class="name">DANA</div>
             <div class="fee">Admin Rp 999</div>
           </div>
-          <div class="payment-card" data-value="SHOPEE" data-admin="999">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQj59M90YyJISqGMOLqfowYhJBcdXS0Kdc8sw&usqp=CAU" alt="BCA">
+          <!-- SHOPEE: flat 999 -->
+          <div class="payment-card" data-value="SHOPEE" data-admin="999" data-percent="0">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQj59M90YyJISqGMOLqfowYhJBcdXS0Kdc8sw&usqp=CAU" alt="ShopeePay">
             <div class="name">SHOPEE</div>
             <div class="fee">Admin Rp 999</div>
           </div>
-          <div class="payment-card" data-value="GOPAY" data-admin="999">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZFWac3q1eIf390vB0eAnX9gRbB_afi1czyReIkVhuEaBVoWuK2ivLFvNr&s=10" alt="ShopeePay">
+          <!-- GOPAY: flat 999 -->
+          <div class="payment-card" data-value="GOPAY" data-admin="999" data-percent="0">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZFWac3q1eIf390vB0eAnX9gRbB_afi1czyReIkVhuEaBVoWuK2ivLFvNr&s=10" alt="GoPay">
             <div class="name">GOPAY</div>
             <div class="fee">Admin Rp 999</div>
           </div>
-          <div class="payment-card" data-value="QRIS GPN" data-admin="0">
-            <img src="https://c.tenor.com/cgoYGj4rhcUAAAAM/qr-code-codigo-qr.gif" alt="ShopeePay">
-            <div class="name">QRIS (gangguan)</div>
-            <div class="fee">Admin Rp 0</div>
+          <!-- QRIS: flat 720 + 1% -->
+          <div class="payment-card" data-value="QRIS" data-admin="720" data-percent="1">
+            <img src="https://c.tenor.com/cgoYGj4rhcUAAAAM/qr-code-codigo-qr.gif" alt="QRIS">
+            <div class="name">QRIS</div>
+            <div class="fee">Admin Rp 720 + 1%</div>
+          </div>
         </div>
       </div>
     </div>
@@ -451,7 +455,6 @@
         <p>Biaya Admin: Rp <span id="outAdmin"></span></p>
         <p class="total">Total: Rp <span id="outTotal"></span></p>
         <img id="qrCode" src="qris-placeholder.png" alt="QR Code Pembayaran">
-        <p class="text-sm text-gray-600">Scan QR code di atas untuk melakukan pembayaran</p>  
       </div>
       <div class="modal-footer">
         <button class="pay-done" id="btnDone">Sudah Bayar</button>
@@ -461,16 +464,16 @@
   </div>
 
   <script>
+  document.addEventListener('DOMContentLoaded', ()=> {
     // toggle mobile menu
-    document.querySelector('.menu-btn').onclick = ()=>{
+    document.querySelector('.menu-btn').onclick = ()=> {
       document.getElementById('mobileMenu').classList.toggle('open');
     };
 
     // pilih nominal
     document.querySelectorAll('.nominal-card').forEach(c=>{
       c.onclick = ()=>{
-        document.querySelectorAll('.nominal-card')
-                .forEach(x=> x.classList.remove('selected'));
+        document.querySelectorAll('.nominal-card').forEach(x=> x.classList.remove('selected'));
         c.classList.add('selected');
       };
     });
@@ -478,76 +481,82 @@
     // pilih payment
     document.querySelectorAll('.payment-card').forEach(c=>{
       c.onclick = ()=>{
-        document.querySelectorAll('.payment-card')
-                .forEach(x=> x.classList.remove('selected'));
+        document.querySelectorAll('.payment-card').forEach(x=> x.classList.remove('selected'));
         c.classList.add('selected');
       };
     });
 
-    // Lanjutkan → modal
-    document.getElementById('btnCheckout').onclick = ()=>{
-      const id  = document.getElementById('userId').value.trim();
-      const srv = document.getElementById('server').value.trim();
-      const wa  = document.getElementById('whatsapp').value.trim();
-      if(!id||!srv||!wa) return alert('Lengkapi data dulu ya.');
+    // Checkout → modal
+    document.getElementById('btnCheckout').onclick = ()=> {
+      const idSel      = document.getElementById('userId').value.trim();
+      const srvSel     = document.getElementById('server').value.trim();
+      const waSel      = document.getElementById('whatsapp').value.trim();
+      if(!idSel||!srvSel||!waSel) return alert('Lengkapi data dulu ya.');
+
       const nomSel = document.querySelector('.nominal-card.selected');
       if(!nomSel) return alert('Pilih nominal diamonds dulu ya.');
       const paySel = document.querySelector('.payment-card.selected');
       if(!paySel) return alert('Pilih metode pembayaran dulu ya.');
 
-      const diam  = nomSel.dataset.value;
-      const price = +nomSel.dataset.price;
-      const pay   = paySel.dataset.value;
-      const admin = +paySel.dataset.admin;
+      const diam      = nomSel.dataset.value;
+      const price     = parseFloat(nomSel.dataset.price);
+      const flatAdmin = parseFloat(paySel.dataset.admin);
+      const percent   = parseFloat(paySel.dataset.percent || 0) / 100;
 
-      document.getElementById('outId').textContent    = `${id} (Srv: ${srv})`;
+      // hitung admin dan total
+      const adminCalc = Math.ceil(flatAdmin + price * percent);
+      const total     = price + adminCalc;
+
+      // update modal
+      document.getElementById('outId').textContent    = `${idSel} (Srv: ${srvSel})`;
       document.getElementById('outDiam').textContent  = diam;
       document.getElementById('outPrice').textContent = price.toLocaleString('id');
-      document.getElementById('outAdmin').textContent = admin.toLocaleString('id');
-      document.getElementById('outTotal').textContent = (price+admin).toLocaleString('id');
-      const qrCode = document.getElementById('qrCode');
+      document.getElementById('outAdmin').textContent = adminCalc.toLocaleString('id');
+      document.getElementById('outTotal').textContent = total.toLocaleString('id');
 
-if (pay === 'DANA') {
-  qrCode.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png';
-} else if (pay === 'SHOPEE') {
-  qrCode.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjL8xRyiYxTJJCxDisZZJqBpMuBMpq1K7Z_uoTTb1fo-YRCCn4S3UXvYHG3eqjAF8ZFy1ouRKa4S4hHQfbAi_VBlKUWt8nV7ThT8ZzFB_Bw5jrn8stCQ_5oK15Pxd9DjsGUmG7TEmeuW5XApanfO_DeYcWNoMsmhe3uk9_r3zHDvqmVTOTdHXRXL7Y2wPLJ/s320/20250206_101339.jpg';
-} else if (pay === 'GOPAY') {
-  qrCode.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg8_2RYyIoEhSvxVdfI5Op2U0c2Tku6yY0xyyfmyi4-NMd09G4dnGGOCVY7w4WDZzkKSJvVsBM32C_xVE_5Y5Q-YmaTeWBi52Raq3tND8_LFamk76vIVHqrAx84egbI04wvr3DoKLkqM3YuAaPSP-GjV0W4KsJRMQyth_8fcgDk4cUx1ZTWAXoTYAfYU0Mj/s320/20250205_163848.jpg';
-} else {
-  qrCode.src = 'qris-placeholder.png';
-}
-      // bisa diganti per metode:
-      // document.getElementById('qrCode').src = pay==='BCA'?'bca-qr.png':'qris-placeholder.png';
+      // set QR code sesuai method
+      const qr = document.getElementById('qrCode');
+      if(paySel.dataset.value === 'DANA') {
+        qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png';
+      } else if(paySel.dataset.value === 'SHOPEE') {
+        qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjL8xRyiYxTJJCxDisZZJqBpMuBMpq1K7Z_uoTTb1fo-YRCCn4S3UXvYHG3eqjAF8ZFy1ouRKa4S4hHQfbAi_VBlKUWt8nV7ThT8ZzFB_Bw5jrn8stCQ_5oK15Pxd9DjsGUmG7TEmeuW5XApanfO_DeYcWNoMsmhe3uk9_r3zHDvqmVTOTdHXRXL7Y2wPLJ/s320/20250206_101339.jpg';
+      } else if(paySel.dataset.value === 'GOPAY') {
+        qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg8_2RYyIoEhSvxVdfI5Op2U0c2Tku6yY0xyyfmyi4-NMd09G4dnGGOCVY7w4WDZzkKSJvVsBM32C_xVE_5Y5Q-YmaTeWBi52Raq3tND8_LFamk76vIVHqrAx84egbI04wvr3DoKLkM3YuAaPSP-GjV0W4KsJRMQyth_8fcgDk4cUx1ZTWAXoTYAfYU0Mj/s320/20250205_163848.jpg';
+      } else {
+        qr.src = 'qris-placeholder.png';
+      }
+
       document.getElementById('modalOverlay').style.display = 'flex';
     };
 
     // tutup modal
-    document.getElementById('btnClose').onclick = ()=>{
+    document.getElementById('btnClose').onclick = ()=> {
       document.getElementById('modalOverlay').style.display = 'none';
     };
 
     // Sudah Bayar → WA
-    document.getElementById('btnDone').onclick = ()=>{
+    document.getElementById('btnDone').onclick = ()=> {
       const idVal   = document.getElementById('userId').value.trim();
       const srvVal  = document.getElementById('server').value.trim();
       const waVal   = document.getElementById('whatsapp').value.trim();
       const nomSel  = document.querySelector('.nominal-card.selected');
       const paySel  = document.querySelector('.payment-card.selected');
-      const diamVal  = nomSel.dataset.value;
-      const payVal   = paySel.dataset.value;
-      const priceVal = +nomSel.dataset.price;
-      const adminVal = +paySel.dataset.admin;
-      const totalVal = priceVal + adminVal;
+      const diamVal = nomSel.dataset.value;
+      const priceVal= parseFloat(nomSel.dataset.price);
+      const flat    = parseFloat(paySel.dataset.admin);
+      const percent = parseFloat(paySel.dataset.percent || 0) / 100;
+      const adminVal= Math.ceil(flat + priceVal * percent);
+      const totalVal= priceVal + adminVal;
 
       const msg =
         `Saya sudah order *${diamVal} Diamonds*` +
         `\nID: ${idVal} (Server: ${srvVal})` +
         `\nNo. WA: ${waVal}` +
-        `\nMetode: ${payVal}` +
+        `\nMetode: ${paySel.dataset.value}` +
         `\nTotal bayar: Rp ${totalVal.toLocaleString('id')}`;
-      const businessWa = '6285697747768';
-      window.open(`https://wa.me/${businessWa}?text=`+encodeURIComponent(msg),'_blank');
+      window.open(`https://wa.me/6285697747768?text=${encodeURIComponent(msg)}`, '_blank');
     };
+  });
   </script>
 </body>
 </html>
