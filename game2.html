@@ -196,7 +196,7 @@ function updateCrashHistory(multiplier) {
   crashHistory.unshift(multiplier);
   if (crashHistory.length > 10) crashHistory.pop();
   historyContainer.innerHTML = crashHistory.map(val => {
-    let cls = val < 2 ? 'crash-low' : 'crash-high';
+    let cls = val < 3 ? 'crash-low' : 'crash-high';
     return `<span class="${cls}">${val.toFixed(2)}x</span>`;
   }).join('');
 }
