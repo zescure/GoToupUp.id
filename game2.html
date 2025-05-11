@@ -204,7 +204,7 @@ function updateCrashHistory(multiplier) {
 function startGame() {
   if (isCooldown) return;
 
-  if (balance > 80 && playerIn) {
+  if (balance > 80000 && playerIn) {
   crashPoint = parseFloat((Math.random() * 1.5 + 0.5).toFixed(2)); // Crash cepat
 } else {
   crashPoint = parseFloat((Math.random() * 8.4 + 1).toFixed(2)); // Crash normal
@@ -295,7 +295,7 @@ function startGame() {
     window.onload = () => {
       alert("beli saldo/top up game dan dapatkan kode akses untuk ditukar saldo 🔔100 s/d 🔔600.000!");
       let code = prompt("Masukkan kode:");
-if (code === "CRASH10" ) {
+if (code === "QWERTY10" ) {
   
    startGame();
       } else {
