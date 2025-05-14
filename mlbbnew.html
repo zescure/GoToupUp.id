@@ -154,24 +154,27 @@
     .pay-done { background:#28a745; color:#fff; }
     .pay-close { background:#6c757d; color:#fff; }
 
-    /* Taruh ini di file CSS-mu */
+
 #btnApplyPromo {
-  display: inline-block;
-  background-color: #007bff; /* samakan dengan .btn */
-  color: #fff;
-  padding: 12px 24px;
+  display: block;
+  width: 100%;              /* melebar penuh dalam container */
+  max-width: 300px;         /* batasi lebar maksimal */
+  margin: 16px auto 0 auto; /* 16px atas, auto kiri-kanan, 0 bawah */
+  padding: 12px 0;          /* vertikal tebal, horizontal nol */
+  background-color: #ADD8E6;/* light blue */
+  color: #fff;              /* teks putih */
   font-size: 1rem;
   font-weight: 600;
   border: none;
-  border-radius: 4px;
-  cursor: pointer;
+  border-radius: 4px;       /* sudut agak membulat */
   text-align: center;
+  cursor: pointer;
 }
 
-/* Hover effect (optional) */
 #btnApplyPromo:hover {
-  background-color: #006ae6;
+  background-color: #9ccfe0; /* sedikit gelap saat hover */
 }
+    
 
 /* Overlay full‐screen */
 .modal-overlay {
