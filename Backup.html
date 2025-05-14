@@ -189,40 +189,48 @@
     <div class="step-header">Metode Pembayaran</div>
     <div class="step-content">
       <div class="payment-grid" id="paymentGrid">
-        <div class="payment-card" data-value="DANA"      data-admin="999"  data-percent="0">
+        <!-- DANA -->
+        <div class="payment-card" data-value="DANA" data-admin="999" data-percent="0">
           <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwtRpAICKjKIeUmkSVYsuBa0Is2ILtR-gIqDAwtpITkEpoYe77eL_MkFeU&s=10" alt="DANA">
           <div class="name">DANA</div><div class="fee">Admin Rp 999</div>
         </div>
-        <div class="payment-card" data-value="SHOPEE"   data-admin="999"  data-percent="0">
+        <!-- SHOPEE -->
+        <div class="payment-card" data-value="SHOPEE" data-admin="999" data-percent="0">
           <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQj59M90YyJISqGMOLqfowYhJBcdXS0Kdc8sw&usqp=CAU" alt="ShopeePay">
           <div class="name">SHOPEE</div><div class="fee">Admin Rp 999</div>
         </div>
-        <div class="payment-card" data-value="GOPAY"    data-admin="999"  data-percent="0">
+        <!-- GOPAY -->
+        <div class="payment-card" data-value="GOPAY" data-admin="999" data-percent="0">
           <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZFWac3q1eIf390vB0eAnX9gRbB_afi1czyReIkVhuEaBVoWuK2ivLFvNr&s=10" alt="GoPay">
           <div class="name">GOPAY</div><div class="fee">Admin Rp 999</div>
         </div>
-        <div class="payment-card" data-value="QRIS"     data-admin="720"  data-percent="1">
+        <!-- QRIS -->
+        <div class="payment-card" data-value="QRIS" data-admin="720" data-percent="1">
           <img src="https://c.tenor.com/cgoYGj4rhcUAAAAM/qr-code-codigo-qr.gif" alt="QRIS">
           <div class="name">QRIS</div><div class="fee">Admin Rp 720 + 1%</div>
         </div>
-        <div class="payment-card" data-value="VA"       data-admin="0"    data-percent="0" id="vaCard">
-          <img src="https://example.com/va-logo.png" alt="Virtual Account">
-          <div class="name">Virtual Account</div><div class="fee">Admin Rp 0</div>
+        <!-- VA BRI -->
+        <div class="payment-card" data-value="VA_BRI" data-admin="2500" data-percent="0" id="vaBRICard">
+          <img src="https://example.com/bri-logo.png" alt="VA BRI">
+          <div class="name">VA BRI</div><div class="fee">Pot. Rp 2.500</div>
           <div class="min-info">Min. Rp 10.000</div>
         </div>
-        <div class="payment-card" data-value="ALFAMART" data-admin="3000" data-percent="0" id="alfamartCard">
-          <img src="https://example.com/alfamart-logo.png" alt="Alfamart">
-          <div class="name">Alfamart</div><div class="fee">Admin Rp 3.000</div>
+        <!-- VA BCA -->
+        <div class="payment-card" data-value="VA_BCA" data-admin="2500" data-percent="0" id="vaBCACard">
+          <img src="https://example.com/bca-logo.png" alt="VA BCA">
+          <div class="name">VA BCA</div><div class="fee">Pot. Rp 2.500</div>
+          <div class="min-info">Min. Rp 10.000</div>
         </div>
-        <div class="payment-card" data-value="INDOMARET" data-admin="3000" data-percent="0" id="indomaretCard">
-          <img src="https://example.com/indomaret-logo.png" alt="Indomaret">
-          <div class="name">Indomaret</div><div class="fee">Admin Rp 3.000</div>
+        <!-- VA Mandiri -->
+        <div class="payment-card" data-value="VA_MANDIRI" data-admin="2500" data-percent="0" id="vaMandiriCard">
+          <img src="https://example.com/mandiri-logo.png" alt="VA Mandiri">
+          <div class="name">VA Mandiri</div><div class="fee">Pot. Rp 2.500</div>
+          <div class="min-info">Min. Rp 10.000</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Tombol Checkout -->
   <button class="btn" id="btnCheckout">Lanjutkan Pembayaran</button>
 
   <!-- MODAL RINCIAN -->
@@ -236,15 +244,15 @@
         <p>Biaya Admin: Rp <span id="outAdmin"></span></p>
         <p class="total">Total: Rp <span id="outTotal"></span></p>
 
-        <!-- QR Code Section -->
+        <!-- QR Section -->
         <div id="qrSection">
           <img id="qrCode" src="qris-placeholder.png" alt="QR Code Pembayaran">
         </div>
 
-        <!-- Virtual Account Section -->
+        <!-- VA Section -->
         <div id="vaSection" style="display:none;">
-          <p><strong>No. Rekening Virtual Account</strong></p>
-          <p id="vaNumber">9888-3081-0216-1147</p>
+          <p><strong id="vaBankName">Virtual Account</strong></p>
+          <p id="vaNumber"></p>
           <p><strong>Catatan:</strong></p>
           <ul>
             <li>Topup via VA kena potongan Rp 2.500</li>
@@ -254,171 +262,163 @@
             <summary>Petunjuk Transfer ATM</summary>
             <ol>
               <li>Pilih Transaksi Lainnya → Transfer</li>
-              <li>Pilih Rekening Tabungan → Rekening BNI Anda</li>
+              <li>Pilih Rekening Tabungan → Rekening Bank Anda</li>
               <li>Masukkan nomor VA + nominal topup</li>
               <li>Pastikan nama: Topup SC 122161147</li>
-              <li>Selesaikan transfer, saldo akan bertambah otomatis</li>
+              <li>Selesai & saldo bertambah otomatis</li>
             </ol>
           </details>
           <details>
-            <summary>Petunjuk Transfer Internet Banking</summary>
+            <summary>Petunjuk Internet Banking</summary>
             <ol>
-              <li>Login Internet Banking BNI</li>
+              <li>Login Internet Banking</li>
               <li>Pilih Transfer → Virtual Account Billing</li>
-              <li>Masukkan nomor VA + nominal topup</li>
-              <li>Konfirmasi dan selesai</li>
+              <li>Masukkan nomor VA + nominal</li>
+              <li>Selesaikan transaksi</li>
             </ol>
           </details>
           <details>
-            <summary>Petunjuk Transfer Mobile Banking</summary>
+            <summary>Petunjuk Mobile Banking</summary>
             <ol>
-              <li>Login BNI Mobile Banking</li>
-              <li>Pilih m-Transfer → BNI Virtual Account</li>
-              <li>Masukkan nomor VA + nominal topup</li>
-              <li>Konfirmasi dan selesai</li>
+              <li>Login Mobile Banking</li>
+              <li>Pilih m-Transfer → Virtual Account</li>
+              <li>Masukkan nomor VA + nominal</li>
+              <li>Selesaikan transaksi</li>
             </ol>
           </details>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="pay-done" id="btnDone">Sudah Bayar</button>
-        <button class="pay-close" id="btnClose">Tutup</button>
+        <button id="btnDone">Sudah Bayar</button>
+        <button id="btnClose">Tutup</button>
       </div>
     </div>
   </div>
 
   <script>
-  document.addEventListener('DOMContentLoaded', ()=> {
-    // elemen
-    const nominalCards   = document.querySelectorAll('.nominal-card');
-    const paymentCards   = document.querySelectorAll('.payment-card');
-    const vaCard         = document.getElementById('vaCard');
-    const alfCard        = document.getElementById('alfamartCard');
-    const indoCard       = document.getElementById('indomaretCard');
-    const qrSection      = document.getElementById('qrSection');
-    const vaSection      = document.getElementById('vaSection');
+    document.addEventListener('DOMContentLoaded', ()=> {
+      const nominalCards = document.querySelectorAll('.nominal-card');
+      const paymentCards = document.querySelectorAll('.payment-card');
+      const vaCards = [
+        document.getElementById('vaBRICard'),
+        document.getElementById('vaBCACard'),
+        document.getElementById('vaMandiriCard')
+      ];
+      const qrSection = document.getElementById('qrSection');
+      const vaSection = document.getElementById('vaSection');
+      const vaBankName = document.getElementById('vaBankName');
+      const vaNumber   = document.getElementById('vaNumber');
 
-    // daftar nominal disable spesifik
-    const disableAlfa = [25000, 37000, 41000, 68000, 250000];
-    const disableIndo = [102000, 350000, 580000, 744000, 989000];
+      // mapping VA → nomor rekening
+      const vaData = {
+        VA_BRI:     { name: 'Bank BRI Virtual Account',     number: '8888-1234-5678-0001' },
+        VA_BCA:     { name: 'Bank BCA Virtual Account',     number: '2222-2345-6789-0002' },
+        VA_MANDIRI: { name: 'Bank Mandiri Virtual Account', number: '3333-3456-7890-0003' }
+      };
 
-    // pilih nominal
-    nominalCards.forEach(c => {
-      c.onclick = ()=>{
-        nominalCards.forEach(x=> x.classList.remove('selected'));
-        c.classList.add('selected');
-        updatePaymentOptions();
+      // pilih nominal
+      nominalCards.forEach(c=>{
+        c.onclick = ()=>{
+          nominalCards.forEach(x=> x.classList.remove('selected'));
+          c.classList.add('selected');
+          const price = parseFloat(c.dataset.price);
+          // disable semua VA kalau < 10000
+          vaCards.forEach(vc=>{
+            if(price < 10000) {
+              vc.classList.add('disabled');
+              vc.classList.remove('selected');
+            } else {
+              vc.classList.remove('disabled');
+            }
+          });
+        };
+      });
+
+      // pilih payment
+      paymentCards.forEach(c=>{
+        c.onclick = ()=>{
+          if(c.classList.contains('disabled')) return;
+          paymentCards.forEach(x=> x.classList.remove('selected'));
+          c.classList.add('selected');
+        };
+      });
+
+      // Checkout → modal
+      document.getElementById('btnCheckout').onclick = ()=>{
+        const idSel = document.getElementById('userId').value.trim();
+        const srvSel= document.getElementById('server').value.trim();
+        const waSel = document.getElementById('whatsapp').value.trim();
+        if(!idSel||!srvSel||!waSel) return alert('Lengkapi data dulu ya.');
+
+        const nomSel = document.querySelector('.nominal-card.selected');
+        if(!nomSel) return alert('Pilih nominal diamonds dulu ya.');
+        const paySel = document.querySelector('.payment-card.selected');
+        if(!paySel) return alert('Pilih metode pembayaran dulu ya.');
+
+        const price     = parseFloat(nomSel.dataset.price);
+        const flatAdmin = parseFloat(paySel.dataset.admin);
+        const percent   = parseFloat(paySel.dataset.percent||0)/100;
+        const adminCalc = Math.ceil(flatAdmin + price*percent);
+        const total     = price + adminCalc;
+
+        // isi teks modal
+        document.getElementById('outId').textContent    = `${idSel} (Srv: ${srvSel})`;
+        document.getElementById('outDiam').textContent  = nomSel.dataset.value;
+        document.getElementById('outPrice').textContent = price.toLocaleString('id');
+        document.getElementById('outAdmin').textContent = adminCalc.toLocaleString('id');
+        document.getElementById('outTotal').textContent = total.toLocaleString('id');
+
+        // show QR atau VA panel
+        if(paySel.dataset.value.startsWith('VA_')) {
+          // VA
+          qrSection.style.display = 'none';
+          vaSection.style.display = 'block';
+          const data = vaData[paySel.dataset.value];
+          vaBankName.textContent = data.name;
+          vaNumber.textContent   = data.number;
+        } else {
+          // QR
+          vaSection.style.display = 'none';
+          qrSection.style.display = 'block';
+          const qr = document.getElementById('qrCode');
+          switch(paySel.dataset.value) {
+            case 'DANA':  qr.src = 'https://blogger.googleusercontent.com/img/b/.../20250205_151426.png'; break;
+            case 'SHOPEE':qr.src = 'https://blogger.googleusercontent.com/img/b/.../20250206_101339.jpg'; break;
+            case 'GOPAY': qr.src = 'https://blogger.googleusercontent.com/img/b/.../20250205_163848.jpg'; break;
+            case 'QRIS':  qr.src = 'qris-placeholder.png'; break;
+          }
+        }
+
+        document.getElementById('modalOverlay').style.display = 'flex';
+      };
+
+      // tutup modal
+      document.getElementById('btnClose').onclick = ()=>{
+        document.getElementById('modalOverlay').style.display = 'none';
+      };
+
+      // Sudah Bayar → WA
+      document.getElementById('btnDone').onclick = ()=>{
+        const idVal   = document.getElementById('userId').value.trim();
+        const srvVal  = document.getElementById('server').value.trim();
+        const waVal   = document.getElementById('whatsapp').value.trim();
+        const nomSel  = document.querySelector('.nominal-card.selected');
+        const paySel  = document.querySelector('.payment-card.selected');
+        const priceVal= parseFloat(nomSel.dataset.price);
+        const flat    = parseFloat(paySel.dataset.admin);
+        const percent = parseFloat(paySel.dataset.percent||0)/100;
+        const adminVal= Math.ceil(flat+priceVal*percent);
+        const totalVal= priceVal+adminVal;
+
+        const msg =
+          `Saya sudah order *${nomSel.dataset.value} Diamonds*`+
+          `\nID: ${idVal} (Server: ${srvVal})`+
+          `\nNo. WA: ${waVal}`+
+          `\nMetode: ${paySel.dataset.value.replace('_',' ')} VA`+
+          `\nTotal bayar: Rp ${totalVal.toLocaleString('id')}`;
+        window.open(`https://wa.me/6285697747768?text=${encodeURIComponent(msg)}`, '_blank');
       };
     });
-
-    // pilih payment
-    paymentCards.forEach(c => {
-      c.onclick = ()=>{
-        if(c.classList.contains('disabled')) return;
-        paymentCards.forEach(x=> x.classList.remove('selected'));
-        c.classList.add('selected');
-      };
-    });
-
-    // update disable/enable payment
-    function updatePaymentOptions() {
-      const sel = document.querySelector('.nominal-card.selected');
-      const price = sel ? parseFloat(sel.dataset.price) : 0;
-
-      // VA
-      if(price < 10000) {
-        vaCard.classList.add('disabled');
-        vaCard.classList.remove('selected');
-      } else {
-        vaCard.classList.remove('disabled');
-      }
-      // Alfamart
-      if(disableAlfa.includes(price)) {
-        alfCard.classList.add('disabled');
-        alfCard.classList.remove('selected');
-      } else {
-        alfCard.classList.remove('disabled');
-      }
-      // Indomaret
-      if(disableIndo.includes(price)) {
-        indoCard.classList.add('disabled');
-        indoCard.classList.remove('selected');
-      } else {
-        indoCard.classList.remove('disabled');
-      }
-    }
-    updatePaymentOptions();
-
-    // Checkout → modal
-    document.getElementById('btnCheckout').onclick = ()=> {
-      const idSel  = document.getElementById('userId').value.trim();
-      const srvSel = document.getElementById('server').value.trim();
-      const waSel  = document.getElementById('whatsapp').value.trim();
-      if(!idSel||!srvSel||!waSel) return alert('Lengkapi data dulu ya.');
-
-      const nomSel = document.querySelector('.nominal-card.selected');
-      if(!nomSel) return alert('Pilih nominal diamonds dulu ya.');
-      const paySel = document.querySelector('.payment-card.selected');
-      if(!paySel) return alert('Pilih metode pembayaran dulu ya.');
-
-      const diam      = nomSel.dataset.value;
-      const price     = parseFloat(nomSel.dataset.price);
-      const flatAdmin = parseFloat(paySel.dataset.admin);
-      const percent   = parseFloat(paySel.dataset.percent || 0) / 100;
-      const adminCalc = Math.ceil(flatAdmin + price * percent);
-      const total     = price + adminCalc;
-
-      // update teks modal
-      document.getElementById('outId').textContent    = `${idSel} (Srv: ${srvSel})`;
-      document.getElementById('outDiam').textContent  = diam;
-      document.getElementById('outPrice').textContent = price.toLocaleString('id');
-      document.getElementById('outAdmin').textContent = adminCalc.toLocaleString('id');
-      document.getElementById('outTotal').textContent = total.toLocaleString('id');
-
-      // tampilkan panel
-    // set QR code sesuai method
-      const qr = document.getElementById('qrCode');
-      if(paySel.dataset.value === 'DANA') {
-        qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png';
-      } else if(paySel.dataset.value === 'SHOPEE') {
-        qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjL8xRyiYxTJJCxDisZZJqBpMuBMpq1K7Z_uoTTb1fo-YRCCn4S3UXvYHG3eqjAF8ZFy1ouRKa4S4hHQfbAi_VBlKUWt8nV7ThT8ZzFB_Bw5jrn8stCQ_5oK15Pxd9DjsGUmG7TEmeuW5XApanfO_DeYcWNoMsmhe3uk9_r3zHDvqmVTOTdHXRXL7Y2wPLJ/s320/20250206_101339.jpg';
-      } else if(paySel.dataset.value === 'GOPAY') {
-        qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg8_2RYyIoEhSvxVdfI5Op2U0c2Tku6yY0xyyfmyi4-NMd09G4dnGGOCVY7w4WDZzkKSJvVsBM32C_xVE_5Y5Q-YmaTeWBi52Raq3tND8_LFamk76vIVHqrAx84egbI04wvr3DoKLkM3YuAaPSP-GjV0W4KsJRMQyth_8fcgDk4cUx1ZTWAXoTYAfYU0Mj/s320/20250205_163848.jpg';
-      } else {
-        qr.src = 'qris-placeholder.png';
-      }
-
-      document.getElementById('modalOverlay').style.display = 'flex';
-    };
-
-    // tutup modal
-    document.getElementById('btnClose').onclick = ()=> {
-      document.getElementById('modalOverlay').style.display = 'none';
-    };
-
-    // Sudah Bayar → WA
-    document.getElementById('btnDone').onclick = ()=> {
-      const idVal   = document.getElementById('userId').value.trim();
-      const srvVal  = document.getElementById('server').value.trim();
-      const waVal   = document.getElementById('whatsapp').value.trim();
-      const nomSel  = document.querySelector('.nominal-card.selected');
-      const paySel  = document.querySelector('.payment-card.selected');
-      const diamVal = nomSel.dataset.value;
-      const priceVal= parseFloat(nomSel.dataset.price);
-      const flat    = parseFloat(paySel.dataset.admin);
-      const percent = parseFloat(paySel.dataset.percent || 0) / 100;
-      const adminVal= Math.ceil(flat + priceVal * percent);
-      const totalVal= priceVal + adminVal;
-
-      const msg =
-        `Saya sudah order *${diamVal} Diamonds*` +
-        `\nID: ${idVal} (Server: ${srvVal})` +
-        `\nNo. WA: ${waVal}` +
-        `\nMetode: ${paySel.dataset.value}` +
-        `\nTotal bayar: Rp ${totalVal.toLocaleString('id')}`;
-      window.open(`https://wa.me/6285697747768?text=${encodeURIComponent(msg)}`, '_blank');
-    };
-  });
   </script>
 </body>
 </html>
