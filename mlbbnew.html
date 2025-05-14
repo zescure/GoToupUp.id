@@ -652,7 +652,34 @@
           `\nTotal bayar: Rp ${totalVal.toLocaleString('id')}`;
         window.open(`https://wa.me/6285697747768?text=${encodeURIComponent(msg)}`, '_blank');
       };
-    });
-  </script>
+      document.addEventListener('DOMContentLoaded', ()=>{
+  const u = ['userId','server','whatsapp'].map(id=>document.getElementById(id));
+  const nominalGrid = document.getElementById('nominalGrid');
+  const paymentGrid = document.getElementById('paymentGrid');
+  const btnCheckout = document.getElementById('btnCheckout');
+  const nominalCards = document.querySelectorAll('.nominal-card');
+  const paymentCards = document.querySelectorAll('.payment-card');
+
+  // 1. Scroll ke nominalGrid ketika ketiganya terisi
+  function tryScrollNominal() {
+    if (u.every(i=>i.value.trim())) nominalGrid.scrollIntoView({behavior:'smooth'});
+  }
+  u.forEach(i=>i.addEventListener('input', tryScrollNominal));
+
+  // 2. Pilih nominal → scroll ke pembayaran
+  nominalCards.forEach(c=>
+    c.addEventListener('click', ()=>{
+      paymentGrid.scrollIntoView({behavior:'smooth'});
+    })
+  );
+
+  // 3. Pilih payment → scroll ke tombol
+  paymentCards.forEach(c=>
+    c.addEventListener('click', ()=>{
+      btnCheckout.scrollIntoView({behavior:'smooth'});
+    })
+  );
+});
+</script>
 </body>
   
