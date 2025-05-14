@@ -654,27 +654,27 @@
       };
 
       ;(function(){
-  const inps = ['u','s','w'].map(id=>document.getElementById(id));
   const nominalGrid = document.getElementById('nominalGrid');
   const paymentGrid = document.getElementById('paymentGrid');
   const btnCheckout = document.getElementById('btnCheckout');
 
-  function scrollTo(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); }
+  function scrollTo(el){
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
-  // 1. Data akun lengkap → scroll ke nominal
-  inps.forEach(i=> i.addEventListener('input', ()=>{
-    if(inps.every(i=> i.value.trim())) scrollTo(nominalGrid);
-  }));
-
-  // 2. Pilih nominal → scroll ke payment
-  nominalGrid.addEventListener('click', e=>{
-    if(e.target.closest('.nominal-card')) scrollTo(paymentGrid);
+  // Setelah klik nominal → scroll ke payment
+  nominalGrid.addEventListener('click', e => {
+    if (e.target.closest('.nominal-card')) {
+      scrollTo(paymentGrid);
+    }
   });
 
-  // 3. Pilih payment aktif → scroll ke checkout
-  paymentGrid.addEventListener('click', e=>{
-    const c = e.target.closest('.payment-card');
-    if(c && !c.classList.contains('disabled')) scrollTo(btnCheckout);
+  // Setelah klik payment aktif → scroll ke tombol Checkout
+  paymentGrid.addEventListener('click', e => {
+    const card = e.target.closest('.payment-card');
+    if (card && !card.classList.contains('disabled')) {
+      scrollTo(btnCheckout);
+    }
   });
 })();
     });
