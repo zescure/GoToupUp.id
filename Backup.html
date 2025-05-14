@@ -185,43 +185,48 @@
     </div>
 
     <!-- STEP 3: Pembayaran -->
-    <div class="step">
-      <div class="step-header">Metode Pembayaran</div>
-      <div class="step-content">
-        <div class="payment-grid" id="paymentGrid">
-          <!-- DANA: flat 999 -->
-          <div class="payment-card" data-value="DANA" data-admin="999" data-percent="0">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwtRpAICKjKIeUmkSVYsuBa0Is2ILtR-gIqDAwtpITkEpoYe77eL_MkFeU&s=10" alt="DANA QR">
-            <div class="name">DANA</div>
-            <div class="fee">Admin Rp 999</div>
-          </div>
-          <!-- SHOPEE: flat 999 -->
-          <div class="payment-card" data-value="SHOPEE" data-admin="999" data-percent="0">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQj59M90YyJISqGMOLqfowYhJBcdXS0Kdc8sw&usqp=CAU" alt="ShopeePay">
-            <div class="name">SHOPEE</div>
-            <div class="fee">Admin Rp 999</div>
-          </div>
-          <!-- GOPAY: flat 999 -->
-          <div class="payment-card" data-value="GOPAY" data-admin="999" data-percent="0">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZFWac3q1eIf390vB0eAnX9gRbB_afi1czyReIkVhuEaBVoWuK2ivLFvNr&s=10" alt="GoPay">
-            <div class="name">GOPAY</div>
-            <div class="fee">Admin Rp 999</div>
-          </div>
-          <!-- QRIS: flat 720 + 1% -->
-          <div class="payment-card" data-value="QRIS" data-admin="720" data-percent="1">
-            <img src="https://c.tenor.com/cgoYGj4rhcUAAAAM/qr-code-codigo-qr.gif" alt="QRIS">
-            <div class="name">QRIS</div>
-            <div class="fee">Admin Rp 720 + 1%</div>
-          </div>
+     <div class="step">
+    <div class="step-header">Metode Pembayaran</div>
+    <div class="step-content">
+      <div class="payment-grid" id="paymentGrid">
+        <div class="payment-card" data-value="DANA"      data-admin="999"  data-percent="0">
+          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwtRpAICKjKIeUmkSVYsuBa0Is2ILtR-gIqDAwtpITkEpoYe77eL_MkFeU&s=10" alt="DANA">
+          <div class="name">DANA</div><div class="fee">Admin Rp 999</div>
+        </div>
+        <div class="payment-card" data-value="SHOPEE"   data-admin="999"  data-percent="0">
+          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQj59M90YyJISqGMOLqfowYhJBcdXS0Kdc8sw&usqp=CAU" alt="ShopeePay">
+          <div class="name">SHOPEE</div><div class="fee">Admin Rp 999</div>
+        </div>
+        <div class="payment-card" data-value="GOPAY"    data-admin="999"  data-percent="0">
+          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZFWac3q1eIf390vB0eAnX9gRbB_afi1czyReIkVhuEaBVoWuK2ivLFvNr&s=10" alt="GoPay">
+          <div class="name">GOPAY</div><div class="fee">Admin Rp 999</div>
+        </div>
+        <div class="payment-card" data-value="QRIS"     data-admin="720"  data-percent="1">
+          <img src="https://c.tenor.com/cgoYGj4rhcUAAAAM/qr-code-codigo-qr.gif" alt="QRIS">
+          <div class="name">QRIS</div><div class="fee">Admin Rp 720 + 1%</div>
+        </div>
+        <div class="payment-card" data-value="VA"       data-admin="0"    data-percent="0" id="vaCard">
+          <img src="https://example.com/va-logo.png" alt="Virtual Account">
+          <div class="name">Virtual Account</div><div class="fee">Admin Rp 0</div>
+          <div class="min-info">Min. Rp 10.000</div>
+        </div>
+        <div class="payment-card" data-value="ALFAMART" data-admin="3000" data-percent="0" id="alfamartCard">
+          <img src="https://example.com/alfamart-logo.png" alt="Alfamart">
+          <div class="name">Alfamart</div><div class="fee">Admin Rp 3.000</div>
+        </div>
+        <div class="payment-card" data-value="INDOMARET" data-admin="3000" data-percent="0" id="indomaretCard">
+          <img src="https://example.com/indomaret-logo.png" alt="Indomaret">
+          <div class="name">Indomaret</div><div class="fee">Admin Rp 3.000</div>
         </div>
       </div>
     </div>
-
-    <button class="btn" id="btnCheckout">Lanjutkan Pembayaran</button>
   </div>
 
+  <!-- Tombol Checkout -->
+  <button class="btn" id="btnCheckout">Lanjutkan Pembayaran</button>
+
   <!-- MODAL RINCIAN -->
-  <div class="modal-overlay" id="modalOverlay">
+  <div class="modal-overlay" id="modalOverlay" style="display:none;">
     <div class="modal">
       <div class="modal-header">Rincian Pembayaran</div>
       <div class="modal-body">
@@ -230,7 +235,50 @@
         <p>Harga: Rp <span id="outPrice"></span></p>
         <p>Biaya Admin: Rp <span id="outAdmin"></span></p>
         <p class="total">Total: Rp <span id="outTotal"></span></p>
-        <img id="qrCode" src="qris-placeholder.png" alt="QR Code Pembayaran">
+
+        <!-- QR Code Section -->
+        <div id="qrSection">
+          <img id="qrCode" src="qris-placeholder.png" alt="QR Code Pembayaran">
+        </div>
+
+        <!-- Virtual Account Section -->
+        <div id="vaSection" style="display:none;">
+          <p><strong>No. Rekening Virtual Account</strong></p>
+          <p id="vaNumber">9888-3081-0216-1147</p>
+          <p><strong>Catatan:</strong></p>
+          <ul>
+            <li>Topup via VA kena potongan Rp 2.500</li>
+            <li>Minimal topup Rp 10.000</li>
+          </ul>
+          <details>
+            <summary>Petunjuk Transfer ATM</summary>
+            <ol>
+              <li>Pilih Transaksi Lainnya → Transfer</li>
+              <li>Pilih Rekening Tabungan → Rekening BNI Anda</li>
+              <li>Masukkan nomor VA + nominal topup</li>
+              <li>Pastikan nama: Topup SC 122161147</li>
+              <li>Selesaikan transfer, saldo akan bertambah otomatis</li>
+            </ol>
+          </details>
+          <details>
+            <summary>Petunjuk Transfer Internet Banking</summary>
+            <ol>
+              <li>Login Internet Banking BNI</li>
+              <li>Pilih Transfer → Virtual Account Billing</li>
+              <li>Masukkan nomor VA + nominal topup</li>
+              <li>Konfirmasi dan selesai</li>
+            </ol>
+          </details>
+          <details>
+            <summary>Petunjuk Transfer Mobile Banking</summary>
+            <ol>
+              <li>Login BNI Mobile Banking</li>
+              <li>Pilih m-Transfer → BNI Virtual Account</li>
+              <li>Masukkan nomor VA + nominal topup</li>
+              <li>Konfirmasi dan selesai</li>
+            </ol>
+          </details>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="pay-done" id="btnDone">Sudah Bayar</button>
@@ -241,32 +289,71 @@
 
   <script>
   document.addEventListener('DOMContentLoaded', ()=> {
-    // toggle mobile menu
-    document.querySelector('.menu-btn').onclick = ()=> {
-      document.getElementById('mobileMenu').classList.toggle('open');
-    };
+    // elemen
+    const nominalCards   = document.querySelectorAll('.nominal-card');
+    const paymentCards   = document.querySelectorAll('.payment-card');
+    const vaCard         = document.getElementById('vaCard');
+    const alfCard        = document.getElementById('alfamartCard');
+    const indoCard       = document.getElementById('indomaretCard');
+    const qrSection      = document.getElementById('qrSection');
+    const vaSection      = document.getElementById('vaSection');
+
+    // daftar nominal disable spesifik
+    const disableAlfa = [25000, 37000, 41000, 68000, 250000];
+    const disableIndo = [102000, 350000, 580000, 744000, 989000];
 
     // pilih nominal
-    document.querySelectorAll('.nominal-card').forEach(c=>{
+    nominalCards.forEach(c => {
       c.onclick = ()=>{
-        document.querySelectorAll('.nominal-card').forEach(x=> x.classList.remove('selected'));
+        nominalCards.forEach(x=> x.classList.remove('selected'));
         c.classList.add('selected');
+        updatePaymentOptions();
       };
     });
 
     // pilih payment
-    document.querySelectorAll('.payment-card').forEach(c=>{
+    paymentCards.forEach(c => {
       c.onclick = ()=>{
-        document.querySelectorAll('.payment-card').forEach(x=> x.classList.remove('selected'));
+        if(c.classList.contains('disabled')) return;
+        paymentCards.forEach(x=> x.classList.remove('selected'));
         c.classList.add('selected');
       };
     });
 
+    // update disable/enable payment
+    function updatePaymentOptions() {
+      const sel = document.querySelector('.nominal-card.selected');
+      const price = sel ? parseFloat(sel.dataset.price) : 0;
+
+      // VA
+      if(price < 10000) {
+        vaCard.classList.add('disabled');
+        vaCard.classList.remove('selected');
+      } else {
+        vaCard.classList.remove('disabled');
+      }
+      // Alfamart
+      if(disableAlfa.includes(price)) {
+        alfCard.classList.add('disabled');
+        alfCard.classList.remove('selected');
+      } else {
+        alfCard.classList.remove('disabled');
+      }
+      // Indomaret
+      if(disableIndo.includes(price)) {
+        indoCard.classList.add('disabled');
+        indoCard.classList.remove('selected');
+      } else {
+        indoCard.classList.remove('disabled');
+      }
+    }
+    updatePaymentOptions();
+
     // Checkout → modal
     document.getElementById('btnCheckout').onclick = ()=> {
-      const idSel      = document.getElementById('userId').value.trim();
-      const srvSel     = document.getElementById('server').value.trim();
-      const waSel      = document.getElementById('whatsapp').value.trim();
+      const idSel  = document.getElementById('userId').value.trim();
+      const srvSel = document.getElementById('server').value.trim();
+      const waSel  = document.getElementById('whatsapp').value.trim();
       if(!idSel||!srvSel||!waSel) return alert('Lengkapi data dulu ya.');
 
       const nomSel = document.querySelector('.nominal-card.selected');
@@ -278,19 +365,18 @@
       const price     = parseFloat(nomSel.dataset.price);
       const flatAdmin = parseFloat(paySel.dataset.admin);
       const percent   = parseFloat(paySel.dataset.percent || 0) / 100;
-
-      // hitung admin dan total
       const adminCalc = Math.ceil(flatAdmin + price * percent);
       const total     = price + adminCalc;
 
-      // update modal
+      // update teks modal
       document.getElementById('outId').textContent    = `${idSel} (Srv: ${srvSel})`;
       document.getElementById('outDiam').textContent  = diam;
       document.getElementById('outPrice').textContent = price.toLocaleString('id');
       document.getElementById('outAdmin').textContent = adminCalc.toLocaleString('id');
       document.getElementById('outTotal').textContent = total.toLocaleString('id');
 
-      // set QR code sesuai method
+      // tampilkan panel
+    // set QR code sesuai method
       const qr = document.getElementById('qrCode');
       if(paySel.dataset.value === 'DANA') {
         qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png';
