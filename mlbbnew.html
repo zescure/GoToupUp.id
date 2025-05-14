@@ -153,6 +153,150 @@
     }
     .pay-done { background:#28a745; color:#fff; }
     .pay-close { background:#6c757d; color:#fff; }
+
+
+/* Overlay full‐screen */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 999;
+}
+
+/* Kotak modal */
+.modal {
+  background: #ffffff;
+  border-radius: 8px;
+  width: 400px;
+  max-width: 100%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Header biru */
+.modal-header {
+  background-color: #00aaff;
+  color: #ffffff;
+  padding: 16px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Body putih */
+.modal-body {
+  padding: 16px;
+  font-family: Arial, sans-serif;
+  color: #333333;
+}
+
+/* Setiap baris teks */
+.modal-body p {
+  margin: 8px 0;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+/* Label Total */
+.modal-body p.total {
+  margin-top: 12px;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+/* Tombol Copy inline */
+.modal-body button.copy-btn {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 4px 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+/* QR Section */
+#qrSection {
+  text-align: center;
+  margin: 16px 0;
+}
+#qrSection img {
+  max-width: 200px;
+  width: 100%;
+  height: auto;
+  display: inline-block;
+}
+
+/* VA Section & Details */
+#vaSection {
+  font-size: 0.95rem;
+  color: #333;
+}
+#vaSection p#vaBankName {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+#vaSection p#vaNumber {
+  font-size: 1rem;
+  margin-bottom: 12px;
+}
+#vaSection details {
+  margin-top: 8px;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 8px;
+}
+#vaSection summary {
+  cursor: pointer;
+  font-weight: 600;
+  position: relative;
+  padding-left: 20px;
+}
+#vaSection summary::before {
+  content: "▶";
+  position: absolute;
+  left: 0; top: 2px;
+  transition: transform 0.2s;
+}
+#vaSection details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+/* Footer */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  background: #fafafa;
+}
+.modal-footer button {
+  padding: 8px 12px;
+  margin-left: 8px;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+}
+
+/* Responsif mobile */
+@media (max-width: 480px) {
+  .modal {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    justify-content: flex-start;
+  }
+  .modal-body {
+    padding: 12px;
+  }
+  .modal-footer {
+    padding: 8px 12px;
+  }
+}
+
+    
   </style>
 </head>
 <body>
