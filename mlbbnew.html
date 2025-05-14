@@ -103,6 +103,15 @@
     .payment-card .fee {
       font-size:.85rem; color:#ddd;
     }
+    .payment-card.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.payment-card .min-info {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 4px;
+}
 
     /* ===== BUTTON ===== */
     .btn {
@@ -409,43 +418,49 @@
     </div>
 
     <!-- STEP 3: Pembayaran -->
-    <div class="step">
-      <div class="step-header">Metode Pembayaran</div>
-      <div class="step-content">
-        <div class="payment-grid" id="paymentGrid">
-          <!-- DANA: flat 999 -->
-          <div class="payment-card" data-value="DANA" data-admin="999" data-percent="0">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwtRpAICKjKIeUmkSVYsuBa0Is2ILtR-gIqDAwtpITkEpoYe77eL_MkFeU&s=10" alt="DANA QR">
-            <div class="name">DANA</div>
-            <div class="fee">Admin Rp 999</div>
-          </div>
-          <!-- SHOPEE: flat 999 -->
-          <div class="payment-card" data-value="SHOPEE" data-admin="999" data-percent="0">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQj59M90YyJISqGMOLqfowYhJBcdXS0Kdc8sw&usqp=CAU" alt="ShopeePay">
-            <div class="name">SHOPEE</div>
-            <div class="fee">Admin Rp 999</div>
-          </div>
-          <!-- GOPAY: flat 999 -->
-          <div class="payment-card" data-value="GOPAY" data-admin="999" data-percent="0">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZFWac3q1eIf390vB0eAnX9gRbB_afi1czyReIkVhuEaBVoWuK2ivLFvNr&s=10" alt="GoPay">
-            <div class="name">GOPAY</div>
-            <div class="fee">Admin Rp 999</div>
-          </div>
-          <!-- QRIS: flat 720 + 1% -->
-          <div class="payment-card" data-value="QRIS" data-admin="720" data-percent="1">
-            <img src="https://c.tenor.com/cgoYGj4rhcUAAAAM/qr-code-codigo-qr.gif" alt="QRIS">
-            <div class="name">QRIS</div>
-            <div class="fee">Admin Rp 720 + 1%</div>
-          </div>
+  <div class="step">
+    <div class="step-header">Metode Pembayaran</div>
+    <div class="step-content">
+      <div class="payment-grid" id="paymentGrid">
+        <!-- DANA -->
+        <div class="payment-card" data-value="DANA" data-admin="999" data-percent="0">
+          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwtRpAICKjKIeUmkSVYsuBa0Is2ILtR-gIqDAwtpITkEpoYe77eL_MkFeU&s=10" alt="DANA">
+          <div class="name">DANA</div>
+          <div class="fee">Admin Rp 999</div>
+        </div>
+        <!-- SHOPEE -->
+        <div class="payment-card" data-value="SHOPEE" data-admin="999" data-percent="0">
+          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQj59M90YyJISqGMOLqfowYhJBcdXS0Kdc8sw&usqp=CAU" alt="ShopeePay">
+          <div class="name">SHOPEE</div>
+          <div class="fee">Admin Rp 999</div>
+        </div>
+        <!-- GOPAY -->
+        <div class="payment-card" data-value="GOPAY" data-admin="999" data-percent="0">
+          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZFWac3q1eIf390vB0eAnX9gRbB_afi1czyReIkVhuEaBVoWuK2ivLFvNr&s=10" alt="GoPay">
+          <div class="name">GOPAY</div>
+          <div class="fee">Admin Rp 999</div>
+        </div>
+        <!-- QRIS -->
+        <div class="payment-card" data-value="QRIS" data-admin="720" data-percent="1">
+          <img src="https://c.tenor.com/cgoYGj4rhcUAAAAM/qr-code-codigo-qr.gif" alt="QRIS">
+          <div class="name">QRIS</div>
+          <div class="fee">Admin Rp 720 + 1%</div>
+        </div>
+        <!-- Virtual Account -->
+        <div class="payment-card" data-value="VA" data-admin="0" data-percent="0" id="vaCard">
+          <img src="https://example.com/va-logo.png" alt="Virtual Account">
+          <div class="name">Virtual Account</div>
+          <div class="fee">Admin Rp 0</div>
+          <div class="min-info">Min. Rp 10.000</div>
         </div>
       </div>
     </div>
-
-    <button class="btn" id="btnCheckout">Lanjutkan Pembayaran</button>
   </div>
 
+  <button class="btn" id="btnCheckout">Lanjutkan Pembayaran</button>
+
   <!-- MODAL RINCIAN -->
-  <div class="modal-overlay" id="modalOverlay">
+  <div class="modal-overlay" id="modalOverlay" style="display:none;">
     <div class="modal">
       <div class="modal-header">Rincian Pembayaran</div>
       <div class="modal-body">
@@ -466,31 +481,49 @@
   <script>
   document.addEventListener('DOMContentLoaded', ()=> {
     // toggle mobile menu
-    document.querySelector('.menu-btn').onclick = ()=> {
+    document.querySelector('.menu-btn').onclick = ()=>{
       document.getElementById('mobileMenu').classList.toggle('open');
     };
 
-    // pilih nominal
-    document.querySelectorAll('.nominal-card').forEach(c=>{
+    // nominal selection
+    const nominalCards = document.querySelectorAll('.nominal-card');
+    nominalCards.forEach(c => {
       c.onclick = ()=>{
-        document.querySelectorAll('.nominal-card').forEach(x=> x.classList.remove('selected'));
+        nominalCards.forEach(x=> x.classList.remove('selected'));
+        c.classList.add('selected');
+        updatePaymentOptions();
+      };
+    });
+
+    // payment selection
+    const paymentCards = document.querySelectorAll('.payment-card');
+    const vaCard = document.getElementById('vaCard');
+    paymentCards.forEach(c => {
+      c.onclick = ()=>{
+        if(c.classList.contains('disabled')) return;
+        paymentCards.forEach(x=> x.classList.remove('selected'));
         c.classList.add('selected');
       };
     });
 
-    // pilih payment
-    document.querySelectorAll('.payment-card').forEach(c=>{
-      c.onclick = ()=>{
-        document.querySelectorAll('.payment-card').forEach(x=> x.classList.remove('selected'));
-        c.classList.add('selected');
-      };
-    });
+    // kunci VA kalau <10k
+    function updatePaymentOptions() {
+      const nomSel = document.querySelector('.nominal-card.selected');
+      const price = nomSel ? parseFloat(nomSel.dataset.price) : 0;
+      if(price < 10000) {
+        vaCard.classList.add('disabled');
+        vaCard.classList.remove('selected');
+      } else {
+        vaCard.classList.remove('disabled');
+      }
+    }
+    updatePaymentOptions();
 
     // Checkout → modal
     document.getElementById('btnCheckout').onclick = ()=> {
-      const idSel      = document.getElementById('userId').value.trim();
-      const srvSel     = document.getElementById('server').value.trim();
-      const waSel      = document.getElementById('whatsapp').value.trim();
+      const idSel  = document.getElementById('userId').value.trim();
+      const srvSel = document.getElementById('server').value.trim();
+      const waSel  = document.getElementById('whatsapp').value.trim();
       if(!idSel||!srvSel||!waSel) return alert('Lengkapi data dulu ya.');
 
       const nomSel = document.querySelector('.nominal-card.selected');
@@ -502,12 +535,10 @@
       const price     = parseFloat(nomSel.dataset.price);
       const flatAdmin = parseFloat(paySel.dataset.admin);
       const percent   = parseFloat(paySel.dataset.percent || 0) / 100;
-
-      // hitung admin dan total
       const adminCalc = Math.ceil(flatAdmin + price * percent);
       const total     = price + adminCalc;
 
-      // update modal
+      // update modal teks
       document.getElementById('outId').textContent    = `${idSel} (Srv: ${srvSel})`;
       document.getElementById('outDiam').textContent  = diam;
       document.getElementById('outPrice').textContent = price.toLocaleString('id');
@@ -517,11 +548,14 @@
       // set QR code sesuai method
       const qr = document.getElementById('qrCode');
       if(paySel.dataset.value === 'DANA') {
-        qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png';
+        qr.src = 'https://blogger.googleusercontent.com/img/b/.../20250205_151426.png';
       } else if(paySel.dataset.value === 'SHOPEE') {
-        qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjL8xRyiYxTJJCxDisZZJqBpMuBMpq1K7Z_uoTTb1fo-YRCCn4S3UXvYHG3eqjAF8ZFy1ouRKa4S4hHQfbAi_VBlKUWt8nV7ThT8ZzFB_Bw5jrn8stCQ_5oK15Pxd9DjsGUmG7TEmeuW5XApanfO_DeYcWNoMsmhe3uk9_r3zHDvqmVTOTdHXRXL7Y2wPLJ/s320/20250206_101339.jpg';
+        qr.src = 'https://blogger.googleusercontent.com/img/b/.../20250206_101339.jpg';
       } else if(paySel.dataset.value === 'GOPAY') {
-        qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg8_2RYyIoEhSvxVdfI5Op2U0c2Tku6yY0xyyfmyi4-NMd09G4dnGGOCVY7w4WDZzkKSJvVsBM32C_xVE_5Y5Q-YmaTeWBi52Raq3tND8_LFamk76vIVHqrAx84egbI04wvr3DoKLkM3YuAaPSP-GjV0W4KsJRMQyth_8fcgDk4cUx1ZTWAXoTYAfYU0Mj/s320/20250205_163848.jpg';
+        qr.src = 'https://blogger.googleusercontent.com/img/b/.../20250205_163848.jpg';
+      } else if(paySel.dataset.value === 'VA') {
+        // VA QR
+        qr.src = 'https://example.com/va-qr.png';
       } else {
         qr.src = 'qris-placeholder.png';
       }
@@ -530,18 +564,17 @@
     };
 
     // tutup modal
-    document.getElementById('btnClose').onclick = ()=> {
+    document.getElementById('btnClose').onclick = ()=>{
       document.getElementById('modalOverlay').style.display = 'none';
     };
 
     // Sudah Bayar → WA
-    document.getElementById('btnDone').onclick = ()=> {
+    document.getElementById('btnDone').onclick = ()=>{
       const idVal   = document.getElementById('userId').value.trim();
       const srvVal  = document.getElementById('server').value.trim();
       const waVal   = document.getElementById('whatsapp').value.trim();
       const nomSel  = document.querySelector('.nominal-card.selected');
       const paySel  = document.querySelector('.payment-card.selected');
-      const diamVal = nomSel.dataset.value;
       const priceVal= parseFloat(nomSel.dataset.price);
       const flat    = parseFloat(paySel.dataset.admin);
       const percent = parseFloat(paySel.dataset.percent || 0) / 100;
@@ -549,7 +582,7 @@
       const totalVal= priceVal + adminVal;
 
       const msg =
-        `Saya sudah order *${diamVal} Diamonds*` +
+        `Saya sudah order *${nomSel.dataset.value} Diamonds*` +
         `\nID: ${idVal} (Server: ${srvVal})` +
         `\nNo. WA: ${waVal}` +
         `\nMetode: ${paySel.dataset.value}` +
@@ -560,3 +593,4 @@
   </script>
 </body>
 </html>
+  
