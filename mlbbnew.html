@@ -864,20 +864,41 @@ btnCopyVA.onclick = ()=>{
 
 
 // — PROMO CODE SC10 —
-document.getElementById('btnApplyPromo').onclick = ()=>{
-  const code = document.getElementById('promoCode').value.trim().toUpperCase();
+document.getElementById('btnApplyPromo').addEventListener('click', ()=>{
+  const code  = document.getElementById('promoCode').value.trim().toUpperCase();
   const msgEl = document.getElementById('promoMsg');
-  if(code==='SC10'){
-    let total = parseInt(document.getElementById('outTotal').textContent.replace(/\D/g,''),10);
-    total = Math.ceil(total*0.9);
-    document.getElementById('outTotal').textContent = total.toLocaleString('id');
-    msgEl.style.color = 'green';
-    msgEl.textContent = 'Promo SC10 berhasil: 10% diskon!';
-  } else {
+  // ambil total sekarang (hapus non-digit)
+  let total   = parseInt(
+    document.getElementById('outTotal').textContent.replace(/\D/g, ''), 
+    10
+  );
+  if(!total) {
     msgEl.style.color = 'red';
-    msgEl.textContent = 'Kode promo tidak valid.';
+    return msgEl.textContent = 'Total belum tersedia.';
   }
-};
+
+  let diskon = 0;
+  if(code === 'FLAT500') {
+    diskon = 500;
+    msgEl.style.color = 'green';
+    msgEl.textContent = `Kode FLAT500: potongan Rp ${diskon.toLocaleString('id')}.`;
+  }
+  else if(code === 'PERCENT1') {
+    diskon = Math.ceil(total * 0.01);
+    msgEl.style.color = 'green';
+    msgEl.textContent = `Kode PERCENT1: potongan ${diskon.toLocaleString('id')} (1%).`;
+  }
+  else {
+    msgEl.style.color = 'red';
+    return msgEl.textContent = code === '' 
+      ? 'Masukkan kode promo dulu.' 
+      : 'Kode promo tidak valid.';
+  }
+
+  // apply diskon, minimal total = 0
+  total = Math.max(0, total - diskon);
+  document.getElementById('outTotal').textContent = total.toLocaleString('id');
+});
 
 
 
