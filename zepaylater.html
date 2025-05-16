@@ -107,6 +107,58 @@
       <button class="btn" id="toStep2">Selanjutnya</button>
     </div>
 
+    <div style="margin-top: 30px; padding: 20px; background-color: #1a1a1a; color: white; border-radius: 10px;">
+  <h2 style="text-align: center;">Informasi Layanan Ubah Saldo PayLater Menjadi Saldo Rekening</h2>
+  <p>
+    Layanan ini dirancang untuk membantu pengguna Shopee PayLater, Akulaku, Kredivo, dan layanan cicilan lainnya
+    agar bisa mencairkan limit PayLater menjadi uang tunai. Dana tersebut akan langsung dikirimkan ke rekening
+    bank atau e-wallet pilihan Anda dengan proses mudah dan cepat.
+  </p>
+
+  <h3>Bagaimana Cara Kerjanya?</h3>
+  <ol>
+    <li>Masukkan nominal saldo PayLater yang ingin dicairkan.</li>
+    <li>Isi data nomor WhatsApp untuk konfirmasi dan bukti transaksi.</li>
+    <li>Pilih tujuan transfer (Bank atau E-Wallet) lalu isi nama dan nomor rekening tujuan Anda.</li>
+    <li>Setelah mengisi data lengkap, Anda akan mendapatkan rincian pembayaran beserta QRIS untuk transfer.</li>
+    <li>Setelah transfer berhasil, klik tombol "Sudah Bayar" untuk mengirim data ke admin via WhatsApp.</li>
+  </ol>
+
+  <h3>Keuntungan Menggunakan Layanan Ini</h3>
+  <ul>
+    <li>Cairkan limit Shopee PayLater dan lainnya tanpa ribet.</li>
+    <li>Dana langsung masuk ke rekening atau e-wallet pilihan Anda.</li>
+    <li>Proses cepat, aman, dan terpercaya.</li>
+    <li>Biaya transparan: hanya 2% biaya layanan + biaya admin (Rp3.000 untuk bank, Rp2.000 untuk e-wallet).</li>
+  </ul>
+
+  <h3>Pertanyaan yang Sering Diajukan (FAQ)</h3>
+  <details style="margin-bottom: 10px;">
+    <summary><strong>Apa saja PayLater yang bisa dicairkan?</strong></summary>
+    Saat ini layanan mendukung Shopee PayLater, Akulaku, Kredivo, dan limit digital lainnya. Silakan hubungi admin untuk jenis lain.
+  </details>
+
+  <details style="margin-bottom: 10px;">
+    <summary><strong>Apakah layanan ini legal?</strong></summary>
+    Layanan ini adalah bentuk jasa pengelolaan keuangan secara pribadi. Kami tidak mewakili Shopee atau pihak ketiga manapun.
+  </details>
+
+  <details style="margin-bottom: 10px;">
+    <summary><strong>Berapa biaya yang dikenakan?</strong></summary>
+    Biaya 2% dari nominal PayLater + biaya admin transfer. Semuanya ditampilkan secara transparan sebelum Anda menyelesaikan transaksi.
+  </details>
+
+  <details style="margin-bottom: 10px;">
+    <summary><strong>Berapa lama proses cair ke rekening?</strong></summary>
+    Setelah pembayaran dikonfirmasi, dana akan dikirim dalam waktu 5–15 menit, tergantung antrian dan jam operasional.
+  </details>
+
+  <details style="margin-bottom: 10px;">
+    <summary><strong>Apa yang harus saya lakukan setelah transfer?</strong></summary>
+    Klik tombol “Sudah Bayar” yang tersedia setelah QR ditampilkan. Anda akan diarahkan ke WhatsApp untuk konfirmasi ke admin.
+  </details>
+</div>
+    
     <!-- STEP 2: Data Penerima -->
     <div class="step" id="step2">
       <label for="wa">No. WhatsApp</label>
@@ -149,10 +201,12 @@
         <p>Nominal: Rp <span id="outNominal"></span></p>
         <p>Admin: Rp <span id="adminFee"></span></p>
         <p class="total">Total Kirim: Rp <span id="totalPay"></span></p>
+        <p>Bayar Sesuai Nominal Tertera Tidak Boleh Kurang/Lebih</p>
         <p>Rekening:</p>
         <p>– Nama: <strong><span id="outName"></span></strong></p>
         <p>– No.: <strong><span id="outNo"></span></strong></p>
         <img id="qrCode" src="qris-placeholder.png" alt="QRIS Code">
+        <p>Silahkan Scan Qris DiAtas Dan Bayar Menggunakan Shopee Paylater</p>
       </div>
       <div class="modal-footer">
         <button class="close-btn" id="closeModal">Batal</button>
