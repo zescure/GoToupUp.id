@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Binary Option Trading (Pure Canvas)</title>
+  <title>Binary Option Trading (Canvas + Cache)</title>
   <style>
     :root {
       --primary-color: #1e88e5;
@@ -13,28 +13,28 @@
       --up-color: #4caf50;
       --down-color: #f44336;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Poppins, sans-serif; }
-    body { background: var(--bg-color); color: var(--text-color); }
-    .header { display: flex; justify-content: space-between; align-items: center;
-      background: var(--primary-color); color: #fff; padding: 1rem; }
-    .controls { display: flex; gap: .5rem; padding: 1rem; }
-    .controls select, .controls button { padding: .5rem; border-radius: 4px; border: 1px solid #ccc; }
-    .btn-deposit { background: var(--primary-color); color: #fff; border: none; cursor: pointer; }
-    .trading-panel { background: var(--card-bg); margin: 1rem; padding: 1rem;
-      border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    #chartCanvas { width: 100%; height: 400px; border: 1px solid #ddd; display: block; }
-    .market-info { display: flex; justify-content: space-between; margin: .5rem 0; }
-    .options { display: flex; gap: .5rem; margin-bottom: .5rem; }
-    .option-btn { flex: 1; padding: .8rem; border: none; border-radius: 4px;
-      color: #fff; font-weight: bold; cursor: pointer; }
-    #btn-up { background: var(--up-color); }
-    #btn-down { background: var(--down-color); }
-    .bet-controls { display: flex; gap: .5rem; margin-bottom: .5rem; }
-    .bet-controls input { flex: 1; padding: .6rem; border-radius: 4px; border: 1px solid #ccc; }
-    .btn-place { background: var(--primary-color); color: #fff; border: none; padding: .6rem 1rem;
-      border-radius: 4px; cursor: pointer; }
-    .result { text-align: center; font-weight: bold; margin-top: .5rem; }
-    .footer { text-align: center; margin: 1rem; color: #777; }
+    * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif; }
+    body { background:var(--bg-color); color:var(--text-color); }
+    .header { display:flex; justify-content:space-between; align-items:center;
+      background:var(--primary-color); color:#fff; padding:1rem; }
+    .controls { display:flex; gap:.5rem; padding:1rem; }
+    .controls select, .controls button { padding:.5rem; border-radius:4px; border:1px solid #ccc; }
+    .btn-deposit { background:var(--primary-color); color:#fff; border:none; cursor:pointer; }
+    .trading-panel { background:var(--card-bg); margin:1rem; padding:1rem;
+      border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,.1); }
+    #chartCanvas { width:100%; height:400px; border:1px solid #ddd; display:block; }
+    .market-info { display:flex; justify-content:space-between; margin:.5rem 0; }
+    .options { display:flex; gap:.5rem; margin-bottom:.5rem; }
+    .option-btn { flex:1; padding:.8rem; border:none; border-radius:4px;
+      color:#fff; font-weight:bold; cursor:pointer; }
+    #btn-up { background:var(--up-color); }
+    #btn-down { background:var(--down-color); }
+    .bet-controls { display:flex; gap:.5rem; margin-bottom:.5rem; }
+    .bet-controls input { flex:1; padding:.6rem; border-radius:4px; border:1px solid #ccc; }
+    .btn-place { background:var(--primary-color); color:#fff; border:none; padding:.6rem 1rem;
+      border-radius:4px; cursor:pointer; }
+    .result { text-align:center; font-weight:bold; margin-top:.5rem; }
+    .footer { text-align:center; margin:1rem; color:#777; }
   </style>
 </head>
 <body>
@@ -122,6 +122,9 @@
     let markers = [];
     let fakeInterval = null;
 
+    // cache historis per symbol_timeframe
+    const historyCache = {};
+
     // ---------- Helpers ----------
     function updateInfo() {
       currSymbol.textContent = symbolSelect.selectedOptions[0].text;
@@ -132,7 +135,7 @@
     function genHistory(count=50) {
       const tf = +tfSelect.value;
       const now = Math.floor(Date.now()/1000);
-      let base = 1 + (symbolSelect.value.charCodeAt(0)%20)/10;
+      let base = 1 + (symbolSelect.value.charCodeAt(0) % 20) / 10;
       const data = [];
       for (let i = count; i > 0; i--) {
         const t = now - i * tf * 60;
@@ -158,7 +161,6 @@
       }, 1000);
     }
 
-    // map price to y
     function getY(price) {
       const prices = candles.flatMap(c => [c.high, c.low]);
       const maxP = Math.max(...prices);
@@ -170,32 +172,29 @@
     function draw() {
       ctx.clearRect(0,0,width,height);
       if (!candles.length) return;
-      const barWidth = width / candles.length * 0.8;
+      const barW = width / candles.length * 0.8;
       candles.forEach((c,i) => {
-        const x = i * (width / candles.length) + (width / candles.length - barWidth)/2;
-        const yOpen  = getY(c.open);
-        const yClose = getY(c.close);
-        const yHigh  = getY(c.high);
-        const yLow   = getY(c.low);
+        const x = i * (width / candles.length) + (width / candles.length - barW)/2;
+        const yO = getY(c.open), yC = getY(c.close);
+        const yH = getY(c.high), yL = getY(c.low);
         // wick
         ctx.strokeStyle = '#555';
         ctx.beginPath();
-        ctx.moveTo(x + barWidth/2, yHigh);
-        ctx.lineTo(x + barWidth/2, yLow);
+        ctx.moveTo(x+barW/2, yH);
+        ctx.lineTo(x+barW/2, yL);
         ctx.stroke();
         // body
         ctx.fillStyle = c.close >= c.open ? 'var(--up-color)' : 'var(--down-color)';
-        const bodyY = Math.min(yOpen, yClose);
-        const bodyH = Math.abs(yClose - yOpen);
-        ctx.fillRect(x, bodyY, barWidth, bodyH || 1);
+        const by = Math.min(yO,yC), bh = Math.abs(yC-yO)||1;
+        ctx.fillRect(x, by, barW, bh);
       });
       // markers
       markers.forEach(m => {
         const i = candles.findIndex(c => c.time === m.time);
         if (i<0) return;
         const x = i * (width / candles.length) + (width / candles.length)/2;
-        const y = getY(m.price) + (m.type==='CALL' ? 10 : -10);
-        ctx.fillStyle = m.type==='CALL' ? 'green' : 'red';
+        const y = getY(m.price) + (m.type==='CALL'?10:-10);
+        ctx.fillStyle = m.type==='CALL'?'green':'red';
         ctx.font = '14px sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(m.type, x, y);
@@ -205,7 +204,13 @@
     // ---------- Data & Events ----------
     function loadChart() {
       updateInfo();
-      candles = genHistory();
+      const key = symbolSelect.value + '_' + tfSelect.value;
+      if (historyCache[key]) {
+        candles = historyCache[key];
+      } else {
+        candles = genHistory();
+        historyCache[key] = candles;
+      }
       markers = [];
       draw();
       startFakeTicks();
@@ -213,39 +218,36 @@
 
     symbolSelect.addEventListener('change', loadChart);
     tfSelect.addEventListener('change', loadChart);
-    durSelect.addEventListener('change', () => { updateInfo(); });
+    durSelect.addEventListener('change', () => updateInfo());
     btnDeposit.addEventListener('click', () => {
       const v = parseFloat(prompt('Jumlah deposit (USD):'));
       if (v>0) { balance += v; balanceEl.textContent = balance.toFixed(2); }
     });
-    btnUp.addEventListener('click', () => selection = 'CALL');
-    btnDown.addEventListener('click', () => selection = 'PUT');
-
+    btnUp.addEventListener('click', () => selection='CALL');
+    btnDown.addEventListener('click', () => selection='PUT');
     btnPlace.addEventListener('click', () => {
       if (!selection) return alert('Klik CALL atau PUT dulu');
       const bet = parseFloat(betAmount.value);
       if (!bet || bet<=0) return alert('Masukkan jumlah valid');
       const last = candles[candles.length-1];
-      markers.push({ time: last.time, price: last.close, type: selection });
+      markers.push({ time:last.time, price:last.close, type:selection });
       draw();
       alert(`${selection} @ ${last.close.toFixed(4)} diterima`);
       setTimeout(() => {
-        const win = Math.random() < 0.5;
+        const win = Math.random()<0.5;
         if (win) {
-          const profit = bet * 0.8;
-          balance += profit;
-          resultEl.textContent = `Menang +${profit.toFixed(2)} USD`;
+          const p = bet*0.8; balance+=p;
+          resultEl.textContent = `Menang +${p.toFixed(2)} USD`;
         } else {
-          balance -= bet;
+          balance-=bet;
           resultEl.textContent = `Kalah -${bet.toFixed(2)} USD`;
         }
         balanceEl.textContent = balance.toFixed(2);
-        selection = null;
-        betAmount.value = '';
-      }, tradeDur * 1000);
+        selection=null; betAmount.value='';
+      }, tradeDur*1000);
     });
 
-    // start
+    // init
     loadChart();
   </script>
 </body>
