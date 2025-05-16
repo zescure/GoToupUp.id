@@ -15,31 +15,26 @@
     }
     * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif; }
     body { background:var(--bg-color); color:var(--text-color); }
-    .header {
-      display:flex; justify-content:space-between; align-items:center;
-      background:var(--primary-color); color:#fff; padding:1rem;
-    }
-    .header .actions {
-      display:flex; align-items:center; gap:.5rem;
-    }
-    .header .actions button {
-      padding:.5rem 1rem; background:#fff; color:var(--primary-color);
-      border:none; border-radius:4px; cursor:pointer; font-weight:bold;
-    }
-    .trading-panel {
-      background:var(--card-bg); max-width:960px; margin:1rem auto; padding:1rem;
-      border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,.1);
-    }
+    .header { display:flex; justify-content:space-between; align-items:center;
+      background:var(--primary-color); color:#fff; padding:1rem; }
+    .controls { display:flex; gap:.5rem; padding:1rem; }
+    .controls select, .controls button { padding:.5rem; border-radius:4px; border:1px solid #ccc; }
+    .btn-deposit { background:var(--primary-color); color:#fff; border:none; cursor:pointer; }
+    .btn-withdraw { background:var(--down-color); color:#fff; border:none; cursor:pointer; }
+    .trading-panel { background:var(--card-bg); max-width:960px; margin:1rem auto; padding:1rem;
+      border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,.1); overflow:hidden; }
     .chart-container { display:flex; flex-wrap:wrap; gap:1rem; }
-    #chartCanvas { flex:1 1 0; max-width:100%; height:300px; border:1px solid #ddd; }
+    #chartCanvas { flex:1 1 0; max-width:100%; height:400px; border:1px solid #ddd; }
     .price-display {
       width:100px; padding:1rem; font-size:1.1rem;
       border-left:1px solid #ccc; text-align:center;
       display:flex; flex-direction:column; justify-content:center;
     }
-    @media(max-width:600px){
-      .chart-container{flex-direction:column;}
-      .price-display{width:100%;border-left:none;border-top:1px solid #ccc;padding-top:.5rem;}
+    @media (max-width:600px) {
+      .chart-container { flex-direction:column; }
+      .price-display {
+        width:100%; border-left:none; border-top:1px solid #ccc; padding-top:.5rem;
+      }
     }
     .market-info { display:flex; justify-content:space-between; margin:.5rem 0; }
     .options { display:flex; gap:.5rem; margin-bottom:.5rem; }
@@ -53,6 +48,7 @@
     #activeTrade { text-align:center; margin-top:.5rem; color:#333; }
     #tradeHistory { list-style:none; padding:0; max-width:600px; margin:1rem auto; font-size:.9rem; }
     #tradeHistory li { margin-bottom:.3rem; }
+    .footer { text-align:center; margin:1rem; color:#777; }
 
     /* Modal */
     .modal { display:none; position:fixed; z-index:10; left:0; top:0; width:100%; height:100%;
@@ -92,35 +88,60 @@
 
   <div class="header">
     <div>🚀 Crash GOOGLE</div>
-    <div class="actions">
+    <div>
       Saldo: Rp. <span id="balance">25000.00</span>
-      <button id="btnDeposit">Deposit</button>
-      <button id="btnWithdraw">Tarik Saldo</button>
     </div>
+  </div>
+
+  <p style="text-align:center; margin-top:.5rem;">Informasi: Market – Pergerakan – Durasi Trading</p>
+  <div class="controls">
+    <select id="symbolSelect">
+      <option value="EURUSD">Polusi Index</option>
+      <option value="GBPUSD">Sumber Daya Mineral</option>
+      <option value="USDJPY">Sumber Daya Air</option>
+      <option value="AUDUSD">Kesehatan Index</option>
+      <option value="USDCAD">Kemiskinan Index</option>
+      <option value="USDCHF">Lingkungan Index</option>
+      <option value="NZDUSD">UMKM Index</option>
+      <option value="XAUUSD">Demokrasi Index</option>
+    </select>
+    <select id="tfSelect">
+      <option value="1">Cepat</option>
+      <option value="5">Standar</option>
+      <option value="15">Lambat</option>
+      <option value="60">Rendah</option>
+    </select>
+    <select id="durSelect">
+      <option value="60">1 menit</option>
+      <option value="120">2 menit</option>
+      <option value="300">5 menit</option>
+    </select>
+    <button id="btnDeposit" class="btn-deposit">Deposit</button>
+    <button id="btnWithdraw" class="btn-withdraw">Tarik Saldo</button>
   </div>
 
   <section class="trading-panel">
     <div class="chart-container">
       <canvas id="chartCanvas"></canvas>
       <div class="price-display">
-        <div>Harga</div>
+        <div>Index Poin</div>
         <div id="currentPrice">–</div>
       </div>
     </div>
     <div class="market-info">
-      <div id="currSymbol">EUR/USD</div>
+      <div id="currSymbol">Polusi Index</div>
       <div>Durasi: <span id="currDur">60</span>s</div>
     </div>
     <div class="options">
-      <button id="btnUp" class="option-btn">CALL ↑</button>
-      <button id="btnDown" class="option-btn">PUT ↓</button>
+      <button id="btnUp" class="option-btn">Buy ↑</button>
+      <button id="btnDown" class="option-btn">Sell ↓</button>
     </div>
     <div class="bet-controls">
-      <input type="number" id="betAmount" placeholder="Jumlah (Rp)" min="1">
+      <input type="number" id="betAmount" placeholder="Jumlah (Rupiah)" min="1">
     </div>
     <div id="result" class="result"></div>
     <div id="activeTrade"></div>
-    <h3 style="text-align:center;">Riwayat Perdagangan</h3>
+    <h3 style="text-align:center; margin-top:1rem;">Riwayat Perdagangan</h3>
     <ul id="tradeHistory"></ul>
   </section>
 
@@ -130,7 +151,7 @@
       <span class="modal-close" id="depositClose">&times;</span>
       <h3>Deposit Saldo</h3>
       <label for="depositAmount">Nominal (Rp)</label>
-      <input type="number" id="depositAmount" placeholder="contoh: 50000" min="1000">
+      <input type="number" id="depositAmount" placeholder="50000" min="1000">
       <label for="depositAccount">No. Rekening Pengirim</label>
       <input type="text" id="depositAccount" placeholder="1234567890">
       <label for="depositMethod">Metode Pembayaran</label>
@@ -142,7 +163,7 @@
       <button id="depositPay">Bayar</button>
       <div class="qrcode-container" id="qrcodeContainer" style="display:none;">
         <p id="qrTotal"></p>
-        <img id="qrImage" src="" alt="QRIS Code">
+        <img id="qrImage" alt="QRIS Code">
         <p>Menunggu pembayaran... Sisa waktu: <span id="depositTimer">15</span>s</p>
         <button id="depositConfirm" style="display:none;">Sudah Bayar</button>
       </div>
@@ -155,7 +176,7 @@
       <span class="modal-close" id="withdrawClose">&times;</span>
       <h3>Tarik Saldo</h3>
       <label for="withdrawAmount">Nominal (Rp)</label>
-      <input type="number" id="withdrawAmount" placeholder="contoh: 50000" min="1000">
+      <input type="number" id="withdrawAmount" placeholder="50000" min="1000">
       <label for="withdrawAccount">No. Rekening Tujuan</label>
       <input type="text" id="withdrawAccount" placeholder="1234567890">
       <label for="withdrawMethod">Metode Penarikan</label>
@@ -170,143 +191,215 @@
   <section class="promo">
     <h2>🚀 Siap Uji Insting Trading Lu?</h2>
     <p>
-      Gabung di <strong>Crash GOOGLE</strong>, game simulasi binary options yang bikin deg‑deg‑an!  
-      Klik CALL/PUT, nikmati timer mundur, dan raih profit 80% per trade—atau siapkan risikonya.  
+      Gabung di <strong>Crash GOOGLE</strong>, simulasi binary options yang bikin deg‑deg‑an!  
+      Klik Buy/Sell, pantau countdown, dan raih profit 80% per trade—atau terima risikonya.  
       Semua hasil tercatat otomatis untuk evaluasi strategi.
     </p>
-    <a href="#chartCanvas" class="btn-play" style="padding:.6rem 1.2rem; background:var(--up-color); color:#fff; border-radius:4px; text-decoration:none;">Main Sekarang</a>
+    <a href="#chartCanvas" class="btn-play">Main Sekarang</a>
   </section>
 
   <section class="faq">
     <h2>FAQ Opsi Trading</h2>
     <details class="faq-item">
       <summary>Apa itu binary options?</summary>
-      <p>Binary options adalah instrumen keuangan di mana trader menebak arah pergerakan harga dalam jangka waktu tertentu. Hasilnya all-or-nothing: menang persentase tetap atau kehilangan modal.</p>
+      <p>Instrumen keuangan all‑or‑nothing: tebak naik/turun dalam waktu tertentu.</p>
     </details>
     <details class="faq-item">
-      <summary>Bagaimana cara bermain di game ini?</summary>
-      <p>1. Masukkan jumlah taruhan (misal Rp 10.000).<br>
-         2. Klik CALL (untuk naik) atau PUT (untuk turun).<br>
-         3. Tunggu countdown berakhir, lalu lihat hasil menang atau kalah.</p>
+      <summary>Bagaimana cara main?</summary>
+      <p>Masukkan nominal, klik Buy/Sell, tunggu countdown, lihat hasil.</p>
     </details>
     <details class="faq-item">
-      <summary>Berapa lama durasi setiap trade?</summary>
-      <p>Durasi default 60 detik, tapi bisa diubah di dropdown “Durasi”.</p>
+      <summary>Durasi trade?</summary>
+      <p>1–5 menit sesuai pilihan di dropdown Durasi.</p>
     </details>
     <details class="faq-item">
-      <summary>Bagaimana cara melihat riwayat trade?</summary>
-      <p>Riwayat ditampilkan di bawah chart dengan waktu, jenis trade, harga masuk, dan hasil (+/-).</p>
+      <summary>Riwayat trade?</summary>
+      <p>Terlihat di bawah chart: waktu, tipe, harga masuk, dan hasil.</p>
     </details>
     <details class="faq-item">
-      <summary>Apa risiko bermain binary options?</summary>
-      <p>Risiko utama adalah kehilangan seluruh taruhan jika prediksi salah. Gunakan modal secukupnya atau mode demo sebelum real money.</p>
+      <summary>Risiko?</summary>
+      <p>Potensi kehilangan seluruh taruhan. Gunakan modal kecil atau demo.</p>
     </details>
   </section>
 
-  <div class="footer" style="text-align:center;margin:1rem;color:#777;">© 2025 Dolphin LLC</div>
+  <div class="footer">© 2025 Dolphin LLC</div>
 
   <script>
-    // --- State & Elemen ---
+    // --- State ---
     let balance = 25000;
-    const balanceEl      = document.getElementById('balance');
-    const canvas         = document.getElementById('chartCanvas');
-    const ctx            = canvas.getContext('2d');
-    const priceEl        = document.getElementById('currentPrice');
-    const symbolSelect   = null; // jika ingin extend
-    const currDur        = document.getElementById('currDur');
-    const durSelect      = document.getElementById('durSelect');
-    const btnUp          = document.getElementById('btnUp');
-    const btnDown        = document.getElementById('btnDown');
-    const betAmount      = document.getElementById('betAmount');
-    const resultEl       = document.getElementById('result');
-    const activeTrade    = document.getElementById('activeTrade');
-    const tradeHistory   = document.getElementById('tradeHistory');
-    let candles = [], markers = [];
-    let lastPrice = 1.2;
-    let tradeDur = 60;
+    const balanceEl = document.getElementById('balance');
+    balanceEl.textContent = balance.toFixed(2);
 
-    // --- Resize Canvas ---
+    // --- Controls ---
+    const symbolSelect = document.getElementById('symbolSelect');
+    const tfSelect     = document.getElementById('tfSelect');
+    const durSelect    = document.getElementById('durSelect');
+    const currSymbol   = document.getElementById('currSymbol');
+    const currDur      = document.getElementById('currDur');
+
+    symbolSelect.addEventListener('change', () => {
+      currSymbol.textContent = symbolSelect.selectedOptions[0].text;
+    });
+    durSelect.addEventListener('change', () => {
+      currDur.textContent = durSelect.value;
+      tradeDur = +durSelect.value;
+    });
+
+    // --- Chart & Trading Setup ---
+    const canvas       = document.getElementById('chartCanvas');
+    const ctx          = canvas.getContext('2d');
+    const priceEl      = document.getElementById('currentPrice');
+    const btnUp        = document.getElementById('btnUp');
+    const btnDown      = document.getElementById('btnDown');
+    const betAmount    = document.getElementById('betAmount');
+    const resultEl     = document.getElementById('result');
+    const activeTrade  = document.getElementById('activeTrade');
+    const tradeHistory = document.getElementById('tradeHistory');
+    let candles = [], markers = [], lastPrice = 1.2;
+    let tradeDur = +durSelect.value;
+
     function resize() {
       canvas.width = canvas.clientWidth;
       canvas.height = canvas.clientHeight;
     }
-    window.addEventListener('resize', resize);
-    resize();
+    window.addEventListener('resize', resize); resize();
 
-    // --- Chart & Price Simulation ---
     function genInitial() {
-      for(let i=0;i<50;i++){
-        const p = lastPrice * (1 + (Math.random()*0.02 - 0.01));
-        candles.push({ time:Date.now()- (50-i)*1000, close:p });
-        lastPrice = p;
+      for (let i=0; i<50; i++){
+        lastPrice *= 1 + (Math.random()*0.02 - 0.01);
+        candles.push({ time:Date.now() - (50-i)*1000, close:lastPrice });
       }
     }
     function updatePrice(){
-      lastPrice = lastPrice * (1 + (Math.random()*0.004 - 0.002));
+      lastPrice *= 1 + (Math.random()*0.004 - 0.002);
       candles.push({ time:Date.now(), close:lastPrice });
-      if(candles.length>50) candles.shift();
+      if (candles.length>50) candles.shift();
       priceEl.textContent = lastPrice.toFixed(4);
       draw();
     }
     function draw(){
       ctx.clearRect(0,0,canvas.width,canvas.height);
-      const prices = candles.map(c=>c.close);
-      const max = Math.max(...prices), min = Math.min(...prices);
-      const stepX = canvas.width / candles.length;
+      if (!candles.length) return;
+      const prices = candles.map(c=>c.close), max = Math.max(...prices), min = Math.min(...prices);
+      const step = canvas.width/(candles.length-1);
+      // line
+      ctx.beginPath();
       candles.forEach((c,i)=>{
-        const x = i*stepX;
-        const y = canvas.height - ((c.close-min)/(max-min))*canvas.height;
-        ctx.fillStyle = '#555';
-        ctx.fillRect(x,y,2,2);
+        const x = i*step, y = canvas.height - ((c.close-min)/(max-min))*canvas.height;
+        i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
       });
+      ctx.strokeStyle = '#555'; ctx.lineWidth = 2; ctx.stroke();
+      // markers
       markers.forEach(m=>{
         const idx = candles.findIndex(c=>c.time===m.time);
-        if(idx>=0){
-          const x = idx*stepX, y = canvas.height - ((m.price-min)/(max-min))*canvas.height;
-          ctx.fillStyle = m.type==='CALL'?varUp:varDown;
-        }
+        if(idx<0) return;
+        const x = idx*step;
+        const y = canvas.height - ((m.price-min)/(max-min))*canvas.height;
+        ctx.fillStyle = m.type==='Buy'?getComputedStyle(document.documentElement).getPropertyValue('--up-color'):getComputedStyle(document.documentElement).getPropertyValue('--down-color');
+        ctx.beginPath(); ctx.arc(x,y,5,0,2*Math.PI); ctx.fill();
       });
     }
-    genInitial();
-    draw();
-    setInterval(updatePrice,1000);
+    genInitial(); draw(); setInterval(updatePrice,1000);
 
-    // --- Trading Function ---
     function placeTrade(type){
       const bet = parseFloat(betAmount.value);
-      if(!bet||bet<=0) return alert('Masukkan jumlah valid');
-      if(bet>balance) return alert('Saldo tidak cukup');
-      const entryPrice = lastPrice;
-      const entryTime = Date.now();
+      if (!bet||bet<=0) return alert('Masukkan jumlah valid');
+      if (bet>balance) return alert('Saldo tidak cukup');
+      const entryPrice = lastPrice, entryTime = Date.now();
       markers.push({ time:entryTime, price:entryPrice, type });
       draw();
-      let timeLeft = tradeDur;
-      activeTrade.textContent = `${type} @ ${entryPrice.toFixed(4)} | Sisa waktu: ${timeLeft}s`;
-      const interval = setInterval(()=>{
-        timeLeft--;
-        activeTrade.textContent = `${type} @ ${entryPrice.toFixed(4)} | Sisa waktu: ${timeLeft}s`;
-        if(timeLeft<=0){
-          clearInterval(interval);
+      let t=tradeDur;
+      activeTrade.textContent = `${type} @ ${entryPrice.toFixed(4)} | Sisa waktu: ${t}s`;
+      const iv = setInterval(()=>{
+        t--; activeTrade.textContent = `${type} @ ${entryPrice.toFixed(4)} | Sisa waktu: ${t}s`;
+        if (t<=0){
+          clearInterval(iv);
           const win = Math.random()<0.5;
           let text;
-          if(win){ const p=bet*0.8; balance+=p; text=`Menang +${p.toFixed(2)} Rp`; }
+          if (win){ const p=bet*0.8; balance+=p; text=`Menang +${p.toFixed(2)} Rp`; }
           else{ balance-=bet; text=`Kalah -${bet.toFixed(2)} Rp`; }
           balanceEl.textContent = balance.toFixed(2);
           resultEl.textContent = text;
           activeTrade.textContent = '';
           const li = document.createElement('li');
           li.textContent = `${new Date().toLocaleTimeString()} — ${type} @ ${entryPrice.toFixed(4)} — ${text}`;
-          li.style.color = win?'green':'red';
+          li.style.color = win?'var(--up-color)':'var(--down-color)';
           tradeHistory.prepend(li);
-          betAmount.value='';
+          betAmount.value = '';
         }
       },1000);
     }
-    btnUp.addEventListener('click',()=>placeTrade('CALL'));
-    btnDown.addEventListener('click',()=>placeTrade('PUT'));
+    btnUp.addEventListener('click', ()=>placeTrade('Buy'));
+    btnDown.addEventListener('click', ()=>placeTrade('Sell'));
 
-    // --- Deposit & Withdraw Logic (seperti sebelumnya) ---
-    // ... kode modal deposit & withdraw persis seperti jawaban sebelumnya ...
+    // --- Deposit & Withdraw Logic ---
+    const btnDeposit     = document.getElementById('btnDeposit'),
+          depositModal   = document.getElementById('depositModal'),
+          depositClose   = document.getElementById('depositClose'),
+          depositPay     = document.getElementById('depositPay'),
+          qrcodeContainer= document.getElementById('qrcodeContainer'),
+          qrTotal        = document.getElementById('qrTotal'),
+          qrImage        = document.getElementById('qrImage'),
+          depositTimerEl = document.getElementById('depositTimer'),
+          depositConfirm = document.getElementById('depositConfirm');
+    let depositTimer, depositCountdown;
+
+    const btnWithdraw    = document.getElementById('btnWithdraw'),
+          withdrawModal  = document.getElementById('withdrawModal'),
+          withdrawClose  = document.getElementById('withdrawClose'),
+          withdrawSubmit = document.getElementById('withdrawSubmit');
+
+    btnDeposit.addEventListener('click', ()=>{
+      document.getElementById('depositAmount').value = '';
+      document.getElementById('depositAccount').value = '';
+      document.getElementById('depositMethod').selectedIndex = 0;
+      qrcodeContainer.style.display = 'none';
+      depositConfirm.style.display = 'none';
+      clearInterval(depositTimer);
+      depositModal.style.display = 'block';
+    });
+    depositClose.addEventListener('click', ()=> depositModal.style.display = 'none');
+    window.addEventListener('click', e=>{ if(e.target===depositModal) depositModal.style.display='none'; });
+    depositPay.addEventListener('click', ()=>{
+      const amt = parseFloat(document.getElementById('depositAmount').value);
+      const acc = document.getElementById('depositAccount').value.trim();
+      const method = document.getElementById('depositMethod').value;
+      if (!amt||amt<1000) return alert('Minimal Rp 1.000');
+      if (!acc) return alert('Masukkan no. rekening');
+      const adminFee = 5000, total = amt + adminFee;
+      qrTotal.textContent = `Total bayar: Rp ${total.toLocaleString()} (admin Rp ${adminFee.toLocaleString()})`;
+      const data = encodeURIComponent(`PAY:${method};ACC:${acc};AMT:${total}`);
+      qrImage.src = `https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${data}`;
+      qrcodeContainer.style.display = 'block';
+      depositCountdown = 15; depositTimerEl.textContent = depositCountdown;
+      depositTimer = setInterval(()=>{
+        depositCountdown--;
+        depositTimerEl.textContent = depositCountdown;
+        if (depositCountdown<=0){ clearInterval(depositTimer); depositConfirm.style.display='block'; }
+      },1000);
+    });
+    depositConfirm.addEventListener('click', ()=>{
+      const amt = parseFloat(document.getElementById('depositAmount').value);
+      balance += amt; balanceEl.textContent = balance.toFixed(2);
+      depositModal.style.display = 'none';
+    });
+
+    btnWithdraw.addEventListener('click', ()=>{
+      document.getElementById('withdrawAmount').value = '';
+      document.getElementById('withdrawAccount').value = '';
+      document.getElementById('withdrawMethod').selectedIndex = 0;
+      withdrawModal.style.display = 'block';
+    });
+    withdrawClose.addEventListener('click', ()=> withdrawModal.style.display = 'none');
+    window.addEventListener('click', e=>{ if(e.target===withdrawModal) withdrawModal.style.display='none'; });
+    withdrawSubmit.addEventListener('click', ()=>{
+      const amt = parseFloat(document.getElementById('withdrawAmount').value);
+      if (!amt||amt<1000) return alert('Minimal Rp 1.000');
+      if (amt>balance) return alert('Saldo tidak cukup');
+      balance -= amt; balanceEl.textContent = balance.toFixed(2);
+      withdrawModal.style.display = 'none';
+    });
   </script>
+
 </body>
 </html>
