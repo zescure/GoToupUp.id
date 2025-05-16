@@ -257,8 +257,8 @@
       const v = parseFloat(prompt('Jumlah deposit (USD):'));
       if (v>0) { balance += v; balanceEl.textContent = balance.toFixed(2); }
     });
-    btnUp.addEventListener('click', () => selection = 'CALL');
-    btnDown.addEventListener('click', () => selection = 'PUT');
+    btnUp.addEventListener('click', () => selection = 'Jual');
+    btnDown.addEventListener('click', () => selection = 'Beli');
     btnPlace.addEventListener('click', () => {
   if (!selection) return alert('Klik CALL atau PUT dulu');
   const bet = parseFloat(betAmount.value);
