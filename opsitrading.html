@@ -100,10 +100,11 @@
       <input type="number" id="betAmount" placeholder="Jumlah (USD)" min="1">
       <button id="btnPlace" class="btn-place">Place Bet</button>
     </div>
-    <div id="result" class="result"></div>
-  <div id="activeTrade" style="text-align:center; margin-top:.5rem; color:#333;"></div>
-<h3 style="margin:1rem 0 .3rem 0; text-align:center;">Riwayat Perdagangan</h3>
-<ul id="tradeHistory" style="list-style:none; padding:0; max-width:600px; margin:0 auto; font-size:.9rem;"></ul>
+    <div id="activeTrade" class="result" style="color:#1e88e5;"></div>
+<div id="tradeHistory" style="margin-top:1rem; font-size:.9rem;">
+  <h4>📈 Riwayat Perdagangan</h4>
+  <ul id="historyList" style="list-style:none; padding:0;"></ul>
+</div>
   </section>
 
   <div class="footer">© 2025 YourCompany</div>
@@ -134,9 +135,12 @@
     const btnUp        = document.getElementById('btnUp');
     const btnDown      = document.getElementById('btnDown');
     const betAmount    = document.getElementById('betAmount');
-    const btnPlace     = document.getElementById('btnPlace');
+    
     const resultEl     = document.getElementById('result');
-
+    const historyList  = document.getElementById('historyList');
+const activeTrade  = document.getElementById('activeTrade');
+let countdownTimer = null;
+    
     let balance        = 1000;
     let tradeDur       = +durSelect.value;
     let selection      = null;
@@ -226,6 +230,46 @@
       });
     }
 
+function placeTrade(type) {
+  const bet = parseFloat(betAmount.value);
+  if (!bet || bet <= 0) return alert('Masukkan jumlah valid');
+
+  const last = candles[candles.length - 1];
+  markers.push({ time: last.time, price: last.close, type });
+  draw();
+
+  const entryPrice = last.close;
+  const startTime = Date.now();
+  let timeLeft = tradeDur;
+  activeTrade.textContent = `${type} @ ${entryPrice.toFixed(4)} | Sisa waktu: ${timeLeft}s`;
+
+  clearInterval(countdownTimer);
+  countdownTimer = setInterval(() => {
+    timeLeft--;
+    activeTrade.textContent = `${type} @ ${entryPrice.toFixed(4)} | Sisa waktu: ${timeLeft}s`;
+    if (timeLeft <= 0) {
+      clearInterval(countdownTimer);
+      const win = Math.random() < 0.5;
+      let resultText;
+      if (win) {
+        const p = bet * 0.8;
+        balance += p;
+        resultText = `Menang +${p.toFixed(2)} USD`;
+      } else {
+        balance -= bet;
+        resultText = `Kalah -${bet.toFixed(2)} USD`;
+      }
+      balanceEl.textContent = balance.toFixed(2);
+      activeTrade.textContent = '';
+      const li = document.createElement('li');
+      li.textContent = `${new Date().toLocaleTimeString()} — ${type} @ ${entryPrice.toFixed(4)} — ${resultText}`;
+      li.style.color = win ? 'green' : 'red';
+      historyList.prepend(li);
+      betAmount.value = '';
+    }
+  }, 1000);
+}
+    
     // ---------- Data & Events ----------
     function loadChart() {
       updateInfo();
@@ -247,7 +291,8 @@
       draw();
       startFakeTicks();
     }
-
+    btnUp.addEventListener('click', () => placeTrade('CALL'));
+btnDown.addEventListener('click', () => placeTrade('PUT'));
     symbolSelect.addEventListener('change', loadChart);
     tfSelect.addEventListener('change', loadChart);
     durSelect.addEventListener('change', () => updateInfo());
@@ -255,7 +300,7 @@
       const v = parseFloat(prompt('Jumlah deposit (USD):'));
       if (v>0) { balance += v; balanceEl.textContent = balance.toFixed(2); }
     });
-    btnPlace.addEventListener('click', () => {
+    
   if (!selection) return alert('Klik CALL atau PUT dulu');
   const bet = parseFloat(betAmount.value);
   if (!bet || bet <= 0) return alert('Masukkan jumlah valid');
