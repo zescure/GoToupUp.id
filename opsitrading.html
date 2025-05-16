@@ -95,8 +95,8 @@
       <div>Durasi: <span id="currDur">60</span>s</div>
     </div>
     <div class="options">
-      <button id="btnUp" class="option-btn">Sell ↓</button>
-      <button id="btnDown" class="option-btn">Buy ↑</button>
+      <button id="btnUp" class="option-btn">Buy ↑</button>
+      <button id="btnDown" class="option-btn">Sell ↓</button>
     </div>
     <div class="bet-controls">
       <input type="number" id="betAmount" placeholder="Jumlah (USD)" min="1">
@@ -257,8 +257,8 @@
       const v = parseFloat(prompt('Jumlah deposit (USD):'));
       if (v>0) { balance += v; balanceEl.textContent = balance.toFixed(2); }
     });
-    btnUp.addEventListener('click', () => selection = 'Jual');
-    btnDown.addEventListener('click', () => selection = 'Beli');
+    btnUp.addEventListener('click', () => selection = 'Dibeli');
+    btnDown.addEventListener('click', () => selection = 'Dijual');
     btnPlace.addEventListener('click', () => {
   if (!selection) return alert('Klik CALL atau PUT dulu');
   const bet = parseFloat(betAmount.value);
