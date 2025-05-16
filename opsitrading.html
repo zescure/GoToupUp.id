@@ -30,8 +30,8 @@
       padding:.5rem; border-radius:4px; border:1px solid #ccc;
       background:#fff; cursor:pointer;
     }
-    .btn-deposit { background:var(--primary-color); color:#fff; border:none; }
-    .btn-withdraw { background:var(--down-color); color:#fff; border:none; }
+     .btn-deposit { background:var(--primary-color); color:#fff; border:none; cursor:pointer; }
+    .btn-withdraw { background:var(--down-color); color:#fff; border:none; cursor:pointer; }
 
     .trading-panel {
       background:var(--card-bg); max-width:960px; margin:1rem auto; padding:1rem;
@@ -129,6 +129,7 @@
     <div class="balance">Saldo: Rp. <span id="balance">25000.00</span></div>
   </div>
 
+    <p style="text-align:center; margin-top:.5rem;">Informasi: Market – Server – Durasi Trading</p>
   <div class="controls">
     <select id="symbolSelect">
       <option value="EURUSD">Polusi Index</option>
@@ -141,10 +142,10 @@
       <option value="XAUUSD">Demokrasi Index</option>
     </select>
     <select id="tfSelect">
-      <option value="1">1m</option>
-      <option value="5">5m</option>
-      <option value="15">15m</option>
-      <option value="60">1h</option>
+      <option value="1">Global</option>
+      <option value="5">Asia</option>
+      <option value="15">Eropa</option>
+      <option value="60">Amerika</option>
     </select>
     <select id="durSelect">
       <option value="60">1 menit</option>
@@ -168,8 +169,8 @@
       <div>Durasi: <span id="currDur">60</span>s</div>
     </div>
     <div class="options">
-      <button id="btnUp" class="option-btn">Buy ↑</button>
-      <button id="btnDown" class="option-btn">Sell ↓</button>
+      <button id="btnUp" class="option-btn">Sell ↓</button>
+      <button id="btnDown" class="option-btn">Buy ↑</button>
     </div>
     <div class="bet-controls">
       <input type="number" id="betAmount" placeholder="Jumlah (Rp)" min="1">
@@ -192,8 +193,7 @@
       <label>Metode Pembayaran</label>
       <select id="depositMethod">
         <option value="Dana">QRIS Dana</option>
-        <option value="ShopeePay">QRIS ShopeePay</option>
-        <option value="GoPay">QRIS GoPay</option>
+        
       </select>
       <button id="depositPay">Bayar</button>
       <div class="qrcode-container" id="qrcodeContainer" style="display:none;">
@@ -216,8 +216,8 @@
       <input type="text" id="withdrawAccount" placeholder="1234567890">
       <label>Metode Penarikan</label>
       <select id="withdrawMethod">
-        <option value="Bank">Bank Transfer</option>
-        <option value="E-Wallet">E‑Wallet</option>
+        <option value="Bank">Dana</option>
+        <option value="E-Wallet">Gopay</option>
       </select>
       <button id="withdrawSubmit">Tarik</button>
     </div>
@@ -227,11 +227,11 @@
   <section class="promo">
     <h2>🚀 Siap Uji Insting Trading Lu?</h2>
     <p>
-      Gabung di <strong>Crash GOOGLE</strong>, simulasi binary options yang bikin deg‑deg‑an!  
+      Gabung di <strong>Crash GOOGLE</strong>, trading binary options yang bikin deg‑deg‑an!  
       Klik Buy/Sell, pantau timer, dan raih profit 80%—atau terima risikonya.  
       Semua hasil tercatat otomatis untuk evaluasi strategi.
     </p>
-    <a href="#chartCanvas" class="btn-play">Main Sekarang</a>
+    
   </section>
 
   <!-- FAQ -->
@@ -404,8 +404,8 @@
           clearInterval(iv);
           const win = Math.random()<0.5;
           let text,color;
-          if(win){ const p=bet*0.8; balance+=p; text=`Menang +${p.toFixed(2)} Rp`; color='green'; }
-          else{ balance-=bet; text=`Kalah -${bet.toFixed(2)} Rp`; color='red'; }
+          if(win){ const p=bet*0.8; balance+=p; text=`Tutup Untung +${p.toFixed(2)} Rp`; color='green'; }
+          else{ balance-=bet; text=`Tutup Rugi -${bet.toFixed(2)} Rp`; color='red'; }
           balanceEl.textContent = balance.toFixed(2);
           resultEl.textContent = text;
           activeTrade.textContent = '';
@@ -422,8 +422,8 @@
     tfSelect.addEventListener('change', loadChart);
     durSelect.addEventListener('change', ()=>{ currDur.textContent = tradeDur = +durSelect.value; });
 
-    btnUp.addEventListener('click', ()=>placeTrade('Buy'));
-    btnDown.addEventListener('click', ()=>placeTrade('Sell'));
+    btnUp.addEventListener('click', ()=>placeTrade('Terbeli'));
+    btnDown.addEventListener('click', ()=>placeTrade('Terjual'));
 
     // Deposit/Withdraw logic (sama dengan sebelumnya)
     const btnDeposit     = document.getElementById('btnDeposit'),
