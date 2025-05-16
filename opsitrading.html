@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Binary Option Trading (Consistent Price)</title>
+  <title>Binary Option Trading (Fixed Price)</title>
   <style>
     :root {
       --primary-color: #1e88e5;
@@ -13,7 +13,7 @@
       --up-color: #4caf50;
       --down-color: #f44336;
     }
-    * { box-sizing: border-box; margin:0; padding:0; font-family:Poppins,sans-serif; }
+    * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif; }
     body { background:var(--bg-color); color:var(--text-color); }
     .header { display:flex; justify-content:space-between; align-items:center;
       background:var(--primary-color); color:#fff; padding:1rem; }
@@ -106,177 +106,121 @@
   <div class="footer">© 2025 YourCompany</div>
 
   <script>
-    // ---------- Setup ----------
-    const canvas = document.getElementById('chartCanvas');
-    const ctx = canvas.getContext('2d');
+    const canvas = document.getElementById('chartCanvas'), ctx = canvas.getContext('2d');
     const priceEl = document.getElementById('currentPrice');
-    let width, height;
-    function resize() {
-      width = canvas.clientWidth;
-      height = canvas.clientHeight;
-      canvas.width = width;
-      canvas.height = height;
-    }
-    window.addEventListener('resize', resize);
-    resize();
+    let w,h;
+    function resize(){ w=canvas.clientWidth; h=canvas.clientHeight; canvas.width=w; canvas.height=h; }
+    window.addEventListener('resize',resize); resize();
 
-    // controls & state
-    const symbolSelect = document.getElementById('symbolSelect');
-    const tfSelect     = document.getElementById('tfSelect');
-    const durSelect    = document.getElementById('durSelect');
-    const currSymbol   = document.getElementById('currSymbol');
-    const currDur      = document.getElementById('currDur');
-    const balanceEl    = document.getElementById('balance');
-    const btnDeposit   = document.getElementById('btnDeposit');
-    const btnUp        = document.getElementById('btnUp');
-    const btnDown      = document.getElementById('btnDown');
-    const betAmount    = document.getElementById('betAmount');
-    const btnPlace     = document.getElementById('btnPlace');
-    const resultEl     = document.getElementById('result');
+    // UI refs
+    const sym = document.getElementById('symbolSelect'),
+          tf  = document.getElementById('tfSelect'),
+          dr  = document.getElementById('durSelect'),
+          cs  = document.getElementById('currSymbol'),
+          cd  = document.getElementById('currDur'),
+          bal = document.getElementById('balance'),
+          btnD= document.getElementById('btnDeposit'),
+          btnU= document.getElementById('btnUp'),
+          btnV= document.getElementById('btnDown'),
+          betI= document.getElementById('betAmount'),
+          btnP= document.getElementById('btnPlace'),
+          res = document.getElementById('result');
 
-    let balance        = 1000;
-    let tradeDur       = +durSelect.value;
-    let selection      = null;
-    let candles        = [];
-    let markers        = [];
-    let fakeInterval   = null;
-    let lastPrice      = null;
+    let balance=1000, tradeDur=+dr.value, selection=null,
+        candles=[], markers=[], fakeInt, lastPrice=null;
 
-    // cache historis per symbol_timeframe
-    const historyCache = {};
-
-    // ---------- Helpers ----------
-    function updateInfo() {
-      currSymbol.textContent = symbolSelect.selectedOptions[0].text;
-      tradeDur = +durSelect.value;
-      currDur.textContent = tradeDur;
+    function updateInfo(){
+      cs.textContent = sym.selectedOptions[0].text;
+      tradeDur = +dr.value; cd.textContent = tradeDur;
     }
 
-    function genHistory(basePrice, count = 50) {
-      const tf = +tfSelect.value;
-      const now = Math.floor(Date.now()/1000);
-      let base = basePrice;
-      const data = [];
-      for (let i = count; i > 0; i--) {
-        const t = now - i * tf * 60;
-        const open = base;
-        const close = open * (1 + (Math.random()*0.02 - 0.01));
-        const high = Math.max(open, close) * (1 + Math.random()*0.005);
-        const low  = Math.min(open, close) * (1 - Math.random()*0.005);
-        data.push({ time: t, open, high, low, close });
-        base = close;
+    function genHistory(base, cnt=50){
+      const tfv=+tf.value, now=Math.floor(Date.now()/1000);
+      let b=base, out=[];
+      for(let i=cnt;i>0;i--){
+        const t=now - i*tfv*60,
+              o=b,
+              c=o*(1+(Math.random()*0.02-0.01)),
+              h=Math.max(o,c)*(1+Math.random()*0.005),
+              l=Math.min(o,c)*(1-Math.random()*0.005);
+        out.push({time:t,open:o,high:h,low:l,close:c});
+        b=c;
       }
-      return data;
+      return out;
     }
 
-    function startFakeTicks() {
-      clearInterval(fakeInterval);
-      fakeInterval = setInterval(() => {
-        const change = lastPrice * (Math.random()*0.004 - 0.002);
+    function startTicks(){
+      clearInterval(fakeInt);
+      fakeInt=setInterval(()=>{
+        const change = lastPrice*(Math.random()*0.004-0.002);
         lastPrice += change;
-        const last = candles[candles.length-1];
-        last.close = lastPrice;
-        last.high  = Math.max(last.high, last.close);
-        last.low   = Math.min(last.low, last.close);
-        priceEl.textContent = lastPrice.toFixed(4);
+        const L=candles[candles.length-1];
+        L.close=lastPrice; L.high=Math.max(L.high,L.close); L.low=Math.min(L.low,L.close);
+        priceEl.textContent=lastPrice.toFixed(4);
         draw();
-      }, 1000);
+      },1000);
     }
 
-    function getY(price) {
-      const prices = candles.flatMap(c => [c.high, c.low]);
-      const maxP = Math.max(...prices);
-      const minP = Math.min(...prices);
-      return ((maxP - price) / (maxP - minP)) * (height * 0.8) + height * 0.1;
+    function getY(p){
+      const vals=candles.flatMap(c=>[c.high,c.low]),
+            maxP=Math.max(...vals), minP=Math.min(...vals);
+      return ((maxP-p)/(maxP-minP))*(h*0.8)+h*0.1;
     }
 
-    // ---------- Drawing ----------
-    function draw() {
-      ctx.clearRect(0,0,width,height);
-      if (!candles.length) return;
-      const barW = width / candles.length * 0.8;
-      candles.forEach((c,i) => {
-        const x = i * (width / candles.length) + (width / candles.length - barW)/2;
-        const yO = getY(c.open), yC = getY(c.close);
-        const yH = getY(c.high), yL = getY(c.low);
-        // wick
-        ctx.strokeStyle = '#555';
-        ctx.beginPath();
-        ctx.moveTo(x+barW/2, yH);
-        ctx.lineTo(x+barW/2, yL);
-        ctx.stroke();
-        // body
-        ctx.fillStyle = c.close >= c.open ? 'var(--up-color)' : 'var(--down-color)';
-        const by = Math.min(yO,yC), bh = Math.abs(yC-yO) || 1;
-        ctx.fillRect(x, by, barW, bh);
+    function draw(){
+      ctx.clearRect(0,0,w,h);
+      if(!candles.length) return;
+      const bw=w/candles.length*0.8;
+      candles.forEach((c,i)=>{
+        const x=i*(w/candles.length)+(w/candles.length-bw)/2,
+              yO=getY(c.open), yC=getY(c.close),
+              yH=getY(c.high),   yL=getY(c.low);
+        ctx.strokeStyle='#555'; ctx.beginPath();
+        ctx.moveTo(x+bw/2,yH); ctx.lineTo(x+bw/2,yL); ctx.stroke();
+        ctx.fillStyle=c.close>=c.open?'var(--up-color)':'var(--down-color)';
+        ctx.fillRect(x,Math.min(yO,yC),bw,Math.abs(yC-yO)||1);
       });
-      // markers
-      markers.forEach(m => {
-        const i = candles.findIndex(c => c.time === m.time);
-        if (i<0) return;
-        const x = i * (width / candles.length) + (width / candles.length)/2;
-        const y = getY(m.price) + (m.type==='CALL'?10:-10);
-        ctx.fillStyle = m.type==='CALL' ? 'green' : 'red';
-        ctx.font = '14px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(m.type, x, y);
+      markers.forEach(m=>{
+        const idx=candles.findIndex(c=>c.time===m.time);
+        if(idx<0) return;
+        const x=idx*(w/candles.length)+(w/candles.length)/2,
+              y=getY(m.price)+(m.type==='CALL'?10:-10);
+        ctx.fillStyle=m.type==='CALL'?'green':'red';
+        ctx.font='14px sans-serif'; ctx.textAlign='center';
+        ctx.fillText(m.type,x,y);
       });
     }
 
-    // ---------- Data & Events ----------
-    function loadChart() {
+    function loadChart(){
       updateInfo();
-      const key = symbolSelect.value + '_' + tfSelect.value;
-      // init lastPrice sekali
-      if (lastPrice === null) {
-        lastPrice = 1 + (symbolSelect.value.charCodeAt(0) % 20) / 10;
-      }
-      // ambil atau generate history
-      if (historyCache[key]) {
-        candles = historyCache[key];
-      } else {
-        candles = genHistory(lastPrice);
-        historyCache[key] = candles;
-      }
+      if(lastPrice===null) lastPrice = 1 + (sym.value.charCodeAt(0)%20)/10;
+      candles = genHistory(lastPrice);
       lastPrice = candles[candles.length-1].close;
-      markers = [];
-      priceEl.textContent = lastPrice.toFixed(4);
-      draw();
-      startFakeTicks();
+      markers=[]; priceEl.textContent=lastPrice.toFixed(4);
+      draw(); startTicks();
     }
 
-    symbolSelect.addEventListener('change', loadChart);
-    tfSelect.addEventListener('change', loadChart);
-    durSelect.addEventListener('change', () => updateInfo());
-    btnDeposit.addEventListener('click', () => {
-      const v = parseFloat(prompt('Jumlah deposit (USD):'));
-      if (v>0) { balance += v; balanceEl.textContent = balance.toFixed(2); }
-    });
-    btnUp.addEventListener('click', () => selection = 'CALL');
-    btnDown.addEventListener('click', () => selection = 'PUT');
-    btnPlace.addEventListener('click', () => {
-      if (!selection) return alert('Klik CALL atau PUT dulu');
-      const bet = parseFloat(betAmount.value);
-      if (!bet || bet<=0) return alert('Masukkan jumlah valid');
-      const last = candles[candles.length-1];
-      markers.push({ time: last.time, price: last.close, type: selection });
-      draw();
-      alert(`${selection} @ ${last.close.toFixed(4)} diterima`);
-      setTimeout(() => {
-        const win = Math.random() < 0.5;
-        if (win) {
-          const p = bet * 0.8; balance += p;
-          resultEl.textContent = `Menang +${p.toFixed(2)} USD`;
-        } else {
-          balance -= bet;
-          resultEl.textContent = `Kalah -${bet.toFixed(2)} USD`;
-        }
-        balanceEl.textContent = balance.toFixed(2);
-        selection = null; betAmount.value = '';
-      }, tradeDur * 1000);
+    sym.addEventListener('change',loadChart);
+    tf.addEventListener('change',loadChart);
+    dr.addEventListener('change',updateInfo);
+    btnD.addEventListener('click',()=>{ const v=parseFloat(prompt('Deposit USD:')); if(v>0){balance+=v;bal.textContent=balance.toFixed(2);} });
+    btnU.addEventListener('click',()=>selection='CALL');
+    btnV.addEventListener('click',()=>selection='PUT');
+    btnP.addEventListener('click',()=>{
+      if(!selection) return alert('Klik CALL atau PUT dulu');
+      const b=parseFloat(betI.value);
+      if(!b||b<=0) return alert('Jumlah valid');
+      const L=candles[candles.length-1];
+      markers.push({time:L.time,price:L.close,type:selection});
+      draw(); alert(`${selection} @ ${L.close.toFixed(4)} diterima`);
+      setTimeout(()=>{
+        const win=Math.random()<0.5;
+        if(win){const p=b*0.8;balance+=p;res.textContent=`Menang +${p.toFixed(2)} USD`;}
+        else{balance-=b;res.textContent=`Kalah -${b.toFixed(2)} USD`;}
+        bal.textContent=balance.toFixed(2); selection=null; betI.value='';
+      }, tradeDur*1000);
     });
 
-    // start
     loadChart();
   </script>
 </body>
