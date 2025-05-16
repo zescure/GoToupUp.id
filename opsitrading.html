@@ -62,7 +62,7 @@
     </div>
   </div>
 
-  <p style="text-align:center; margin-top:.5rem;">Informasi: Market – Timeframe – Durasi</p>
+  <p style="text-align:center; margin-top:.5rem;">Informasi: Market – Server – Durasi</p>
   <div class="controls">
     <select id="symbolSelect">
       <option value="EURUSD">Polusi Index</option>
@@ -75,10 +75,10 @@
       <option value="XAUUSD">Demokrasi Index</option>
     </select>
     <select id="tfSelect">
-      <option value="1">1m</option>
-      <option value="5">5m</option>
-      <option value="15">15m</option>
-      <option value="60">1h</option>
+      <option value="1">Global</option>
+      <option value="5">Asia</option>
+      <option value="15">Eropa</option>
+      <option value="60">Amerika</option>
     </select>
     <select id="durSelect">
       <option value="60">1 menit</option>
@@ -102,8 +102,8 @@
       <div>Durasi: <span id="currDur">60</span>s</div>
     </div>
     <div class="options">
-      <button id="btnUp" class="option-btn">Buy ↑</button>
-      <button id="btnDown" class="option-btn">Sell ↓</button>
+      <button id="btnUp" class="option-btn">Sell ↓</button>
+      <button id="btnDown" class="option-btn">Buy ↑</button>
     </div>
     <div class="bet-controls">
       <input type="number" id="betAmount" placeholder="Jumlah (Rupiah)" min="1">
@@ -280,10 +280,10 @@
           let text, color;
           if (win) {
             const p = bet*0.8; balance+=p;
-            text = `Menang +${p.toFixed(2)} Rp`; color='green';
+            text = `Keuntungan +${p.toFixed(2)} Rp`; color='green';
           } else {
             balance-=bet;
-            text = `Kalah -${bet.toFixed(2)} Rp`; color='red';
+            text = `Kerugian -${bet.toFixed(2)} Rp`; color='red';
           }
           balanceEl.textContent = balance.toFixed(2);
           resultEl.textContent = text;
@@ -306,8 +306,8 @@
       currDur.textContent = tradeDur = +durSelect.value;
     });
 
-    btnUp.addEventListener('click', ()=>placeTrade('Buy'));
-    btnDown.addEventListener('click', ()=>placeTrade('Sell'));
+    btnUp.addEventListener('click', ()=>placeTrade('Terjual'));
+    btnDown.addEventListener('click', ()=>placeTrade('Terbeli'));
 
     // --- Init ---
     resize();
