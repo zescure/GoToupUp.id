@@ -31,23 +31,31 @@
       background:#fff; cursor:pointer;
     }
     /* Deposit: hijau cerah dengan teks putih */
-.btn-deposit {
-  background: #28a745; /* hijau Spotify-like */
-  color: #ffffff;      /* teks putih */
+/* setelah semua aturan .controls select, .controls button */
+
+/* Deposit: hijau cerah dengan teks putih */
+.controls .btn-deposit {
+  background-color: #28a745;
+  color: #ffffff;
+  border: none;
 }
 
 /* Withdraw: merah cerah dengan teks putih */
-.btn-withdraw {
-  background: #dc3545; /* merah Bootstrap-like */
-  color: #ffffff;      /* teks putih */
+.controls .btn-withdraw {
+  background-color: #dc3545;
+  color: #ffffff;
+  border: none;
 }
 
-/* Hover efek biar keliatan interaktif */
-.btn-deposit:hover {
-  background: #218838;
+/* efek hover/focus */
+.controls .btn-deposit:hover,
+.controls .btn-deposit:focus {
+  background-color: #218838;
 }
-.btn-withdraw:hover {
-  background: #c82333;
+
+.controls .btn-withdraw:hover,
+.controls .btn-withdraw:focus {
+  background-color: #c82333;
 }
 
     .trading-panel {
