@@ -41,6 +41,41 @@
       border-radius:4px; cursor:pointer; }
     .result { text-align:center; font-weight:bold; margin-top:.5rem; }
     .footer { text-align:center; margin:1rem; color:#777; }
+ /* 1. Batas max-width panel & center */
+.trading-panel {
+  max-width: 960px;       /* atau 100% kalau mau full, tapi beri padding */
+  margin: 1rem auto;      /* center horizontal */
+  padding: 1rem;
+  overflow: hidden;       /* sembunyikan apa pun yang kelihatan keluar */
+}
+
+/* 2. Chart container responsif */
+.chart-container {
+  display: flex;
+  flex-wrap: wrap;        /* biar anaknya bisa wrap di kolom baru */
+  gap: 1rem;
+}
+
+/* 3. Canvas responsif */
+#chartCanvas {
+  flex: 1 1 0;            /* grow & shrink, basis 0 */
+  max-width: 100%;        /* jangan lebih dari container */
+  height: 400px;          /* bisa sesuaikan, atau pakai aspect-ratio */
+  box-sizing: border-box;
+}
+
+/* 4. Price display di bawah canvas di mobile */
+@media (max-width: 600px) {
+  .chart-container {
+    flex-direction: column;
+  }
+  .price-display {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid #ccc;
+    padding-top: 0.5rem;
+  }
+}
   </style>
 </head>
 <body>
