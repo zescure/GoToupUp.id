@@ -95,8 +95,8 @@
       <div>Durasi: <span id="currDur">60</span>s</div>
     </div>
     <div class="options">
-      <button id="btnUp" class="option-btn">buy </button>
-      <button id="btnDown" class="option-btn">Sell </button>
+      <button id="btnUp" class="option-btn">Sell ↓</button>
+      <button id="btnDown" class="option-btn">Buy ↑</button>
     </div>
     <div class="bet-controls">
       <input type="number" id="betAmount" placeholder="Jumlah (USD)" min="1">
@@ -257,10 +257,10 @@
       const v = parseFloat(prompt('Jumlah deposit (USD):'));
       if (v>0) { balance += v; balanceEl.textContent = balance.toFixed(2); }
     });
-    btnUp.addEventListener('click', () => selection = 'Beli');
-    btnDown.addEventListener('click', () => selection = 'Jual');
+    btnUp.addEventListener('click', () => selection = 'Jual');
+    btnDown.addEventListener('click', () => selection = 'Beli');
     btnPlace.addEventListener('click', () => {
-  if (!selection) return alert('Klik Buy atau Sell dulu');
+  if (!selection) return alert('Klik CALL atau PUT dulu');
   const bet = parseFloat(betAmount.value);
   if (!bet || bet <= 0) return alert('Masukkan jumlah valid');
   if (bet > balance) return alert('Saldo tidak cukup');
@@ -275,7 +275,7 @@
 
   let countdown = tradeDur;
   resultEl.textContent = '';
-  activeTrade.innerHTML = `<strong>${selection}</strong> <strong>${Betamount}</strong> @ ${entryPrice.toFixed(4)} - Waktu tersisa: <span id="countdown">${countdown}</span> detik`;
+  activeTrade.innerHTML = `<strong>${selection}</strong> @ ${entryPrice.toFixed(4)} - Waktu tersisa: <span id="countdown">${countdown}</span> detik`;
 
   const countdownInterval = setInterval(() => {
     countdown--;
@@ -292,11 +292,11 @@
       const profit = bet * 0.8;
       balance += profit;
       resultText = `Menang +${profit.toFixed(2)} USD`;
-      tradeResult = `<li style="color:green;">${selection} ${Betamount} @ ${entryPrice.toFixed(4)} → Menang (+${profit.toFixed(2)} USD)</li>`;
+      tradeResult = `<li style="color:green;">${selection} @ ${entryPrice.toFixed(4)} → Menang (+${profit.toFixed(2)} USD)</li>`;
     } else {
       balance -= bet;
       resultText = `Kalah -${bet.toFixed(2)} USD`;
-      tradeResult = `<li style="color:red;">${selection} ${Betamount} @ ${entryPrice.toFixed(4)} → Kalah (-${bet.toFixed(2)} USD)</li>`;
+      tradeResult = `<li style="color:red;">${selection} @ ${entryPrice.toFixed(4)} → Kalah (-${bet.toFixed(2)} USD)</li>`;
     }
 
     balanceEl.textContent = balance.toFixed(2);
