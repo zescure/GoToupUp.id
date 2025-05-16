@@ -22,7 +22,7 @@
       --btn-radius: 8px;
       --btn-hover-glow: rgba(255,255,255,0.4);
     }
-    /* global resets */
+    /* reset & typography */
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
     body { background: var(--bg-color); color: var(--text-color); }
     /* header */
@@ -158,13 +158,14 @@
       let balance       = 1000.00;
       let selection     = null;
       let tradeDuration = parseInt(durSel.value, 10);
-      let ws, candleSeries;
+      let ws, candleSeries, lastCandle, markers = [];
 
       function updateInfo() {
         curSymEl.textContent = symbolSel.selectedOptions[0].text;
         curDurEl.textContent = tradeDuration;
       }
 
+      // init chart
       const chart = LightweightCharts.createChart(document.getElementById('chart'), {
         layout: {
           backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--card-bg'),
@@ -178,23 +179,28 @@
         borderVisible: false, wickUpColor: '#388e3c', wickDownColor: '#d32f2f'
       });
 
+      // load historical
       async function loadCandles(sym, tf) {
         try {
           const resp = await fetch(`/api/ohlc?symbol=${sym}&interval=${tf}`);
           const data = await resp.json();
           candleSeries.setData(data);
+          lastCandle = data[data.length -1];
         } catch (e) { console.error(e); }
       }
 
+      // real-time feed
       function connectWS(sym) {
         if (ws) ws.close();
         ws = new WebSocket(`wss://your-ws-feed?symbol=${sym}`);
         ws.onmessage = e => {
           const tick = JSON.parse(e.data);
           candleSeries.update(tick);
+          lastCandle = tick;
         };
       }
 
+      // controls
       symbolSel.addEventListener('change', () => {
         loadCandles(symbolSel.value, tfSel.value);
         connectWS(symbolSel.value);
@@ -205,10 +211,10 @@
         tradeDuration = parseInt(e.target.value, 10);
         updateInfo();
       });
-
       btnUp.addEventListener('click', () => selection = 'CALL');
       btnDown.addEventListener('click', () => selection = 'PUT');
 
+      // deposit
       document.getElementById('btn-deposit').addEventListener('click', () => {
         const amt = prompt('Masukkan jumlah deposit (USD):');
         if (amt && !isNaN(amt)) {
@@ -218,11 +224,23 @@
         }
       });
 
+      // place bet & marker
       placeBetBtn.addEventListener('click', () => {
         if (!selection) return alert('Pilih CALL atau PUT dulu');
         const bet = parseFloat(betInput.value);
         if (!bet || bet <= 0) return alert('Masukkan jumlah bet valid');
-        alert(`Taruhan ${selection} sebesar ${bet.toFixed(2)} USD diterima. Tunggu hasil...`);
+
+        // tambahkan marker
+        markers.push({
+          time: lastCandle.time,
+          position: selection === 'CALL' ? 'belowBar' : 'aboveBar',
+          color: selection === 'CALL' ? 'green' : 'red',
+          shape: selection === 'CALL' ? 'arrowUp' : 'arrowDown',
+          text: selection
+        });
+        candleSeries.setMarkers(markers);
+
+        alert(`Taruhan ${selection} sebesar ${bet.toFixed(2)} USD diterima. Lihat marker di chart!`);
         setTimeout(() => {
           const outcome = Math.random() < 0.5 ? 'CALL' : 'PUT';
           if (outcome === selection) {
@@ -239,6 +257,7 @@
         }, tradeDuration * 1000);
       });
 
+      // init
       updateInfo();
       loadCandles(symbolSel.value, tfSel.value);
       connectWS(symbolSel.value);
