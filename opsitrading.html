@@ -52,7 +52,7 @@
 <body>
   <div class="header">
     <div>🚀 Crash GOOGLE</div>
-    <div>Saldo: <span id="balance">1000.00</span> USD</div>
+    <div>Saldo: Rp. <span id="balance">25000.00</span> </div>
   </div>
 
    <p>Informasi : Market - Pergerakan - Durasi Trading</p>
@@ -99,7 +99,7 @@
       <button id="btnDown" class="option-btn">Sell ↓</button>
     </div>
     <div class="bet-controls">
-      <input type="number" id="betAmount" placeholder="Jumlah (USD)" min="1">
+      <input type="number" id="betAmount" placeholder="Jumlah (Rupiah)" min="1">
       <button id="btnPlace" class="btn-place">Eksekusi</button>
     </div>
     <div id="result" class="result"></div>
@@ -254,7 +254,7 @@
     tfSelect.addEventListener('change', loadChart);
     durSelect.addEventListener('change', () => updateInfo());
     btnDeposit.addEventListener('click', () => {
-      const v = parseFloat(prompt('Jumlah deposit (USD):'));
+      const v = parseFloat(prompt('Jumlah deposit (Rupiah):'));
       if (v>0) { balance += v; balanceEl.textContent = balance.toFixed(2); }
     });
     btnUp.addEventListener('click', () => selection = 'Dibeli');
@@ -291,12 +291,12 @@
     if (win) {
       const profit = bet * 0.8;
       balance += profit;
-      resultText = `Menang +${profit.toFixed(2)} USD`;
-      tradeResult = `<li style="color:green;">${selection} @ ${entryPrice.toFixed(4)} → Menang (+${profit.toFixed(2)} USD)</li>`;
+      resultText = `Keuntungan +${profit.toFixed(2)} Rp`;
+      tradeResult = `<li style="color:green;">${selection} @ ${entryPrice.toFixed(4)} → Tutup Untung (+${profit.toFixed(2)} Rp)</li>`;
     } else {
       balance -= bet;
-      resultText = `Kalah -${bet.toFixed(2)} USD`;
-      tradeResult = `<li style="color:red;">${selection} @ ${entryPrice.toFixed(4)} → Kalah (-${bet.toFixed(2)} USD)</li>`;
+      resultText = `Kerugian -${bet.toFixed(2)} Rp`;
+      tradeResult = `<li style="color:red;">${selection} @ ${entryPrice.toFixed(4)} → Tutup Rugi (-${bet.toFixed(2)} Rp)</li>`;
     }
 
     balanceEl.textContent = balance.toFixed(2);
