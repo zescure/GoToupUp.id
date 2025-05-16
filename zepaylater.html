@@ -24,8 +24,6 @@
       color:#00bfff;
       margin-bottom:1.5rem;
     }
-
-    /* STEP BOX */
     .step {
       display:none;
       background:#022c43;
@@ -51,8 +49,6 @@
       color:#fff;
     }
     .step select option { background:#022c43; color:#fff; }
-
-    /* BUTTON */
     .btn {
       display:block;
       width:100%;
@@ -68,8 +64,6 @@
       transition:background .2s;
     }
     .btn:hover { background:#0094d6; }
-
-    /* MODAL SUMMARY */
     .modal-overlay {
       position:fixed;top:0;left:0;width:100%;height:100%;
       background:rgba(0,0,0,0.6);
@@ -99,12 +93,11 @@
       display:flex;gap:.5rem;
     }
     .modal-footer button {
-      flex:1;padding:.8rem;border:none;border-radius:0;
+      flex:1;padding:.8rem;border:none;
       font-size:1rem;cursor:pointer;
     }
-    .close-btn { background:#6c757d;color:#fff; }
-    .pay-btn   { background:#28a745;color:#fff; }
-
+    .close-btn { background:#6c757d;color:#fff;border-radius:0 0 0 6px; }
+    .pay-btn   { background:#28a745;color:#fff;border-radius:0 0 6px 0; }
   </style>
 </head>
 <body>
@@ -123,6 +116,7 @@
     <div class="step" id="step2">
       <label for="wa">No. WhatsApp</label>
       <input type="text" id="wa" placeholder="628xxxxxxxxxx">
+
       <label for="method">Pilih Bank / E-Wallet</label>
       <select id="method">
         <optgroup label="Bank">
@@ -132,7 +126,6 @@
           <option value="BNI">BNI</option>
           <option value="CIMB">CIMB Niaga</option>
           <option value="Danamon">Danamon</option>
-          <!-- tambah lainnya -->
         </optgroup>
         <optgroup label="E-Wallet">
           <option value="GoPay">GoPay</option>
@@ -142,8 +135,13 @@
           <option value="LinkAja">LinkAja</option>
         </optgroup>
       </select>
-      <label for="acc">Nama Pemilik & No. Rekening</label>
-      <input type="text" id="acc" placeholder="Nama dan nomor rekening">
+
+      <label for="accName">Nama Pemilik Rekening</label>
+      <input type="text" id="accName" placeholder="Nama pemilik">
+
+      <label for="accNo">No. Rekening / ID E-Wallet</label>
+      <input type="text" id="accNo" placeholder="Nomor rekening atau ID">
+
       <button class="btn" id="toSummary">Lanjutkan</button>
     </div>
   </div>
@@ -154,9 +152,11 @@
       <div class="modal-header">Rincian Transfer</div>
       <div class="modal-body">
         <p>Nominal: Rp <span id="outNominal"></span></p>
-        <p>Profit 2%: Rp <span id="profit"></span></p>
         <p>Admin: Rp <span id="adminFee"></span></p>
         <p class="total">Total Kirim: Rp <span id="totalPay"></span></p>
+        <p>Rekening:</p>
+        <p>– Nama: <strong><span id="outName"></span></strong></p>
+        <p>– No.: <strong><span id="outNo"></span></strong></p>
         <img id="qrCode" src="qris-placeholder.png" alt="QRIS Code">
       </div>
       <div class="modal-footer">
@@ -167,66 +167,76 @@
   </div>
 
   <script>
-    // Langkah
     const step1 = document.getElementById('step1');
     const step2 = document.getElementById('step2');
     document.getElementById('toStep2').onclick = () => {
-      if (parseInt(nominal.value) > 0) {
+      if (parseInt(document.getElementById('nominal').value) > 0) {
         step1.classList.remove('active');
         step2.classList.add('active');
-      } else alert('Masukkan nominal valid.');
+      } else {
+        alert('Masukkan nominal valid.');
+      }
     };
 
-    // Ringkasan
-    const nomEl = document.getElementById('nominal');
-    const waEl  = document.getElementById('wa');
+    const nomEl    = document.getElementById('nominal');
+    const waEl     = document.getElementById('wa');
     const methodEl = document.getElementById('method');
-    const accEl = document.getElementById('acc');
-    const modal = document.getElementById('modalOverlay');
+    const nameEl   = document.getElementById('accName');
+    const noEl     = document.getElementById('accNo');
+    const modal    = document.getElementById('modalOverlay');
 
     document.getElementById('toSummary').onclick = () => {
-      const nom = parseInt(nomEl.value);
-      const wa  = waEl.value.trim();
-      const m   = methodEl.value;
-      const acc = accEl.value.trim();
-      if(!wa||!m||!acc) return alert('Lengkapi semua data.');
-      // hitung profit
+      const nom  = parseInt(nomEl.value);
+      const wa   = waEl.value.trim();
+      const m    = methodEl.value;
+      const nm   = nameEl.value.trim();
+      const no   = noEl.value.trim();
+      if (!wa || !m || !nm || !no) {
+        return alert('Lengkapi semua data.');
+      }
+
+      // hitung profit 2% (disertakan dalam total tapi tidak ditampilkan)
       const profit = Math.ceil(nom * 0.02);
-      // admin
+
+      // hitung admin fee
       const isBank = ['BCA','Mandiri','BRI','BNI','CIMB','Danamon'].includes(m);
       const admin  = isBank ? 3000 : 2000;
-      // total
-      const total = nom + profit + admin;
+
+      // total transfer = nominal + profit + admin
+      const total  = nom + profit + admin;
+
       // isi modal
       document.getElementById('outNominal').innerText = nom.toLocaleString('id');
-      document.getElementById('profit').innerText     = profit.toLocaleString('id');
       document.getElementById('adminFee').innerText   = admin.toLocaleString('id');
       document.getElementById('totalPay').innerText   = total.toLocaleString('id');
-      // (opsional) ganti QR per method
-      // document.getElementById('qrCode').src = methodEl.value==='DANA'?'dana-qr.png':'qris-placeholder.png';
+      document.getElementById('outName').innerText    = nm;
+      document.getElementById('outNo').innerText      = no;
+
       modal.style.display = 'flex';
     };
 
-    // Tutup modal
     document.getElementById('closeModal').onclick = () => {
       modal.style.display = 'none';
     };
 
-    // Konfirmasi bayar → WA
     document.getElementById('confirmPay').onclick = () => {
-      const nom    = nomEl.value;
-      const m      = methodEl.value;
-      const total  = document.getElementById('totalPay').innerText;
-      const wa     = waEl.value.trim();
-      const acc    = accEl.value.trim();
-      // pesan WA
+      const nom   = nomEl.value;
+      const m     = methodEl.value;
+      const total = document.getElementById('totalPay').innerText;
+      const wa    = waEl.value.trim();
+      const nm    = nameEl.value.trim();
+      const no    = noEl.value.trim();
+
       const msg =
-        `Saya ingin tukar PayLater Rp ${nom}\n` +
-        `Transfer ke: ${m} – ${acc}\n` +
-        `Total kirim: Rp ${total}\n` +
+        `Tukar PayLater Rp ${nom}\n` +
+        `Transfer ke: ${m}\n` +
+        `Nama: ${nm}\n` +
+        `No Rekening/ID: ${no}\n` +
+        `Total bayar: Rp ${total}\n` +
         `No. WA: ${wa}`;
+
       const businessWa = '6281234567890';
-      window.open(`https://wa.me/${businessWa}?text=`+encodeURIComponent(msg), '_blank');
+      window.open(`https://wa.me/${businessWa}?text=` + encodeURIComponent(msg), '_blank');
     };
   </script>
 
