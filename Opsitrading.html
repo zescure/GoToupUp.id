@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Binary Option Trading</title>
+  <!-- Lightweight Charts -->
+  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+  <style>
+    /* root palette */
+    :root {
+      --primary-color: #1e88e5;
+      --bg-color: #f5f5f5;
+      --text-color: #333;
+      --card-bg: #fff;
+      --color-up-start: #4caf50;
+      --color-up-end:   #81c784;
+      --color-down-start: #f44336;
+      --color-down-end:   #e57373;
+      --btn-text: #fff;
+      --btn-shadow: rgba(0,0,0,0.2);
+      --btn-radius: 8px;
+      --btn-hover-glow: rgba(255,255,255,0.4);
+    }
+    /* global resets */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+    body { background: var(--bg-color); color: var(--text-color); }
+    /* header */
+    .header { display: flex; align-items: center; justify-content: space-between;
+      background: var(--primary-color); padding: 1rem 2rem; color: #fff; }
+    .nav a { margin: 0 1rem; text-decoration: none; color: #fff; }
+    /* container */
+    .container { max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
+    /* controls */
+    .controls { display: flex; gap: 0.5rem; margin-bottom: 1rem; align-items: center; }
+    .controls select { padding: 0.6rem; border-radius: 6px; border: 1px solid #ccc; }
+    .btn-deposit {
+      padding: 0.6rem 1rem; background: var(--primary-color); color: #fff;
+      border: none; border-radius: 6px; cursor: pointer;
+      box-shadow: 0 4px 8px var(--btn-shadow);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-deposit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px var(--btn-shadow), 0 0 8px var(--btn-hover-glow);
+    }
+    /* trading panel */
+    .trading-panel {
+      background: var(--card-bg); padding: 1.5rem; border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .chart { height: 300px; margin-bottom: 1rem; }
+    .market-info { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+    .options { display: flex; justify-content: space-around; margin-bottom: 1.5rem; }
+    .option-btn {
+      flex: 1; margin: 0 0.5rem; padding: 1rem; font-size: 1.1rem; font-weight: bold;
+      color: var(--btn-text); border: none; border-radius: var(--btn-radius);
+      box-shadow: 0 4px 8px var(--btn-shadow); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    #btn-up { background: linear-gradient(135deg, var(--color-up-start), var(--color-up-end)); }
+    #btn-down { background: linear-gradient(135deg, var(--color-down-start), var(--color-down-end)); }
+    .option-btn svg { width: 1.2em; height: 1.2em; margin-right: 0.5em; }
+    .option-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px var(--btn-shadow), 0 0 8px var(--btn-hover-glow);
+    }
+    .option-btn:active { transform: scale(0.98); }
+    .bet-controls { display: flex; align-items: center; margin-bottom: 1rem; }
+    .bet-controls input {
+      flex: 1; padding: 0.8rem; margin-right: 1rem;
+      border: 1px solid #ccc; border-radius: 6px;
+    }
+    .btn-place {
+      padding: 0.8rem 1.5rem; background: var(--primary-color); color: #fff;
+      border: none; border-radius: 6px; cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-place:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px var(--btn-shadow), 0 0 8px var(--btn-hover-glow);
+    }
+    .result { margin-top: 1rem; font-weight: bold; text-align: center; }
+    /* footer */
+    .footer { text-align: center; margin: 2rem 0; color: #777; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">🚀 Crash GOOGLE</div>
+    <nav class="nav">
+      <a href="#">Dashboard</a><a href="#">Market</a><a href="#">Riwayat</a><a href="#">Akun</a>
+    </nav>
+    <div class="balance">Saldo: <span id="balance">1000.00</span> USD</div>
+  </header>
+
+  <main class="container">
+    <div class="controls">
+      <select id="symbol-select">
+        <option value="EURUSD">EUR/USD</option><option value="GBPUSD">GBP/USD</option>
+        <option value="USDJPY">USD/JPY</option><option value="AUDUSD">AUD/USD</option>
+        <option value="USDCAD">USD/CAD</option><option value="USDCHF">USD/CHF</option>
+        <option value="NZDUSD">NZD/USD</option><option value="XAUUSD">Gold (XAU/USD)</option>
+      </select>
+      <select id="tf-select">
+        <option value="1">1m</option><option value="5">5m</option>
+        <option value="15">15m</option><option value="60">1h</option>
+      </select>
+      <select id="duration-select">
+        <option value="60">1 menit</option><option value="120">2 menit</option>
+        <option value="300">5 menit</option>
+      </select>
+      <button id="btn-deposit" class="btn-deposit">Deposit</button>
+    </div>
+
+    <section class="trading-panel">
+      <div id="chart" class="chart"></div>
+      <div class="market-info">
+        <h2 id="current-symbol">EUR/USD</h2>
+        <p>Durasi: <span id="current-duration">60</span>s</p>
+      </div>
+      <div class="options">
+        <button id="btn-up" class="option-btn">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.59 5.58L20 12l-8-8-8 8z"/>
+          </svg>CALL
+        </button>
+        <button id="btn-down" class="option-btn">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.59-5.58L4 12l8 8 8-8z"/>
+          </svg>PUT
+        </button>
+      </div>
+      <div class="bet-controls">
+        <input type="number" id="bet-amount" placeholder="Jumlah (USD)" min="1" />
+        <button id="place-bet" class="btn-place">Place Bet</button>
+      </div>
+      <div id="result" class="result"></div>
+    </section>
+  </main>
+
+  <footer class="footer">© 2025 YourCompany</footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const balanceEl   = document.getElementById('balance');
+      const symbolSel   = document.getElementById('symbol-select');
+      const tfSel       = document.getElementById('tf-select');
+      const durSel      = document.getElementById('duration-select');
+      const curSymEl    = document.getElementById('current-symbol');
+      const curDurEl    = document.getElementById('current-duration');
+      const btnUp       = document.getElementById('btn-up');
+      const btnDown     = document.getElementById('btn-down');
+      const betInput    = document.getElementById('bet-amount');
+      const placeBetBtn = document.getElementById('place-bet');
+      const resultEl    = document.getElementById('result');
+      let balance       = 1000.00;
+      let selection     = null;
+      let tradeDuration = parseInt(durSel.value, 10);
+      let ws, candleSeries;
+
+      function updateInfo() {
+        curSymEl.textContent = symbolSel.selectedOptions[0].text;
+        curDurEl.textContent = tradeDuration;
+      }
+
+      const chart = LightweightCharts.createChart(document.getElementById('chart'), {
+        layout: {
+          backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--card-bg'),
+          textColor: getComputedStyle(document.documentElement).getPropertyValue('--text-color')
+        },
+        rightPriceScale: { visible: true },
+        timeScale: { timeVisible: true, secondsVisible: false },
+      });
+      candleSeries = chart.addCandlestickSeries({
+        upColor: '#4caf50', downColor: '#f44336',
+        borderVisible: false, wickUpColor: '#388e3c', wickDownColor: '#d32f2f'
+      });
+
+      async function loadCandles(sym, tf) {
+        try {
+          const resp = await fetch(`/api/ohlc?symbol=${sym}&interval=${tf}`);
+          const data = await resp.json();
+          candleSeries.setData(data);
+        } catch (e) { console.error(e); }
+      }
+
+      function connectWS(sym) {
+        if (ws) ws.close();
+        ws = new WebSocket(`wss://your-ws-feed?symbol=${sym}`);
+        ws.onmessage = e => {
+          const tick = JSON.parse(e.data);
+          candleSeries.update(tick);
+        };
+      }
+
+      symbolSel.addEventListener('change', () => {
+        loadCandles(symbolSel.value, tfSel.value);
+        connectWS(symbolSel.value);
+        updateInfo();
+      });
+      tfSel.addEventListener('change', () => loadCandles(symbolSel.value, tfSel.value));
+      durSel.addEventListener('change', e => {
+        tradeDuration = parseInt(e.target.value, 10);
+        updateInfo();
+      });
+
+      btnUp.addEventListener('click', () => selection = 'CALL');
+      btnDown.addEventListener('click', () => selection = 'PUT');
+
+      document.getElementById('btn-deposit').addEventListener('click', () => {
+        const amt = prompt('Masukkan jumlah deposit (USD):');
+        if (amt && !isNaN(amt)) {
+          balance += parseFloat(amt);
+          balanceEl.textContent = balance.toFixed(2);
+          alert(`Deposit berhasil +${parseFloat(amt).toFixed(2)} USD`);
+        }
+      });
+
+      placeBetBtn.addEventListener('click', () => {
+        if (!selection) return alert('Pilih CALL atau PUT dulu');
+        const bet = parseFloat(betInput.value);
+        if (!bet || bet <= 0) return alert('Masukkan jumlah bet valid');
+        alert(`Taruhan ${selection} sebesar ${bet.toFixed(2)} USD diterima. Tunggu hasil...`);
+        setTimeout(() => {
+          const outcome = Math.random() < 0.5 ? 'CALL' : 'PUT';
+          if (outcome === selection) {
+            const profit = bet * 0.8;
+            balance += profit;
+            resultEl.textContent = `Menang! +${profit.toFixed(2)} USD`;
+          } else {
+            balance -= bet;
+            resultEl.textContent = `Kalah! -${bet.toFixed(2)} USD`;
+          }
+          balanceEl.textContent = balance.toFixed(2);
+          selection = null;
+          betInput.value = '';
+        }, tradeDuration * 1000);
+      });
+
+      updateInfo();
+      loadCandles(symbolSel.value, tfSel.value);
+      connectWS(symbolSel.value);
+    });
+  </script>
+</body>
+</html>
