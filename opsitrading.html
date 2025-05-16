@@ -447,8 +447,8 @@
     tfSelect.addEventListener('change', loadChart);
     durSelect.addEventListener('change', ()=>{ currDur.textContent = tradeDur = +durSelect.value; });
 
-    btnUp.addEventListener('click', ()=>placeTrade('Terbeli'));
-    btnDown.addEventListener('click', ()=>placeTrade('Terjual'));
+    btnUp.addEventListener('click', ()=>placeTrade('Terjual'));
+    btnDown.addEventListener('click', ()=>placeTrade('Terbeli'));
 
     // Deposit/Withdraw logic (sama dengan sebelumnya)
     const btnDeposit     = document.getElementById('btnDeposit'),
