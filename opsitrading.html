@@ -30,8 +30,25 @@
       padding:.5rem; border-radius:4px; border:1px solid #ccc;
       background:#fff; cursor:pointer;
     }
-     .btn-deposit { background:var(--primary-color); color:#fff; border:none; cursor:pointer; }
-    .btn-withdraw { background:var(--down-color); color:#fff; border:none; cursor:pointer; }
+    /* Deposit: hijau cerah dengan teks putih */
+.btn-deposit {
+  background: #28a745; /* hijau Spotify-like */
+  color: #ffffff;      /* teks putih */
+}
+
+/* Withdraw: merah cerah dengan teks putih */
+.btn-withdraw {
+  background: #dc3545; /* merah Bootstrap-like */
+  color: #ffffff;      /* teks putih */
+}
+
+/* Hover efek biar keliatan interaktif */
+.btn-deposit:hover {
+  background: #218838;
+}
+.btn-withdraw:hover {
+  background: #c82333;
+}
 
     .trading-panel {
       background:var(--card-bg); max-width:960px; margin:1rem auto; padding:1rem;
