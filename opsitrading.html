@@ -49,7 +49,34 @@
     #tradeHistory { list-style:none; padding:0; max-width:600px; margin:1rem auto; font-size:.9rem; }
     #tradeHistory li { margin-bottom:.3rem; }
     .footer { text-align:center; margin:1rem; color:#777; }
-
+ .promo {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background: var(--card-bg, #fff);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    font-family: Poppins, sans-serif;
+    text-align: center;
+  }
+  .promo h2 {
+    margin-bottom: 0.5rem;
+    color: var(--primary-color, #1e88e5);
+  }
+  .promo p {
+    margin-bottom: 1rem;
+    color: var(--text-color, #333);
+    line-height: 1.5;
+  }
+  .promo .btn-play {
+    display: inline-block;
+    padding: 0.6rem 1.2rem;
+    background: var(--up-color, #4caf50);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 600;
+  }
     /* Modal sama Promo/FAQ seperti sebelumnya... */
   </style>
 </head>
@@ -113,7 +140,89 @@
     <h3 style="text-align:center; margin-top:1rem;">Riwayat Perdagangan</h3>
     <ul id="tradeHistory"></ul>
   </section>
+   <section class="promo">
+  <h2>🚀 Siap Uji Insting Trading Lu?</h2>
+  <p>
+    Gabung di <strong>Crash GOOGLE</strong>, game simulasi binary options yang bikin deg‑deg‑an!  
+    Langsung eksekusi CALL/PUT, nikmati timer mundur, dan kumpulkan profit 80% per trade—atau siap terima risikonya.  
+    Semua hasil tercatat otomatis, jadi lu bisa evaluasi strategi dengan mudah.
+  </p>
+  
+</section>
+ <!-- Modal Deposit -->
+  <div id="depositModal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" id="depositClose">&times;</span>
+      <h3>Deposit Saldo</h3>
+      <label for="depositAmount">Nominal (Rp)</label>
+      <input type="number" id="depositAmount" placeholder="contoh: 50000" min="1000">
+      <label for="depositAccount">No. Rekening Pengirim</label>
+      <input type="text" id="depositAccount" placeholder="1234567890">
+      <label for="depositMethod">Metode Pembayaran</label>
+      <select id="depositMethod">
+        <option value="Dana">QRIS Dana</option>
+        <option value="ShopeePay">QRIS ShopeePay</option>
+        <option value="GoPay">QRIS GoPay</option>
+      </select>
+      <button id="depositPay">Bayar</button>
+      <div class="qrcode-container" id="qrcodeContainer" style="display:none;">
+        <p id="qrTotal"></p>
+        <img id="qrImage" src="" alt="QRIS Code">
+        <p>Menunggu pembayaran... Sisa waktu: <span id="depositTimer">15</span>s</p>
+        <button id="depositConfirm" style="display:none;">Sudah Bayar</button>
+      </div>
+    </div>
+  </div>
 
+  <!-- Modal Withdraw -->
+  <div id="withdrawModal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" id="withdrawClose">&times;</span>
+      <h3>Tarik Saldo</h3>
+      <label for="withdrawAmount">Nominal (Rp)</label>
+      <input type="number" id="withdrawAmount" placeholder="contoh: 50000" min="1000">
+      <label for="withdrawAccount">No. Rekening Tujuan</label>
+      <input type="text" id="withdrawAccount" placeholder="1234567890">
+      <label for="withdrawMethod">Metode Penarikan</label>
+      <select id="withdrawMethod">
+        <option value="Bank">Bank Transfer</option>
+        <option value="E-Wallet">E‑Wallet</option>
+      </select>
+      <button id="withdrawSubmit">Tarik</button>
+    </div>
+  </div>
+
+  
+<section class="promo">
+  <h2>FAQ Opsi Trading</h2>
+
+  <details class="faq-item">
+    <summary>Apa itu binary options?</summary>
+    <p>Binary options adalah instrumen keuangan di mana trader menebak arah pergerakan harga dalam jangka waktu tertentu. Hasilnya all-or-nothing: menang persentase tetap atau kehilangan modal.</p>
+  </details>
+
+  <details class="faq-item">
+    <summary>Bagaimana cara bermain di game ini?</summary>
+    <p>1. Masukkan jumlah taruhan (misal USD 10).<br>
+       2. Klik CALL (untuk naik) atau PUT (untuk turun).<br>
+       3. Tunggu countdown berakhir, lalu lihat hasil menang atau kalah.</p>
+  </details>
+
+  <details class="faq-item">
+    <summary>Berapa lama durasi setiap trade?</summary>
+    <p>Durasi default 5 detik, tapi bisa diubah di variabel <code>tradeDur</code> sesuai kebutuhan.</p>
+  </details>
+
+  <details class="faq-item">
+    <summary>Bagaimana cara melihat riwayat trade?</summary>
+    <p>Riwayat ditampilkan di bawah chart. Setiap entry menunjukkan waktu, jenis (CALL/PUT), harga masuk, dan hasil (+/- USD).</p>
+  </details>
+
+  <details class="faq-item">
+    <summary>Apa risiko bermain binary options?</summary>
+    <p>Risiko utama adalah kehilangan seluruh taruhan jika prediksi salah. Pastikan menggunakan modal kecil atau fitur demo sebelum real money.</p>
+  </details>
+</section>
   <!-- Modal Deposit & Withdraw, Promo & FAQ di-skip di sini untuk ringkas -->
 
   <script>
