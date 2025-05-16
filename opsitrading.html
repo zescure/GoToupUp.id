@@ -223,7 +223,7 @@
       <button id="depositPay">Bayar</button>
       <div class="qrcode-container" id="qrcodeContainer" style="display:none;">
         <p id="qrTotal"></p>
-        <img id="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png" alt="QRIS Code">
+        <img id="qrImage" alt="QRIS Code">
         <p>Menunggu pembayaran... Sisa waktu: <span id="depositTimer">15</span>s</p>
         <button id="depositConfirm" style="display:none;">Sudah Bayar</button>
       </div>
@@ -486,7 +486,7 @@
       const adminFee=5000, total=amt+adminFee;
       qrTotal.textContent=`Total bayar: Rp ${total.toLocaleString()} (admin Rp ${adminFee.toLocaleString()})`;
       const data=encodeURIComponent(`PAY:${method};ACC:${acc};AMT:${total}`);
-      qrImage.src=`https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${data}`;
+      qrImage.src=`https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png${data}`;
       qrcodeContainer.style.display='block';
       depositCountdown=15; depositTimerEl.textContent=15;
       depositTimer=setInterval(()=>{
