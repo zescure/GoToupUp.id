@@ -19,11 +19,9 @@
       margin:2rem auto;
       padding:1rem;
     }
-    h1 {
-      text-align:center;
-      color:#00bfff;
-      margin-bottom:1.5rem;
-    }
+    h1 { text-align:center; color:#00bfff; margin-bottom:1.5rem; }
+
+    /* STEP BOX */
     .step {
       display:none;
       background:#022c43;
@@ -32,72 +30,68 @@
       padding:1rem;
     }
     .step.active { display:block; }
-    .step label {
-      display:block;
-      margin:.5rem 0 .2rem;
-      font-weight:600;
-    }
+    .step label { display:block; margin:.5rem 0 .2rem; font-weight:600; }
     .step input[type=number],
     .step input[type=text],
     .step select {
-      width:100%;
-      padding:.6rem;
-      border:none;
-      border-radius:4px;
+      width:100%; padding:.6rem;
+      border:none; border-radius:4px;
       font-size:1rem;
       background:rgba(255,255,255,0.1);
       color:#fff;
     }
     .step select option { background:#022c43; color:#fff; }
+    .net-display {
+      margin-top:0.5rem;
+      color: #00ff9d;
+      font-size: 0.95rem;
+    }
+
+    /* BUTTON */
     .btn {
-      display:block;
-      width:100%;
-      margin:1rem 0;
-      padding:.8rem;
-      background:#00bfff;
-      color:#011627;
-      border:none;
-      border-radius:4px;
-      font-size:1rem;
-      cursor:pointer;
-      text-align:center;
+      display:block; width:100%; margin:1rem 0;
+      padding:.8rem; background:#00bfff;
+      color:#011627; border:none;
+      border-radius:4px; font-size:1rem;
+      cursor:pointer; text-align:center;
       transition:background .2s;
     }
     .btn:hover { background:#0094d6; }
+
+    /* MODAL SUMMARY */
     .modal-overlay {
-      position:fixed;top:0;left:0;width:100%;height:100%;
+      position:fixed; top:0; left:0; width:100%; height:100%;
       background:rgba(0,0,0,0.6);
-      display:none;align-items:center;justify-content:center;
+      display:none; align-items:center; justify-content:center;
       z-index:1000;
     }
     .modal {
-      background:#fff;color:#011627;
-      border-radius:6px;
-      width:90%;max-width:400px;
+      background:#fff; color:#011627;
+      border-radius:6px; width:90%; max-width:400px;
       overflow:hidden;
     }
     .modal-header {
-      background:#00bfff;padding:1rem;color:#011627;font-weight:bold;
+      background:#00bfff; padding:1rem;
+      color:#011627; font-weight:bold;
     }
-    .modal-body { padding:1rem;line-height:1.4; }
+    .modal-body { padding:1rem; line-height:1.4; }
     .modal-body p { margin:.5rem 0; }
     .modal-body .total {
-      font-weight:bold;margin-top:.5rem;
+      font-weight:bold; margin-top:.5rem;
     }
     .modal-body img {
-      display:block;
-      max-width:200px;
+      display:block; max-width:200px;
       margin:1rem auto;
     }
     .modal-footer {
-      display:flex;gap:.5rem;
+      display:flex; gap:.5rem;
     }
     .modal-footer button {
-      flex:1;padding:.8rem;border:none;
-      font-size:1rem;cursor:pointer;
+      flex:1; padding:.8rem; border:none; font-size:1rem;
+      cursor:pointer;
     }
-    .close-btn { background:#6c757d;color:#fff;border-radius:0 0 0 6px; }
-    .pay-btn   { background:#28a745;color:#fff;border-radius:0 0 6px 0; }
+    .close-btn { background:#6c757d; color:#fff; border-radius:0 0 0 6px; }
+    .pay-btn   { background:#28a745; color:#fff; border-radius:0 0 6px 0; }
   </style>
 </head>
 <body>
@@ -109,6 +103,7 @@
     <div class="step active" id="step1">
       <label for="nominal">Masukan Nominal (PayLater)</label>
       <input type="number" id="nominal" placeholder="misal 100000" min="1000">
+      <p class="net-display" id="netDisplay">Saldo yang akan diterima: Rp 0</p>
       <button class="btn" id="toStep2">Selanjutnya</button>
     </div>
 
@@ -167,45 +162,51 @@
   </div>
 
   <script>
-    const step1 = document.getElementById('step1');
-    const step2 = document.getElementById('step2');
+    // Step navigation
+    const step1 = document.getElementById('step1'),
+          step2 = document.getElementById('step2'),
+          nominal = document.getElementById('nominal'),
+          netDisplay = document.getElementById('netDisplay');
+
+    // update net display = nominal - ceil(2% of nominal)
+    nominal.addEventListener('input', () => {
+      const nom = parseInt(nominal.value) || 0;
+      const profit = Math.ceil(nom * 0.02);
+      const net = nom - profit;
+      netDisplay.innerText = `Saldo yang akan diterima: Rp ${net.toLocaleString('id')}`;
+    });
+
     document.getElementById('toStep2').onclick = () => {
-      if (parseInt(document.getElementById('nominal').value) > 0) {
+      if (parseInt(nominal.value) > 0) {
         step1.classList.remove('active');
         step2.classList.add('active');
-      } else {
-        alert('Masukkan nominal valid.');
-      }
+      } else alert('Masukkan nominal valid.');
     };
 
-    const nomEl    = document.getElementById('nominal');
-    const waEl     = document.getElementById('wa');
-    const methodEl = document.getElementById('method');
-    const nameEl   = document.getElementById('accName');
-    const noEl     = document.getElementById('accNo');
-    const modal    = document.getElementById('modalOverlay');
+    // Form fields
+    const waEl = document.getElementById('wa'),
+          methodEl = document.getElementById('method'),
+          nameEl = document.getElementById('accName'),
+          noEl = document.getElementById('accNo'),
+          modal = document.getElementById('modalOverlay');
 
     document.getElementById('toSummary').onclick = () => {
-      const nom  = parseInt(nomEl.value);
+      const nom  = parseInt(nominal.value,10);
       const wa   = waEl.value.trim();
       const m    = methodEl.value;
       const nm   = nameEl.value.trim();
       const no   = noEl.value.trim();
-      if (!wa || !m || !nm || !no) {
-        return alert('Lengkapi semua data.');
-      }
+      if (!wa || !m || !nm || !no) return alert('Lengkapi semua data.');
 
-      // hitung profit 2% (disertakan dalam total tapi tidak ditampilkan)
+      // 2% profit (not shown)
       const profit = Math.ceil(nom * 0.02);
-
-      // hitung admin fee
+      // admin fee
       const isBank = ['BCA','Mandiri','BRI','BNI','CIMB','Danamon'].includes(m);
-      const admin  = isBank ? 3000 : 2000;
+      const admin = isBank ? 3000 : 2000;
+      // total transfer
+      const total = nom + profit + admin;
 
-      // total transfer = nominal + profit + admin
-      const total  = nom + profit + admin;
-
-      // isi modal
+      // fill modal
       document.getElementById('outNominal').innerText = nom.toLocaleString('id');
       document.getElementById('adminFee').innerText   = admin.toLocaleString('id');
       document.getElementById('totalPay').innerText   = total.toLocaleString('id');
@@ -220,13 +221,12 @@
     };
 
     document.getElementById('confirmPay').onclick = () => {
-      const nom   = nomEl.value;
-      const m     = methodEl.value;
-      const total = document.getElementById('totalPay').innerText;
-      const wa    = waEl.value.trim();
-      const nm    = nameEl.value.trim();
-      const no    = noEl.value.trim();
-
+      const nom   = nominal.value,
+            m     = methodEl.value,
+            total = document.getElementById('totalPay').innerText,
+            wa    = waEl.value.trim(),
+            nm    = nameEl.value.trim(),
+            no    = noEl.value.trim();
       const msg =
         `Tukar PayLater Rp ${nom}\n` +
         `Transfer ke: ${m}\n` +
@@ -234,9 +234,8 @@
         `No Rekening/ID: ${no}\n` +
         `Total bayar: Rp ${total}\n` +
         `No. WA: ${wa}`;
-
       const businessWa = '6281234567890';
-      window.open(`https://wa.me/${businessWa}?text=` + encodeURIComponent(msg), '_blank');
+      window.open(`https://wa.me/${businessWa}?text=`+encodeURIComponent(msg), '_blank');
     };
   </script>
 
