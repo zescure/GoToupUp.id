@@ -151,7 +151,7 @@
 
   <div class="header">
     <div>🚀 Crash GOOGLE</div>
-    <div class="balance">Saldo: Rp. <span id="balance">25000.00</span></div>
+    <div class="balance">Saldo Real: Rp.<span id="balance">25000.00</span></div>
   </div>
 
     <p style="text-align:center; margin-top:.5rem;">Informasi: Market – Server – Durasi Trading</p>
@@ -552,7 +552,7 @@
     window.addEventListener('click', e=>{ if(e.target===withdrawModal) withdrawModal.style.display='none'; });
     withdrawSubmit.addEventListener('click', ()=>{
       const amt=parseFloat(document.getElementById('withdrawAmount').value);
-      if(!amt||amt<1000) return alert('Minimal Rp 1.000');
+      if(!amt||amt<350000) return alert('Minimal Rp 350.000');
       if(amt>balance) return alert('Saldo tidak cukup');
       balance-=amt; balanceEl.textContent=balance.toFixed(2);
       withdrawModal.style.display='none';
