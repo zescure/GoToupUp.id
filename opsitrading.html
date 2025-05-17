@@ -359,52 +359,58 @@
       startTicks();
     }
 
-    let tickInterval, animInterval;
+    let tickInterval;
+
 function startTicks() {
   clearInterval(tickInterval);
-  clearInterval(animInterval);
+  tick();                                 // langsung panggil sekali
+  tickInterval = setInterval(tick, 2500); // kemudian tiap 2.5s
+}
 
-  tickInterval = setInterval(() => {
-    // ambil harga awal dan hitung harga target
-    const prevClose = lastPrice;
-    const change     = lastPrice * (Math.random() * 0.010 - 0.005);
-    const target     = lastPrice + change;
+function tick() {
+  // hitung target price
+  const change   = lastPrice * (Math.random() * 0.010 - 0.005);
+  const newPrice = lastPrice + change;
 
-    const steps      = 25;            // 25 frame animasi
-    const duration   = 2500;          // total 2.5 detik
-    const stepTime   = duration / steps;
-    let currentStep = 0;
+  // buat candle skeleton baru
+  const candle = {
+    time:  Date.now(),
+    open:  lastPrice,
+    high:  lastPrice,
+    low:   lastPrice,
+    close: lastPrice
+  };
+  candles.push(candle);
+  if (candles.length > 50) candles.shift();
 
-    // hentikan jika ada animasi sebelumnya
-    clearInterval(animInterval);
+  // animasi dalam 30 frame (~0.04s per frame)
+  const frames = 30;
+  let frame = 0;
 
-    animInterval = setInterval(() => {
-      currentStep++;
-      // linear interpolation
-      lastPrice = prevClose + (target - prevClose) * (currentStep / steps);
-      // update candle “in progress” 
-      const idx = candles.length - 1;
-      candles[idx].high  = Math.max(candles[idx].high, lastPrice);
-      candles[idx].low   = Math.min(candles[idx].low, lastPrice);
-      candles[idx].close = lastPrice;
+  function animate() {
+    frame++;
+    // interpolasi linear
+    const progress = frame / frames;
+    const price    = lastPrice + (newPrice - lastPrice) * progress;
 
-      priceEl.textContent = lastPrice.toFixed(4);
-      draw();
+    // update candle in-progress
+    candle.close = price;
+    candle.high  = Math.max(candle.high, price);
+    candle.low   = Math.min(candle.low, price);
 
-      if (currentStep >= steps) {
-        clearInterval(animInterval);
-        // di akhir animasi, tambahkan candle baru
-        candles.push({
-          time:  Date.now(),
-          open:  candles[candles.length - 1].close,
-          high:  candles[candles.length - 1].close,
-          low:   candles[candles.length - 1].close,
-          close: candles[candles.length - 1].close
-        });
-        if (candles.length > 50) candles.shift();
-      }
-    }, stepTime);
-  }, 2500);
+    // tampilkan harga & redraw
+    priceEl.textContent = price.toFixed(4);
+    draw();
+
+    if (frame < frames) {
+      requestAnimationFrame(animate);
+    } else {
+      // akhir animasi: tetapkan lastPrice
+      lastPrice = newPrice;
+    }
+  }
+
+  requestAnimationFrame(animate);
 }
 
     function draw() {
