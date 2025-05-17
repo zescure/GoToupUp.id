@@ -194,8 +194,8 @@
       <div>Durasi: <span id="currDur">60</span>s</div>
     </div>
     <div class="options">
-      <button id="btnUp" class="option-btn">Sell ↓</button>
-      <button id="btnDown" class="option-btn">Buy ↑</button>
+      <button id="btnUp" class="option-btn">Buy ↑</button>
+      <button id="btnDown" class="option-btn">Sell ↓</button>
     </div>
     <div class="bet-controls">
       <input type="number" id="betAmount" placeholder="Jumlah (Rp)" min="1">
@@ -415,40 +415,65 @@
     }
 
     function placeTrade(type) {
-      const bet = parseFloat(betAmount.value);
-      if(!bet||bet<=0) return alert('Masukkan jumlah valid');
-      if(bet>balance) return alert('Saldo tidak cukup');
-      const entryPrice = lastPrice, entryTime = Date.now();
-      markers.push({ time:entryTime, price:entryPrice, type });
-      draw();
-      let t = tradeDur;
-      activeTrade.textContent = `${type} @ ${entryPrice.toFixed(4)} | Sisa waktu: ${t}s`;
-      const iv = setInterval(()=>{
-        t--; activeTrade.textContent = `${type} @ ${entryPrice.toFixed(4)} | Sisa waktu: ${t}s`;
-        if(t<=0){
-          clearInterval(iv);
-          const win = Math.random()<0.5;
-          let text,color;
-          if(win){ const p=bet*0.8; balance+=p; text=`Tutup Untung +${p.toFixed(2)} Rp`; color='green'; }
-          else{ balance-=bet; text=`Tutup Rugi -${bet.toFixed(2)} Rp`; color='red'; }
-          balanceEl.textContent = balance.toFixed(2);
-          resultEl.textContent = text;
-          activeTrade.textContent = '';
-          const html = `<li style="color:${color};">${new Date().toLocaleTimeString()} — ${type} @ ${entryPrice.toFixed(4)} — ${text}</li>`;
-          saveHistoryItem(html);
-          tradeHistory.insertAdjacentHTML('afterbegin', html);
-          betAmount.value='';
-        }
-      },1000);
+  const bet = parseFloat(betAmount.value);
+  if (!bet || bet <= 0) return alert('Masukkan jumlah valid');
+  if (bet > balance) return alert('Saldo tidak cukup');
+
+  const entryPrice = lastPrice;
+  const entryTime  = Date.now();
+  markers.push({ time: entryTime, price: entryPrice, type });
+  draw();
+
+  let t = tradeDur;
+  activeTrade.textContent = `${type} @ ${entryPrice.toFixed(4)} | Sisa waktu: ${t}s`;
+  const iv = setInterval(() => {
+    t--;
+    activeTrade.textContent = `${type} @ ${entryPrice.toFixed(4)} | Sisa waktu: ${t}s`;
+    if (t <= 0) {
+      clearInterval(iv);
+
+      // Ambil harga exit sekarang
+      const exitPrice = lastPrice;
+      // Tentukan menang/rugi berdasar tipe dan perbandingan harga
+      const win = (type === 'Buy'  && exitPrice > entryPrice) ||
+                  (type === 'Sell' && exitPrice < entryPrice);
+
+      let text, color;
+      if (win) {
+        const profit = bet * 0.8;
+        balance += profit;
+        text = `Tutup Keuntungan +${profit.toFixed(2)} Rp (Exit @ ${exitPrice.toFixed(4)})`;
+        color = 'green';
+      } else {
+        balance -= bet;
+        text = `Tutup Kerugian -${bet.toFixed(2)} Rp (Exit @ ${exitPrice.toFixed(4)})`;
+        color = 'red';
+      }
+
+      // Update UI
+      balanceEl.textContent = balance.toFixed(2);
+      resultEl.textContent  = text;
+      activeTrade.textContent = '';
+
+      // Simpan ke history
+      const html = `<li style="color:${color};">
+        ${new Date().toLocaleTimeString()} — ${type} @ ${entryPrice.toFixed(4)} → Exit @ ${exitPrice.toFixed(4)} — ${text}
+      </li>`;
+      saveHistoryItem(html);
+      tradeHistory.insertAdjacentHTML('afterbegin', html);
+
+      betAmount.value = '';
     }
+  }, 1000);
+}
 
     // Events
     symbolSelect.addEventListener('change', loadChart);
     tfSelect.addEventListener('change', loadChart);
     durSelect.addEventListener('change', ()=>{ currDur.textContent = tradeDur = +durSelect.value; });
 
-    btnUp.addEventListener('click', ()=>placeTrade('Terjual'));
-    btnDown.addEventListener('click', ()=>placeTrade('Terbeli'));
+    btnUp.addEventListener('click', ()=>placeTrade('TerBeli'));
+    btnDown.addEventListener('click', ()=>placeTrade('TerJual'));
 
     // Deposit/Withdraw logic (sama dengan sebelumnya)
     const btnDeposit     = document.getElementById('btnDeposit'),
