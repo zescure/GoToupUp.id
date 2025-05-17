@@ -151,7 +151,7 @@
 
   <div class="header">
     <div>🚀 Crash GOOGLE</div>
-    <div class="balance">Saldo Real: Rp.<span id="balance">25000.00</span></div>
+    <div class="balance">Saldo Real: Rp.<span id="balance">0.00</span></div>
   </div>
 
     <p style="text-align:center; margin-top:.5rem;">Informasi: Market – Server – Durasi Trading</p>
@@ -194,8 +194,8 @@
       <div>Durasi: <span id="currDur">60</span>s</div>
     </div>
     <div class="options">
-      <button id="btnUp" class="option-btn">Bawah ↓</button>
-      <button id="btnDown" class="option-btn">Atas ↑</button>
+      <button id="btnUp" class="option-btn">BELI</button>
+      <button id="btnDown" class="option-btn">JUAL</button>
     </div>
     <div class="bet-controls">
       <input type="number" id="betAmount" placeholder="Jumlah (Rp)" min="1">
@@ -252,7 +252,9 @@
   <section class="promo">
     <h2>🚀 Siap Uji Insting Trading Lu?</h2>
     <p>
-      Gabung di <strong>Crash GOOGLE</strong>, trading binary options yang bikin deg‑deg‑an!  
+      Gabung di <strong>Crash GOOGLE</strong>, memperkenalkan trading binary options yang bikin deg‑deg‑an!  
+      opsi trading bukan cuma untuk pasar forex/saham/boom index karena disini kalian bisa melakukan opsi trading untuk index lingkungan, wilayah atau negara tertentu dibumi ini
+      Bosan Opsi Biner di Pasar Yang Sama? Cobalah Teritori Index!!
       Klik Buy/Sell, pantau timer, dan raih profit 80%—atau terima risikonya.  
       Semua hasil tercatat otomatis untuk evaluasi strategi.
     </p>
@@ -488,8 +490,8 @@
     tfSelect.addEventListener('change', loadChart);
     durSelect.addEventListener('change', ()=>{ currDur.textContent = tradeDur = +durSelect.value; });
 
-    btnUp.addEventListener('click', ()=>placeTrade('TerJual'));
-    btnDown.addEventListener('click', ()=>placeTrade('TerBeli'));
+    btnUp.addEventListener('click', ()=>placeTrade('opsi BELI'));
+    btnDown.addEventListener('click', ()=>placeTrade('opsi JUAL'));
 
     // Deposit/Withdraw logic (sama dengan sebelumnya)
     const btnDeposit     = document.getElementById('btnDeposit'),
