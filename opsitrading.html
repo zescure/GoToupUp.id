@@ -385,20 +385,31 @@
       if(!candles.length) return;
       const maxP = Math.max(...candles.flatMap(c=>[c.high]));
       const minP = Math.min(...candles.flatMap(c=>[c.low]));
-      const w = canvas.width/candles.length*0.8;
-      candles.forEach((c,i)=>{
-        const x = i*(canvas.width/candles.length)+(canvas.width/candles.length-w)/2;
-        const yO = ((maxP-c.open)/(maxP-minP))*canvas.height;
-        const yC = ((maxP-c.close)/(maxP-minP))*canvas.height;
-        const yH = ((maxP-c.high)/(maxP-minP))*canvas.height;
-        const yL = ((maxP-c.low)/(maxP-minP))*canvas.height;
-        // wick
-          // 1. Gambar wick (shadow) dengan warna hitam
-    ctx.strokeStyle = '#000000';
-    ctx.beginPath();
-    ctx.moveTo(x + w/2, yHigh);
-    ctx.lineTo(x + w/2, yLow);
-    ctx.stroke();
+      // hitung lebar batang sebelum loop
+const w = canvas.width / candles.length * 0.8;
+
+candles.forEach((c, i) => {
+  const x  = i * (canvas.width / candles.length) + (canvas.width / candles.length - w) / 2;
+  const yO = ((maxP - c.open)  / (maxP - minP)) * canvas.height;
+  const yC = ((maxP - c.close) / (maxP - minP)) * canvas.height;
+  const yH = ((maxP - c.high)  / (maxP - minP)) * canvas.height;
+  const yL = ((maxP - c.low)   / (maxP - minP)) * canvas.height;
+
+  // wick: selalu hitam
+  ctx.strokeStyle = '#000000';
+  ctx.beginPath();
+  ctx.moveTo(x + w/2, yH);
+  ctx.lineTo(x + w/2, yL);
+  ctx.stroke();
+
+  // body lilin: hijau/merah
+  const upColor   = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--up-color').trim();
+  const downColor = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--down-color').trim();
+  ctx.fillStyle = c.close >= c.open ? upColor : downColor;
+  ctx.fillRect(x, Math.min(yO, yC), w, Math.max(1, Math.abs(yC - yO)));
+});
 
     // 2. Gambar body dengan warna naik/turun
     if (c.close >= c.open) {
