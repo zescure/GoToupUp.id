@@ -393,25 +393,27 @@
         const yH = ((maxP-c.high)/(maxP-minP))*canvas.height;
         const yL = ((maxP-c.low)/(maxP-minP))*canvas.height;
         // wick
-        ctx.strokeStyle='#555';
-        ctx.beginPath();
-        ctx.moveTo(x+w/2,yH);
-        ctx.lineTo(x+w/2,yL);
-        ctx.stroke();
-        // body
-        ctx.fillStyle = c.close>=c.open?'var(--up-color)':'var(--down-color)';
-        ctx.fillRect(x,Math.min(yO,yC),w,Math.max(1,Math.abs(yC-yO)));
-      });
-      // markers
-      markers.forEach(m=>{
-        const i = candles.findIndex(c=>c.time===m.time);
-        if(i<0) return;
-        const x = i*(canvas.width/candles.length)+(canvas.width/candles.length)/2;
-        const y = ((maxP-m.price)/(maxP-minP))*canvas.height + (m.type==='Buy'?-12:12);
-        ctx.fillStyle = m.type==='Buy'?'var(--up-color)':'var(--down-color)';
-        ctx.font='12px sans-serif'; ctx.textAlign='center';
-        ctx.fillText(m.type, x, y);
-      });
+          // 1. Gambar wick (shadow) dengan warna hitam
+    ctx.strokeStyle = '#000000';
+    ctx.beginPath();
+    ctx.moveTo(x + w/2, yHigh);
+    ctx.lineTo(x + w/2, yLow);
+    ctx.stroke();
+
+    // 2. Gambar body dengan warna naik/turun
+    if (c.close >= c.open) {
+      // hijau untuk naik
+      ctx.fillStyle = 'var(--up-color)';
+    } else {
+      // merah untuk turun
+      ctx.fillStyle = 'var(--down-color)';
+    }
+    const topY    = Math.min(yOpen, yClose);
+    const height  = Math.max(1, Math.abs(yClose - yOpen));
+    ctx.fillRect(x, topY, w, height);
+  });
+
+  // … gambar marker, dll …
     }
 
     function placeTrade(type) {
