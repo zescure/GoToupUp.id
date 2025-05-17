@@ -359,24 +359,53 @@
       startTicks();
     }
 
-    let tickInterval;
-    function startTicks() {
-      clearInterval(tickInterval);
-      tickInterval = setInterval(()=>{
-        const change = lastPrice*(Math.random()*0.010-0.005);
-        lastPrice += change;
+    let tickInterval, animInterval;
+function startTicks() {
+  clearInterval(tickInterval);
+  clearInterval(animInterval);
+
+  tickInterval = setInterval(() => {
+    // ambil harga awal dan hitung harga target
+    const prevClose = lastPrice;
+    const change     = lastPrice * (Math.random() * 0.010 - 0.005);
+    const target     = lastPrice + change;
+
+    const steps      = 25;            // 25 frame animasi
+    const duration   = 2500;          // total 2.5 detik
+    const stepTime   = duration / steps;
+    let currentStep = 0;
+
+    // hentikan jika ada animasi sebelumnya
+    clearInterval(animInterval);
+
+    animInterval = setInterval(() => {
+      currentStep++;
+      // linear interpolation
+      lastPrice = prevClose + (target - prevClose) * (currentStep / steps);
+      // update candle “in progress” 
+      const idx = candles.length - 1;
+      candles[idx].high  = Math.max(candles[idx].high, lastPrice);
+      candles[idx].low   = Math.min(candles[idx].low, lastPrice);
+      candles[idx].close = lastPrice;
+
+      priceEl.textContent = lastPrice.toFixed(4);
+      draw();
+
+      if (currentStep >= steps) {
+        clearInterval(animInterval);
+        // di akhir animasi, tambahkan candle baru
         candles.push({
-          time:Date.now(),
-          open:candles[candles.length-1].close,
-          high:Math.max(candles[candles.length-2].close,lastPrice),
-          low:Math.min(candles[candles.length-2].close,lastPrice),
-          close:lastPrice
+          time:  Date.now(),
+          open:  candles[candles.length - 1].close,
+          high:  candles[candles.length - 1].close,
+          low:   candles[candles.length - 1].close,
+          close: candles[candles.length - 1].close
         });
-        if(candles.length>50) candles.shift();
-        priceEl.textContent = lastPrice.toFixed(4);
-        draw();
-      },2500);
-    }
+        if (candles.length > 50) candles.shift();
+      }
+    }, stepTime);
+  }, 2500);
+}
 
     function draw() {
   // Resize & clear
