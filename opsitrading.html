@@ -421,12 +421,12 @@ function tick() {
 
   if (!candles.length) return;
 
-  // cari rentang harga
+  // cari rentang harga dari semua high & low
   const allPrices = candles.flatMap(c => [c.high, c.low]);
   const maxP = Math.max(...allPrices);
   const minP = Math.min(...allPrices);
 
-  // ambil warna dari CSS variables
+  // ambil warna CSS
   const upColor   = getComputedStyle(document.documentElement)
                       .getPropertyValue('--up-color').trim();
   const downColor = getComputedStyle(document.documentElement)
@@ -435,6 +435,7 @@ function tick() {
   // lebar batang lilin
   const w = canvas.width / candles.length * 0.8;
 
+  // gambar tiap candle
   candles.forEach((c, i) => {
     const x  = i * (canvas.width / candles.length) + (canvas.width / candles.length - w) / 2;
     const yO = ((maxP - c.open)  / (maxP - minP)) * canvas.height;
@@ -443,27 +444,29 @@ function tick() {
     const yL = ((maxP - c.low)   / (maxP - minP)) * canvas.height;
 
     // 1) Wick (shadow) hitam
-    ctx.strokeStyle = '#000000';
+    ctx.strokeStyle = '#000';
     ctx.beginPath();
     ctx.moveTo(x + w/2, yH);
     ctx.lineTo(x + w/2, yL);
     ctx.stroke();
 
-    // 2) Body lilin warna hijau/merah
+    // 2) Body lilin hijau/merah
     ctx.fillStyle = c.close >= c.open ? upColor : downColor;
     ctx.fillRect(x, Math.min(yO, yC), w, Math.max(1, Math.abs(yC - yO)));
   });
-      // markers
-      markers.forEach(m=>{
-        const i = candles.findIndex(c=>c.time===m.time);
-        if(i<0) return;
-        const x = i*(canvas.width/candles.length)+(canvas.width/candles.length)/2;
-        const y = ((maxP-m.price)/(maxP-minP))*canvas.height + (m.type==='Buy'?-12:12);
-        ctx.fillStyle = m.type==='Buy'?'var(--up-color)':'var(--down-color)';
-        ctx.font='12px sans-serif'; ctx.textAlign='center';
-        ctx.fillText(m.type, x, y);
-      });
-    }
+
+  // gambar marker (Buy/​Sell)
+  markers.forEach(m => {
+    const idx = candles.findIndex(c => c.time === m.time);
+    if (idx < 0) return;
+    const x = idx * (canvas.width / candles.length) + (canvas.width / candles.length) / 2;
+    const y = ((maxP - m.price) / (maxP - minP)) * canvas.height + (m.type === 'Buy' ? -12 : 12);
+    ctx.fillStyle = m.type === 'Buy' ? upColor : downColor;
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(m.type, x, y);
+  });
+}
 
     function placeTrade(type) {
   const bet = parseFloat(betAmount.value);
