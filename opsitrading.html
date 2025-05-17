@@ -367,7 +367,7 @@
         lastPrice += change;
         candles.push({
           time:Date.now(),
-          open:candles[candles.length-2].close,
+          open:candles[candles.length-1].close,
           high:Math.max(candles[candles.length-2].close,lastPrice),
           low:Math.min(candles[candles.length-2].close,lastPrice),
           close:lastPrice
