@@ -363,7 +363,7 @@
     function startTicks() {
       clearInterval(tickInterval);
       tickInterval = setInterval(()=>{
-        const change = lastPrice*(Math.random()*0.004-0.002);
+        const change = lastPrice*(Math.random()*0.008-0.004);
         lastPrice += change;
         candles.push({
           time:Date.now(),
