@@ -194,8 +194,8 @@
       <div>Durasi: <span id="currDur">60</span>s</div>
     </div>
     <div class="options">
-      <button id="btnUp" class="option-btn">Buy ↑</button>
-      <button id="btnDown" class="option-btn">Sell ↓</button>
+      <button id="btnUp" class="option-btn">Bawah ↓</button>
+      <button id="btnDown" class="option-btn">Atas ↑</button>
     </div>
     <div class="bet-controls">
       <input type="number" id="betAmount" placeholder="Jumlah (Rp)" min="1">
@@ -472,8 +472,8 @@
     tfSelect.addEventListener('change', loadChart);
     durSelect.addEventListener('change', ()=>{ currDur.textContent = tradeDur = +durSelect.value; });
 
-    btnUp.addEventListener('click', ()=>placeTrade('TerBeli'));
-    btnDown.addEventListener('click', ()=>placeTrade('TerJual'));
+    btnUp.addEventListener('click', ()=>placeTrade('TerJual'));
+    btnDown.addEventListener('click', ()=>placeTrade('TerBeli'));
 
     // Deposit/Withdraw logic (sama dengan sebelumnya)
     const btnDeposit     = document.getElementById('btnDeposit'),
