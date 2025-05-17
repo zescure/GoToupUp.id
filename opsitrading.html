@@ -367,23 +367,29 @@ function startTicks() {
   tickInterval = setInterval(tick, 2500); // kemudian tiap 2.5s
 }
 
-function tick() {
-  // hitung target price
-  const change   = lastPrice * (Math.random() * 0.010 - 0.005);
-  const target   = lastPrice + change;
+// 1) Hapus atau komentar semua setInterval(tick, …)
+// 2) Ganti dengan ini:
 
-  // buat skeleton candle baru
-  const candle = {
-    time:  Date.now(),
-    open:  lastPrice,
-    high:  lastPrice,   // initial high = open
-    low:   lastPrice,   // initial low  = open
-    close: lastPrice
-  };
+function startTicks() {
+  // Mulai scheduler sekali saja
+  scheduleNextTick();
+}
+
+function scheduleNextTick() {
+  // Jadwalkan tick berikutnya tepat 2 detik setelah animasi selesai
+  setTimeout(() => tick(), 2000);
+}
+
+function tick() {
+  // ... semua logic hitung target & skeleton candle sama seperti sebelumnya ...
+
+  const change = lastPrice * (Math.random() * 0.01 - 0.005);
+  const target = lastPrice + change;
+  const candle = { time: Date.now(), open: lastPrice, high: lastPrice, low: lastPrice, close: lastPrice };
   candles.push(candle);
   if (candles.length > 50) candles.shift();
 
-  // animasi 30 frame (~2.5s / 30 ≈ 83ms per frame)
+  // animasi 30 frame (~2 detik / 30 ≈ 67ms per frame)
   const frames = 30;
   let frame = 0;
 
@@ -392,29 +398,29 @@ function tick() {
     const progress = frame / frames;
     const price    = lastPrice + (target - lastPrice) * progress;
 
-    // Update candle in‑progress:
+    // update wick & body
     candle.close = price;
+    candle.high  = Math.max(candle.high, price);
+    candle.low   = Math.min(candle.low, price);
 
-    // Wick animates as price moves:
-    if (price > candle.high) candle.high = price;
-    if (price < candle.low)  candle.low  = price;
-
-    // Tampilkan harga & redraw:
     priceEl.textContent = price.toFixed(4);
     draw();
 
     if (frame < frames) {
       requestAnimationFrame(animate);
     } else {
-      // selesai animasi: finalize lastPrice
       lastPrice = target;
-      // schedule tick selanjutnya
-      setTimeout(tick, 250);
+      // baru schedule tick selanjutnya
+      scheduleNextTick();
     }
   }
 
   requestAnimationFrame(animate);
 }
+
+// Panggil startTicks() sekali setelah loadChart()
+loadChart();
+startTicks();
 
     function draw() {
   // Resize & clear
