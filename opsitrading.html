@@ -359,58 +359,52 @@
       startTicks();
     }
 
-    let tickInterval;
-
+    let tickInterval, animInterval;
 function startTicks() {
   clearInterval(tickInterval);
-  tick();                                 // langsung panggil sekali
-  tickInterval = setInterval(tick, 2500); // kemudian tiap 2.5s
-}
+  clearInterval(animInterval);
 
-function tick() {
-  // hitung target price
-  const change   = lastPrice * (Math.random() * 0.010 - 0.005);
-  const newPrice = lastPrice + change;
+  tickInterval = setInterval(() => {
+    // ambil harga awal dan hitung harga target
+    const prevClose = lastPrice;
+    const change     = lastPrice * (Math.random() * 0.010 - 0.005);
+    const target     = lastPrice + change;
 
-  // buat candle skeleton baru
-  const candle = {
-    time:  Date.now(),
-    open:  lastPrice,
-    high:  lastPrice,
-    low:   lastPrice,
-    close: lastPrice
-  };
-  candles.push(candle);
-  if (candles.length > 50) candles.shift();
+    const steps      = 25;            // 25 frame animasi
+    const duration   = 2500;          // total 2.5 detik
+    const stepTime   = duration / steps;
+    let currentStep = 0;
 
-  // animasi dalam 30 frame (~0.04s per frame)
-  const frames = 30;
-  let frame = 0;
+    // hentikan jika ada animasi sebelumnya
+    clearInterval(animInterval);
 
-  function animate() {
-    frame++;
-    // interpolasi linear
-    const progress = frame / frames;
-    const price    = lastPrice + (newPrice - lastPrice) * progress;
+    animInterval = setInterval(() => {
+      currentStep++;
+      // linear interpolation
+      lastPrice = prevClose + (target - prevClose) * (currentStep / steps);
+      // update candle “in progress” 
+      const idx = candles.length - 1;
+      candles[idx].high  = Math.max(candles[idx].high, lastPrice);
+      candles[idx].low   = Math.min(candles[idx].low, lastPrice);
+      candles[idx].close = lastPrice;
 
-    // update candle in-progress
-    candle.close = price;
-    candle.high  = Math.max(candle.high, price);
-    candle.low   = Math.min(candle.low, price);
+      priceEl.textContent = lastPrice.toFixed(4);
+      draw();
 
-    // tampilkan harga & redraw
-    priceEl.textContent = price.toFixed(4);
-    draw();
-
-    if (frame < frames) {
-      requestAnimationFrame(animate);
-    } else {
-      // akhir animasi: tetapkan lastPrice
-      lastPrice = newPrice;
-    }
-  }
-
-  requestAnimationFrame(animate);
+      if (currentStep >= steps) {
+        clearInterval(animInterval);
+        // di akhir animasi, tambahkan candle baru
+        candles.push({
+          time:  Date.now(),
+          open:  candles[candles.length - 1].close,
+          high:  candles[candles.length - 1].close,
+          low:   candles[candles.length - 1].close,
+          close: candles[candles.length - 1].close
+        });
+        if (candles.length > 50) candles.shift();
+      }
+    }, stepTime);
+  }, 2500);
 }
 
     function draw() {
@@ -421,12 +415,12 @@ function tick() {
 
   if (!candles.length) return;
 
-  // cari rentang harga dari semua high & low
+  // cari rentang harga
   const allPrices = candles.flatMap(c => [c.high, c.low]);
   const maxP = Math.max(...allPrices);
   const minP = Math.min(...allPrices);
 
-  // ambil warna CSS
+  // ambil warna dari CSS variables
   const upColor   = getComputedStyle(document.documentElement)
                       .getPropertyValue('--up-color').trim();
   const downColor = getComputedStyle(document.documentElement)
@@ -435,7 +429,6 @@ function tick() {
   // lebar batang lilin
   const w = canvas.width / candles.length * 0.8;
 
-  // gambar tiap candle
   candles.forEach((c, i) => {
     const x  = i * (canvas.width / candles.length) + (canvas.width / candles.length - w) / 2;
     const yO = ((maxP - c.open)  / (maxP - minP)) * canvas.height;
@@ -444,29 +437,27 @@ function tick() {
     const yL = ((maxP - c.low)   / (maxP - minP)) * canvas.height;
 
     // 1) Wick (shadow) hitam
-    ctx.strokeStyle = '#000';
+    ctx.strokeStyle = '#000000';
     ctx.beginPath();
     ctx.moveTo(x + w/2, yH);
     ctx.lineTo(x + w/2, yL);
     ctx.stroke();
 
-    // 2) Body lilin hijau/merah
+    // 2) Body lilin warna hijau/merah
     ctx.fillStyle = c.close >= c.open ? upColor : downColor;
     ctx.fillRect(x, Math.min(yO, yC), w, Math.max(1, Math.abs(yC - yO)));
   });
-
-  // gambar marker (Buy/​Sell)
-  markers.forEach(m => {
-    const idx = candles.findIndex(c => c.time === m.time);
-    if (idx < 0) return;
-    const x = idx * (canvas.width / candles.length) + (canvas.width / candles.length) / 2;
-    const y = ((maxP - m.price) / (maxP - minP)) * canvas.height + (m.type === 'Buy' ? -12 : 12);
-    ctx.fillStyle = m.type === 'Buy' ? upColor : downColor;
-    ctx.font = '12px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(m.type, x, y);
-  });
-}
+      // markers
+      markers.forEach(m=>{
+        const i = candles.findIndex(c=>c.time===m.time);
+        if(i<0) return;
+        const x = i*(canvas.width/candles.length)+(canvas.width/candles.length)/2;
+        const y = ((maxP-m.price)/(maxP-minP))*canvas.height + (m.type==='Buy'?-12:12);
+        ctx.fillStyle = m.type==='Buy'?'var(--up-color)':'var(--down-color)';
+        ctx.font='12px sans-serif'; ctx.textAlign='center';
+        ctx.fillText(m.type, x, y);
+      });
+    }
 
     function placeTrade(type) {
   const bet = parseFloat(betAmount.value);
