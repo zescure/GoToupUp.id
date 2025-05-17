@@ -280,7 +280,7 @@
     </details>
     <details class="faq-item">
       <summary>Apa risiko bermain?</summary>
-      <p>Risiko kehilangan seluruh taruhan. Gunakan modal kecil atau mode demo.</p>
+      <p>Risiko kehilangan seluruh taruhan. Gunakan modal kecil.</p>
     </details>
   </section>
 
@@ -363,13 +363,13 @@
     function startTicks() {
       clearInterval(tickInterval);
       tickInterval = setInterval(()=>{
-        const change = lastPrice*(Math.random()*0.008-0.004);
+        const change = lastPrice*(Math.random()*0.010-0.005);
         lastPrice += change;
         candles.push({
           time:Date.now(),
-          open:candles[candles.length-1].close,
-          high:Math.max(candles[candles.length-1].close,lastPrice),
-          low:Math.min(candles[candles.length-1].close,lastPrice),
+          open:candles[candles.length-2].close,
+          high:Math.max(candles[candles.length-2].close,lastPrice),
+          low:Math.min(candles[candles.length-2].close,lastPrice),
           close:lastPrice
         });
         if(candles.length>50) candles.shift();
