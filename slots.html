@@ -56,16 +56,22 @@
     #result {
       margin-top: 20px;
       font-weight: bold;
+      min-height: 1.2em;
     }
     #freeSpins {
       font-weight: bold;
       color: #ffeb3b;
+    }
+    #balance {
+      font-weight: bold;
+      color: #4caf50;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Slots of Olympus ⚡</h1>
+    <p>Saldo: Rp <span id="balance">100000</span></p>
     <div class="slot-grid" id="slotGrid"></div>
     <div>
       <button id="spinBtn">🔄 SPIN</button>
@@ -77,18 +83,22 @@
 
   <script>
     const symbols = ['⚡','👑','💎','🔥','🍇','🔱','⭐']; // ⭐ = scatter
+    const payouts = { '⚡':2000, '👑':1500, '💎':1000, '🔥':800, '🍇':500, '🔱':300 };
     const SCATTER = '⭐';
     const cols = 5, rows = 3;
     const gridEl = document.getElementById('slotGrid');
     const resultEl = document.getElementById('result');
     const freeSpinsEl = document.getElementById('freeSpins');
+    const balanceEl = document.getElementById('balance');
     const spinBtn = document.getElementById('spinBtn');
     const boosterBtn = document.getElementById('boosterBtn');
 
     let freeSpins = 0;
+    let balance = 100000;
 
-    function updateFreeSpins() {
+    function updateUI() {
       freeSpinsEl.textContent = freeSpins;
+      balanceEl.textContent = balance;
     }
 
     function createGrid() {
@@ -105,18 +115,28 @@
       return symbols[Math.floor(Math.random() * symbols.length)];
     }
 
-    // spin dengan opsi booster: jika true, groupSize = 3; else 1
+    // generate biaya spin manual: kelipatan 200 antara 200-2000
+    function randomCost() {
+      return (Math.ceil(Math.random() * 10) * 200);
+    }
+
     function spin(withBooster, isManual) {
+      // deduct cost only for manual spins
+      let cost = 0;
+      if (isManual && freeSpins === 0) {
+        cost = randomCost();
+        balance = Math.max(0, balance - cost);
+      }
       spinBtn.disabled = true;
       boosterBtn.disabled = true;
-      resultEl.textContent = '';
+      resultEl.textContent = isManual && freeSpins === 0
+        ? `–Rp ${cost}` : '';
       const cells = Array.from(document.querySelectorAll('.slot-cell'));
       const groupSize = withBooster ? 3 : 1;
       const groupDelays = [];
       for (let start = 0; start < cols; start += groupSize) {
         groupDelays.push(start / groupSize * 200);
       }
-      // animate per group
       groupDelays.forEach((delay, gi) => {
         setTimeout(() => {
           const startCol = gi * groupSize;
@@ -128,10 +148,10 @@
               setTimeout(() => { cells[idx].style.transform = 'translateY(0)'; }, 100);
             }
           }
-          // setelah animasi terakhir group, cek hasil
           if (gi === groupDelays.length - 1) {
-            const finalSymbols = cells.map(c => c.textContent);
-            evaluate(finalSymbols, isManual);
+            const finalSyms = cells.map(c => c.textContent);
+            evaluate(finalSyms, isManual, cost);
+            updateUI();
             spinBtn.disabled = false;
             boosterBtn.disabled = false;
           }
@@ -139,29 +159,33 @@
       });
     }
 
-    function evaluate(gridSymbols, isManual) {
-      // cek jackpot di baris tengah
-      const mid = gridSymbols.slice(rows, rows*2);
-      if (mid.every(s => s === mid[0])) {
-        resultEl.textContent = `🎉 JACKPOT: ${mid[0].repeat(3)}!`;
+    function evaluate(gridSyms, isManual, cost) {
+      let winAmt = 0;
+      // cek tiap kolom untuk 3 simbol sama
+      for (let c = 0; c < cols; c++) {
+        const colSyms = [ gridSyms[c], gridSyms[c+cols], gridSyms[c+2*cols] ];
+        if (colSyms.every(s => s === colSyms[0]) && payouts[colSyms[0]]) {
+          winAmt += payouts[colSyms[0]];
+        }
       }
-      // cek scatter manual
-      const scatters = gridSymbols.filter(s => s === SCATTER).length;
+      // cek jackpot + update balance
+      if (winAmt > 0) {
+        balance += winAmt;
+        resultEl.textContent += ` 🎉 Menang Rp ${winAmt}`;
+      }
+      // cek scatter free spin
+      const scatters = gridSyms.filter(s => s === SCATTER).length;
       if (isManual && scatters >= 3) {
         freeSpins += 10;
-        updateFreeSpins();
-        resultEl.textContent = `✨ Scatter x${scatters}! +10 Free Spins!`;
-        autoSpin();
-      } else if (!resultEl.textContent) {
-        resultEl.textContent = '😢 Better luck next time.';
+        resultEl.textContent += ` ✨ Scatter x${scatters}! +10 Free Spins!`;
       }
-    }
-
-    function autoSpin() {
+      // free spin otomatis
       if (freeSpins > 0) {
         freeSpins--;
-        updateFreeSpins();
+        updateUI();
         setTimeout(() => { spin(false, false); }, 500);
+      } else if (!winAmt && scatters < 3) {
+        resultEl.textContent += ' 😢 Better luck next time.';
       }
     }
 
@@ -170,7 +194,7 @@
 
     window.onload = () => {
       createGrid();
-      updateFreeSpins();
+      updateUI();
     };
   </script>
 </body>
