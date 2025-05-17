@@ -379,29 +379,45 @@
     }
 
     function draw() {
-      canvas.width = canvas.clientWidth;
-      canvas.height = canvas.clientHeight;
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      if(!candles.length) return;
-      const maxP = Math.max(...candles.flatMap(c=>[c.high]));
-      const minP = Math.min(...candles.flatMap(c=>[c.low]));
-      const w = canvas.width/candles.length*0.8;
-      candles.forEach((c,i)=>{
-        const x = i*(canvas.width/candles.length)+(canvas.width/candles.length-w)/2;
-        const yO = ((maxP-c.open)/(maxP-minP))*canvas.height;
-        const yC = ((maxP-c.close)/(maxP-minP))*canvas.height;
-        const yH = ((maxP-c.high)/(maxP-minP))*canvas.height;
-        const yL = ((maxP-c.low)/(maxP-minP))*canvas.height;
-        // wick
-        ctx.strokeStyle='#555';
-        ctx.beginPath();
-        ctx.moveTo(x+w/2,yH);
-        ctx.lineTo(x+w/2,yL);
-        ctx.stroke();
-        // body
-        ctx.fillStyle = c.close>=c.open?'var(--up-color)':'var(--down-color)';
-        ctx.fillRect(x,Math.min(yO,yC),w,Math.max(1,Math.abs(yC-yO)));
-      });
+  // Resize & clear
+  canvas.width  = canvas.clientWidth;
+  canvas.height = canvas.clientHeight;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (!candles.length) return;
+
+  // cari rentang harga
+  const allPrices = candles.flatMap(c => [c.high, c.low]);
+  const maxP = Math.max(...allPrices);
+  const minP = Math.min(...allPrices);
+
+  // ambil warna dari CSS variables
+  const upColor   = getComputedStyle(document.documentElement)
+                      .getPropertyValue('--up-color').trim();
+  const downColor = getComputedStyle(document.documentElement)
+                      .getPropertyValue('--down-color').trim();
+
+  // lebar batang lilin
+  const w = canvas.width / candles.length * 0.8;
+
+  candles.forEach((c, i) => {
+    const x  = i * (canvas.width / candles.length) + (canvas.width / candles.length - w) / 2;
+    const yO = ((maxP - c.open)  / (maxP - minP)) * canvas.height;
+    const yC = ((maxP - c.close) / (maxP - minP)) * canvas.height;
+    const yH = ((maxP - c.high)  / (maxP - minP)) * canvas.height;
+    const yL = ((maxP - c.low)   / (maxP - minP)) * canvas.height;
+
+    // 1) Wick (shadow) hitam
+    ctx.strokeStyle = '#000000';
+    ctx.beginPath();
+    ctx.moveTo(x + w/2, yH);
+    ctx.lineTo(x + w/2, yL);
+    ctx.stroke();
+
+    // 2) Body lilin warna hijau/merah
+    ctx.fillStyle = c.close >= c.open ? upColor : downColor;
+    ctx.fillRect(x, Math.min(yO, yC), w, Math.max(1, Math.abs(yC - yO)));
+  });
       // markers
       markers.forEach(m=>{
         const i = candles.findIndex(c=>c.time===m.time);
