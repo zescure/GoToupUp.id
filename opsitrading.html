@@ -370,43 +370,46 @@ function startTicks() {
 function tick() {
   // hitung target price
   const change   = lastPrice * (Math.random() * 0.010 - 0.005);
-  const newPrice = lastPrice + change;
+  const target   = lastPrice + change;
 
-  // buat candle skeleton baru
+  // buat skeleton candle baru
   const candle = {
     time:  Date.now(),
     open:  lastPrice,
-    high:  lastPrice,
-    low:   lastPrice,
+    high:  lastPrice,   // initial high = open
+    low:   lastPrice,   // initial low  = open
     close: lastPrice
   };
   candles.push(candle);
   if (candles.length > 50) candles.shift();
 
-  // animasi dalam 30 frame (~0.04s per frame)
+  // animasi 30 frame (~2.5s / 30 ≈ 83ms per frame)
   const frames = 30;
   let frame = 0;
 
   function animate() {
     frame++;
-    // interpolasi linear
     const progress = frame / frames;
-    const price    = lastPrice + (newPrice - lastPrice) * progress;
+    const price    = lastPrice + (target - lastPrice) * progress;
 
-    // update candle in-progress
+    // Update candle in‑progress:
     candle.close = price;
-    candle.high  = Math.max(candle.high, price);
-    candle.low   = Math.min(candle.low, price);
 
-    // tampilkan harga & redraw
+    // Wick animates as price moves:
+    if (price > candle.high) candle.high = price;
+    if (price < candle.low)  candle.low  = price;
+
+    // Tampilkan harga & redraw:
     priceEl.textContent = price.toFixed(4);
     draw();
 
     if (frame < frames) {
       requestAnimationFrame(animate);
     } else {
-      // akhir animasi: tetapkan lastPrice
-      lastPrice = newPrice;
+      // selesai animasi: finalize lastPrice
+      lastPrice = target;
+      // schedule tick selanjutnya
+      setTimeout(tick, 2500);
     }
   }
 
