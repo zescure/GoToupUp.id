@@ -361,59 +361,22 @@
 
     let tickInterval;
     function startTicks() {
-  // mulai loop tick
-  scheduleNextTick();
-}
-
-function scheduleNextTick() {
-  const delay = 2500; // 2,5 detik
-  setTimeout(() => {
-    // ===================================================
-    // 1) Hitung harga target
-    const change   = lastPrice * (Math.random() * 0.010 - 0.005);
-    const target   = lastPrice + change;
-
-    // 2) Tambah “skeleton” candle baru
-    const candle = {
-      time:  Date.now(),
-      open:  lastPrice,
-      high:  lastPrice,
-      low:   lastPrice,
-      close: lastPrice
-    };
-    candles.push(candle);
-    if (candles.length > 50) candles.shift();
-
-    // 3) Animasi interpolasi 30 frame
-    const frames = 30;
-    let frame = 0;
-    function animate() {
-      frame++;
-      const progress = frame / frames;
-      const price    = lastPrice + (target - lastPrice) * progress;
-
-      // update in‑progress candle
-      candle.close = price;
-      candle.high  = Math.max(candle.high, price);
-      candle.low   = Math.min(candle.low, price);
-
-      // redraw & update price display
-      priceEl.textContent = price.toFixed(4);
-      draw();
-
-      if (frame < frames) {
-        requestAnimationFrame(animate);
-      } else {
-        // selesai animasi: tetapkan lastPrice ke target
-        lastPrice = target;
-        // langsung jadwalkan tick selanjutnya
-        scheduleNextTick();
-      }
+      clearInterval(tickInterval);
+      tickInterval = setInterval(()=>{
+        const change = lastPrice*(Math.random()*0.010-0.005);
+        lastPrice += change;
+        candles.push({
+          time:Date.now(),
+          open:candles[candles.length-1].close,
+          high:Math.max(candles[candles.length-2].close,lastPrice),
+          low:Math.min(candles[candles.length-2].close,lastPrice),
+          close:lastPrice
+        });
+        if(candles.length>50) candles.shift();
+        priceEl.textContent = lastPrice.toFixed(4);
+        draw();
+      },2500);
     }
-    requestAnimationFrame(animate);
-    // ===================================================
-  }, delay);
-}
 
     function draw() {
   // Resize & clear
