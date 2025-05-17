@@ -311,107 +311,122 @@
     const resultEl  = document.getElementById('result');
     const activeTrade = document.getElementById('activeTrade');
 
-    let candles = [], markers = [], lastPrice = 1.2;
-    let tradeDur = +durSelect.value;
+    // --- State & Data ---
+let candles = [], markers = [];
+let lastPrice = 1 + Math.random();
+let tradeDur = 60; // contoh durasi
+const priceEl = document.getElementById('currentPrice');
+const canvas  = document.getElementById('chartCanvas');
+const ctx     = canvas.getContext('2d');
 
-    function key() { return symbolSelect.value + '_' + tfSelect.value; }
+// Inisialisasi 50 candle awal
+for (let i = 0; i < 50; i++) {
+  const p = lastPrice * (1 + (Math.random() * 0.01 - 0.005));
+  candles.push({ time: Date.now() - (50 - i) * 2500, open: lastPrice, high: p, low: p, close: p });
+  lastPrice = p;
+}
 
-    function loadHistoryUI() {
-      const k = key();
-      tradeHistory.innerHTML = historyCache[k]?.join('') || '';
-    }
-    function saveHistoryItem(html) {
-      const k = key();
-      historyCache[k] = historyCache[k] || [];
-      historyCache[k].unshift(html);
-    }
+// --- Draw Function (candles + wick) ---
+function draw() {
+  // resize & clear
+  canvas.width  = canvas.clientWidth;
+  canvas.height = canvas.clientHeight;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!candles.length) return;
 
-    function genHistory(base, count=50) {
-      const tf = +tfSelect.value;
-      const now = Date.now();
-      let b = base, arr = [];
-      for(let i=count; i>0; i--) {
-        const t = now - i*tf*60000;
-        const open = b;
-        const close = open*(1+(Math.random()*0.02-0.01));
-        const high = Math.max(open,close)*(1+Math.random()*0.005);
-        const low  = Math.min(open,close)*(1-Math.random()*0.005);
-        arr.push({ time:t, open, high, low, close });
-        b = close;
-      }
-      return arr;
-    }
+  // hitung range
+  const allPrices = candles.flatMap(c => [c.high, c.low]);
+  const maxP = Math.max(...allPrices);
+  const minP = Math.min(...allPrices);
 
-    function loadChart() {
-      currSymbol.textContent = symbolSelect.selectedOptions[0].text;
-      currDur.textContent = tradeDur = +durSelect.value;
-      const k = key();
-      if (!candlesCache[k]) {
-        lastPrice = 1 + Math.random();
-        candlesCache[k] = genHistory(lastPrice);
-      }
-      candles = candlesCache[k];
-      lastPrice = candles[candles.length-1].close;
-      markers = [];
-      priceEl.textContent = lastPrice.toFixed(4);
-      loadHistoryUI();
-      draw();
-      startTicks();
-    }
+  // ambil warna
+  const upColor   = getComputedStyle(document.documentElement).getPropertyValue('--up-color').trim();
+  const downColor = getComputedStyle(document.documentElement).getPropertyValue('--down-color').trim();
 
-    let tickInterval;
+  // lebar batang
+  const w = canvas.width / candles.length * 0.8;
 
-function startTicks() {
-  clearInterval(tickInterval);
-  tick();                                 // langsung panggil sekali
-  tickInterval = setInterval(tick, 2500); // kemudian tiap 2.5s
+  // gambar tiap candle
+  candles.forEach((c, i) => {
+    const x  = i * (canvas.width / candles.length) + (canvas.width / candles.length - w) / 2;
+    const yO = ((maxP - c.open)  / (maxP - minP)) * canvas.height;
+    const yC = ((maxP - c.close) / (maxP - minP)) * canvas.height;
+    const yH = ((maxP - c.high)  / (maxP - minP)) * canvas.height;
+    const yL = ((maxP - c.low)   / (maxP - minP)) * canvas.height;
+
+    // wick (shadow) hitam
+    ctx.strokeStyle = '#000';
+    ctx.beginPath();
+    ctx.moveTo(x + w/2, yH);
+    ctx.lineTo(x + w/2, yL);
+    ctx.stroke();
+
+    // body lilin
+    ctx.fillStyle = c.close >= c.open ? upColor : downColor;
+    ctx.fillRect(x, Math.min(yO, yC), w, Math.max(1, Math.abs(yC - yO)));
+  });
+
+  // gambar marker (Buy/Sell)
+  markers.forEach(m => {
+    const idx = candles.findIndex(c => c.time === m.time);
+    if (idx < 0) return;
+    const x = idx * (canvas.width / candles.length) + (canvas.width / candles.length) / 2;
+    const y = ((maxP - m.price) / (maxP - minP)) * canvas.height + (m.type === 'Buy' ? -12 : 12);
+    ctx.fillStyle = m.type === 'Buy' ? upColor : downColor;
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(m.type, x, y);
+  });
+}
+
+// --- Tick & Animation Loop ---
+function scheduleNextTick() {
+  setTimeout(() => tick(), 2500);
 }
 
 function tick() {
-  // hitung target price
-  const change   = lastPrice * (Math.random() * 0.010 - 0.005);
-  const newPrice = lastPrice + change;
+  // target price
+  const change = lastPrice * (Math.random() * 0.01 - 0.005);
+  const target = lastPrice + change;
 
-  // buat candle skeleton baru
-  const candle = {
-    time:  Date.now(),
-    open:  lastPrice,
-    high:  lastPrice,
-    low:   lastPrice,
-    close: lastPrice
-  };
+  // skeleton candle
+  const candle = { time: Date.now(), open: lastPrice, high: lastPrice, low: lastPrice, close: lastPrice };
   candles.push(candle);
   if (candles.length > 50) candles.shift();
 
-  // animasi dalam 30 frame (~0.04s per frame)
+  // animasi 30 frame
   const frames = 30;
   let frame = 0;
 
   function animate() {
     frame++;
-    // interpolasi linear
     const progress = frame / frames;
-    const price    = lastPrice + (newPrice - lastPrice) * progress;
+    const price = lastPrice + (target - lastPrice) * progress;
 
-    // update candle in-progress
+    // update candle
     candle.close = price;
     candle.high  = Math.max(candle.high, price);
     candle.low   = Math.min(candle.low, price);
 
-    // tampilkan harga & redraw
+    // render
     priceEl.textContent = price.toFixed(4);
     draw();
 
     if (frame < frames) {
       requestAnimationFrame(animate);
     } else {
-      // akhir animasi: tetapkan lastPrice
-      lastPrice = newPrice;
+      // selesai animasi
+      lastPrice = target;
+      scheduleNextTick();
     }
   }
 
   requestAnimationFrame(animate);
 }
+
+// --- Start ---
+draw();
+scheduleNextTick();
 
     function draw() {
   // Resize & clear
