@@ -370,7 +370,7 @@ function scheduleNextTick() {
   setTimeout(() => {
     // ===================================================
     // 1) Hitung harga target
-    const change   = lastPrice * (Math.random() * 0.020 - 0.010);
+    const change   = lastPrice * (Math.random() * 0.010 - 0.005);
     const target   = lastPrice + change;
 
     // 2) Tambah “skeleton” candle baru
