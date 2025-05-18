@@ -128,12 +128,8 @@
       <button id="btnUp" class="option-btn">BELI</button>
       <button id="btnDown" class="option-btn">JUAL</button>
     </div>
-    <!-- Auto‐Close Controls -->
-<div class="bet-controls" style="margin-bottom:1rem;">
-  <input type="number" id="tpValue" placeholder="TP (poin)" step="0.0001">
-  <input type="number" id="slValue" placeholder="SL (poin)" step="0.0001">
-  <button id="setAutoClose" class="btn-place">Set Auto‐Close</button>
-
+    <div class="bet-controls">
+      <input type="number" id="betAmount" placeholder="Lot (0.01…)" step="0.01" min="0.01">
     </div>
     <div id="result" class="result"></div>
     <div id="activeTrade" class="result"></div>
@@ -275,16 +271,6 @@
       openDiv.querySelectorAll('.close-btn').forEach(b=>{
         b.onclick=()=>closePosition(+b.dataset.i);
       });
-   // simpan TP/SL global (atau simpan di posisi jika per‑position)
-let autoTP = null, autoSL = null;
-
-document.getElementById('setAutoClose').addEventListener('click', () => {
-  const tp = parseFloat(document.getElementById('tpValue').value);
-  const sl = parseFloat(document.getElementById('slValue').value);
-  autoTP = isNaN(tp) ? null : tp;
-  autoSL = isNaN(sl) ? null : sl;
-  alert(`Auto‐Close set → TP: ${autoTP ?? '—'} poin, SL: ${autoSL ?? '—'} poin`);
-});
     }
     function closePosition(idx){
       const pos=positions.splice(idx,1)[0];
@@ -346,29 +332,7 @@ document.getElementById('setAutoClose').addEventListener('click', () => {
         ctx.font='12px sans-serif'; ctx.textAlign='center';
         ctx.fillText(m.type,x,y);
       });
-     // setelah draw() atau di checkAutoClose(), sebelum renderPositions():
-if (autoTP !== null || autoSL !== null) {
-  positions = positions.filter(pos => {
-    const diff = (lastPrice - pos.entry) * (pos.type==='BUY'?1:-1);
-    // kalau kena TP atau SL
-    if ((autoTP !== null && diff >= autoTP) ||
-        (autoSL !== null && diff <= -autoSL)) {
-      // close otomatis
-      const pnl = Math.round(diff * pos.amount);
-      balance += pnl;
-      const color = pnl >= 0 ? 'green' : 'red';
-      const html = `<li style="color:${color}">
-        ${new Date().toLocaleTimeString()} — ${pos.type} @ ${pos.entry.toFixed(4)} → Exit @ ${lastPrice.toFixed(4)} — ${pnl>=0?'Profit':'Loss'} ${pnl} Rp (Auto)
-      </li>`;
-      saveHistoryItem(html);
-      tradeHistory.insertAdjacentHTML('afterbegin', html);
-      return false; // remove this pos
-    }
-    return true;  // keep open
-  });
- 
-      
-    renderPositions();
+      renderPositions();
     }
 
     // ===== PLACE TRADE (FOREX) =====
