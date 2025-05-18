@@ -190,7 +190,7 @@
     balanceEl.textContent = balance.toFixed(2);
 
     const historyCache = {}, candlesCache = {};
-    let candles = [], markers = [], lastPrice = 5.4;
+    let candles = [], markers = [], lastPrice = 1.2;
     let tradeDur = +document.getElementById('durSelect').value;
 
     // ===== CONTROLS & UI =====
@@ -342,7 +342,7 @@
       if(positions.length>=maxPos) return alert(`Maks ${maxPos} posisi.`);
       const lot=parseFloat(betAmount.value);
       if(!lot||lot<0.01) return alert('Lot minimal 0.01');
-      const amt=Math.round(lot*1500000);
+      const amt=Math.round(lot*15000);
       if(amt>balance) return alert('Saldo tidak cukup');
       const entry=lastPrice;
       balance-=amt; balanceEl.textContent=balance.toFixed(2);
