@@ -185,12 +185,12 @@
 
   <script>
     // ===== STATE =====
-    let balance = 25000;
+    let balance = 0;
     balanceEl = document.getElementById('balance');
     balanceEl.textContent = balance.toFixed(2);
 
     const historyCache = {}, candlesCache = {};
-    let candles = [], markers = [], lastPrice = 1.2;
+    let candles = [], markers = [], lastPrice = 2.3;
     let tradeDur = +document.getElementById('durSelect').value;
 
     // ===== CONTROLS & UI =====
