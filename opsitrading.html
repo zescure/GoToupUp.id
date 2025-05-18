@@ -516,39 +516,77 @@ const win = (isBuy  && exitPrice > entryPrice) ||
           withdrawSubmit = document.getElementById('withdrawSubmit');
 
     btnDeposit.addEventListener('click', ()=>{
-      document.getElementById('depositAmount').value='';
-      document.getElementById('depositAccount').value='';
-      document.getElementById('depositMethod').selectedIndex=0;
-      qrcodeContainer.style.display='none';
-      depositConfirm.style.display='none';
+  document.getElementById('depositAmount').value = '';
+  document.getElementById('depositAccount').value = '';
+  document.getElementById('depositMethod').selectedIndex = 0;
+  qrcodeContainer.style.display = 'none';
+  depositConfirm.style.display = 'none';
+  clearInterval(depositTimer);
+  depositModal.style.display = 'block';
+});
+
+depositClose.addEventListener('click', ()=> depositModal.style.display = 'none');
+
+window.addEventListener('click', e => {
+  if (e.target === depositModal) depositModal.style.display = 'none';
+});
+
+depositPay.addEventListener('click', ()=>{
+  const amt = parseFloat(document.getElementById('depositAmount').value);
+  const acc = document.getElementById('depositAccount').value.trim();
+  const method = document.getElementById('depositMethod').value;
+
+  if (!amt || amt < 1000) return alert('Minimal Rp 1.000');
+  if (!acc) return alert('Masukkan no. rekening');
+
+  const adminFee = 5000, total = amt + adminFee;
+
+  qrTotal.textContent = `Total bayar: Rp ${total.toLocaleString()} (admin Rp ${adminFee.toLocaleString()})`;
+
+  const data = encodeURIComponent(`PAY:${method};ACC:${acc};AMT:${total}`);
+  qrImage.src = `https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png${data}`;
+
+  qrcodeContainer.style.display = 'block';
+  depositCountdown = 15;
+  depositTimerEl.textContent = 15;
+
+  depositTimer = setInterval(()=>{
+    depositCountdown--;
+    depositTimerEl.textContent = depositCountdown;
+    if (depositCountdown <= 0) {
       clearInterval(depositTimer);
-      depositModal.style.display='block';
-    });
-    depositClose.addEventListener('click', ()=>depositModal.style.display='none');
-    window.addEventListener('click', e=>{ if(e.target===depositModal) depositModal.style.display='none'; });
-    depositPay.addEventListener('click', ()=>{
-      const amt = parseFloat(document.getElementById('depositAmount').value);
-      const acc = document.getElementById('depositAccount').value.trim();
-      const method = document.getElementById('depositMethod').value;
-      if(!amt||amt<1000) return alert('Minimal Rp 1.000');
-      if(!acc) return alert('Masukkan no. rekening');
-      const adminFee=5000, total=amt+adminFee;
-      qrTotal.textContent=`Total bayar: Rp ${total.toLocaleString()} (admin Rp ${adminFee.toLocaleString()})`;
-      const data=encodeURIComponent(`PAY:${method};ACC:${acc};AMT:${total}`);
-      qrImage.src=`https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png${data}`;
-      qrcodeContainer.style.display='block';
-      depositCountdown=15; depositTimerEl.textContent=15;
-      depositTimer=setInterval(()=>{
-        depositCountdown--;
-        depositTimerEl.textContent=depositCountdown;
-        if(depositCountdown<=0){ clearInterval(depositTimer); depositConfirm.style.display='block'; }
-      },1000);
-    });
-    depositConfirm.addEventListener('click', ()=>{
-      const amt=parseFloat(document.getElementById('depositAmount').value);
-      balance+=amt; balanceEl.textContent=balance.toFixed(2);
-      depositModal.style.display='none';
-    });
+      depositConfirm.style.display = 'block';
+    }
+  }, 1000);
+});
+
+depositConfirm.addEventListener('click', ()=>{
+  const amt = parseFloat(document.getElementById('depositAmount').value);
+  const acc = document.getElementById('depositAccount').value.trim();
+  const method = document.getElementById('depositMethod').value;
+  const adminFee = 5000, total = amt + adminFee;
+
+  balance += amt;
+  balanceEl.textContent = balance.toFixed(2);
+  depositModal.style.display = 'none';
+
+  // Format pesan untuk WhatsApp
+  const message = `
+*Konfirmasi Deposit*
+*Option Trading*
+➤ Nominal: Rp ${amt.toLocaleString('id-ID')}
+➤ Total Bayar: Rp ${total.toLocaleString('id-ID')} (admin Rp ${adminFee.toLocaleString('id-ID')})
+➤ Rekening: ${acc}
+➤ Metode: ${method}
+`.trim();
+
+  // Ganti nomor WA admin di bawah ini
+  const whatsappNumber = '6285697747768';
+  const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+  // Arahkan ke WhatsApp
+  window.open(whatsappLink, '_blank');
+});
 
     btnWithdraw.addEventListener('click', () => {
   document.getElementById('withdrawAmount').value = '';
