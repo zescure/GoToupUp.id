@@ -265,7 +265,7 @@
   </section>
 
   <!-- FAQ -->
-  <section class="faq">
+  <section class="promo">
     <h2>FAQ Opsi Trading</h2>
     <details class="faq-item">
       <summary>Apa itu binary options?</summary>
@@ -467,7 +467,7 @@ const win = (isBuy  && exitPrice > entryPrice) ||
 
       let text, color;
       if (win) {
-        const profit = bet * 0.8;
+        const profit = bet * 0.7;
         balance += profit;
         text = `Tutup Keuntungan +${profit.toFixed(2)} Rp (Exit @ ${exitPrice.toFixed(4)})`;
         color = 'green';
