@@ -134,6 +134,25 @@
     <div class="bet-controls">
       <input type="number" id="betAmount" placeholder="Lot (0.01…)" step="0.01" min="0.01">
     </div>
+      <div
+    id="autoCloseControls"
+    class="bet-controls"
+    style="display:none; gap:.5rem; margin-bottom:1rem;"
+  >
+    <input
+      type="number"
+      id="tpValue"
+      placeholder="TP (poin)"
+      step="0.0001"
+    >
+    <input
+      type="number"
+      id="slValue"
+      placeholder="SL (poin)"
+      step="0.0001"
+    >
+    <button id="setAutoClose" class="btn-place">Set Auto‑Close</button>
+  </div>
     <div id="result" class="result"></div>
     <div id="activeTrade" class="result"></div>
     <div id="openPositions"></div>
