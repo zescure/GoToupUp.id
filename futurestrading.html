@@ -105,8 +105,10 @@
     <div>🚀 Futures GOOGLE</div>
     <div class="balance">Saldo: Rp.<span id="balance">0.00</span></div>
   </div>
+  <section class="promo">
 <h6>Saat Sudah Trading/Deposit/Penarikan Jangan di Refresh Agar Tidak menghapus History dan Saldo Trading</h6>
-  <div class="controls">
+  </section>
+    <div class="controls">
     <select id="symbolSelect">
       <option value="EURUSD">Polusi Index</option>
       <option value="GBPUSD">Mineral Index</option>
@@ -148,19 +150,22 @@
       <button id="btnUp" class="option-btn">BELI</button>
       <button id="btnDown" class="option-btn">JUAL</button>
     </div>
+    <h5>Leverage 1.2000 (0.01lot=Rp.16.000)</h5>
     <div class="bet-controls">
       <input type="number" id="betAmount" placeholder="Lot (0.01…)" step="0.01" min="0.01">
     </div>
-    <h6>Untuk Futures Trading Rumus Agar Profit Adalah Modal+Profit</h6>
-    <h6>Contoh Modal 0.01 lot=Rp.15.000 dan pnl posisi close Rp.16.000 Maka Profit Rp.1.000</h6>
     <div id="result" class="result"></div>
     <div id="activeTrade" class="result"></div>
     <div id="openPositions"></div>
     <h3 style="text-align:center; margin-top:1rem;">Riwayat Perdagangan</h3>
     <ul id="tradeHistory"></ul>
   </section>
+ <section class="promo">
+  <h6>Untuk Futures Trading Rumus Agar Profit Adalah Modal+Profit</h6>
+    <h6>Contoh Modal 0.01 lot=Rp.15.000 dan pnl posisi close Rp.16.000 Maka Profit Rp.1.000</h6>
 <h6>Saat Close Posisi Profit/Minus tidak melebihi Modal, Maka Yang dikembalikan Hanya Pnl Bukan Modal+Pnl</h6>
-  <!-- Deposit Modal -->
+ </section>
+   <!-- Deposit Modal -->
   <div id="depositModal" class="modal">
     <div class="modal-content">
       <span class="modal-close" id="depositClose">&times;</span>
