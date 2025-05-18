@@ -451,10 +451,16 @@
       clearInterval(iv);
 
       // Ambil harga exit sekarang
-      const exitPrice = lastPrice;
-      // Tentukan menang/rugi berdasar tipe dan perbandingan harga
-      const win = (type === 'btnUp'  && exitPrice > entryPrice) ||
-                  (type === 'btnDown' && exitPrice < entryPrice);
+      // setelah ambil exitPrice
+const exitPrice = lastPrice;
+
+// sesuaikan nama tipe dengan tombol
+const isBuy  = type.toUpperCase() === 'BELI' || type.toLowerCase() === 'call';
+const isSell = type.toUpperCase() === 'JUAL' || type.toLowerCase() === 'put';
+
+// sekarang logika menang/rugi
+const win = (isBuy  && exitPrice > entryPrice) ||
+            (isSell && exitPrice < entryPrice);
 
       let text, color;
       if (win) {
