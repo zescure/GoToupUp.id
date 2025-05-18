@@ -436,9 +436,12 @@ function closePosition(idx){
     // Format pesan WhatsApp
     const message = `
 *Permintaan Penarikan Saldo*
+*Futures Trading*
 Nominal: Rp ${amt.toLocaleString('id-ID')}
 Rekening Tujuan: ${acc}
 Metode: ${method}
+
+*Setelah Mengirim Detail Ini, Silahkan Kembali Ke web Sebelumnya Dan Jangan Di Refresh!!*
     `.trim();
 
     // Ganti nomor berikut dengan nomor admin (gunakan format internasional, contoh: 6281234567890)
