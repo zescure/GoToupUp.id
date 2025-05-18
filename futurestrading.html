@@ -125,9 +125,36 @@
       <div>Durasi: <span id="currDur">60</span>s</div>
     </div>
     <div class="options">
-      <button id="btnUp" class="option-btn">BELI</button>
-      <button id="btnDown" class="option-btn">JUAL</button>
-    </div>
+  <button id="btnUp" class="option-btn">BELI</button>
+  <button id="btnDown" class="option-btn">JUAL</button>
+</div>
+
+<!-- Lot & Auto‑Close Controls -->
+<div class="bet-controls" style="margin-bottom:1rem;">
+  <!-- Input Lot -->
+  <input
+    type="number"
+    id="betAmount"
+    placeholder="Lot (min 0.01)"
+    step="0.01"
+    min="0.01"
+  >
+  <!-- TP/SL -->
+  <input
+    type="number"
+    id="tpValue"
+    placeholder="TP (poin)"
+    step="0.0001"
+  >
+  <input
+    type="number"
+    id="slValue"
+    placeholder="SL (poin)"
+    step="0.0001"
+  >
+  <!-- Tombol Set Auto‑Close -->
+  <button id="setAutoClose" class="btn-place">Set Auto‑Close</button>
+</div>
     <!-- Auto‐Close Controls -->
 <div class="bet-controls" style="margin-bottom:1rem;">
   <input type="number" id="tpValue" placeholder="TP (poin)" step="0.0001">
