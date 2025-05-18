@@ -255,35 +255,38 @@
 
     // ===== RENDER POSISI =====
     function renderPositions(){
-      openDiv.innerHTML = '<h4>Posisi Terbuka</h4>';
-      positions.forEach((pos,i)=>{
-        const diff=(lastPrice-pos.entry)*(pos.type==='BUY'?1:-1);
-        const pnl=Math.round(diff*pos.amount);
-        const el=document.createElement('div');
-        el.style.display='flex';el.style.justifyContent='space-between';
-        el.style.padding='.5rem';el.style.border='1px solid #ccc';el.style.marginBottom='.3rem';
-        el.innerHTML=`
-          <span>${i+1}. ${pos.type} @ ${pos.entry.toFixed(4)} | Lot ${pos.lot}</span>
-          <span style="color:${pnl>=0?'green':'red'}">P/L: ${pnl} Rp</span>
-          <button data-i="${i}" class="close-btn">Close</button>`;
-        openDiv.append(el);
-      });
-      openDiv.querySelectorAll('.close-btn').forEach(b=>{
-        b.onclick=()=>closePosition(+b.dataset.i);
-      });
-    }
-    function closePosition(idx){
-      const pos=positions.splice(idx,1)[0];
-      const diff=(lastPrice-pos.entry)*(pos.type==='BUY'?1:-1);
-      const pnl=Math.round(diff*pos.amount);
-      balance+=pnl; balanceEl.textContent=balance.toFixed(2);
-      const html=`<li style="color:${pnl>=0?'green':'red'}">
-        ${new Date().toLocaleTimeString()} — ${pos.type} @ ${pos.entry.toFixed(4)} → Exit @ ${lastPrice.toFixed(4)} — ${pnl>=0?'Profit':'Loss'} ${pnl} Rp
-      </li>`;
-      saveHistoryItem(html);
-      tradeHistory.insertAdjacentHTML('afterbegin',html);
-      renderPositions();
-    }
+  openDiv.innerHTML = '<h4>Posisi Terbuka</h4>';
+  positions.forEach((pos,i)=>{
+    const diff = (lastPrice - pos.entry) * (pos.type === 'BUY' ? 1 : -1);
+    const pipValue = 100000; // sesuaikan di sini
+    const pnl = Math.round(diff * pipValue * pos.lot);
+    const el = document.createElement('div');
+    el.style.display = 'flex'; el.style.justifyContent = 'space-between';
+    el.style.padding = '.5rem'; el.style.border = '1px solid #ccc'; el.style.marginBottom = '.3rem';
+    el.innerHTML = `
+      <span>${i+1}. ${pos.type} @ ${pos.entry.toFixed(4)} | Lot ${pos.lot}</span>
+      <span style="color:${pnl>=0?'green':'red'}">P/L: ${pnl} Rp</span>
+      <button data-i="${i}" class="close-btn">Close</button>`;
+    openDiv.append(el);
+  });
+  openDiv.querySelectorAll('.close-btn').forEach(b=>{
+    b.onclick = () => closePosition(+b.dataset.i);
+  });
+}
+
+function closePosition(idx){
+  const pos = positions.splice(idx,1)[0];
+  const diff = (lastPrice - pos.entry) * (pos.type === 'BUY' ? 1 : -1);
+  const pipValue = 100000; // konsisten sama
+  const pnl = Math.round(diff * pipValue * pos.lot);
+  balance += pnl; balanceEl.textContent = balance.toFixed(2);
+  const html = `<li style="color:${pnl>=0?'green':'red'}">
+    ${new Date().toLocaleTimeString()} — ${pos.type} @ ${pos.entry.toFixed(4)} → Exit @ ${lastPrice.toFixed(4)} — ${pnl>=0?'Profit':'Loss'} ${pnl} Rp
+  </li>`;
+  saveHistoryItem(html);
+  tradeHistory.insertAdjacentHTML('afterbegin',html);
+  renderPositions();
+}
 
     // ===== DRAW & TICKS (sama seperti awal) =====
     let tickInterval;
@@ -342,11 +345,11 @@
       if(positions.length>=maxPos) return alert(`Maks ${maxPos} posisi.`);
       const lot=parseFloat(betAmount.value);
       if(!lot||lot<0.01) return alert('Lot minimal 0.01');
-      const amt=Math.round(lot*15000);
+      const amt=Math.round(lot*1500000);
       if(amt>balance) return alert('Saldo tidak cukup');
       const entry=lastPrice;
       balance-=amt; balanceEl.textContent=balance.toFixed(2);
-      positions.push({type,entry,lot,amount:amt});
+      positions.push({type, entry: lastPrice, lot, amount: amt});
       renderPositions();
       betAmount.value='';
     }
