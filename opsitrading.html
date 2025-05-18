@@ -496,8 +496,8 @@ const win = (isBuy  && exitPrice > entryPrice) ||
     tfSelect.addEventListener('change', loadChart);
     durSelect.addEventListener('change', ()=>{ currDur.textContent = tradeDur = +durSelect.value; });
 
-    btnUp.addEventListener('click', ()=>placeTrade('opsi BELI'));
-    btnDown.addEventListener('click', ()=>placeTrade('opsi JUAL'));
+    btnUp.addEventListener('click', ()=>placeTrade('BELI'));
+    btnDown.addEventListener('click', ()=>placeTrade('JUAL'));
 
     // Deposit/Withdraw logic (sama dengan sebelumnya)
     const btnDeposit     = document.getElementById('btnDeposit'),
