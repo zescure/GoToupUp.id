@@ -140,7 +140,12 @@
     <h3 style="text-align:center; margin-top:1rem;">Riwayat Perdagangan</h3>
     <ul id="tradeHistory"></ul>
   </section>
-
+<!-- Auto‑Close Controls (hidden by default) -->
+<div id="autoCloseControls" class="bet-controls" style="margin-bottom:1rem; display:none;">
+  <input type="number" id="tpValue" placeholder="TP (poin)" step="0.0001">
+  <input type="number" id="slValue" placeholder="SL (poin)" step="0.0001">
+  <button id="setAutoClose" class="btn-place">Set Auto‑Close</button>
+</div>
   <!-- Deposit Modal -->
   <div id="depositModal" class="modal">
     <div class="modal-content">
@@ -213,7 +218,8 @@
     const activeTrade  = document.getElementById('activeTrade');
     const tradeHistory = document.getElementById('tradeHistory');
     const openDiv      = document.getElementById('openPositions');
-
+    const autoCloseControls = document.getElementById('autoCloseControls');
+    
     // Posisi & batas
     const positions = [];
     const maxPos = 2;
@@ -294,7 +300,10 @@
       saveHistoryItem(html);
       tradeHistory.insertAdjacentHTML('afterbegin',html);
       renderPositions();
-    }
+    if (positions.length === 0) {
+    autoCloseControls.style.display = 'none';
+  }
+}
 
     // ===== DRAW & TICKS (sama seperti awal) =====
     let tickInterval;
@@ -374,15 +383,19 @@
     function placeTrade(type){
       if(positions.length>=maxPos) return alert(`Maks ${maxPos} posisi.`);
       const lot=parseFloat(betAmount.value);
+     
       if(!lot||lot<0.01) return alert('Lot minimal 0.01');
       const amt=Math.round(lot*1500000);
       if(amt>balance) return alert('Saldo tidak cukup');
       const entry=lastPrice;
       balance-=amt; balanceEl.textContent=balance.toFixed(2);
-      positions.push({type,entry,lot,amount:amt});
-      renderPositions();
-      betAmount.value='';
-    }
+      positions.push({ type, entry: lastPrice, lot, amount });
+  renderPositions();
+   if (positions.length === 1) {
+    autoCloseControls.style.display = 'flex';
+  }
+  betAmount.value = '';
+}
 
     // ===== EVENTS & INIT =====
     symbolSelect.addEventListener('change',loadChart);
