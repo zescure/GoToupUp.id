@@ -201,7 +201,7 @@
       <button id="btnDown" class="option-btn">JUAL</button>
     </div>
     <div class="bet-controls">
-      <input type="number" id="betAmount" placeholder="Jumlah (Rp)" min="15000">
+      <input type="number" id="betAmount" placeholder="Jumlah (Rp)" min="14900">
     </div>
     <div id="result" class="result"></div>
     <div id="activeTrade" class="result"></div>
@@ -437,7 +437,7 @@
 
     function placeTrade(type) {
   const bet = parseFloat(betAmount.value);
-  if (!bet || bet <= 15000) return alert('Minimal transaksi Rp.15.000');
+  if (!bet || bet <= 14900) return alert('Minimal transaksi Rp.15.000');
   if (bet > balance) return alert('Saldo tidak cukup');
 
   const entryPrice = lastPrice;
