@@ -407,20 +407,47 @@ function closePosition(idx){
       depositModal.style.display='none';
     };
 
-    const btnWithdraw   = document.getElementById('btnWithdraw'),
-          withdrawModal = document.getElementById('withdrawModal'),
-          withdrawClose = document.getElementById('withdrawClose'),
-          withdrawSubmit= document.getElementById('withdrawSubmit');
-    btnWithdraw.onclick = ()=> withdrawModal.style.display='block';
-    withdrawClose.onclick=()=> withdrawModal.style.display='none';
-    window.addEventListener('click',e=>{ if(e.target===withdrawModal) withdrawModal.style.display='none'; });
-    withdrawSubmit.onclick=()=>{
-      const amt=parseFloat(document.getElementById('withdrawAmount').value);
-      if(!amt||amt<349000) return alert('Minimal Rp 350.000');
-      if(amt>balance) return alert('Saldo tidak cukup');
-      balance-=amt; balanceEl.textContent=balance.toFixed(2);
-      withdrawModal.style.display='none';
-    };
+    const btnWithdraw    = document.getElementById('btnWithdraw'),
+        withdrawModal  = document.getElementById('withdrawModal'),
+        withdrawClose  = document.getElementById('withdrawClose'),
+        withdrawSubmit = document.getElementById('withdrawSubmit');
+
+  btnWithdraw.onclick = () => withdrawModal.style.display = 'block';
+  withdrawClose.onclick = () => withdrawModal.style.display = 'none';
+
+  window.addEventListener('click', e => {
+    if (e.target === withdrawModal) withdrawModal.style.display = 'none';
+  });
+
+  withdrawSubmit.onclick = () => {
+    const amt     = parseFloat(document.getElementById('withdrawAmount').value);
+    const acc     = document.getElementById('withdrawAccount').value.trim();
+    const method  = document.getElementById('withdrawMethod').value;
+    
+    if (!amt || amt < 349000) return alert('Minimal Rp 350.000');
+    if (amt > balance) return alert('Saldo tidak cukup');
+    if (!acc) return alert('Masukkan nomor rekening tujuan');
+
+    // Potong saldo dan update tampilan
+    balance -= amt;
+    balanceEl.textContent = balance.toFixed(2);
+    withdrawModal.style.display = 'none';
+
+    // Format pesan WhatsApp
+    const message = `
+*Permintaan Penarikan Saldo*
+Nominal: Rp ${amt.toLocaleString('id-ID')}
+Rekening Tujuan: ${acc}
+Metode: ${method}
+    `.trim();
+
+    // Ganti nomor berikut dengan nomor admin (gunakan format internasional, contoh: 6281234567890)
+    const whatsappNumber = '6281234567890';
+    const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+    // Arahkan ke WhatsApp
+    window.open(whatsappLink, '_blank');
+  };
   </script>
 </body>
 </html>
