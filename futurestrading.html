@@ -257,7 +257,7 @@
   openDiv.innerHTML = '<h4>Posisi Terbuka</h4>';
   positions.forEach((pos,i)=>{
     const diff = (lastPrice - pos.entry) * (pos.type === 'BUY' ? 1 : -1);
-const pipValue = 10000000; // 0.0001 = Rp10 untuk lot 0.01
+const pipValue = 100000000; // 0.0001 = Rp10 untuk lot 0.01
 const pnl = Math.round(diff * pipValue * pos.lot);
     const el = document.createElement('div');
     el.style.display = 'flex'; el.style.justifyContent = 'space-between';
