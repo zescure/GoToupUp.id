@@ -257,21 +257,38 @@
   openDiv.innerHTML = '<h4>Posisi Terbuka</h4>';
   positions.forEach((pos,i)=>{
     const diff = (lastPrice - pos.entry) * (pos.type === 'BUY' ? 1 : -1);
-const pipValue = 100000000; // 0.0001 = Rp10 untuk lot 0.01
-const pnl = Math.round(diff * pipValue * pos.lot);
-    const el = document.createElement('div');
-    el.style.display = 'flex'; el.style.justifyContent = 'space-between';
-    el.style.padding = '.5rem'; el.style.border = '1px solid #ccc'; el.style.marginBottom = '.3rem';
-    el.innerHTML = `
-      <span>${i+1}. ${pos.type} @ ${pos.entry.toFixed(4)} | Lot ${pos.lot}</span>
-      <span style="color:${pnl>=0?'green':'red'}">P/L: ${pnl} Rp</span>
-      <button data-i="${i}" class="close-btn">Close</button>`;
-    openDiv.append(el);
-  });
-  openDiv.querySelectorAll('.close-btn').forEach(b=>{
-    b.onclick = () => closePosition(+b.dataset.i);
-  });
-}
+    const pipValue = 100000000; // 0.0001 = Rp10 untuk lot 0.01
+positions.forEach((pos, i) => {
+  const diff = pos.type === 'BUY' ? (price - pos.entry) : (pos.entry - price);
+  const pnl = Math.round(diff * pipValue * pos.lot);
+
+  // 💥 Auto-close jika loss melebihi nilai lot (misal 0.01 lot = Rp15.000)
+  const maxLoss = pos.lot * 1500000; // 0.01 lot = Rp15.000
+  if (pnl <= -maxLoss) {
+    closePosition(i);
+    return; // skip render posisi ini karena udah ditutup
+  }
+
+  const el = document.createElement('div');
+  el.style.display = 'flex';
+  el.style.justifyContent = 'space-between';
+  el.style.padding = '.5rem';
+  el.style.border = '1px solid #ccc';
+  el.style.marginBottom = '.3rem';
+
+  el.innerHTML = `
+    <span>${i+1}. ${pos.type} @ ${pos.entry.toFixed(4)} | Lot ${pos.lot}</span>
+    <span style="color:${pnl>=0?'green':'red'}">P/L: ${pnl} Rp</span>
+    <button data-i="${i}" class="close-btn">Close</button>
+  `;
+
+  openDiv.append(el);
+});
+
+// tombol manual close
+openDiv.querySelectorAll('.close-btn').forEach(b => {
+  b.onclick = () => closePosition(+b.dataset.i);
+});
 
 function closePosition(idx){
   const pos = positions.splice(idx,1)[0];
