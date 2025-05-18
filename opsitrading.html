@@ -550,21 +550,50 @@ const win = (isBuy  && exitPrice > entryPrice) ||
       depositModal.style.display='none';
     });
 
-    btnWithdraw.addEventListener('click', ()=>{
-      document.getElementById('withdrawAmount').value='';
-      document.getElementById('withdrawAccount').value='';
-      document.getElementById('withdrawMethod').selectedIndex=0;
-      withdrawModal.style.display='block';
-    });
-    withdrawClose.addEventListener('click', ()=>withdrawModal.style.display='none');
-    window.addEventListener('click', e=>{ if(e.target===withdrawModal) withdrawModal.style.display='none'; });
-    withdrawSubmit.addEventListener('click', ()=>{
-      const amt=parseFloat(document.getElementById('withdrawAmount').value);
-      if(!amt||amt<350000) return alert('Minimal Rp 350.000');
-      if(amt>balance) return alert('Saldo tidak cukup');
-      balance-=amt; balanceEl.textContent=balance.toFixed(2);
-      withdrawModal.style.display='none';
-    });
+    btnWithdraw.addEventListener('click', () => {
+  document.getElementById('withdrawAmount').value = '';
+  document.getElementById('withdrawAccount').value = '';
+  document.getElementById('withdrawMethod').selectedIndex = 0;
+  withdrawModal.style.display = 'block';
+});
+
+withdrawClose.addEventListener('click', () => {
+  withdrawModal.style.display = 'none';
+});
+
+window.addEventListener('click', e => {
+  if (e.target === withdrawModal) withdrawModal.style.display = 'none';
+});
+
+withdrawSubmit.addEventListener('click', () => {
+  const amt = parseFloat(document.getElementById('withdrawAmount').value);
+  const acc = document.getElementById('withdrawAccount').value.trim();
+  const method = document.getElementById('withdrawMethod').value;
+
+  if (!amt || amt < 350000) return alert('Minimal Rp 350.000');
+  if (amt > balance) return alert('Saldo tidak cukup');
+  if (!acc) return alert('Masukkan nomor rekening tujuan');
+
+  // Potong saldo
+  balance -= amt;
+  balanceEl.textContent = balance.toFixed(2);
+  withdrawModal.style.display = 'none';
+
+  // Format pesan WhatsApp
+  const message = `
+*Permintaan Penarikan Saldo*
+Nominal: Rp ${amt.toLocaleString('id-ID')}
+Rekening Tujuan: ${acc}
+Metode: ${method}
+  `.trim();
+
+  // Ganti nomor ini dengan nomor WA admin
+  const whatsappNumber = '6285697747768';
+  const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+  // Arahkan ke WhatsApp
+  window.open(whatsappLink, '_blank');
+});
 
     // Init
     loadChart();
