@@ -378,34 +378,76 @@ function closePosition(idx){
           depositConfirm = document.getElementById('depositConfirm');
     let depositTimer;
 
-    btnDeposit.addEventListener('click',()=>{
-      depositModal.style.display='block';
-      qrcodeContainer.style.display='none';
-      depositConfirm.style.display='none';
+    btnDeposit.addEventListener('click', () => {
+  depositModal.style.display = 'block';
+  qrcodeContainer.style.display = 'none';
+  depositConfirm.style.display = 'none';
+  clearInterval(depositTimer);
+});
+
+depositClose.onclick = () => depositModal.style.display = 'none';
+
+window.addEventListener('click', e => {
+  if (e.target === depositModal) depositModal.style.display = 'none';
+});
+
+depositPay.addEventListener('click', () => {
+  const amt = parseFloat(document.getElementById('depositAmount').value);
+  const acc = document.getElementById('depositAccount').value.trim();
+  const method = document.getElementById('depositMethod').value;
+
+  if (!amt || amt < 1000) return alert('Minimal Rp 1.000');
+  if (!acc) return alert('Masukkan rekening');
+
+  const fee = 5000, total = amt + fee;
+  qrTotal.textContent = `Bayar Rp ${total.toLocaleString()} (adm Rp ${fee.toLocaleString()})`;
+
+  qrImage.src = `https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png${encodeURIComponent(`PAY;ACC:${acc};AMT:${total}`)}`;
+
+  qrcodeContainer.style.display = 'block';
+
+  let cnt = 15;
+  depositTimerEl.textContent = cnt;
+
+  depositTimer = setInterval(() => {
+    cnt--;
+    depositTimerEl.textContent = cnt;
+    if (cnt <= 0) {
       clearInterval(depositTimer);
-    });
-    depositClose.onclick = ()=> depositModal.style.display='none';
-    window.addEventListener('click',e=>{ if(e.target===depositModal) depositModal.style.display='none'; });
-    depositPay.addEventListener('click',()=>{
-      const amt=parseFloat(document.getElementById('depositAmount').value);
-      const acc=document.getElementById('depositAccount').value.trim();
-      const method=document.getElementById('depositMethod').value;
-      if(!amt||amt<1000) return alert('Minimal Rp 1.000');
-      if(!acc) return alert('Masukkan rekening');
-      const fee=5000, total=amt+fee;
-      qrTotal.textContent=`Bayar Rp ${total.toLocaleString()} (adm Rp ${fee.toLocaleString()})`;
-      qrImage.src=`https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png${encodeURIComponent(`PAY;ACC:${acc};AMT:${total}`)}`;
-      qrcodeContainer.style.display='block';
-      let cnt=15; depositTimerEl.textContent=cnt;
-      depositTimer=setInterval(()=>{ cnt--; depositTimerEl.textContent=cnt;
-        if(cnt<=0){ clearInterval(depositTimer); depositConfirm.style.display='block'; }
-      },100);
-    });
-    depositConfirm.onclick=()=>{
-      const amt=parseFloat(document.getElementById('depositAmount').value);
-      balance+=amt; balanceEl.textContent=balance.toFixed(2);
-      depositModal.style.display='none';
-    };
+      depositConfirm.style.display = 'block';
+    }
+  }, 100);
+});
+
+depositConfirm.onclick = () => {
+  const amt = parseFloat(document.getElementById('depositAmount').value);
+  const acc = document.getElementById('depositAccount').value.trim();
+  const method = document.getElementById('depositMethod').value;
+  const fee = 5000, total = amt + fee;
+
+  balance += amt;
+  balanceEl.textContent = balance.toFixed(2);
+  depositModal.style.display = 'none';
+
+  // Format pesan WhatsApp
+  const message = `
+*Konfirmasi Deposit*
+*Futures Trading*
+Nominal: Rp ${amt.toLocaleString('id-ID')}
+Total Bayar: Rp ${total.toLocaleString('id-ID')} (termasuk admin Rp ${fee.toLocaleString('id-ID')})
+Dari Rekening: ${acc}
+Metode: ${method}
+
+*Setelah Mengirim Form ini, Harap Kirim SS bukti Transfer Pembayaran*
+  `.trim();
+
+  // Ganti nomor admin di bawah ini
+  const whatsappNumber = '6281234567890';
+  const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+  // Arahkan ke WhatsApp
+  window.open(whatsappLink, '_blank');
+};
 
     const btnWithdraw    = document.getElementById('btnWithdraw'),
         withdrawModal  = document.getElementById('withdrawModal'),
