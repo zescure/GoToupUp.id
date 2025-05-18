@@ -453,8 +453,8 @@
       // Ambil harga exit sekarang
       const exitPrice = lastPrice;
       // Tentukan menang/rugi berdasar tipe dan perbandingan harga
-      const win = (type === 'Buy'  && exitPrice > entryPrice) ||
-                  (type === 'Sell' && exitPrice < entryPrice);
+      const win = (type === 'btnUp'  && exitPrice > entryPrice) ||
+                  (type === 'btnDown' && exitPrice < entryPrice);
 
       let text, color;
       if (win) {
