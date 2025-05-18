@@ -77,6 +77,26 @@
     .qrcode-container img { max-width:200px; }
 
     /* Promo & FAQ omitted for brevity… */
+    /* Promo & FAQ */
+    .promo {
+      max-width:600px; margin:2rem auto; padding:1.5rem;
+      background:var(--card-bg); border-radius:8px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.1); text-align:center;
+    }
+    .promo h2 { color:var(--primary-color); margin-bottom:.5rem; }
+    .promo p { line-height:1.5; margin-bottom:1rem; }
+    .promo .btn-play {
+      padding:.6rem 1.2rem; background:var(--up-color);
+      color:#fff; border-radius:4px; text-decoration:none; font-weight:600;
+    }
+    .faq { max-width:600px; margin:2rem auto; }
+    .faq-item { border-bottom:1px solid #ddd; }
+    .faq-item summary {
+      cursor:pointer; padding:1rem; list-style:none;
+      background:#f9f9f9; font-weight:600;
+    }
+    .faq-item details[open] summary { background:#e0e0e0; }
+    .faq-item p { padding:0 1rem 1rem; color:#333; }
   </style>
 </head>
 <body>
