@@ -283,7 +283,7 @@ openDiv.querySelectorAll('.close-btn').forEach(b=>{
 function closePosition(idx){
   const pos = positions.splice(idx,1)[0];
   const diff = (lastPrice - pos.entry) * (pos.type === 'BUY' ? 1 : -1);
-  const pipValue = 1000000; // konsisten sama
+  const pipValue = 100000000; // konsisten sama
   const pnl = Math.round(diff * pipValue * pos.lot);
   balance += pnl; balanceEl.textContent = balance.toFixed(2);
   const html = `<li style="color:${pnl>=0?'green':'red'}">
