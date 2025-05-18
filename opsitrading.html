@@ -194,8 +194,8 @@
       <div>Durasi: <span id="currDur">60</span>s</div>
     </div>
     <div class="options">
-      <button id="btnUp" class="option-btn">BELI</button>
-      <button id="btnDown" class="option-btn">JUAL</button>
+      <button id="btnUp" class="option-btn">buy</button>
+      <button id="btnDown" class="option-btn">sell</button>
     </div>
     <div class="bet-controls">
       <input type="number" id="betAmount" placeholder="Jumlah (Rp)" min="15000">
@@ -443,47 +443,55 @@
   draw();
 
   let t = tradeDur;
+activeTrade.textContent = `${type} @ ${entryPrice.toFixed(4)} | Sisa waktu: ${t}s`;
+const iv = setInterval(() => {
+  t--;
   activeTrade.textContent = `${type} @ ${entryPrice.toFixed(4)} | Sisa waktu: ${t}s`;
-  const iv = setInterval(() => {
-    t--;
-    activeTrade.textContent = `${type} @ ${entryPrice.toFixed(4)} | Sisa waktu: ${t}s`;
-    if (t <= 0) {
-      clearInterval(iv);
+  if (t <= 0) {
+    clearInterval(iv);
 
-      // Ambil harga exit sekarang
-      const exitPrice = lastPrice;
-      // Tentukan menang/rugi berdasar tipe dan perbandingan harga
-      const win = (type === 'Buy'  && exitPrice > entryPrice) ||
-                  (type === 'Sell' && exitPrice < entryPrice);
+    // Ambil exitPrice dari candle terakhir yang sudah “settled”
+    const lastCandle = candles[candles.length - 1];
+    // Gunakan close dari candle terakhir, pastikan number
+    const exitPrice = Number(lastCandle.close);
 
-      let text, color;
-      if (win) {
-        const profit = bet * 0.8;
-        balance += profit;
-        text = `Tutup Keuntungan +${profit.toFixed(2)} Rp (Exit @ ${exitPrice.toFixed(4)})`;
-        color = 'green';
-      } else {
-        balance -= bet;
-        text = `Tutup Kerugian -${bet.toFixed(2)} Rp (Exit @ ${exitPrice.toFixed(4)})`;
-        color = 'red';
-      }
+    // Debug: tampilkan entry vs exit di console
+    console.log('Entry:', entryPrice, 'Exit:', exitPrice, 'Type:', type);
 
-      // Update UI
-      balanceEl.textContent = balance.toFixed(2);
-      resultEl.textContent  = text;
-      activeTrade.textContent = '';
+    // Hitung menang/rugi berdasarkan tipe
+    const isBuy  = type.toLowerCase() === 'buy';
+    const isSell = type.toLowerCase() === 'sell';
+    const win    = (isBuy  && exitPrice > entryPrice) ||
+                   (isSell && exitPrice < entryPrice);
 
-      // Simpan ke history
-      const html = `<li style="color:${color};">
-        ${new Date().toLocaleTimeString()} — ${type} @ ${entryPrice.toFixed(4)} → Exit @ ${exitPrice.toFixed(4)} — ${text}
-      </li>`;
-      saveHistoryItem(html);
-      tradeHistory.insertAdjacentHTML('afterbegin', html);
-
-      betAmount.value = '';
+    let text, color;
+    if (win) {
+      const profit = bet * 0.8;
+      balance += profit;
+      text  = `Tutup Keuntungan +${profit.toFixed(2)} Rp (Entry ${entryPrice.toFixed(4)} → Exit ${exitPrice.toFixed(4)})`;
+      color = 'green';
+    } else {
+      balance -= bet;
+      text  = `Tutup Kerugian -${bet.toFixed(2)} Rp (Entry ${entryPrice.toFixed(4)} → Exit ${exitPrice.toFixed(4)})`;
+      color = 'red';
     }
-  }, 100);
-}
+
+    // Update UI
+    balanceEl.textContent    = balance.toFixed(2);
+    resultEl.textContent     = text;
+    resultEl.style.color     = color;
+    activeTrade.textContent  = '';
+
+    // Simpan history
+    const html = `<li style="color:${color};">
+      ${new Date().toLocaleTimeString()} — ${type} @ ${entryPrice.toFixed(4)} → Exit @ ${exitPrice.toFixed(4)} — ${text}
+    </li>`;
+    saveHistoryItem(html);
+    tradeHistory.insertAdjacentHTML('afterbegin', html);
+
+    betAmount.value = '';
+  }
+}, 1000);
 
     // Events
     symbolSelect.addEventListener('change', loadChart);
