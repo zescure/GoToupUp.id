@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MLBB Counter Guide</title>
+  <style>
+    body { font-family: Arial; background:#111; color:#fff; padding:20px }
+    .container { max-width:600px; margin:auto; background:#222; padding:20px; border-radius:10px }
+    select { width:100%; padding:10px; margin-top:10px; background:#333; color:#fff; border:none; border-radius:5px }
+    .counter-box { margin-top:20px; background:#333; padding:15px; border-radius:8px }
+    h3 { color:#ffcc00; margin-top:15px }
+    ul { list-style:circle; padding-left:20px }
+    li { margin-bottom:5px }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>MLBB Hero Counter Guide</h1>
+    <select id="heroSelect" onchange="showCounters()">
+      <option value="">-- Pilih Hero --</option>
+      <option value="ixia">Ixia</option>
+      <option value="kimmy">Kimmy</option>
+      <option value="bruno">Bruno</option>
+      <option value="brody">Brody</option>
+      <option value="moscov">Moscov</option>
+      <option value="irithel">Irithel</option>
+      <option value="wanwan">Wanwan</option>
+      <option value="angela">Angela</option>
+      <option value="rafaela">Rafaela</option>
+      <option value="floryn">Floryn</option>
+      <option value="franco">Franco</option>
+      <option value="atlas">Atlas</option>
+      <option value="kalea">Kalea</option>
+      <option value="ruby">Ruby</option>
+      <option value="hylos">Hylos</option>
+      <option value="lukas">Lukas</option>
+      <option value="bane">Bane</option>
+      <option value="leomord">Leomord</option>
+      <option value="yishunsin">Yi Shun-Shin</option>
+      <option value="joy">Joy</option>
+      <option value="hanzo">Hanzo</option>
+      <option value="julian">Julian</option>
+      <option value="fredrin">Fredrin</option>
+      <option value="badang">Badang</option>
+    </select>
+    <div id="counterResult" class="counter-box"></div>
+  </div>
+
+  <script>
+    const counters = {
+      ixia: {
+        Marksman: [["Karrie","Wind of Nature"],["Moskov","Corrosion Scythe"]],
+        Fighter: [["Chou","Blade Armor"],["Franco","Dominance Ice"]],
+        Assassin: [["Natalia","Wind of Nature"],["Ling","Wind of Nature"]],
+        Mage: [["Pharsa","Winter Truncheon"],["Cecilion","Dominance Ice"]],
+        Roam: [["Lolita","Antique Cuirass"],["Angela","Dominance Ice"]]
+      },
+      kimmy: {
+        Marksman: [["Wanwan","Corrosion Scythe"],["Moskov","DHS"]],
+        Fighter: [["Chou","Blade Armor"],["Aldous","Wind of Nature"]],
+        Assassin: [["Hayabusa","Hunter Strike"],["Lancelot","War Axe"]],
+        Mage: [["Kagura","Clock of Destiny"],["Pharsa","Lightning Truncheon"]],
+        Roam: [["Lolita","Athena's Shield"],["Estes","Holy Crystal"]]
+      },
+      bruno: {
+        Marksman: [["Brody","Wind of Nature"],["Moskov","Blade Armor"]],
+        Fighter: [["Fredrin","Cursed Helmet"],["Lukas","Bloodlust Axe"]],
+        Assassin: [["Helcurt","Wind of Nature"],["Karina","Dominance Ice"]],
+        Mage: [["Cecilion","Ice Queen Wand"],["Kagura","Genius Wand"]],
+        Roam: [["Angela","Fleeting Time"],["Ruby","Antique Cuirass"]]
+      },
+      brody: {
+        Marksman: [["Irithel","Scarlet Phantom"],["Moscov","Corrosion Scythe"]],
+        Fighter: [["Badang","Blade of Despair"],["Leomord","War Axe"]],
+        Assassin: [["Julian","Clock of Destiny"],["Joy","Concentrated Energy"]],
+        Mage: [["Kagura","Enchanted Talisman"],["Cecilion","Glowing Wand"]],
+        Roam: [["Atlas","Dominance Ice"],["Hylos","Oracle"]]
+      },
+      moscov: {
+        Marksman: [["Wanwan","Corrosion Scythe"],["Kimmy","Feather of Heaven"]],
+        Fighter: [["Lukas","Bloodlust Axe"],["Bane","War Axe"]],
+        Assassin: [["Hanzo","Blade of Heptaseas"],["Joy","Concentrated Energy"]],
+        Mage: [["Kagura","Lightning Truncheon"],["Cecilion","Clock of Destiny"]],
+        Roam: [["Franco","Antique Cuirass"],["Angela","Dominance Ice"]]
+      },
+      irithel: {
+        Marksman: [["Lesley","Malefic Roar"],["Bruno","Berserker’s Fury"]],
+        Fighter: [["Chou","Blade Armor"],["Fredrin","Radiant Armor"]],
+        Assassin: [["Lancelot","War Axe"],["Hayabusa","Wind of Nature"]],
+        Mage: [["Cecilion","Ice Queen Wand"],["Pharsa","Clock of Destiny"]],
+        Roam: [["Atlas","Antique Cuirass"],["Ruby","Dominance Ice"]]
+      },
+      wanwan: {
+        Marksman: [["Brody","Malefic Roar"],["Bruno","Endless Battle"]],
+        Fighter: [["Leomord","War Axe"],["Fredrin","Antique Cuirass"]],
+        Assassin: [["Hanzo","Blade of Despair"],["Joy","Holy Crystal"]],
+        Mage: [["Cecilion","Lightning Truncheon"],["Kagura","Clock of Destiny"]],
+        Roam: [["Ruby","Antique Cuirass"],["Franco","Dominance Ice"]]
+      },
+      angela: {
+        Marksman: [["Lesley","Berserker’s Fury"],["Irithel","Demon Hunter Sword"]],
+        Fighter: [["Chou","Blade Armor"],["Fredrin","Oracle"]],
+        Assassin: [["Saber","Hunter Strike"],["Hayabusa","Blade of Despair"]],
+        Mage: [["Pharsa","Lightning Truncheon"],["Valentina","Genius Wand"]],
+        Roam: [["Atlas","Dominance Ice"],["Franco","Antique Cuirass"]]
+      },
+      rafaela: {
+        Marksman: [["Kimmy","Glowing Wand"],["Moscov","Golden Staff"]],
+        Fighter: [["Badang","War Axe"],["Lukas","Bloodlust Axe"]],
+        Assassin: [["Hanzo","Blade of Despair"],["Julian","Clock of Destiny"]],
+        Mage: [["Cecilion","Genius Wand"],["Kagura","Lightning Truncheon"]],
+        Roam: [["Atlas","Dominance Ice"],["Ruby","Antique Cuirass"]]
+      },
+      floryn: {
+        Marksman: [["Bruno","Sea Halberd"],["Wanwan","Corrosion Scythe"]],
+        Fighter: [["Bane","Bloodlust Axe"],["Fredrin","Radiant Armor"]],
+        Assassin: [["Saber","Blade of Despair"],["Joy","Holy Crystal"]],
+        Mage: [["Valentina","Genius Wand"],["Pharsa","Clock of Destiny"]],
+        Roam: [["Franco","Antique Cuirass"],["Ruby","Dominance Ice"]]
+      },
+      franco: {
+        Marksman: [["Bruno","Wind of Nature"],["Brody","Corrosion Scythe"]],
+        Fighter: [["Chou","War Axe"],["Bane","Blade Armor"]],
+        Assassin: [["Hanzo","Hunter Strike"],["Joy","Genius Wand"]],
+        Mage: [["Cecilion","Clock of Destiny"],["Pharsa","Lightning Truncheon"]],
+        Roam: [["Angela","Immortality"],["Rafaela","Enchanted Talisman"]]
+      },
+      atlas: {
+        Marksman: [["Lesley","Wind of Nature"],["Moscov","Corrosion Scythe"]],
+        Fighter: [["Leomord","Blade Armor"],["Lukas","Bloodlust Axe"]],
+        Assassin: [["Hayabusa","Wind of Nature"],["Julian","Hunter Strike"]],
+        Mage: [["Pharsa","Ice Queen Wand"],["Cecilion","Clock of Destiny"]],
+        Roam: [["Angela","Dominance Ice"],["Floryn","Enchanted Talisman"]]
+      },
+      kalea: {
+        Marksman: [["Brody","Sea Halberd"],["Bruno","Corrosion Scythe"]],
+        Fighter: [["Minsitthar","Dominance Ice"],["Alpha","Twilight Armor"]],
+        Assassin: [["Badang","Blade Armor"],["Baxia","Radiant Armor"]],
+        Mage: [["Valentina","Clock of Destiny"],["Pharsa","Lightning Truncheon"]],
+        Roam: [["Diggie","Antique Cuirass"],["Kaja","Dominance Ice"]]
+      },
+      ruby: {
+        Marksman: [["Irithel","Malefic Roar"],["Bruno","Sea Halberd"]],
+        Fighter: [["Chou","Blade Armor"],["Fredrin","Oracle"]],
+        Assassin: [["Hanzo","Blade of Despair"],["Joy","Genius Wand"]],
+        Mage: [["Cecilion","Glowing Wand"],["Kagura","Clock of Destiny"]],
+        Roam: [["Angela","Immortality"],["Floryn","Dominance Ice"]]
+      },
+      hylos: {
+        Marksman: [["Kimmy","Sea Halberd"],["Wanwan","Corrosion Scythe"]],
+        Fighter: [["Lukas","Bloodlust Axe"],["Badang","War Axe"]],
+        Assassin: [["Saber","Hunter Strike"],["Julian","Clock of Destiny"]],
+        Mage: [["Pharsa","Glowing Wand"],["Valentina","Genius Wand"]],
+        Roam: [["Franco","Dominance Ice"],["Ruby","Antique Cuirass"]]
+      },
+      lukas: {
+        Marksman: [["Brody","Sea Halberd"],["Bane","Wind of Nature"]],
+        Fighter: [["Chou","Blade Armor"],["Alpha","Antique Cuirass"]],
+        Assassin: [["Saber","Blade of Heptaseas"],["Natalia","Haas Claws"]],
+        Mage: [["Cecilion","Clock of Destiny"],["Kagura","Ice Queen Wand"]],
+        Roam: [["Franco","Antique Cuirass"],["Rafaela","Dominance Ice"]]
+      },
+      bane: {
+        Marksman: [["Lesley","Wind of Nature"],["Bruno","Sea Halberd"]],
+        Fighter: [["Chou","Blade Armor"],["Alpha","Dominance Ice"]],
+        Assassin: [["Saber","Blade of Heptaseas"],["Natalia","Haas Claws"]],
+        Mage: [["Cecilion","Clock of Destiny"],["Kagura","Lightning Truncheon"]],
+        Roam: [["Angela","Dominance Ice"],["Ruby","Antique Cuirass"]]
+      },
+      leomord: {
+        Marksman: [["Brody","Sea Halberd"],["Moscov","Corrosion Scythe"]],
+        Fighter: [["Chou","Brute Force Breastplate"],["Alpha","Antique Cuirass"]],
+        Assassin: [["Saber","Hunter Strike"],["Natalia","Wind of Nature"]],
+        Mage: [["Cecilion","Clock of Destiny"],["Kagura","Ice Queen Wand"]],
+        Roam: [["Franco","Antique Cuirass"],["Ruby","Dominance Ice"]]
+      },
+      yishunsin: {
+        Marksman: [["Brody","Sea Halberd"],["Bane","Corrosion Scythe"]],
+        Fighter: [["Chou","Blade Armor"],["Alpha","Dominance Ice"]],
+        Assassin: [["Natalia","Wind of Nature"],["Saber","Hunter Strike"]],
+        Mage: [["Cecilion","Clock of Destiny"],["Kagura","Ice Queen Wand"]],
+        Roam: [["Franco","Dominance Ice"],["Rafaela","Antique Cuirass"]]
+      },
+      joy: {
+        Marksman: [["Bruno","Sea Halberd"],["Lesley","Corrosion Scythe"]],
+        Fighter: [["Chou","Blade Armor"],["Alpha","Dominance Ice"]],
+        Assassin: [["Saber","Blade of Heptaseas"],["Natalia","Haas Claws"]],
+        Mage: [["Pharsa","Clock of Destiny"],["Kagura","Genius Wand"]],
+        Roam: [["Angela","Dominance Ice"],["Floryn","Antique Cuirass"]]
+      },
+      hanzo: {
+        Marksman: [["Lesley","Wind of Nature"],["Brody","Sea Halberd"]],
+        Fighter: [["Chou","Blade Armor"],["Alpha","Dominance Ice"]],
+        Assassin: [["Natalia","Antique Cuirass"],["Helcurt","Blade Armor"]],
+        Mage: [["Cecilion","Clock of Destiny"],["Kagura","Lightning Truncheon"]],
+        Roam: [["Angela","Dominance Ice"],["Ruby","Antique Cuirass"]]
+      },
+      julian: {
+    Marksman: [["Lesley","Wind of Nature"],["Bruno","Sea Halberd"]],
+    Fighter: [["Chou","Blade Armor"],["Alpha","Dominance Ice"]],
+    Assassin: [["Selena","Ice Queen Wand"],["Lancelot","Hunter Strike"]],
+    Mage: [["Cecilion","Clock of Destiny"],["Kagura","Lightning Truncheon"]],
+    "Roam/Support": [["Angela","Dominance Ice"],["Franco","Antique Cuirass"]]
+  },
+  fredrin: {
+    Marksman: [["Lesley","Wind of Nature"],["Bruno","Sea Halberd"]],
+    Fighter: [["Alpha","Dominance Ice"],["Chou","Blade Armor"]],
+    Assassin: [["Saber","War Axe"],["Natalia","Haas Claws"]],
+    Mage: [["Cecilion","Clock of Destiny"],["Kagura","Ice Queen Wand"]],
+    "Roam/Support": [["Angela","Dominance Ice"],["Ruby","Antique Cuirass"]]
+  },
+  badang: {
+    Marksman: [["Lesley","Wind of Nature"],["Bruno","Sea Halberd"]],
+    Fighter: [["Chou","Queen’s Wings"],["Benedetta","Blade Armor"]],
+    Assassin: [["Saber","Blade of Heptaseas"],["Natalia","Wind of Nature"]],
+    Mage: [["Cecilion","Clock of Destiny"],["Kagura","Lightning Truncheon"]],
+    "Roam/Support": [["Angela","Dominance Ice"],["Ruby","Antique Cuirass"]]
+  }
+    };
+
+    function showCounters() {
+      let v = document.getElementById("heroSelect").value;
+      let box = document.getElementById("counterResult");
+      box.innerHTML = "";
+      if(counters[v]){
+        for(let role in counters[v]){
+          box.innerHTML += `<h3>${role}</h3><ul>`;
+          counters[v][role].forEach(c=> box.innerHTML += `<li>${c[0]} – <b>${c[1]}</b></li>`);
+          box.innerHTML += `</ul>`;
+        }
+      } else box.innerHTML = `<p>Pilih hero untuk lihat counter</p>`;
+    }
+  </script>
+</body>
+</html>
