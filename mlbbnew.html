@@ -775,7 +775,7 @@
         const idSel = document.getElementById('userId').value.trim();
         const srvSel= document.getElementById('server').value.trim();
         const waSel = document.getElementById('whatsapp').value.trim();
-        if(!idSel||!srvSel||!waSel) return alert('Lengkapi data dulu ya.');
+        if(!idSel) return alert('Lengkapi data dulu ya.');
 
         const nomSel = document.querySelector('.nominal-card.selected');
         if(!nomSel) return alert('Pilih nominal dulu ya.');
