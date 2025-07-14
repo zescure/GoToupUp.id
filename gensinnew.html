@@ -445,13 +445,43 @@
         const totalVal= priceVal+adminVal;
 
         const msg =
-          `Saya sudah order Genshin Impact*${nomSel.dataset.value} Genesis Crystals*`+
+          `Saya sudah order Genshin Impact *${nomSel.dataset.value} Genesis Crystals*`+
           `\nID: ${idVal} (Server: ${srvVal})`+
           `\nNo. WA: ${waVal}`+
           `\nMetode: ${paySel.dataset.value.replace('_',' ')} VA`+
           `\nTotal bayar: Rp ${totalVal.toLocaleString('id')}`;
         window.open(`https://wa.me/6285697747768?text=${encodeURIComponent(msg)}`, '_blank');
       };
+
+      // Tambahkan elemen untuk countdown
+let bayarSebelum = document.getElementById('bayarSebelum');
+if (!bayarSebelum) {
+  bayarSebelum = document.createElement('span');
+  bayarSebelum.id = 'bayarSebelum';
+  bayarSebelum.style = 'margin-left:10px; font-size:12px; font-weight:bold;';
+  document.querySelector('.modal-body p.total').appendChild(bayarSebelum);
+}
+
+// Hitungan mundur 14 menit (840 detik)
+let sisaDetik = 14 * 60;
+
+// Fungsi untuk update waktu tiap detik
+const updateCountdown = () => {
+  if (sisaDetik <= 0) {
+    bayarSebelum.innerHTML = `<span style="color:red">⏰ Waktu habis!</span>`;
+    clearInterval(countdownInterval);
+    return;
+  }
+
+  const m = Math.floor(sisaDetik / 60).toString().padStart(2, '0');
+  const d = (sisaDetik % 60).toString().padStart(2, '0');
+  bayarSebelum.innerHTML = `(Bayar sebelum <span style="color:red">${m}:${d}</span>)`;
+  sisaDetik--;
+};
+
+// Start hitungan mundur
+updateCountdown(); // tampilkan langsung waktu awal
+const countdownInterval = setInterval(updateCountdown, 1000);
     });
   </script>
 </body>
