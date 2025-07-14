@@ -293,6 +293,88 @@
     color: #888;
     font-size: 16px;
   }
+    #shortcutList {
+    display: none;
+    background: rgba(10, 10, 20, 0.92);
+    border-radius: 10px;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    z-index: 999;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 0 12px rgba(0, 128, 255, 0.15);
+    overflow: hidden;
+    border: 2px solid transparent;
+    animation: glow-border 3s linear infinite;
+  }
+
+  @keyframes glow-border {
+    0% {
+      border-color: rgba(0, 136, 255, 0.3);
+    }
+    50% {
+      border-color: rgba(50, 200, 255, 0.9);
+    }
+    100% {
+      border-color: rgba(0, 136, 255, 0.3);
+    }
+  }
+
+  .shortcut-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    text-decoration: none;
+    color: #ddd;
+    transition: background 0.2s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .shortcut-item:hover {
+    background: rgba(60, 80, 120, 0.3);
+  }
+
+  .shortcut-item img {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    margin-right: 12px;
+    object-fit: cover;
+    box-shadow: 0 0 6px rgba(0, 136, 255, 0.3);
+  }
+
+  .promo-msg {
+    color: #4cc8ff;
+    font-weight: bold;
+    padding: 12px 16px;
+    text-align: center;
+    font-size: 13px;
+  }
+
+  .search-box input {
+    width: 100%;
+    padding: 10px 16px 10px 40px;
+    border-radius: 6px;
+    border: 1px solid #555;
+    background-color: #111;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+  }
+
+  .search-box input::placeholder {
+    color: #777;
+  }
+
+  .search-box span {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    color: #888;
+    font-size: 16px;
+  }
   </style>
 </head>
 <body>
@@ -602,6 +684,12 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   const renderList = (filter = '') => {
+    if (filter.trim() === '') {
+      shortcutList.innerHTML = `<div class="promo-msg">Cari game, Voucher, dan lainnya paling murah cuma di <b>Zestore</b></div>`;
+      shortcutList.style.display = 'block';
+      return;
+    }
+
     const filtered = games.filter(g =>
       g.name.toLowerCase().includes(filter.toLowerCase())
     );
@@ -617,7 +705,7 @@ document.addEventListener('DOMContentLoaded', () => {
       `).join('');
     }
 
-    shortcutList.style.display = filter || input === document.activeElement ? 'block' : 'none';
+    shortcutList.style.display = 'block';
   };
 
   input.addEventListener('focus', () => {
