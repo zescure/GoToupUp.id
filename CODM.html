@@ -712,6 +712,21 @@ btnCopyVA.onclick = ()=>{
 };
 
 
+// Hitung waktu +14 menit dari sekarang
+const deadline = new Date(Date.now() + 14 * 60 * 1000);
+const jam  = deadline.getHours().toString().padStart(2, '0');
+const menit = deadline.getMinutes().toString().padStart(2, '0');
+
+// Tampilkan info batas waktu di sebelah total
+let bayarSebelum = document.getElementById('bayarSebelum');
+if (!bayarSebelum) {
+  bayarSebelum = document.createElement('span');
+  bayarSebelum.id = 'bayarSebelum';
+  bayarSebelum.style = 'margin-left:10px;color:#888;font-size:12px';
+  document.querySelector('.modal-body p.total').appendChild(bayarSebelum);
+}
+bayarSebelum.textContent = `(Bayar sebelum ${jam}:${menit})`;
+      
 
 // — PROMO CODE SC10 —
 document.getElementById('btnApplyPromo').addEventListener('click', ()=>{
