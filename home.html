@@ -238,6 +238,18 @@
   <header>
     <button class="menu-btn">&#9776;</button>
     <div class="logo">ZESTORE.id</div>
+    <div class="search-box" style="position: relative; max-width: 400px; margin: auto;">
+  <input id="inputGameSearch" type="text" placeholder="Cari Game atau Voucher" 
+    style="width: 100%; padding: 10px 16px 10px 40px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;" />
+
+  <span style="position:absolute; top: 50%; left: 12px; transform: translateY(-50%); color: #888;">
+    🔍
+  </span>
+
+  <div id="shortcutList" style="display:none; background: #1f1f1f; border: 1px solid #444; border-radius: 6px; position: absolute; top: 100%; left: 0; width: 100%; z-index: 999;">
+    <!-- List akan diisi lewat JavaScript -->
+  </div>
+</div>
     <button class="login-btn" onclick="window.location.href='https://zestore.netlify.app/Daftar-login'">
   Login
 </button>
