@@ -712,20 +712,35 @@ btnCopyVA.onclick = ()=>{
 };
 
 
-// Hitung waktu +14 menit dari sekarang
-const deadline = new Date(Date.now() + 14 * 60 * 1000);
-const jam  = deadline.getHours().toString().padStart(2, '0');
-const menit = deadline.getMinutes().toString().padStart(2, '0');
-
-// Tampilkan info batas waktu di sebelah total
+// Tambahkan elemen untuk countdown
 let bayarSebelum = document.getElementById('bayarSebelum');
 if (!bayarSebelum) {
   bayarSebelum = document.createElement('span');
   bayarSebelum.id = 'bayarSebelum';
-  bayarSebelum.style = 'margin-left:10px;color:#888;font-size:12px';
+  bayarSebelum.style = 'margin-left:10px; font-size:12px; font-weight:bold;';
   document.querySelector('.modal-body p.total').appendChild(bayarSebelum);
 }
-bayarSebelum.textContent = `(Bayar sebelum ${jam}:${menit})`;
+
+// Hitungan mundur 14 menit (840 detik)
+let sisaDetik = 14 * 60;
+
+// Fungsi untuk update waktu tiap detik
+const updateCountdown = () => {
+  if (sisaDetik <= 0) {
+    bayarSebelum.innerHTML = `<span style="color:red">⏰ Waktu habis!</span>`;
+    clearInterval(countdownInterval);
+    return;
+  }
+
+  const m = Math.floor(sisaDetik / 60).toString().padStart(2, '0');
+  const d = (sisaDetik % 60).toString().padStart(2, '0');
+  bayarSebelum.innerHTML = `(Bayar sebelum <span style="color:red">${m}:${d}</span>)`;
+  sisaDetik--;
+};
+
+// Start hitungan mundur
+updateCountdown(); // tampilkan langsung waktu awal
+const countdownInterval = setInterval(updateCountdown, 1000);
       
 
 // — PROMO CODE SC10 —
