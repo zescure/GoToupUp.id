@@ -574,51 +574,6 @@
   });
 
 
-
-document.addEventListener('DOMContentLoaded', () => {
-  const input = document.getElementById('inputGameSearch');
-  const shortcutList = document.getElementById('shortcutList');
-
-  // 💥 Editable shortcut list
-  const games = [
-    {
-      name: "Mobile Legends",
-      image: "https://cdn.example.com/mlbb.jpg",
-      url: "topup-ml.html"
-    },
-    {
-      name: "Free Fire",
-      image: "https://cdn.example.com/ff.jpg",
-      url: "topup-ff.html"
-    },
-    {
-      name: "Call of Duty Mobile",
-      image: "https://cdn.example.com/codm.jpg",
-      url: "topup-cod.html"
-    },
-    {
-      name: "Genshin Impact",
-      image: "https://cdn.example.com/genshin.jpg",
-      url: "topup-genshin.html"
-    }
-  ];
-
-  // 💡 Render shortcut list
-  shortcutList.innerHTML = games.map(g => `
-    <a href="${g.url}" class="shortcut-item" style="display:flex; align-items:center; padding:10px; text-decoration:none; color:#fff;">
-      <img src="${g.image}" alt="${g.name}" style="width:40px; height:40px; border-radius:8px; margin-right:12px;">
-      <span>${g.name}</span>
-    </a>
-  `).join('');
-
-  // 🔁 Show/hide logic
-  input.addEventListener('focus', () => {
-    shortcutList.style.display = 'block';
-  });
-
-  input.addEventListener('blur', () => {
-    setTimeout(() => shortcutList.style.display = 'none', 200);
-  });
 });
 
 
