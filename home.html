@@ -230,6 +230,69 @@
       padding-top: .5rem;
       font-size: .8rem;
     }
+  /* Shortcut container */
+  #shortcutList {
+    display: none;
+    background: rgba(15, 15, 25, 0.95); /* hitam kebiruan transparan */
+    border: 1px solid rgba(80, 120, 255, 0.2); /* garis luar biru halus */
+    border-radius: 8px;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    z-index: 99;
+    backdrop-filter: blur(6px); /* efek kaca */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Tiap item */
+  .shortcut-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    text-decoration: none;
+    color: #ddd;
+    transition: background 0.2s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .shortcut-item:hover {
+    background: rgba(60, 80, 120, 0.25); /* efek hover biru luar angkasa */
+  }
+
+  .shortcut-item img {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    margin-right: 12px;
+    box-shadow: 0 0 6px rgba(0, 136, 255, 0.3); /* glow kebiruan */
+  }
+
+  /* Input pencarian */
+  .search-box input {
+    width: 100%;
+    padding: 10px 16px 10px 40px;
+    border-radius: 6px;
+    border: 1px solid #555;
+    background-color: #111;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+  }
+
+  .search-box input::placeholder {
+    color: #888;
+  }
+
+  /* Icon cari */
+  .search-box span {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    color: #888;
+    font-size: 16px;
+  }
   </style>
 </head>
 <body>
