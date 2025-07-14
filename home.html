@@ -572,10 +572,67 @@
   card.addEventListener('mouseenter', ()=> {
     console.log('Hover di:', card.querySelector('.game-overlay').textContent);
   });
-
-
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('inputGameSearch');
+  const shortcutList = document.getElementById('shortcutList');
+
+  const games = [
+    {
+      name: "Mobile Legends",
+      image: "https://cdn.example.com/mlbb.jpg",
+      url: "topup-ml.html"
+    },
+    {
+      name: "Free Fire",
+      image: "https://cdn.example.com/ff.jpg",
+      url: "topup-ff.html"
+    },
+    {
+      name: "Call of Duty Mobile",
+      image: "https://cdn.example.com/codm.jpg",
+      url: "topup-cod.html"
+    },
+    {
+      name: "Genshin Impact",
+      image: "https://cdn.example.com/genshin.jpg",
+      url: "topup-genshin.html"
+    }
+  ];
+
+  const renderList = (filter = '') => {
+    const filtered = games.filter(g =>
+      g.name.toLowerCase().includes(filter.toLowerCase())
+    );
+
+    if (filtered.length === 0) {
+      shortcutList.innerHTML = `<div style="padding:10px; color:#ccc;">Tidak ditemukan</div>`;
+    } else {
+      shortcutList.innerHTML = filtered.map(g => `
+        <a href="${g.url}" class="shortcut-item">
+          <img src="${g.image}" alt="${g.name}">
+          <span>${g.name}</span>
+        </a>
+      `).join('');
+    }
+
+    shortcutList.style.display = filter || input === document.activeElement ? 'block' : 'none';
+  };
+
+  input.addEventListener('focus', () => {
+    renderList(input.value);
+  });
+
+  input.addEventListener('input', () => {
+    renderList(input.value);
+  });
+
+  input.addEventListener('blur', () => {
+    setTimeout(() => shortcutList.style.display = 'none', 200);
+  });
+});
+    
 
   </script>
 </body>
