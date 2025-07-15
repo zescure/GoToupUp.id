@@ -637,26 +637,40 @@ document.addEventListener('DOMContentLoaded', () => {
   const shortcutList = document.getElementById('shortcutList');
 
   const games = [
+     // Game List
     {
       name: "Mobile Legends",
-      image: "https://cdn.example.com/mlbb.jpg",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4sqBxABspT2k5eGkvweih9PbVdcNMIRHUBZRWk78l-nCeiM9TjKZ6Wfca&s=10",
       url: "topup-ml.html"
     },
     {
       name: "Free Fire",
-      image: "https://cdn.example.com/ff.jpg",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQthzbcsOjsCsykuN4uk6-pzsnZLoRzcg-pfTpZL-nVYKgcK7eYinXZx78&s=10",
       url: "topup-ff.html"
     },
     {
       name: "Call of Duty Mobile",
-      image: "https://cdn.example.com/codm.jpg",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCTrkIfW1COaYXrlEnZAyEikcjQs9SFM6SMw&usqp=CAU",
       url: "topup-cod.html"
     },
     {
       name: "Genshin Impact",
-      image: "https://cdn.example.com/genshin.jpg",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS65SXg_FKzvzKsAFUzQvhur6DD9F-HANwHjA&usqp=CAU",
       url: "topup-genshin.html"
+    },
+
+     // Tagihan list
+    {
+      name: "Astra Credit Company | Sedaya Finance",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5TOAghHrprtnhqiQakg5QUSrRnScL7Nt7vm0WmwbJfiSyN64tj8zdp",
+      url: "buylink.id/Zestore.zcn/share?product=FNASTRA&category=finance"
+    },
+    {
+      name: "Bpjs Kesehatan",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQHpQ7luo95IF-3RIUBYGPdFyKG-kQWOibyw&s",
+      url: "buylink.id/Zestore.zcn/share?product=BPJS&category=bpjs"
     }
+    // akhir penutup list gaboleh pake tanda koma
   ];
 
   const renderList = (filter = '') => {
