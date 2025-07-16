@@ -395,6 +395,66 @@
         .container {
             margin-top: 20px;
         }
+        .popup-panel {
+  position: fixed;
+  bottom: -100%;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: rgba(10, 10, 20, 0.97);
+  backdrop-filter: blur(4px);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  z-index: 1000;
+  transition: bottom 0.3s ease-in-out;
+  box-shadow: 0 -2px 10px rgba(0, 136, 255, 0.3);
+  overflow-y: auto;
+}
+
+.popup-panel.show {
+  bottom: 0;
+}
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid #333;
+  color: #00bfff;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.popup-header button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.popup-content {
+  padding: 16px 20px;
+  color: #ddd;
+}
+
+.popup-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.popup-content ul li {
+  padding: 10px 0;
+  border-bottom: 1px solid #222;
+}
+
+.popup-content ul li a {
+  color: #00bfff;
+  text-decoration: none;
+  font-size: 14px;
+}
 
     </style>
 </head>
@@ -726,9 +786,24 @@
                 <h4 class="text-center text-sm font-medium">BPJS Kesehatan</h4>
             </a>
             </div>
+            
         </div>
     </div>
-    
+    <div id="popupGamePanel" class="popup-panel">
+  <div class="popup-header">
+    <span>Semua Layanan Game</span>
+    <button id="closePopupBtn">&times;</button>
+  </div>
+  <div class="popup-content">
+    <!-- Tempat list semua game -->
+    <ul>
+      <li><a href="/topup/ml">Mobile Legends</a></li>
+      <li><a href="/topup/ff">Free Fire</a></li>
+      <li><a href="/topup/pubgm">PUBG Mobile</a></li>
+      <!-- Tambah game lain di sini -->
+    </ul>
+  </div>
+</div>
 
          <!-- voucher -->
     <div class="text-selection">
@@ -1100,7 +1175,20 @@
                 popup.style.display = 'none';
             }
         }
-        
+
+         const popupPanel = document.getElementById('popupGamePanel');
+  const closePopupBtn = document.getElementById('closePopupBtn');
+
+  // Trigger klik Game Lainnya
+  document.querySelector('.game-card a[href="#popupGameList"]')?.addEventListener('click', function (e) {
+    e.preventDefault();
+    popupPanel.classList.add('show');
+  });
+
+  // Tutup popup
+  closePopupBtn.addEventListener('click', function () {
+    popupPanel.classList.remove('show');
+  });
     </script>
     </body>
     </html>
