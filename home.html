@@ -326,69 +326,77 @@ html {
   scroll-behavior: smooth;
 }
 /* ✅ Gaya Flash Sale */
-.product-promo-card {
+.flash-carousel {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+  padding: 8px 0;
+}
+
+.carousel-track {
   display: flex;
-  align-items: center;
+  gap: 12px;
+  transition: transform 0.5s ease;
+}
+
+.product-promo-card {
+  min-width: 220px;
   background: linear-gradient(to right, #d9f1ff, #c0e3ff);
   border-radius: 12px;
-  padding: 10px 12px;
-  margin-bottom: 10px;
+  padding: 10px;
+  display: flex;
   position: relative;
-  width: 100%;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .promo-image img {
-  width: 50px;
-  height: 50px;
-  border-radius: 12px;
-  object-fit: cover;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
 }
 
 .promo-info {
-  flex: 1;
   margin-left: 10px;
+  flex-grow: 1;
 }
 
 .promo-title {
   font-size: 14px;
   font-weight: bold;
-  color: #222;
 }
 
 .promo-subtitle {
   font-size: 12px;
-  color: #666;
-  margin-top: 2px;
+  color: #777;
 }
 
 .promo-price {
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 .original-price {
   font-size: 12px;
-  color: red;
   text-decoration: line-through;
+  color: red;
   margin-right: 6px;
 }
 
 .discounted-price {
   font-size: 14px;
   font-weight: bold;
-  color: #2e7d32;
+  color: green;
 }
 
 .promo-badge {
   position: absolute;
   top: -5px;
   right: -5px;
-  background-color: #4caf50;
+  background: #ff5722;
   color: white;
   font-size: 10px;
   padding: 3px 6px;
-  border-radius: 4px;
-  transform: rotate(15deg);
+  border-radius: 5px;
+  transform: rotate(10deg);
 }
   </style>
 </head>
@@ -477,19 +485,42 @@ html {
 </div>
 
   <!-- 🔥 Flash Sale Carousel -->
-<div class="product-promo-card">
-  <div class="promo-image">
-    <img src="https://via.placeholder.com/64" alt="Logo Bstation" />
-  </div>
-  <div class="promo-info">
-    <div class="promo-title">31 Days Premium</div>
-    <div class="promo-subtitle">Bstation / Bilibili</div>
-    <div class="promo-price">
-      <span class="original-price">Rp1.000</span>
-      <span class="discounted-price">Rp500</span>
+<div class="flash-carousel">
+  <div class="carousel-track">
+    <!-- Card 1 -->
+    <div class="product-promo-card">
+      <div class="promo-image">
+        <img src="https://via.placeholder.com/64" alt="Logo" />
+      </div>
+      <div class="promo-info">
+        <div class="promo-title">31 Days Premium</div>
+        <div class="promo-subtitle">Bstation</div>
+        <div class="promo-price">
+          <span class="original-price">Rp1.000</span>
+          <span class="discounted-price">Rp500</span>
+        </div>
+      </div>
+      <div class="promo-badge">50% OFF</div>
     </div>
+
+    <!-- Card 2 -->
+    <div class="product-promo-card">
+      <div class="promo-image">
+        <img src="https://via.placeholder.com/64" alt="Logo" />
+      </div>
+      <div class="promo-info">
+        <div class="promo-title">Weekly Pass</div>
+        <div class="promo-subtitle">Mobile Legends</div>
+        <div class="promo-price">
+          <span class="original-price">Rp10.000</span>
+          <span class="discounted-price">Rp7.500</span>
+        </div>
+      </div>
+      <div class="promo-badge">25% OFF</div>
+    </div>
+
+    <!-- Tambahin lagi card di sini -->
   </div>
-  <div class="promo-badge">10% OFF</div>
 </div>
   </div>
 </div>
@@ -795,16 +826,19 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
     
-      const track = document.querySelector('.carousel-track');
-  const cards = document.querySelectorAll('.product-card');
-  let index = 0;
+        const track = document.querySelector('.carousel-track');
+  let position = 0;
+  const cardWidth = 232; // card width + gap (220 + 12)
 
   setInterval(() => {
-    index++;
-    if (index >= cards.length) {
-      index = 0;
+    const totalCards = track.children.length;
+    position += 1;
+
+    if (position >= totalCards) {
+      position = 0;
     }
-    track.style.transform = `translateX(-${index * (cards[0].offsetWidth + 16)}px)`;
+
+    track.style.transform = `translateX(-${position * cardWidth}px)`;
   }, 5000);
 
   </script>
