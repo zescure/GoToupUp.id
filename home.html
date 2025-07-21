@@ -325,6 +325,70 @@
 html {
   scroll-behavior: smooth;
 }
+/* ✅ Gaya Flash Sale */
+.flash-sale-section {
+  padding: 16px;
+  background-color: #f9ffef;
+  border-radius: 12px;
+  margin: 20px;
+}
+
+.flash-sale-section h2 {
+  margin-bottom: 12px;
+  font-size: 20px;
+  color: #444;
+}
+
+.carousel-container {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+
+.carousel-track {
+  display: flex;
+  transition: transform 0.5s ease-in-out;
+}
+
+.product-card {
+  min-width: 70%;
+  margin-right: 16px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+  overflow: hidden;
+  text-align: center;
+  font-family: sans-serif;
+}
+
+.product-card img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.product-card .info {
+  padding: 10px;
+}
+
+.product-card .title {
+  font-size: 14px;
+  color: #222;
+  margin-bottom: 4px;
+}
+
+.product-card .price {
+  font-size: 15px;
+  font-weight: bold;
+  color: #e53935;
+}
+
+.product-card .old-price {
+  font-size: 12px;
+  color: #999;
+  text-decoration: line-through;
+  margin-left: 6px;
+}
   </style>
 </head>
 <body>
@@ -408,6 +472,37 @@ html {
 
   <div id="shortcutList" style="display:none; background: #1f1f1f; border: 1px solid #444; border-radius: 6px; position: absolute; top: 100%; left: 0; width: 100%; z-index: 999;">
     <!-- List akan diisi lewat JavaScript -->
+  </div>
+</div>
+
+  <!-- 🔥 Flash Sale Carousel -->
+<div class="flash-sale-section">
+  <h2>⚡ Flash Sale Spesial</h2>
+  <div class="carousel-container">
+    <div class="carousel-track">
+      <div class="product-card">
+        <img src="https://via.placeholder.com/150" alt="Produk 1">
+        <div class="info">
+          <p class="title">Diamond ML 86+</p>
+          <p class="price">Rp 21.500 <span class="old-price">Rp 25.000</span></p>
+        </div>
+      </div>
+      <div class="product-card">
+        <img src="https://via.placeholder.com/150" alt="Produk 2">
+        <div class="info">
+          <p class="title">UC PUBG 74</p>
+          <p class="price">Rp 18.900 <span class="old-price">Rp 22.000</span></p>
+        </div>
+      </div>
+      <div class="product-card">
+        <img src="https://via.placeholder.com/150" alt="Produk 3">
+        <div class="info">
+          <p class="title">Genshin Primogem</p>
+          <p class="price">Rp 16.000 <span class="old-price">Rp 20.000</span></p>
+        </div>
+      </div>
+      <!-- Tambah produk sesukamu -->
+    </div>
   </div>
 </div>
   
@@ -710,7 +805,19 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => shortcutList.style.display = 'none', 200);
   });
 });
+
     
+      const track = document.querySelector('.carousel-track');
+  const cards = document.querySelectorAll('.product-card');
+  let index = 0;
+
+  setInterval(() => {
+    index++;
+    if (index >= cards.length) {
+      index = 0;
+    }
+    track.style.transform = `translateX(-${index * (cards[0].offsetWidth + 16)}px)`;
+  }, 5000);
 
   </script>
 </body>
