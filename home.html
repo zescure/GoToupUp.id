@@ -327,7 +327,9 @@ html {
 }
 /* ✅ Gaya Flash Sale */
 .flash-carousel {
-  overflow: hidden;
+  overflow-x: auto; /* biar bisa scroll manual */
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
   width: 100%;
   position: relative;
   padding: 8px 0;
@@ -340,12 +342,14 @@ html {
 }
 
 .product-promo-card {
+  flex: 0 0 auto;
   min-width: 220px;
   background: linear-gradient(to right, #d9f1ff, #c0e3ff);
   border-radius: 12px;
   padding: 10px;
   display: flex;
   position: relative;
+  scroll-snap-align: start;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -398,10 +402,10 @@ html {
   border-radius: 5px;
   transform: rotate(10deg);
 }
+
 .promo-link {
   text-decoration: none;
   color: inherit;
-  display: inline-block;
 }
   </style>
 </head>
@@ -833,20 +837,21 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
     
-        const track = document.querySelector('.carousel-track');
-  let position = 0;
-  const cardWidth = 232; // card width + gap (220 + 12)
+         const carousel = document.querySelector('.flash-carousel');
+  const track = document.querySelector('.carousel-track');
+  let scrollAmount = 0;
+  const interval = 5000;
 
-  setInterval(() => {
-    const totalCards = track.children.length;
-    position += 1;
-
-    if (position >= totalCards) {
-      position = 0;
+  function autoScroll() {
+    scrollAmount += 220 + 12; // width + gap
+    if (scrollAmount >= track.scrollWidth - carousel.clientWidth) {
+      scrollAmount = 0;
     }
+    carousel.scrollTo({ left: scrollAmount, behavior: 'smooth' });
+  }
 
-    track.style.transform = `translateX(-${position * cardWidth}px)`;
-  }, 5000);
+  setInterval(autoScroll, interval);
+
 
   </script>
 </body>
