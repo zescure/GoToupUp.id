@@ -327,7 +327,7 @@ html {
 }
 /* ✅ Gaya Flash Sale */
 .flash-carousel {
-  overflow-x: auto; /* biar bisa scroll manual */
+  overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   width: 100%;
@@ -344,10 +344,12 @@ html {
 .product-promo-card {
   flex: 0 0 auto;
   min-width: 220px;
+  height: 130px; /* Tambahkan tinggi tetap */
   background: linear-gradient(to right, #d9f1ff, #c0e3ff);
   border-radius: 12px;
   padding: 10px;
   display: flex;
+  align-items: center;
   position: relative;
   scroll-snap-align: start;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
@@ -362,31 +364,44 @@ html {
 .promo-info {
   margin-left: 10px;
   flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  overflow: hidden;
 }
 
 .promo-title {
   font-size: 14px;
   font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .promo-subtitle {
   font-size: 12px;
   color: #777;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .promo-price {
   margin-top: 4px;
+  font-size: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .original-price {
-  font-size: 12px;
   text-decoration: line-through;
   color: red;
   margin-right: 6px;
 }
 
 .discounted-price {
-  font-size: 14px;
   font-weight: bold;
   color: green;
 }
