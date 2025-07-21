@@ -326,32 +326,69 @@ html {
   scroll-behavior: smooth;
 }
 /* ✅ Gaya Flash Sale */
-.flash-sale-section {
-  padding: 8px;
-  background-color: #eaffea;
-}
-
-.carousel-container {
-  overflow: hidden;
-  width: 100%;
-  position: relative;
-}
-
-.carousel-track {
+.product-promo-card {
   display: flex;
-  transition: transform 0.5s ease-in-out;
+  align-items: center;
+  background: linear-gradient(to right, #d9f1ff, #c0e3ff);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  position: relative;
+  width: 100%;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.1);
 }
 
-.product-card {
-  min-width: 55%; /* Lebih kecil dari sebelumnya */
-  margin-right: 12px;
-  background-color: white;
-  border-radius: 10px;
-  padding: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  font-size: 13px;
+.promo-image img {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.promo-info {
+  flex: 1;
+  margin-left: 10px;
+}
+
+.promo-title {
+  font-size: 14px;
   font-weight: bold;
-  text-align: center;
+  color: #222;
+}
+
+.promo-subtitle {
+  font-size: 12px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.promo-price {
+  margin-top: 6px;
+}
+
+.original-price {
+  font-size: 12px;
+  color: red;
+  text-decoration: line-through;
+  margin-right: 6px;
+}
+
+.discounted-price {
+  font-size: 14px;
+  font-weight: bold;
+  color: #2e7d32;
+}
+
+.promo-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #4caf50;
+  color: white;
+  font-size: 10px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  transform: rotate(15deg);
 }
   </style>
 </head>
@@ -440,33 +477,20 @@ html {
 </div>
 
   <!-- 🔥 Flash Sale Carousel -->
-<div class="flash-sale-section">
-  <h2>⚡ Flash Sale Spesial</h2>
-  <div class="carousel-container">
-    <div class="carousel-track">
-      <div class="product-card">
-        <img src="https://via.placeholder.com/150" alt="Produk 1">
-        <div class="info">
-          <p class="title">Diamond ML 86+</p>
-          <p class="price">Rp 21.500 <span class="old-price">Rp 25.000</span></p>
-        </div>
-      </div>
-      <div class="product-card">
-        <img src="https://via.placeholder.com/150" alt="Produk 2">
-        <div class="info">
-          <p class="title">UC PUBG 74</p>
-          <p class="price">Rp 18.900 <span class="old-price">Rp 22.000</span></p>
-        </div>
-      </div>
-      <div class="product-card">
-        <img src="https://via.placeholder.com/150" alt="Produk 3">
-        <div class="info">
-          <p class="title">Genshin Primogem</p>
-          <p class="price">Rp 16.000 <span class="old-price">Rp 20.000</span></p>
-        </div>
-      </div>
-      <!-- Tambah produk sesukamu -->
+<div class="product-promo-card">
+  <div class="promo-image">
+    <img src="https://via.placeholder.com/64" alt="Logo Bstation" />
+  </div>
+  <div class="promo-info">
+    <div class="promo-title">31 Days Premium</div>
+    <div class="promo-subtitle">Bstation / Bilibili</div>
+    <div class="promo-price">
+      <span class="original-price">Rp1.000</span>
+      <span class="discounted-price">Rp500</span>
     </div>
+  </div>
+  <div class="promo-badge">10% OFF</div>
+</div>
   </div>
 </div>
   
