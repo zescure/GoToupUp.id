@@ -327,90 +327,85 @@ html {
 }
 /* ✅ Gaya Flash Sale */
 .flash-carousel {
-  overflow-x: auto;
+  overflow-x: auto; /* biar bisa scroll manual */
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   width: 100%;
-  padding: 5px 0;
+  position: relative;
+  padding: 8px 0;
 }
 
 .carousel-track {
   display: flex;
-  gap: 8px;
+  gap: 12px;
+  transition: transform 0.5s ease;
+}
+
+.product-promo-card {
+  flex: 0 0 auto;
+  min-width: 220px;
+  background: linear-gradient(to right, #d9f1ff, #c0e3ff);
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  position: relative;
+  scroll-snap-align: start;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.promo-image img {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+}
+
+.promo-info {
+  margin-left: 10px;
+  flex-grow: 1;
+}
+
+.promo-title {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.promo-subtitle {
+  font-size: 12px;
+  color: #777;
+}
+
+.promo-price {
+  margin-top: 4px;
+}
+
+.original-price {
+  font-size: 12px;
+  text-decoration: line-through;
+  color: red;
+  margin-right: 6px;
+}
+
+.discounted-price {
+  font-size: 14px;
+  font-weight: bold;
+  color: green;
+}
+
+.promo-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #ff5722;
+  color: white;
+  font-size: 10px;
+  padding: 3px 6px;
+  border-radius: 5px;
+  transform: rotate(10deg);
 }
 
 .promo-link {
   text-decoration: none;
   color: inherit;
-  scroll-snap-align: start;
-}
-
-.product-promo-card {
-  flex: 0 0 auto;
-  width: 165px;
-  background: linear-gradient(to right, #dff7ff, #c8e9ff);
-  border-radius: 10px;
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  position: relative;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.promo-image img {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-}
-
-.promo-info {
-  margin-left: 7px;
-  flex-grow: 1;
-}
-
-.promo-title {
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.1;
-  margin: 0;
-}
-
-.promo-subtitle {
-  font-size: 10px;
-  color: #444;
-  margin: 1px 0;
-  line-height: 1.1;
-}
-
-.promo-price {
-  display: flex;
-  align-items: center;
-  margin-top: 1px;
-}
-
-.original-price {
-  font-size: 10px;
-  color: red;
-  text-decoration: line-through;
-  margin-right: 4px;
-}
-
-.discounted-price {
-  font-size: 12px;
-  color: green;
-  font-weight: 700;
-}
-
-.promo-badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  background: #ff5722;
-  color: #fff;
-  font-size: 9px;
-  padding: 1px 4px;
-  border-radius: 4px;
-  transform: rotate(10deg);
 }
   </style>
 </head>
