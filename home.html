@@ -327,7 +327,7 @@ html {
 }
 /* ✅ Gaya Flash Sale */
 .flash-carousel {
-  overflow-x: auto; /* biar bisa scroll manual */
+  overflow-x: auto; /* scroll manual */
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   width: 100%;
@@ -344,13 +344,34 @@ html {
 .product-promo-card {
   flex: 0 0 auto;
   min-width: 220px;
-  background: linear-gradient(to right, #d9f1ff, #cce0ff, #2c3e90);
-  border-radius: 12px;
-  padding: 10px;
-  display: flex;
-  position: relative;
   scroll-snap-align: start;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+  background: linear-gradient(270deg, #d9f1ff, #cce0ff, #2c3e90, #cce0ff, #d9f1ff);
+  background-size: 400% 400%;
+  animation: gradientMove 10s ease infinite;
+  box-shadow: 0 0 12px rgba(44, 62, 144, 0.3);
+  color: #000;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  text-align: left;
+}
+
+/* Gradient animation */
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .promo-image img {
