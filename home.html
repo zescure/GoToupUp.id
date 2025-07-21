@@ -409,6 +409,42 @@ html {
   text-decoration: none;
   color: inherit;
 }
+
+.product-promo-card::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: conic-gradient(
+    from 0deg,
+    #00ffff,
+    #00ffcc,
+    #00ffff,
+    #00ccff,
+    #00ffff
+  );
+  border-radius: 14px; /* lebih besar dari card biar nutupin pinggiran */
+  z-index: 0;
+  animation: spinBorder 4s linear infinite;
+  filter: blur(3px);
+}
+
+.product-promo-card {
+  position: relative;
+  z-index: 1; /* biar isi di atas animasi */
+  overflow: hidden;
+}
+
+@keyframes spinBorder {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
   </style>
 </head>
 <body>
@@ -543,8 +579,8 @@ html {
           <div class="promo-title">Token Pln 100Rb</div>
           <div class="promo-subtitle">(PLN) Perusahaan Listrik Negara</div>
           <div class="promo-price">
-            <span class="original-price">Rp100.950</span>
-            <span class="discounted-price">Rp102.550</span>
+            <span class="original-price">Rp102.540</span>
+            <span class="discounted-price">Rp100.950</span>
           </div>
         </div>
         <div class="promo-badge">0.6% OFF</div>
