@@ -837,20 +837,35 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
     
-         const carousel = document.querySelector('.flash-carousel');
-  const track = document.querySelector('.carousel-track');
-  let scrollAmount = 0;
-  const interval = 5000;
+          const carousel = document.querySelector('.flash-carousel');
+  const items = document.querySelectorAll('.flash-carousel .promo-link');
+  let index = 0;
+  let autoScroll;
 
-  function autoScroll() {
-    scrollAmount += 220 + 12; // width + gap
-    if (scrollAmount >= track.scrollWidth - carousel.clientWidth) {
-      scrollAmount = 0;
+  function scrollToItem(i) {
+    if (items[i]) {
+      items[i].scrollIntoView({ behavior: 'smooth', inline: 'start' });
     }
-    carousel.scrollTo({ left: scrollAmount, behavior: 'smooth' });
   }
 
-  setInterval(autoScroll, interval);
+  function startAutoScroll() {
+    autoScroll = setInterval(() => {
+      index = (index + 1) % items.length;
+      scrollToItem(index);
+    }, 5000); // 5 detik
+  }
+
+  function resetAutoScroll() {
+    clearInterval(autoScroll);
+    startAutoScroll();
+  }
+
+  // Deteksi manual scroll
+  carousel.addEventListener('touchstart', resetAutoScroll);
+  carousel.addEventListener('mousedown', resetAutoScroll);
+
+  // Mulai auto scroll saat load
+  startAutoScroll();
 
 
   </script>
