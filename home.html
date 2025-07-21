@@ -410,34 +410,35 @@ html {
   color: inherit;
 }
 
+/* Glowing border luar */
 .product-promo-card::before {
   content: '';
   position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border-radius: 16px;
   background: conic-gradient(
     from 0deg,
     #00ffff,
-    #00ffcc,
-    #00ffff,
     #00ccff,
+    #00ffff,
+    #00ffcc,
     #00ffff
   );
-  border-radius: 14px; /* lebih besar dari card biar nutupin pinggiran */
   z-index: 0;
-  animation: spinBorder 4s linear infinite;
-  filter: blur(3px);
+  animation: spinGlow 4s linear infinite;
+  filter: blur(6px);
 }
 
-.product-promo-card {
+/* Biar isi card tetep di atas glowing */
+.product-promo-card > * {
   position: relative;
-  z-index: 1; /* biar isi di atas animasi */
-  overflow: hidden;
+  z-index: 2;
 }
 
-@keyframes spinBorder {
+@keyframes spinGlow {
   0% {
     transform: rotate(0deg);
   }
