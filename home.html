@@ -337,71 +337,63 @@ html {
 
 .carousel-track {
   display: flex;
-  gap: 12px;
-  transition: transform 0.5s ease;
+  gap: 10px;
+}
+
+.promo-link {
+  text-decoration: none;
+  color: inherit;
+  scroll-snap-align: start;
 }
 
 .product-promo-card {
   flex: 0 0 auto;
-  min-width: 220px;
-  height: 130px; /* Tambahkan tinggi tetap */
+  min-width: 180px;
   background: linear-gradient(to right, #d9f1ff, #c0e3ff);
   border-radius: 12px;
   padding: 10px;
   display: flex;
   align-items: center;
   position: relative;
-  scroll-snap-align: start;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .promo-image img {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
 }
 
 .promo-info {
-  margin-left: 10px;
+  margin-left: 8px;
   flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 100%;
-  overflow: hidden;
 }
 
 .promo-title {
-  font-size: 14px;
-  font-weight: bold;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
 }
 
 .promo-subtitle {
-  font-size: 12px;
-  color: #777;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 11px;
+  color: #555;
+  margin: 2px 0;
 }
 
 .promo-price {
-  margin-top: 4px;
-  font-size: 12px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  margin-top: 2px;
 }
 
 .original-price {
+  font-size: 11px;
   text-decoration: line-through;
   color: red;
-  margin-right: 6px;
+  margin-right: 4px;
 }
 
 .discounted-price {
+  font-size: 13px;
   font-weight: bold;
   color: green;
 }
@@ -412,15 +404,10 @@ html {
   right: -5px;
   background: #ff5722;
   color: white;
-  font-size: 10px;
-  padding: 3px 6px;
+  font-size: 9px;
+  padding: 2px 5px;
   border-radius: 5px;
   transform: rotate(10deg);
-}
-
-.promo-link {
-  text-decoration: none;
-  color: inherit;
 }
   </style>
 </head>
