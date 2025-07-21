@@ -410,41 +410,12 @@ html {
   color: inherit;
 }
 
-/* Glowing border luar */
-.product-promo-card::before {
-  content: '';
-  position: absolute;
-  top: -4px;
-  left: -4px;
-  right: -4px;
-  bottom: -4px;
-  border-radius: 16px;
-  background: conic-gradient(
-    from 0deg,
-    #00ffff,
-    #00ccff,
-    #00ffff,
-    #00ffcc,
-    #00ffff
-  );
-  z-index: 0;
-  animation: spinGlow 4s linear infinite;
-  filter: blur(6px);
-}
-
-/* Biar isi card tetep di atas glowing */
-.product-promo-card > * {
-  position: relative;
-  z-index: 2;
-}
-
-@keyframes spinGlow {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+body {
+  background-color: #004d00; /* Hijau terang untuk area luar konten */
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+  color: white;
 }
   </style>
 </head>
