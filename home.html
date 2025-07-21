@@ -838,21 +838,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     
           const carousel = document.querySelector('.flash-carousel');
-  const items = document.querySelectorAll('.flash-carousel .promo-link');
+  const itemWidth = carousel.querySelector('.promo-link').offsetWidth + 12; // 12 = gap antar item
   let index = 0;
   let autoScroll;
 
   function scrollToItem(i) {
-    if (items[i]) {
-      items[i].scrollIntoView({ behavior: 'smooth', inline: 'start' });
-    }
+    carousel.scrollTo({
+      left: i * itemWidth,
+      behavior: 'smooth'
+    });
   }
 
   function startAutoScroll() {
     autoScroll = setInterval(() => {
-      index = (index + 1) % items.length;
+      index = (index + 1) % carousel.querySelectorAll('.promo-link').length;
       scrollToItem(index);
-    }, 5000); // 5 detik
+    }, 5000);
   }
 
   function resetAutoScroll() {
@@ -860,12 +861,13 @@ document.addEventListener('DOMContentLoaded', () => {
     startAutoScroll();
   }
 
-  // Deteksi manual scroll
+  // Manual scroll trigger reset
   carousel.addEventListener('touchstart', resetAutoScroll);
   carousel.addEventListener('mousedown', resetAutoScroll);
 
-  // Mulai auto scroll saat load
+  // Start scroll on load
   startAutoScroll();
+
 
 
   </script>
