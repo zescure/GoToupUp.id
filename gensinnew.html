@@ -328,191 +328,167 @@
     </div>
   </div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', ()=> {
-      const nominalCards = document.querySelectorAll('.nominal-card');
-      const paymentCards = document.querySelectorAll('.payment-card');
-      const vaCards = [
-        document.getElementById('vaBRICard'),
-        document.getElementById('vaBNICard'),
-        document.getElementById('vaMandiriCard')
-      ];
-      const qrSection = document.getElementById('qrSection');
-      const vaSection = document.getElementById('vaSection');
-      const vaBankName = document.getElementById('vaBankName');
-      const vaNumber   = document.getElementById('vaNumber');
+<script type="module">
+  import { auth, db } from './firebase-config.js';
+  import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+  import { collection, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-      // mapping VA → nomor rekening
-      const vaData = {
-        VA_BRI:     { name: 'Bank BRI Virtual Account',     number: '5790-8569-7747-768' },
-        VA_BNI:     { name: 'Bank BNI Virtual Account',     number: '9888-3081-0216-1147' },
-        VA_MANDIRI: { name: 'Bank Mandiri Virtual Account', number: '8889-8285-6977-4776-8' }
-      };
+  document.addEventListener('DOMContentLoaded', ()=> {
+    const nominalCards = document.querySelectorAll('.nominal-card');
+    const paymentCards = document.querySelectorAll('.payment-card');
+    const vaCards = [
+      document.getElementById('vaBRICard'),
+      document.getElementById('vaBNICard'),
+      document.getElementById('vaMandiriCard')
+    ];
+    const qrSection = document.getElementById('qrSection');
+    const vaSection = document.getElementById('vaSection');
+    const vaBankName = document.getElementById('vaBankName');
+    const vaNumber   = document.getElementById('vaNumber');
 
-      // pilih nominal
-      nominalCards.forEach(c=>{
-        c.onclick = ()=>{
-          nominalCards.forEach(x=> x.classList.remove('selected'));
-          c.classList.add('selected');
-          const price = parseFloat(c.dataset.price);
-          // disable semua VA kalau < 10000
-          vaCards.forEach(vc=>{
-            if(price < 10000) {
-              vc.classList.add('disabled');
-              vc.classList.remove('selected');
-            } else {
-              vc.classList.remove('disabled');
-            }
-          });
-        };
-      });
+    const vaData = {
+      VA_BRI:     { name: 'Bank BRI Virtual Account',     number: '5790-8569-7747-768' },
+      VA_BNI:     { name: 'Bank BNI Virtual Account',     number: '9888-3081-0216-1147' },
+      VA_MANDIRI: { name: 'Bank Mandiri Virtual Account', number: '8889-8285-6977-4776-8' }
+    };
 
-      // pilih payment
-      paymentCards.forEach(c=>{
-        c.onclick = ()=>{
-          if(c.classList.contains('disabled')) return;
-          paymentCards.forEach(x=> x.classList.remove('selected'));
-          c.classList.add('selected');
-        };
-      });
-
-      // Checkout → modal
-      document.getElementById('btnCheckout').onclick = ()=>{
-        const idSel = document.getElementById('userId').value.trim();
-        const srvSel= document.getElementById('server').value.trim();
-        const waSel = document.getElementById('whatsapp').value.trim();
-        if(!idSel||!srvSel||!waSel) return alert('Lengkapi data dulu ya.');
-
-        const nomSel = document.querySelector('.nominal-card.selected');
-        if(!nomSel) return alert('Pilih nominal dulu ya.');
-        const paySel = document.querySelector('.payment-card.selected');
-        if(!paySel) return alert('Pilih metode pembayaran dulu ya.');
-
-        const price     = parseFloat(nomSel.dataset.price);
-        const flatAdmin = parseFloat(paySel.dataset.admin);
-        const percent   = parseFloat(paySel.dataset.percent||0)/100;
-        const adminCalc = Math.ceil(flatAdmin + price*percent);
-        const total     = price + adminCalc;
-
-        // isi teks modal
-        document.getElementById('outId').textContent    = `${idSel} (Srv: ${srvSel})`;
-        document.getElementById('outDiam').textContent  = nomSel.dataset.value;
-        document.getElementById('outPrice').textContent = price.toLocaleString('id');
-        document.getElementById('outAdmin').textContent = adminCalc.toLocaleString('id');
-        document.getElementById('outTotal').textContent = total.toLocaleString('id');
-
-        // show QR atau VA panel
-        if(paySel.dataset.value.startsWith('VA_')) {
-          // VA
-          qrSection.style.display = 'none';
-          vaSection.style.display = 'block';
-          const data = vaData[paySel.dataset.value];
-          vaBankName.textContent = data.name;
-          vaNumber.textContent   = data.number;
-        } else {
-          // QR
-          vaSection.style.display = 'none';
-          qrSection.style.display = 'block';
-          const qr = document.getElementById('qrCode');
-          switch(paySel.dataset.value) {
-            case 'DANA':  qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png'; break;
-            case 'SHOPEE': qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjL8xRyiYxTJJCxDisZZJqBpMuBMpq1K7Z_uoTTb1fo-YRCCn4S3UXvYHG3eqjAF8ZFy1ouRKa4S4hHQfbAi_VBlKUWt8nV7ThT8ZzFB_Bw5jrn8stCQ_5oK15Pxd9DjsGUmG7TEmeuW5XApanfO_DeYcWNoMsmhe3uk9_r3zHDvqmVTOTdHXRXL7Y2wPLJ/s320/20250206_101339.jpg'; break;
-            case 'GOPAY': qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgrpYxkkJADDVoGJ0YI-UfcK2roO_JWFbzeVoFiMkKGBvFoze_096vm00gNoFkPMaMGnU0KoWvjpFScv4eP41WgRuYA7kF-UBCmw2lq6hyPkrfoxzi9oFWVoIxjZ1wCb2HIvhYKkCE2DYwixXiJGR-9xsdoEv3z9EdyKaYOa0aKMuImxXLTqpvlf6GkhQ/s320/IMG_1040.jpeg'; break;
-            case 'QRIS': qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjL8xRyiYxTJJCxDisZZJqBpMuBMpq1K7Z_uoTTb1fo-YRCCn4S3UXvYHG3eqjAF8ZFy1ouRKa4S4hHQfbAi_VBlKUWt8nV7ThT8ZzFB_Bw5jrn8stCQ_5oK15Pxd9DjsGUmG7TEmeuW5XApanfO_DeYcWNoMsmhe3uk9_r3zHDvqmVTOTdHXRXL7Y2wPLJ/s320/20250206_101339.jpg'; break;
-            case 'QRISCODE':  qr.src = 'qris-placeholder.png'; break; 
+    nominalCards.forEach(c=>{
+      c.onclick = ()=>{
+        nominalCards.forEach(x=> x.classList.remove('selected'));
+        c.classList.add('selected');
+        const price = parseFloat(c.dataset.price);
+        vaCards.forEach(vc=>{
+          if(price < 10000) {
+            vc.classList.add('disabled');
+            vc.classList.remove('selected');
+          } else {
+            vc.classList.remove('disabled');
           }
+        });
+      };
+    });
+
+    paymentCards.forEach(c=>{
+      c.onclick = ()=>{
+        if(c.classList.contains('disabled')) return;
+        paymentCards.forEach(x=> x.classList.remove('selected'));
+        c.classList.add('selected');
+      };
+    });
+
+    document.getElementById('btnCheckout').onclick = ()=>{
+      const idSel = document.getElementById('userId').value.trim();
+      const srvSel= document.getElementById('server').value.trim();
+      const waSel = document.getElementById('whatsapp').value.trim();
+      if(!idSel||!srvSel||!waSel) return alert('Lengkapi data dulu ya.');
+
+      const nomSel = document.querySelector('.nominal-card.selected');
+      if(!nomSel) return alert('Pilih nominal dulu ya.');
+      const paySel = document.querySelector('.payment-card.selected');
+      if(!paySel) return alert('Pilih metode pembayaran dulu ya.');
+
+      const price     = parseFloat(nomSel.dataset.price);
+      const flatAdmin = parseFloat(paySel.dataset.admin);
+      const percent   = parseFloat(paySel.dataset.percent||0)/100;
+      const adminCalc = Math.ceil(flatAdmin + price*percent);
+      const total     = price + adminCalc;
+
+      document.getElementById('outId').textContent    = `${idSel} (Srv: ${srvSel})`;
+      document.getElementById('outDiam').textContent  = nomSel.dataset.value;
+      document.getElementById('outPrice').textContent = price.toLocaleString('id');
+      document.getElementById('outAdmin').textContent = adminCalc.toLocaleString('id');
+      document.getElementById('outTotal').textContent = total.toLocaleString('id');
+
+      if(paySel.dataset.value.startsWith('VA_')) {
+        qrSection.style.display = 'none';
+        vaSection.style.display = 'block';
+        const data = vaData[paySel.dataset.value];
+        vaBankName.textContent = data.name;
+        vaNumber.textContent   = data.number;
+      } else {
+        vaSection.style.display = 'none';
+        qrSection.style.display = 'block';
+        const qr = document.getElementById('qrCode');
+        switch(paySel.dataset.value) {
+          case 'DANA':  qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png'; break;
+          case 'SHOPEE': qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjL8xRyiYxTJJCxDisZZJqBpMuBMpq1K7Z_uoTTb1fo-YRCCn4S3UXvYHG3eqjAF8ZFy1ouRKa4S4hHQfbAi_VBlKUWt8nV7ThT8ZzFB_Bw5jrn8stCQ_5oK15Pxd9DjsGUmG7TEmeuW5XApanfO_DeYcWNoMsmhe3uk9_r3zHDvqmVTOTdHXRXL7Y2wPLJ/s320/20250206_101339.jpg'; break;
+          case 'GOPAY': qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgrpYxkkJADDVoGJ0YI-UfcK2roO_JWFbzeVoFiMkKGBvFoze_096vm00gNoFkPMaMGnU0KoWvjpFScv4eP41WgRuYA7kF-UBCmw2lq6hyPkrfoxzi9oFWVoIxjZ1wCb2HIvhYKkCE2DYwixXiJGR-9xsdoEv3z9EdyKaYOa0aKMuImxXLTqpvlf6GkhQ/s320/IMG_1040.jpeg'; break;
+          case 'QRIS': qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjL8xRyiYxTJJCxDisZZJqBpMuBMpq1K7Z_uoTTb1fo-YRCCn4S3UXvYHG3eqjAF8ZFy1ouRKa4S4hHQfbAi_VBlKUWt8nV7ThT8ZzFB_Bw5jrn8stCQ_5oK15Pxd9DjsGUmG7TEmeuW5XApanfO_DeYcWNoMsmhe3uk9_r3zHDvqmVTOTdHXRXL7Y2wPLJ/s320/20250206_101339.jpg'; break;
+          case 'QRISCODE':  qr.src = 'qris-placeholder.png'; break; 
         }
+      }
 
-        document.getElementById('modalOverlay').style.display = 'flex';
+      document.getElementById('modalOverlay').style.display = 'flex';
+
+      // Countdown 14 menit
+      let bayarSebelum = document.getElementById('bayarSebelum');
+      if (!bayarSebelum) {
+        bayarSebelum = document.createElement('span');
+        bayarSebelum.id = 'bayarSebelum';
+        bayarSebelum.style = 'margin-left:10px; font-size:12px; font-weight:bold;';
+        document.querySelector('.modal-body p.total').appendChild(bayarSebelum);
+      }
+
+      let sisaDetik = 14 * 60;
+      const updateCountdown = () => {
+        if (sisaDetik <= 0) {
+          bayarSebelum.innerHTML = `<span style="color:red">⏰ Waktu habis!</span>`;
+          clearInterval(countdownInterval);
+          return;
+        }
+        const m = Math.floor(sisaDetik / 60).toString().padStart(2, '0');
+        const d = (sisaDetik % 60).toString().padStart(2, '0');
+        bayarSebelum.innerHTML = `(Bayar sebelum <span style="color:red">${m}:${d}</span>)`;
+        sisaDetik--;
       };
-
-      // tutup modal
-      document.getElementById('btnClose').onclick = ()=>{
-        document.getElementById('modalOverlay').style.display = 'none';
-      };
-
-      // Sudah Bayar → WA
-      document.getElementById('btnDone').onclick = ()=>{
-        const idVal   = document.getElementById('userId').value.trim();
-        const srvVal  = document.getElementById('server').value.trim();
-        const waVal   = document.getElementById('whatsapp').value.trim();
-        const nomSel  = document.querySelector('.nominal-card.selected');
-        const paySel  = document.querySelector('.payment-card.selected');
-        const priceVal= parseFloat(nomSel.dataset.price);
-        const flat    = parseFloat(paySel.dataset.admin);
-        const percent = parseFloat(paySel.dataset.percent||0)/100;
-        const adminVal= Math.ceil(flat+priceVal*percent);
-        const totalVal= priceVal+adminVal;
-
-        const msg =
-          `Saya sudah order Genshin Impact *${nomSel.dataset.value} Genesis Crystals*`+
-          `\nID: ${idVal} (Server: ${srvVal})`+
-          `\nNo. WA: ${waVal}`+
-          `\nMetode: ${paySel.dataset.value.replace('_',' ')} VA`+
-          `\nTotal bayar: Rp ${totalVal.toLocaleString('id')}`;
-        window.open(`https://wa.me/6285697747768?text=${encodeURIComponent(msg)}`, '_blank');
-      };
-
-
-// Firebase import
-import { auth, db } from './firebase-config.js';
-import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { collection, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-
-// Simpan histori topup
-onAuthStateChanged(auth, async (user) => {
-  if (!user) return;
-
-  try {
-    const ref = doc(collection(db, "topupHistory", user.uid, "records"));
-    await setDoc(ref, {
-      id: idVal,
-      server: srvVal,
-      whatsapp: waVal,
-      produk: nomSel.dataset.value,
-      metode: paySel.dataset.value,
-      jumlah: priceVal,
-      admin: adminVal,
-      total: totalVal,
-      waktu: new Date(),
-      status: "Menunggu Konfirmasi"
+      updateCountdown();
+      const countdownInterval = setInterval(updateCountdown, 1000);
     });
-    console.log("Histori topup berhasil disimpan.");
-  } catch (err) {
-    console.error("Gagal simpan histori:", err);
-  }
 
-    
+    // Sudah Bayar → WA + Simpan Histori
+    document.getElementById('btnDone').onclick = ()=>{
+      const idVal   = document.getElementById('userId').value.trim();
+      const srvVal  = document.getElementById('server').value.trim();
+      const waVal   = document.getElementById('whatsapp').value.trim();
+      const nomSel  = document.querySelector('.nominal-card.selected');
+      const paySel  = document.querySelector('.payment-card.selected');
+      const priceVal= parseFloat(nomSel.dataset.price);
+      const flat    = parseFloat(paySel.dataset.admin);
+      const percent = parseFloat(paySel.dataset.percent||0)/100;
+      const adminVal= Math.ceil(flat+priceVal*percent);
+      const totalVal= priceVal+adminVal;
 
-      // Tambahkan elemen untuk countdown
-let bayarSebelum = document.getElementById('bayarSebelum');
-if (!bayarSebelum) {
-  bayarSebelum = document.createElement('span');
-  bayarSebelum.id = 'bayarSebelum';
-  bayarSebelum.style = 'margin-left:10px; font-size:12px; font-weight:bold;';
-  document.querySelector('.modal-body p.total').appendChild(bayarSebelum);
-}
+      const msg =
+        `Saya sudah order Genshin Impact *${nomSel.dataset.value} Genesis Crystals*`+
+        `\nID: ${idVal} (Server: ${srvVal})`+
+        `\nNo. WA: ${waVal}`+
+        `\nMetode: ${paySel.dataset.value.replace('_',' ')} VA`+
+        `\nTotal bayar: Rp ${totalVal.toLocaleString('id')}`;
+      window.open(`https://wa.me/6285697747768?text=${encodeURIComponent(msg)}`, '_blank');
 
-// Hitungan mundur 14 menit (840 detik)
-let sisaDetik = 14 * 60;
-
-// Fungsi untuk update waktu tiap detik
-const updateCountdown = () => {
-  if (sisaDetik <= 0) {
-    bayarSebelum.innerHTML = `<span style="color:red">⏰ Waktu habis!</span>`;
-    clearInterval(countdownInterval);
-    return;
-  }
-
-  const m = Math.floor(sisaDetik / 60).toString().padStart(2, '0');
-  const d = (sisaDetik % 60).toString().padStart(2, '0');
-  bayarSebelum.innerHTML = `(Bayar sebelum <span style="color:red">${m}:${d}</span>)`;
-  sisaDetik--;
-};
-
-// Start hitungan mundur
-updateCountdown(); // tampilkan langsung waktu awal
-const countdownInterval = setInterval(updateCountdown, 1000);
-    });
-  </script>
+      // Simpan histori
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) return;
+        try {
+          const ref = doc(collection(db, "topupHistory", user.uid, "records"));
+          await setDoc(ref, {
+            id: idVal,
+            server: srvVal,
+            whatsapp: waVal,
+            produk: nomSel.dataset.value,
+            metode: paySel.dataset.value.replace('_',' '),
+            jumlah: priceVal,
+            admin: adminVal,
+            total: totalVal,
+            waktu: new Date(),
+            status: "Menunggu Konfirmasi"
+          });
+          console.log("Histori topup berhasil disimpan.");
+        } catch (err) {
+          console.error("Gagal simpan histori:", err);
+        }
+      });
+    };
+  });
+</script>
 </body>
