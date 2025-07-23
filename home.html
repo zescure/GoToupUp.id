@@ -431,12 +431,16 @@ html {
 
   <!-- HEADER -->
   <header>
-    <button class="menu-btn">&#9776;</button>
-    <div class="logo">ZESTORE.id</div>
-    <button class="login-btn" onclick="window.location.href='https://zestore.netlify.app/register-login'">
-  Login
-</button>
-  </header>
+  <button class="menu-btn">&#9776;</button>
+  <div class="logo">ZESTORE.id</div>
+  <div class="account-area">
+    <button class="login-btn" id="loginBtn" onclick="window.location.href='https://zestore.netlify.app/register-login'">Login</button>
+    <div id="accountInfo" style="display: none;">
+      👤 <span id="usernameDisplay"></span> | 
+      <a href="#" id="logoutBtn" style="color: red;">Logout</a>
+    </div>
+  </div>
+</header>
 
   <!-- MOBILE MENU -->
   <nav class="mobile-menu" id="mobileMenu">
@@ -974,7 +978,26 @@ document.addEventListener('DOMContentLoaded', () => {
   startAutoScroll();
 
 
+ window.addEventListener("DOMContentLoaded", () => {
+    const user = localStorage.getItem("username");
+    const loginBtn = document.getElementById("loginBtn");
+    const accountInfo = document.getElementById("accountInfo");
+    const usernameDisplay = document.getElementById("usernameDisplay");
 
+    if (user) {
+      loginBtn.style.display = "none";
+      accountInfo.style.display = "inline-block";
+      usernameDisplay.textContent = user;
+    }
+
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem("username");
+        location.href = "/register-login";
+      });
+    }
+  });
   </script>
 </body>
 </html>
