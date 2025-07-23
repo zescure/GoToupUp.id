@@ -843,182 +843,139 @@ html {
   </footer>
 
   <script>
- import { auth } from './firebase-config.js';
-import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-
-document.addEventListener("DOMContentLoaded", () => {
-  // 🔹 Toggle mobile menu
-  const btn = document.querySelector('.menu-btn');
-  const menu = document.getElementById('mobileMenu');
-  if (btn && menu) {
+ // Toggle mobile menu
+    const btn = document.querySelector('.menu-btn');
+    const menu = document.getElementById('mobileMenu');
     btn.addEventListener('click', () => menu.classList.toggle('open'));
-  }
 
-  // 🔹 Manual slider
-  const slides = document.getElementById('slides');
-  const prevBtn = document.getElementById('prevBtn');
-  const nextBtn = document.getElementById('nextBtn');
-  if (slides && prevBtn && nextBtn) {
+    // Manual slider
+    const slides = document.getElementById('slides');
     const total = slides.children.length;
     let idx = 0;
-    prevBtn.addEventListener('click', () => {
+    document.getElementById('prevBtn').addEventListener('click', () => {
       idx = (idx - 1 + total) % total;
       slides.style.transform = `translateX(-${idx * 100}vw)`;
     });
-    nextBtn.addEventListener('click', () => {
+    document.getElementById('nextBtn').addEventListener('click', () => {
       idx = (idx + 1) % total;
       slides.style.transform = `translateX(-${idx * 100}vw)`;
     });
-  }
-
-  // 🔹 Hover log (debug)
-  document.querySelectorAll('.game-card').forEach(card => {
-    card.addEventListener('mouseenter', () => {
-      const overlay = card.querySelector('.game-overlay');
-      if (overlay) {
-        console.log('Hover di:', overlay.textContent);
-      }
-    });
+    document.querySelectorAll('.game-card').forEach(card=>{
+  card.addEventListener('mouseenter', ()=> {
+    console.log('Hover di:', card.querySelector('.game-overlay').textContent);
   });
+});
 
-  // 🔹 Game Search Suggest
+document.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById('inputGameSearch');
   const shortcutList = document.getElementById('shortcutList');
-  if (input && shortcutList) {
-    const games = [
-      {
-        name: "Mobile Legends",
-        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4sqBxABspT2k5eGkvweih9PbVdcNMIRHUBZRWk78l-nCeiM9TjKZ6Wfca&s=10",
-        url: "mlbbnew.html"
-      },
-      {
-        name: "Free Fire",
-        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQthzbcsOjsCsykuN4uk6-pzsnZLoRzcg-pfTpZL-nVYKgcK7eYinXZx78&s=10",
-        url: "freefiremax.html"
-      },
-      {
-        name: "Call of Duty Mobile",
-        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCTrkIfW1COaYXrlEnZAyEikcjQs9SFM6SMw&usqp=CAU",
-        url: "codm.html"
-      },
-      {
-        name: "Genshin Impact",
-        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS65SXg_FKzvzKsAFUzQvhur6DD9F-HANwHjA&usqp=CAU",
-        url: "gensinnew.html"
-      },
-      {
-        name: "Astra Credit Company | Sedaya Finance",
-        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS3s59mF7qr1oxeN0i9DWf1TfoF3Ct20Do_GQmrnq4qaOg5pHv3R2Er5vAc&s=10",
-        url: "https://buylink.id/Zestore.zcn/share?product=FNASTRA&category=finance"
-      },
-      {
-        name: "Bpjs Kesehatan",
-        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQHpQ7luo95IF-3RIUBYGPdFyKG-kQWOibyw&s",
-        url: "https://buylink.id/Zestore.zcn/share?product=BPJS&category=bpjs"
-      }
-    ];
 
-    const renderList = (filter = '') => {
-      if (filter.trim() === '') {
-        shortcutList.innerHTML = `<div class="promo-msg">Cari game, Voucher, dan lainnya paling murah cuma di <b>Zestore</b></div>`;
-        shortcutList.style.display = 'block';
-        return;
-      }
+  const games = [
+     // Game List
+    {
+      name: "Mobile Legends",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4sqBxABspT2k5eGkvweih9PbVdcNMIRHUBZRWk78l-nCeiM9TjKZ6Wfca&s=10",
+      url: "mlbbnew.html"
+    },
+    {
+      name: "Free Fire",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQthzbcsOjsCsykuN4uk6-pzsnZLoRzcg-pfTpZL-nVYKgcK7eYinXZx78&s=10",
+      url: "freefiremax.html"
+    },
+    {
+      name: "Call of Duty Mobile",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCTrkIfW1COaYXrlEnZAyEikcjQs9SFM6SMw&usqp=CAU",
+      url: "codm.html"
+    },
+    {
+      name: "Genshin Impact",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS65SXg_FKzvzKsAFUzQvhur6DD9F-HANwHjA&usqp=CAU",
+      url: "gensinnew.html"
+    },
 
-      const filtered = games.filter(g =>
-        g.name.toLowerCase().includes(filter.toLowerCase())
-      );
+     // Tagihan list
+    {
+      name: "Astra Credit Company | Sedaya Finance",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS3s59mF7qr1oxeN0i9DWf1TfoF3Ct20Do_GQmrnq4qaOg5pHv3R2Er5vAc&s=10",
+      url: "https://buylink.id/Zestore.zcn/share?product=FNASTRA&category=finance"
+    },
+    {
+      name: "Bpjs Kesehatan",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQHpQ7luo95IF-3RIUBYGPdFyKG-kQWOibyw&s",
+      url: "https://buylink.id/Zestore.zcn/share?product=BPJS&category=bpjs"
+    }
+    // akhir penutup list gaboleh pake tanda koma
+  ];
 
-      if (filtered.length === 0) {
-        shortcutList.innerHTML = `<div style="padding:10px; color:#ccc;">Tidak ditemukan</div>`;
-      } else {
-        shortcutList.innerHTML = filtered.map(g => `
-          <a href="${g.url}" class="shortcut-item">
-            <img src="${g.image}" alt="${g.name}">
-            <span>${g.name}</span>
-          </a>
-        `).join('');
-      }
-
+  const renderList = (filter = '') => {
+    if (filter.trim() === '') {
+      shortcutList.innerHTML = `<div class="promo-msg">Cari game, Voucher, dan lainnya paling murah cuma di <b>Zestore</b></div>`;
       shortcutList.style.display = 'block';
-    };
-
-    input.addEventListener('focus', () => renderList(input.value));
-    input.addEventListener('input', () => renderList(input.value));
-    input.addEventListener('blur', () => {
-      setTimeout(() => shortcutList.style.display = 'none', 200);
-    });
-  }
-
-  // 🔹 Carousel
-  const carousel = document.querySelector('.flash-carousel');
-  if (carousel) {
-    const promoLinks = carousel.querySelectorAll('.promo-link');
-    if (promoLinks.length > 0) {
-      const itemWidth = promoLinks[0].offsetWidth + 12;
-      let index = 0;
-      let autoScroll;
-
-      function scrollToItem(i) {
-        carousel.scrollTo({
-          left: i * itemWidth,
-          behavior: 'smooth'
-        });
-      }
-
-      function startAutoScroll() {
-        autoScroll = setInterval(() => {
-          index = (index + 1) % promoLinks.length;
-          scrollToItem(index);
-        }, 5000);
-      }
-
-      function resetAutoScroll() {
-        clearInterval(autoScroll);
-        startAutoScroll();
-      }
-
-      carousel.addEventListener('touchstart', resetAutoScroll);
-      carousel.addEventListener('mousedown', resetAutoScroll);
-
-      startAutoScroll();
+      return;
     }
-  }
 
-  // 🔹 Firebase Auth Handling
-  const loginBtn = document.getElementById("loginBtn");
-  const accountInfo = document.getElementById("accountInfo");
-  const usernameDisplay = document.getElementById("usernameDisplay");
-  const logoutBtn = document.getElementById("logoutBtn");
+    const filtered = games.filter(g =>
+      g.name.toLowerCase().includes(filter.toLowerCase())
+    );
 
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      if (loginBtn) loginBtn.style.display = "none";
-      if (accountInfo) accountInfo.style.display = "inline-block";
-      if (usernameDisplay) usernameDisplay.textContent = user.email;
-
-      if (!window.location.href.includes("info-akun")) {
-        window.location.href = "https://zestore.netlify.app/info-akun";
-      }
+    if (filtered.length === 0) {
+      shortcutList.innerHTML = `<div style="padding:10px; color:#ccc;">Tidak ditemukan</div>`;
     } else {
-      if (loginBtn) loginBtn.style.display = "inline-block";
-      if (accountInfo) accountInfo.style.display = "none";
+      shortcutList.innerHTML = filtered.map(g => `
+        <a href="${g.url}" class="shortcut-item">
+          <img src="${g.image}" alt="${g.name}">
+          <span>${g.name}</span>
+        </a>
+      `).join('');
     }
+
+    shortcutList.style.display = 'block';
+  };
+
+  input.addEventListener('focus', () => {
+    renderList(input.value);
   });
 
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      signOut(auth)
-        .then(() => {
-          window.location.href = "/register-login";
-        })
-        .catch((error) => {
-          alert("Gagal logout: " + error.message);
-        });
+  input.addEventListener('input', () => {
+    renderList(input.value);
+  });
+
+  input.addEventListener('blur', () => {
+    setTimeout(() => shortcutList.style.display = 'none', 200);
+  });
+});
+
+    
+          const carousel = document.querySelector('.flash-carousel');
+  const itemWidth = carousel.querySelector('.promo-link').offsetWidth + 12; // 12 = gap antar item
+  let index = 0;
+  let autoScroll;
+
+  function scrollToItem(i) {
+    carousel.scrollTo({
+      left: i * itemWidth,
+      behavior: 'smooth'
     });
   }
-});
+
+  function startAutoScroll() {
+    autoScroll = setInterval(() => {
+      index = (index + 1) % carousel.querySelectorAll('.promo-link').length;
+      scrollToItem(index);
+    }, 5000);
+  }
+
+  function resetAutoScroll() {
+    clearInterval(autoScroll);
+    startAutoScroll();
+  }
+
+  // Manual scroll trigger reset
+  carousel.addEventListener('touchstart', resetAutoScroll);
+  carousel.addEventListener('mousedown', resetAutoScroll);
+
+  // Start scroll on load
+  startAutoScroll();
 
     
   </script>
