@@ -440,45 +440,44 @@
       };
 
       // Sudah Bayar → WA
-      document.getElementById('btnDone').onclick = async () => {
-  const idVal    = document.getElementById('userId').value.trim();
-  const srvVal   = document.getElementById('server').value.trim();
-  const waVal    = document.getElementById('whatsapp').value.trim();
-  const nomSel   = document.querySelector('.nominal-card.selected');
-  const paySel   = document.querySelector('.payment-card.selected');
-  const priceVal = parseFloat(nomSel.dataset.price);
-  const flat     = parseFloat(paySel.dataset.admin);
-  const percent  = parseFloat(paySel.dataset.percent || 0) / 100;
-  const adminVal = Math.ceil(flat + priceVal * percent);
-  const totalVal = priceVal + adminVal;
+      document.getElementById('btnDone').onclick = () => {
+  const idVal   = document.getElementById('userId').value.trim();
+  const srvVal  = document.getElementById('server').value.trim();
+  const waVal   = document.getElementById('whatsapp').value.trim();
+  const nomSel  = document.querySelector('.nominal-card.selected');
+  const paySel  = document.querySelector('.payment-card.selected');
+  const priceVal= parseFloat(nomSel.dataset.price);
+  const flat    = parseFloat(paySel.dataset.admin);
+  const percent = parseFloat(paySel.dataset.percent || 0) / 100;
+  const adminVal= Math.ceil(flat + priceVal * percent);
+  const totalVal= priceVal + adminVal;
 
+  // Simpan ke Firebase Firestore
+  firebase.firestore().collection("histori-topup").add({
+    userId: idVal,
+    server: srvVal,
+    whatsapp: waVal,
+    nominal: nomSel.dataset.value,
+    metode: paySel.dataset.value.replace('_',' '),
+    harga: totalVal,
+    waktu: new Date(),
+    status: "Menunggu Konfirmasi"
+  })
+  .then(() => {
+    console.log("✅ Data berhasil disimpan ke histori Firestore");
+  })
+  .catch((error) => {
+    console.error("❌ Gagal menyimpan ke Firestore: ", error);
+  });
+
+  // Kirim ke WhatsApp
   const msg =
     `Saya sudah order Genshin Impact *${nomSel.dataset.value} Genesis Crystals*` +
     `\nID: ${idVal} (Server: ${srvVal})` +
     `\nNo. WA: ${waVal}` +
-    `\nMetode: ${paySel.dataset.value.replace('_', ' ')} VA` +
+    `\nMetode: ${paySel.dataset.value.replace('_',' ')} VA` +
     `\nTotal bayar: Rp ${totalVal.toLocaleString('id')}`;
-
-  // Arahkan ke WhatsApp
   window.open(`https://wa.me/6285697747768?text=${encodeURIComponent(msg)}`, '_blank');
-
-  // Simpan ke Firebase Firestore tanpa auth
-  try {
-    const db = firebase.firestore();
-    await db.collection("histori").add({
-      game: "Genshin Impact",
-      nominal: nomSel.dataset.value,
-      userId: idVal,
-      server: srvVal,
-      whatsapp: waVal,
-      metode: paySel.dataset.value,
-      total: totalVal,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      status: "Menunggu Pembayaran"
-    });
-  } catch (err) {
-    console.error("Gagal simpan histori:", err);
-  }
 };
 
       // Tambahkan elemen untuk countdown
