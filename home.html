@@ -990,34 +990,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Login/Register
   const loginBtn = document.getElementById("loginBtn");
-  const accountInfo = document.getElementById("accountInfo");
-  const usernameDisplay = document.getElementById("usernameDisplay");
-  const logoutBtn = document.getElementById("logoutBtn");
+const accountInfo = document.getElementById("accountInfo");
+const usernameDisplay = document.getElementById("usernameDisplay");
+const logoutBtn = document.getElementById("logoutBtn");
 
-  function updateLoginState() {
-    const username = localStorage.getItem("username");
-    if (username) {
+// Ambil langsung dari Firebase
+function updateLoginState() {
+  firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
       loginBtn.style.display = "none";
       accountInfo.style.display = "block";
-      usernameDisplay.textContent = username;
+      usernameDisplay.textContent = user.displayName || user.email;
     } else {
       loginBtn.style.display = "inline-block";
       accountInfo.style.display = "none";
       usernameDisplay.textContent = "";
     }
-  }
+  });
+}
 
-  loginBtn?.addEventListener("click", () => {
+loginBtn?.addEventListener("click", () => {
   window.location.href = 'https://zestore.netlify.app/register-login';
 });
 
-  logoutBtn?.addEventListener("click", () => {
-    localStorage.removeItem("username");
+logoutBtn?.addEventListener("click", () => {
+  firebase.auth().signOut().then(() => {
     updateLoginState();
   });
-
-  updateLoginState();
 });
+
+updateLoginState();
 
     
   </script>
