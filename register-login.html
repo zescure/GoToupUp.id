@@ -105,7 +105,8 @@
   <button class="btn" id="submitBtn">Login</button>
 
   <div class="toggle">
-    <span id="toggleText">Belum punya akun? <a id="toggleLink">Register</a></span>
+    <span id="toggleText">Belum punya akun?</span>
+    <a id="toggleLink">Register</a>
   </div>
 
   <div class="alert" id="alertText"></div>
@@ -113,12 +114,16 @@
 
 <script type="module">
   import { auth } from './firebase-config.js';
-  import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import {
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
   const email = document.getElementById('email');
   const password = document.getElementById('password');
   const submitBtn = document.getElementById('submitBtn');
   const toggleLink = document.getElementById('toggleLink');
+  const toggleText = document.getElementById('toggleText');
   const formTitle = document.getElementById('form-title');
   const alertText = document.getElementById('alertText');
 
@@ -128,15 +133,12 @@
     isLogin = !isLogin;
     formTitle.textContent = isLogin ? 'Login' : 'Register';
     submitBtn.textContent = isLogin ? 'Login' : 'Register';
+    toggleText.textContent = isLogin ? 'Belum punya akun?' : 'Sudah punya akun?';
     toggleLink.textContent = isLogin ? 'Register' : 'Login';
-    document.getElementById('toggleText').innerHTML = isLogin
-      ? 'Belum punya akun? <a id="toggleLink">Register</a>'
-      : 'Sudah punya akun? <a id="toggleLink">Login</a>';
   });
 
   submitBtn.addEventListener('click', async () => {
     alertText.textContent = '';
-
     try {
       if (isLogin) {
         await signInWithEmailAndPassword(auth, email.value, password.value);
