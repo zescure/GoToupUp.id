@@ -424,6 +424,9 @@ html {
   color: inherit;
 }
 
+.hidden {
+  display: none;
+}
 
   </style>
 </head>
@@ -843,25 +846,25 @@ html {
   </footer>
 
   <script>
- // Toggle mobile menu
-    const btn = document.querySelector('.menu-btn');
-    const menu = document.getElementById('mobileMenu');
-    btn.addEventListener('click', () => menu.classList.toggle('open'));
+// Toggle mobile menu
+const btn = document.querySelector('.menu-btn');
+const menu = document.getElementById('mobileMenu');
+btn.addEventListener('click', () => menu.classList.toggle('open'));
 
-    // Manual slider
-    const slides = document.getElementById('slides');
-    const total = slides.children.length;
-    let idx = 0;
-    document.getElementById('prevBtn').addEventListener('click', () => {
-      idx = (idx - 1 + total) % total;
-      slides.style.transform = `translateX(-${idx * 100}vw)`;
-    });
-    document.getElementById('nextBtn').addEventListener('click', () => {
-      idx = (idx + 1) % total;
-      slides.style.transform = `translateX(-${idx * 100}vw)`;
-    });
-    document.querySelectorAll('.game-card').forEach(card=>{
-  card.addEventListener('mouseenter', ()=> {
+// Manual slider
+const slides = document.getElementById('slides');
+const total = slides.children.length;
+let idx = 0;
+document.getElementById('prevBtn').addEventListener('click', () => {
+  idx = (idx - 1 + total) % total;
+  slides.style.transform = `translateX(-${idx * 100}vw)`;
+});
+document.getElementById('nextBtn').addEventListener('click', () => {
+  idx = (idx + 1) % total;
+  slides.style.transform = `translateX(-${idx * 100}vw)`;
+});
+document.querySelectorAll('.game-card').forEach(card => {
+  card.addEventListener('mouseenter', () => {
     console.log('Hover di:', card.querySelector('.game-overlay').textContent);
   });
 });
@@ -871,7 +874,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const shortcutList = document.getElementById('shortcutList');
 
   const games = [
-     // Game List
     {
       name: "Mobile Legends",
       image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4sqBxABspT2k5eGkvweih9PbVdcNMIRHUBZRWk78l-nCeiM9TjKZ6Wfca&s=10",
@@ -892,8 +894,6 @@ document.addEventListener('DOMContentLoaded', () => {
       image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS65SXg_FKzvzKsAFUzQvhur6DD9F-HANwHjA&usqp=CAU",
       url: "gensinnew.html"
     },
-
-     // Tagihan list
     {
       name: "Astra Credit Company | Sedaya Finance",
       image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS3s59mF7qr1oxeN0i9DWf1TfoF3Ct20Do_GQmrnq4qaOg5pHv3R2Er5vAc&s=10",
@@ -904,7 +904,6 @@ document.addEventListener('DOMContentLoaded', () => {
       image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQHpQ7luo95IF-3RIUBYGPdFyKG-kQWOibyw&s",
       url: "https://buylink.id/Zestore.zcn/share?product=BPJS&category=bpjs"
     }
-    // akhir penutup list gaboleh pake tanda koma
   ];
 
   const renderList = (filter = '') => {
@@ -945,37 +944,80 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-    
-          const carousel = document.querySelector('.flash-carousel');
-  const itemWidth = carousel.querySelector('.promo-link').offsetWidth + 12; // 12 = gap antar item
-  let index = 0;
-  let autoScroll;
+const carousel = document.querySelector('.flash-carousel');
+const itemWidth = carousel.querySelector('.promo-link').offsetWidth + 12; // 12 = gap antar item
+let index = 0;
+let autoScroll;
 
-  function scrollToItem(i) {
-    carousel.scrollTo({
-      left: i * itemWidth,
-      behavior: 'smooth'
-    });
-  }
+function scrollToItem(i) {
+  carousel.scrollTo({
+    left: i * itemWidth,
+    behavior: 'smooth'
+  });
+}
 
-  function startAutoScroll() {
-    autoScroll = setInterval(() => {
-      index = (index + 1) % carousel.querySelectorAll('.promo-link').length;
-      scrollToItem(index);
-    }, 5000);
-  }
+function startAutoScroll() {
+  autoScroll = setInterval(() => {
+    index = (index + 1) % carousel.querySelectorAll('.promo-link').length;
+    scrollToItem(index);
+  }, 5000);
+}
 
-  function resetAutoScroll() {
-    clearInterval(autoScroll);
-    startAutoScroll();
-  }
-
-  // Manual scroll trigger reset
-  carousel.addEventListener('touchstart', resetAutoScroll);
-  carousel.addEventListener('mousedown', resetAutoScroll);
-
-  // Start scroll on load
+function resetAutoScroll() {
+  clearInterval(autoScroll);
   startAutoScroll();
+}
+
+carousel.addEventListener('touchstart', resetAutoScroll);
+carousel.addEventListener('mousedown', resetAutoScroll);
+startAutoScroll();
+
+// ==================== LOGIN REGISTER DETECTION =====================
+document.addEventListener("DOMContentLoaded", () => {
+  const loginBtn = document.getElementById("loginBtn");
+  const registerBtn = document.getElementById("registerBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const usernameDisplay = document.getElementById("usernameDisplay");
+
+  function updateLoginState() {
+    const username = localStorage.getItem("username");
+
+    if (username) {
+      loginBtn?.classList.add("hidden");
+      registerBtn?.classList.add("hidden");
+      logoutBtn?.classList.remove("hidden");
+      usernameDisplay && (usernameDisplay.textContent = `Hi, ${username}`);
+    } else {
+      loginBtn?.classList.remove("hidden");
+      registerBtn?.classList.remove("hidden");
+      logoutBtn?.classList.add("hidden");
+      usernameDisplay && (usernameDisplay.textContent = "");
+    }
+  }
+
+  loginBtn?.addEventListener("click", () => {
+    const username = prompt("Masukkan nama pengguna:");
+    if (username) {
+      localStorage.setItem("username", username);
+      updateLoginState();
+    }
+  });
+
+  registerBtn?.addEventListener("click", () => {
+    const username = prompt("Daftar dengan nama pengguna:");
+    if (username) {
+      localStorage.setItem("username", username);
+      updateLoginState();
+    }
+  });
+
+  logoutBtn?.addEventListener("click", () => {
+    localStorage.removeItem("username");
+    updateLoginState();
+  });
+
+  updateLoginState();
+});
 
     
   </script>
