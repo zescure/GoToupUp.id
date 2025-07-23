@@ -988,7 +988,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Login/Register
+ // Login/Register
   const loginBtn = document.getElementById("loginBtn");
   const accountInfo = document.getElementById("accountInfo");
   const usernameDisplay = document.getElementById("usernameDisplay");
@@ -1008,8 +1008,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   loginBtn?.addEventListener("click", () => {
-  window.location.href = 'https://zestore.netlify.app/register-login';
-});
+    const username = prompt("Masukkan nama pengguna:");
+    if (username) {
+      localStorage.setItem("username", username);
+      updateLoginState();
+    } else {
+      window.location.href = 'https://zestore.netlify.app/register-login';
+    }
+  });
 
   logoutBtn?.addEventListener("click", () => {
     localStorage.removeItem("username");
