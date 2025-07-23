@@ -156,40 +156,102 @@
 
 <script type="module">
   import { auth } from './firebase-config.js';
-  import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
-  const displayName = document.getElementById("displayName");
-  const email = document.getElementById("email");
-  const uid = document.getElementById("uid");
-  const phone = document.getElementById("phone");
+const displayName = document.getElementById("displayName");
+const email = document.getElementById("email");
+const uid = document.getElementById("uid");
+const phone = document.getElementById("phone");
 
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      displayName.textContent = localStorage.getItem("username") || user.displayName || "Tidak diketahui";
-      email.textContent = user.email || "Tidak ada";
-      uid.textContent = user.uid;
-      phone.textContent = user.phoneNumber || "Tidak ada";
+let currentEmail = "";
+let generatedOTP = "";
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    const username = localStorage.getItem("username") || user.displayName || "Tidak diketahui";
+    const userEmail = user.email || "Tidak ada";
+    const userPhone = user.phoneNumber || "Tidak ada";
+
+    displayName.textContent = username;
+    email.textContent = userEmail;
+    uid.textContent = user.uid;
+    phone.textContent = userPhone;
+
+    currentEmail = userEmail;
+
+    const phoneSpan = document.getElementById("waPhoneDisplay");
+    const phoneInputSection = document.getElementById("phoneInputSection");
+    const savedPhone = localStorage.getItem("phone_" + currentEmail);
+
+    if (savedPhone) {
+      phoneSpan.textContent = savedPhone;
     } else {
-      window.location.href = "/register-login";
+      phoneSpan.textContent = "Belum diisi";
+      phoneInputSection.style.display = "block";
     }
+
+  } else {
+    window.location.href = "/register-login";
+  }
+});
+
+const logoutAll = () => {
+  signOut(auth).then(() => {
+    localStorage.removeItem("username");
+    window.location.href = "/register-login";
   });
+};
 
-  const logoutAll = () => {
-    signOut(auth).then(() => {
-      localStorage.removeItem("username");
-      window.location.href = "/register-login";
-    });
-  };
+document.getElementById("logoutBtn").addEventListener("click", logoutAll);
+document.getElementById("logoutBtn2").addEventListener("click", logoutAll);
 
-  document.getElementById("logoutBtn").addEventListener("click", logoutAll);
-  document.getElementById("logoutBtn2").addEventListener("click", logoutAll);
+// Toggle menu
+const toggleMenuBtn = document.getElementById("toggleMenu");
+const menuList = document.getElementById("menuList");
+toggleMenuBtn.addEventListener("click", () => {
+  menuList.style.display = menuList.style.display === "flex" ? "none" : "flex";
+});
 
-  // Toggle menu
-  const toggleMenuBtn = document.getElementById("toggleMenu");
-  const menuList = document.getElementById("menuList");
-  toggleMenuBtn.addEventListener("click", () => {
-    menuList.style.display = menuList.style.display === "flex" ? "none" : "flex";
-  });
+// ========== FUNGSI OTP via WA ==========
+window.sendOTP = () => {
+  const phoneInput = document.getElementById("phoneInput").value.trim();
+
+  if (!phoneInput.startsWith("08") || phoneInput.length < 10) {
+    alert("Nomor HP tidak valid.");
+    return;
+  }
+
+  // Simpan sementara & generate OTP
+  sessionStorage.setItem("pendingPhone", phoneInput);
+  generatedOTP = Math.floor(1000 + Math.random() * 9000).toString();
+
+  const message = `
+Halo saya mau melakukan verifikasi akun
+
+Nomor hp: ${phoneInput}
+Email: ${currentEmail}
+Kode otp: ${generatedOTP}
+
+Masukan kode otp setelah mengirim pesan ini`.trim();
+
+  const waLink = `https://wa.me/62${phoneInput.slice(1)}?text=${encodeURIComponent(message)}`;
+  window.open(waLink, "_blank");
+
+  document.getElementById("otpSection").style.display = "block";
+};
+
+window.verifyOTP = () => {
+  const inputOTP = document.getElementById("otpInput").value.trim();
+  const finalPhone = sessionStorage.getItem("pendingPhone");
+
+  if (inputOTP === generatedOTP) {
+    localStorage.setItem("phone_" + currentEmail, finalPhone);
+    document.getElementById("waPhoneDisplay").textContent = finalPhone;
+    alert("OTP berhasil diverifikasi!");
+  } else {
+    alert("OTP salah. Silakan coba lagi.");
+  }
+};
 </script>
 
 </body>
