@@ -453,6 +453,37 @@
         window.open(`https://wa.me/6285697747768?text=${encodeURIComponent(msg)}`, '_blank');
       };
 
+
+// Firebase import
+import { auth, db } from './firebase-config.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { collection, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+// Simpan histori topup
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return;
+
+  try {
+    const ref = doc(collection(db, "topupHistory", user.uid, "records"));
+    await setDoc(ref, {
+      id: idVal,
+      server: srvVal,
+      whatsapp: waVal,
+      produk: nomSel.dataset.value,
+      metode: paySel.dataset.value,
+      jumlah: priceVal,
+      admin: adminVal,
+      total: totalVal,
+      waktu: new Date(),
+      status: "Menunggu Konfirmasi"
+    });
+    console.log("Histori topup berhasil disimpan.");
+  } catch (err) {
+    console.error("Gagal simpan histori:", err);
+  }
+
+    
+
       // Tambahkan elemen untuk countdown
 let bayarSebelum = document.getElementById('bayarSebelum');
 if (!bayarSebelum) {
