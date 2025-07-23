@@ -162,34 +162,22 @@ const displayName = document.getElementById("displayName");
 const email = document.getElementById("email");
 const uid = document.getElementById("uid");
 const phone = document.getElementById("phone");
+const phoneInputSection = document.getElementById("phoneInputSection");
+const otpSection = document.getElementById("otpSection");
+const phoneInput = document.getElementById("phoneInput");
+const otpInput = document.getElementById("otpInput");
 
 let currentEmail = "";
 let generatedOTP = "";
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    const username = localStorage.getItem("username") || user.displayName || "Tidak diketahui";
-    const userEmail = user.email || "Tidak ada";
-    const userPhone = user.phoneNumber || "Tidak ada";
-
-    displayName.textContent = username;
-    email.textContent = userEmail;
+    displayName.textContent = localStorage.getItem("username") || user.displayName || "Tidak diketahui";
+    email.textContent = user.email || "Tidak ada";
     uid.textContent = user.uid;
-    phone.textContent = userPhone;
-
-    currentEmail = userEmail;
-
-    const phoneSpan = document.getElementById("waPhoneDisplay");
-    const phoneInputSection = document.getElementById("phoneInputSection");
-    const savedPhone = localStorage.getItem("phone_" + currentEmail);
-
-    if (savedPhone) {
-      phoneSpan.textContent = savedPhone;
-    } else {
-      phoneSpan.textContent = "Belum diisi";
-      phoneInputSection.style.display = "block";
-    }
-
+    phone.textContent = user.phoneNumber || "Tidak ada";
+    currentEmail = user.email;
+    phoneInputSection.style.display = "block"; // Tampilkan input nomor HP
   } else {
     window.location.href = "/register-login";
   }
@@ -205,53 +193,46 @@ const logoutAll = () => {
 document.getElementById("logoutBtn").addEventListener("click", logoutAll);
 document.getElementById("logoutBtn2").addEventListener("click", logoutAll);
 
-// Toggle menu
 const toggleMenuBtn = document.getElementById("toggleMenu");
 const menuList = document.getElementById("menuList");
 toggleMenuBtn.addEventListener("click", () => {
   menuList.style.display = menuList.style.display === "flex" ? "none" : "flex";
 });
 
-// ========== FUNGSI OTP via WA ==========
-window.sendOTP = () => {
-  const phoneInput = document.getElementById("phoneInput").value.trim();
+// Fungsi generate OTP acak
+function generateOTP() {
+  return Math.floor(1000 + Math.random() * 9000).toString();
+}
 
-  if (!phoneInput.startsWith("08") || phoneInput.length < 10) {
-    alert("Nomor HP tidak valid.");
+// Fungsi untuk kirim OTP (redirect ke WA)
+window.sendOTP = function () {
+  const phoneNumber = phoneInput.value.trim();
+  if (!phoneNumber) {
+    alert("Masukkan nomor HP dulu!");
     return;
   }
 
-  // Simpan sementara & generate OTP
-  sessionStorage.setItem("pendingPhone", phoneInput);
-  generatedOTP = Math.floor(1000 + Math.random() * 9000).toString();
+  generatedOTP = generateOTP();
+  otpSection.style.display = "block";
 
-  const message = `
-Halo saya mau melakukan verifikasi akun
+  const waMessage = `Halo saya mau melakukan verifikasi akun\n\nNomor HP: ${phoneNumber}\nEmail: ${currentEmail}\n\nKode OTP: ${generatedOTP}\n\nMasukkan kode OTP setelah mengirim pesan ini.`;
+  const encodedMessage = encodeURIComponent(waMessage);
+  const waURL = `https://wa.me/?text=${encodedMessage}`;
+  window.open(waURL, "_blank");
+}
 
-Nomor hp: ${phoneInput}
-Email: ${currentEmail}
-Kode otp: ${generatedOTP}
-
-Masukan kode otp setelah mengirim pesan ini`.trim();
-
-  const waLink = `https://wa.me/62${phoneInput.slice(1)}?text=${encodeURIComponent(message)}`;
-  window.open(waLink, "_blank");
-
-  document.getElementById("otpSection").style.display = "block";
-};
-
-window.verifyOTP = () => {
-  const inputOTP = document.getElementById("otpInput").value.trim();
-  const finalPhone = sessionStorage.getItem("pendingPhone");
-
-  if (inputOTP === generatedOTP) {
-    localStorage.setItem("phone_" + currentEmail, finalPhone);
-    document.getElementById("waPhoneDisplay").textContent = finalPhone;
-    alert("OTP berhasil diverifikasi!");
+// Fungsi untuk verifikasi OTP
+window.verifyOTP = function () {
+  const enteredOTP = otpInput.value.trim();
+  if (enteredOTP === generatedOTP) {
+    alert("Nomor berhasil diverifikasi!");
+    phone.textContent = phoneInput.value;
+    phoneInputSection.style.display = "none";
+    otpSection.style.display = "none";
   } else {
-    alert("OTP salah. Silakan coba lagi.");
+    alert("Kode OTP salah, coba lagi.");
   }
-};
+}
 </script>
 
 </body>
