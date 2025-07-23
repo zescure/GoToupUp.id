@@ -446,13 +446,20 @@
   const waVal   = document.getElementById('whatsapp').value.trim();
   const nomSel  = document.querySelector('.nominal-card.selected');
   const paySel  = document.querySelector('.payment-card.selected');
+
+  // Validasi input
+  if (!idVal || !srvVal || !waVal || !nomSel || !paySel) {
+    alert("Lengkapi semua data dan pilih nominal serta metode pembayaran dulu.");
+    return;
+  }
+
   const priceVal= parseFloat(nomSel.dataset.price);
   const flat    = parseFloat(paySel.dataset.admin);
   const percent = parseFloat(paySel.dataset.percent || 0) / 100;
   const adminVal= Math.ceil(flat + priceVal * percent);
   const totalVal= priceVal + adminVal;
 
-  // Simpan ke Firebase Firestore
+  // Simpan ke Firestore
   firebase.firestore().collection("histori-topup").add({
     userId: idVal,
     server: srvVal,
@@ -470,7 +477,7 @@
     console.error("❌ Gagal menyimpan ke Firestore: ", error);
   });
 
-  // Kirim ke WhatsApp
+  // Buka WA
   const msg =
     `Saya sudah order Genshin Impact *${nomSel.dataset.value} Genesis Crystals*` +
     `\nID: ${idVal} (Server: ${srvVal})` +
