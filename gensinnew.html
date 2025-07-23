@@ -451,7 +451,27 @@
           `\nMetode: ${paySel.dataset.value.replace('_',' ')} VA`+
           `\nTotal bayar: Rp ${totalVal.toLocaleString('id')}`;
         window.open(`https://wa.me/6285697747768?text=${encodeURIComponent(msg)}`, '_blank');
-      };
+      // Simpan ke Firebase Firestore
+  const user = firebase.auth().currentUser;
+  if (user) {
+    const db = firebase.firestore();
+    const historyRef = db.collection("users").doc(user.uid).collection("histori");
+
+    await historyRef.add({
+      game: "Genshin Impact",
+      nominal: nomSel.dataset.value,
+      userId: idVal,
+      server: srvVal,
+      whatsapp: waVal,
+      metode: paySel.dataset.value,
+      total: totalVal,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      status: "Menunggu Pembayaran"
+    });
+  } else {
+    console.error("User belum login.");
+  }
+};
 
       // Tambahkan elemen untuk countdown
 let bayarSebelum = document.getElementById('bayarSebelum');
