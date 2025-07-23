@@ -1008,14 +1008,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   loginBtn?.addEventListener("click", () => {
-    const username = prompt("Masukkan nama pengguna:");
-    if (username) {
-      localStorage.setItem("username", username);
-      updateLoginState();
-    } else {
-      window.location.href = 'https://zestore.netlify.app/register-login';
-    }
-  });
+  window.location.href = 'https://zestore.netlify.app/register-login';
+});
 
   logoutBtn?.addEventListener("click", () => {
     localStorage.removeItem("username");
