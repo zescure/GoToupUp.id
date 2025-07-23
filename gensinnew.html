@@ -326,6 +326,14 @@
         <button id="btnClose">Tutup</button>
       </div>
     </div>
+    <!-- Firebase Core -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+<!-- Firestore -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
+<!-- Config Firebase lu -->
+<script src="firebase-config.js"></script>
+<!-- JS utama lu -->
+<script src="main.js"></script>
   </div>
 
   <script>
@@ -432,32 +440,32 @@
       };
 
       // Sudah Bayar → WA
-      document.getElementById('btnDone').onclick = ()=>{
-        const idVal   = document.getElementById('userId').value.trim();
-        const srvVal  = document.getElementById('server').value.trim();
-        const waVal   = document.getElementById('whatsapp').value.trim();
-        const nomSel  = document.querySelector('.nominal-card.selected');
-        const paySel  = document.querySelector('.payment-card.selected');
-        const priceVal= parseFloat(nomSel.dataset.price);
-        const flat    = parseFloat(paySel.dataset.admin);
-        const percent = parseFloat(paySel.dataset.percent||0)/100;
-        const adminVal= Math.ceil(flat+priceVal*percent);
-        const totalVal= priceVal+adminVal;
+      document.getElementById('btnDone').onclick = async () => {
+  const idVal    = document.getElementById('userId').value.trim();
+  const srvVal   = document.getElementById('server').value.trim();
+  const waVal    = document.getElementById('whatsapp').value.trim();
+  const nomSel   = document.querySelector('.nominal-card.selected');
+  const paySel   = document.querySelector('.payment-card.selected');
+  const priceVal = parseFloat(nomSel.dataset.price);
+  const flat     = parseFloat(paySel.dataset.admin);
+  const percent  = parseFloat(paySel.dataset.percent || 0) / 100;
+  const adminVal = Math.ceil(flat + priceVal * percent);
+  const totalVal = priceVal + adminVal;
 
-        const msg =
-          `Saya sudah order Genshin Impact *${nomSel.dataset.value} Genesis Crystals*`+
-          `\nID: ${idVal} (Server: ${srvVal})`+
-          `\nNo. WA: ${waVal}`+
-          `\nMetode: ${paySel.dataset.value.replace('_',' ')} VA`+
-          `\nTotal bayar: Rp ${totalVal.toLocaleString('id')}`;
-        window.open(`https://wa.me/6285697747768?text=${encodeURIComponent(msg)}`, '_blank');
-      // Simpan ke Firebase Firestore
-  const user = firebase.auth().currentUser;
-  if (user) {
+  const msg =
+    `Saya sudah order Genshin Impact *${nomSel.dataset.value} Genesis Crystals*` +
+    `\nID: ${idVal} (Server: ${srvVal})` +
+    `\nNo. WA: ${waVal}` +
+    `\nMetode: ${paySel.dataset.value.replace('_', ' ')} VA` +
+    `\nTotal bayar: Rp ${totalVal.toLocaleString('id')}`;
+
+  // Arahkan ke WhatsApp
+  window.open(`https://wa.me/6285697747768?text=${encodeURIComponent(msg)}`, '_blank');
+
+  // Simpan ke Firebase Firestore tanpa auth
+  try {
     const db = firebase.firestore();
-    const historyRef = db.collection("users").doc(user.uid).collection("histori");
-
-    await historyRef.add({
+    await db.collection("histori").add({
       game: "Genshin Impact",
       nominal: nomSel.dataset.value,
       userId: idVal,
@@ -468,8 +476,8 @@
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
       status: "Menunggu Pembayaran"
     });
-  } else {
-    console.error("User belum login.");
+  } catch (err) {
+    console.error("Gagal simpan histori:", err);
   }
 };
 
