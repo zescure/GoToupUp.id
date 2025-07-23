@@ -845,11 +845,16 @@ html {
 
   <script>
 // Toggle mobile menu
+// ==================== FIREBASE IMPORT ====================
+import { auth } from './firebase-config.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+
+// ==================== MOBILE MENU TOGGLE ====================
 const btn = document.querySelector('.menu-btn');
 const menu = document.getElementById('mobileMenu');
 btn.addEventListener('click', () => menu.classList.toggle('open'));
 
-// Manual slider
+// ==================== SLIDER ====================
 const slides = document.getElementById('slides');
 const total = slides.children.length;
 let idx = 0;
@@ -867,6 +872,7 @@ document.querySelectorAll('.game-card').forEach(card => {
   });
 });
 
+// ==================== SEARCH SHORTCUT ====================
 document.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById('inputGameSearch');
   const shortcutList = document.getElementById('shortcutList');
@@ -942,9 +948,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Auto Scroll Flash Promo
+// ==================== FLASH PROMO SCROLL ====================
 const carousel = document.querySelector('.flash-carousel');
-const itemWidth = carousel.querySelector('.promo-link').offsetWidth + 12; // 12 = gap antar item
+const itemWidth = carousel.querySelector('.promo-link').offsetWidth + 12;
 let index = 0;
 let autoScroll;
 
@@ -971,44 +977,38 @@ carousel.addEventListener('touchstart', resetAutoScroll);
 carousel.addEventListener('mousedown', resetAutoScroll);
 startAutoScroll();
 
-// ==================== LOGIN / REGISTER DETEKSI =====================
+// ==================== AUTH USER STATUS ====================
 document.addEventListener("DOMContentLoaded", () => {
   const loginBtn = document.getElementById("loginBtn");
   const accountInfo = document.getElementById("accountInfo");
   const usernameDisplay = document.getElementById("usernameDisplay");
   const logoutBtn = document.getElementById("logoutBtn");
 
-  function updateLoginState() {
-    const username = localStorage.getItem("username");
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      if (!user.displayName) {
+        // 👇 Redirect kalau belum isi username
+        window.location.href = "https://zestore.netlify.app/register-login";
+        return;
+      }
 
-    if (username) {
+      // ✅ Sudah login dan punya displayName
       loginBtn.style.display = "none";
-      accountInfo.style.display = "block";
-      usernameDisplay.textContent = username;
+      accountInfo.style.display = "inline-block";
+      usernameDisplay.textContent = user.displayName;
     } else {
+      // Belum login
       loginBtn.style.display = "inline-block";
       accountInfo.style.display = "none";
-      usernameDisplay.textContent = "";
-    }
-  }
-
-  loginBtn?.addEventListener("click", () => {
-    const username = prompt("Masukkan nama pengguna:");
-    if (username) {
-      localStorage.setItem("username", username);
-      updateLoginState();
-    } else {
-      // Bisa juga redirect ke halaman login asli:
-      // window.location.href = 'https://zestore.netlify.app/register-login';
     }
   });
 
-  logoutBtn?.addEventListener("click", () => {
-    localStorage.removeItem("username");
-    updateLoginState();
+  logoutBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    signOut(auth).then(() => {
+      window.location.reload();
+    });
   });
-
-  updateLoginState();
 });
 
     
