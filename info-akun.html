@@ -3,136 +3,129 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Info Akun | ZESTORE.id</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <!-- HEADER -->
-  <header>
-    <button class="menu-btn">&#9776;</button>
-    <div class="logo">ZESTORE.id</div>
-    <div class="account-area">
-      <button class="login-btn" id="loginBtn" style="display: none;" onclick="window.location.href='https://zestore.netlify.app/register-login'">
-        Login
-      </button>
-      <div id="accountInfo" style="display: none;">
-        👤 <span id="usernameDisplay" style="cursor:pointer;"></span> | 
-        <a href="#" id="logoutBtn" style="color: red;">Logout</a>
-      </div>
-    </div>
-  </header>
-
-  <!-- KONTEN INFO AKUN -->
-  <section class="promo">
-    <div class="promo-content">
-      <h2>Informasi Akun</h2>
-      <div class="akun-card">
-        <p><strong>Email:</strong> <span id="userEmail">Memuat...</span></p>
-        <p><strong>Username:</strong> <span id="userName">Memuat...</span></p>
-        <p><strong>Member Sejak:</strong> <span id="userSince">-</span></p>
-      </div>
-    </div>
-  </section>
-
-  <!-- FOOTER -->
-  <footer>
-    <p>&copy; 2025 ZESTORE.id. Semua Hak Dilindungi.</p>
-  </footer>
-
-  <!-- FIREBASE + LOGIKA -->
-  <script type="module">
-    import { auth } from './firebase-config.js';
-    import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-
-    const loginBtn = document.getElementById("loginBtn");
-    const accountInfo = document.getElementById("accountInfo");
-    const usernameDisplay = document.getElementById("usernameDisplay");
-    const logoutBtn = document.getElementById("logoutBtn");
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const email = user.email || "-";
-        const displayName = user.displayName || email.split('@')[0];
-        const createdAt = new Date(user.metadata.creationTime).toLocaleDateString();
-
-        // Header info
-        loginBtn.style.display = "none";
-        accountInfo.style.display = "inline";
-        usernameDisplay.textContent = displayName;
-
-        // Data utama
-        document.getElementById("userEmail").textContent = email;
-        document.getElementById("userName").textContent = displayName;
-        document.getElementById("userSince").textContent = createdAt;
-
-      } else {
-        // Redirect kalau belum login
-        window.location.href = "/register-login";
-      }
-    });
-
-    // Logout
-    logoutBtn.addEventListener("click", async (e) => {
-      e.preventDefault();
-      await signOut(auth);
-      window.location.href = "/register-login";
-    });
-  </script>
-
-  <!-- STYLE DALAM -->
+  <title>Info Akun - ZESTORE</title>
+  <link rel="stylesheet" href="styles.css" />
   <style>
-    body {
-      margin: 0;
-      background-color: #001f3f;
-      font-family: sans-serif;
-      color: white;
-    }
-
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background-color: #011d35;
-      padding: 1rem;
-      box-shadow: 0 0 8px rgba(0, 191, 255, 0.2);
+      background-color: #1a1a1a;
+      color: white;
+      padding: 10px 20px;
+    }
+
+    .menu-btn {
+      font-size: 24px;
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
     }
 
     .logo {
       font-weight: bold;
-      font-size: 1.2rem;
+      font-size: 18px;
     }
 
-    .account-area {
-      font-size: 0.9rem;
+    .menu-list {
+      display: none;
+      flex-direction: column;
+      background-color: #1a1a1a;
+      position: absolute;
+      top: 50px;
+      left: 10px;
+      padding: 10px;
+      border-radius: 5px;
     }
 
-    .promo-content {
-      padding: 2rem;
-      max-width: 600px;
-      margin: auto;
-      background-color: #022c43;
+    .menu-list a {
+      color: white;
+      text-decoration: none;
+      margin: 5px 0;
+    }
+
+    .account-box {
+      margin: 20px;
+      background-color: #f1f1f1;
+      padding: 15px;
       border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 191, 255, 0.2);
+      max-width: 400px;
     }
 
-    .promo-content h2 {
-      text-align: center;
-      color: #00bfff;
-      margin-bottom: 1.5rem;
+    button {
+      padding: 8px 14px;
+      margin-top: 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
     }
 
-    .akun-card p {
-      margin: 0.7rem 0;
-      font-size: 1rem;
+    .logout-btn {
+      background-color: red;
+      color: white;
     }
 
-    footer {
-      text-align: center;
-      padding: 1rem;
-      background: #011d35;
-      font-size: 0.8rem;
-      color: #ccc;
+    .back-btn {
+      background-color: #333;
+      color: white;
     }
   </style>
+</head>
+<body>
+
+<header>
+  <button class="menu-btn" id="toggleMenu">&#9776;</button>
+  <div class="logo">ZESTORE.id</div>
+  <div class="menu-list" id="menuList">
+    <a href="/">🏠 Beranda</a>
+    <a href="/info-akun">👤 Info Akun</a>
+    <a href="#" id="logoutBtn">🚪 Logout</a>
+  </div>
+</header>
+
+<div class="account-box">
+  <h2>Informasi Akun</h2>
+  <p><strong>Nama:</strong> <span id="displayName">Memuat...</span></p>
+  <p><strong>Email:</strong> <span id="email">Memuat...</span></p>
+  <p><strong>UID:</strong> <span id="uid">Memuat...</span></p>
+
+  <button class="back-btn" onclick="window.location.href='/'">⬅ Kembali</button>
+</div>
+
+<script type="module">
+  import { auth } from './firebase-config.js';
+  import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+
+  const displayName = document.getElementById("displayName");
+  const email = document.getElementById("email");
+  const uid = document.getElementById("uid");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      displayName.textContent = user.displayName || "Tidak diketahui";
+      email.textContent = user.email;
+      uid.textContent = user.uid;
+    } else {
+      window.location.href = "/register-login";
+    }
+  });
+
+  logoutBtn.addEventListener("click", () => {
+    signOut(auth).then(() => {
+      localStorage.removeItem("username");
+      window.location.href = "/register-login";
+    });
+  });
+
+  // Toggle menu
+  const toggleMenuBtn = document.getElementById("toggleMenu");
+  const menuList = document.getElementById("menuList");
+  toggleMenuBtn.addEventListener("click", () => {
+    menuList.style.display = menuList.style.display === "flex" ? "none" : "flex";
+  });
+</script>
+
 </body>
 </html>
