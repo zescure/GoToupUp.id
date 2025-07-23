@@ -135,6 +135,7 @@
   <h2>Info Akun</h2>
   <p><strong>Username:</strong> <span id="displayName">Memuat...</span></p>
   <p><strong>Email:</strong> <span id="email">Memuat...</span></p>
+  <p><strong>Nomor HP:</strong> <span id="phone">Memuat...</span></p>
   <p><strong>UID:</strong> <span id="uid">Memuat...</span></p>
 
   <button class="logout-btn" id="logoutBtn2">Logout</button>
@@ -148,12 +149,14 @@
   const displayName = document.getElementById("displayName");
   const email = document.getElementById("email");
   const uid = document.getElementById("uid");
+  const phone = document.getElementById("phone");
 
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      displayName.textContent = localStorage.getItem("username") || "Tidak diketahui";
-      email.textContent = user.email;
+      displayName.textContent = localStorage.getItem("username") || user.displayName || "Tidak diketahui";
+      email.textContent = user.email || "Tidak ada";
       uid.textContent = user.uid;
+      phone.textContent = user.phoneNumber || "Tidak ada";
     } else {
       window.location.href = "/register-login";
     }
