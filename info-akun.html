@@ -138,6 +138,18 @@
   <p><strong>Nomor HP:</strong> <span id="phone">Memuat...</span></p>
   <p><strong>UID:</strong> <span id="uid">Memuat...</span></p>
 
+ <div id="phoneInputSection" style="margin-top: 20px; display: none;">
+  <label for="phoneInput">Masukkan Nomor HP:</label>
+  <input type="tel" id="phoneInput" placeholder="08xxxxxxxxxx" style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: none; outline: none;">
+  <button onclick="sendOTP()" style="background-color: #00bfff; color: white; margin-top: 10px;">Kirim OTP</button>
+</div>
+
+<div id="otpSection" style="margin-top: 15px; display: none;">
+  <label for="otpInput">Masukkan OTP (coba isi 1234):</label>
+  <input type="text" id="otpInput" placeholder="Kode OTP" style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: none; outline: none;">
+  <button onclick="verifyOTP()" style="background-color: #00bfff; color: white; margin-top: 10px;">Verifikasi</button>
+</div>
+  
   <button class="logout-btn" id="logoutBtn2">Logout</button>
   <button class="back-btn" onclick="window.location.href='/'">⬅ Kembali</button>
 </div>
@@ -178,6 +190,51 @@
   toggleMenuBtn.addEventListener("click", () => {
     menuList.style.display = menuList.style.display === "flex" ? "none" : "flex";
   });
+
+  // Cek dan load nomor dari localStorage
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    displayName.textContent = localStorage.getItem("username") || user.displayName || "Tidak diketahui";
+    email.textContent = user.email || "Tidak ada";
+    uid.textContent = user.uid;
+
+    const phoneKey = "phone_" + user.email;
+    const savedPhone = localStorage.getItem(phoneKey);
+    if (savedPhone) {
+      phone.textContent = savedPhone;
+    } else {
+      phone.textContent = "Belum diisi";
+      document.getElementById("phoneInputSection").style.display = "block";
+    }
+  }
+});
+
+// Simulasi kirim OTP
+window.sendOTP = () => {
+  const phoneInput = document.getElementById("phoneInput").value.trim();
+  if (!phoneInput.startsWith("08") || phoneInput.length < 10) {
+    alert("Nomor HP tidak valid.");
+    return;
+  }
+  sessionStorage.setItem("pendingPhone", phoneInput);
+  document.getElementById("otpSection").style.display = "block";
+};
+
+// Simulasi verifikasi OTP
+window.verifyOTP = () => {
+  const otp = document.getElementById("otpInput").value.trim();
+  const correctOTP = "1234"; // Dummy OTP
+  if (otp === correctOTP) {
+    const finalPhone = sessionStorage.getItem("pendingPhone");
+    const emailKey = "phone_" + email.textContent;
+    localStorage.setItem(emailKey, finalPhone);
+    phone.textContent = finalPhone;
+    alert("Berhasil verifikasi! Akan diarahkan ke WhatsApp.");
+    window.location.href = `https://wa.me/62${finalPhone.slice(1)}?text=Halo%20Admin%20ZESTORE%2C%20saya%20sudah%20verifikasi%20akun.`;
+  } else {
+    alert("OTP salah. Coba lagi.");
+  }
+};
 </script>
 
 </body>
