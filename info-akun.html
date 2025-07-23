@@ -209,32 +209,71 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// Simulasi kirim OTP
-window.sendOTP = () => {
-  const phoneInput = document.getElementById("phoneInput").value.trim();
-  if (!phoneInput.startsWith("08") || phoneInput.length < 10) {
-    alert("Nomor HP tidak valid.");
-    return;
-  }
-  sessionStorage.setItem("pendingPhone", phoneInput);
-  document.getElementById("otpSection").style.display = "block";
-};
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+  import { auth } from "./firebase.js"; // ganti path kalau perlu
 
-// Simulasi verifikasi OTP
-window.verifyOTP = () => {
-  const otp = document.getElementById("otpInput").value.trim();
-  const correctOTP = "1234"; // Dummy OTP
-  if (otp === correctOTP) {
+  let generatedOTP = "";
+  let currentEmail = "";
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      currentEmail = user.email;
+      document.getElementById("email").textContent = currentEmail;
+
+      const phoneSpan = document.getElementById("phone");
+      const phoneInputSection = document.getElementById("phoneInputSection");
+      const savedPhone = localStorage.getItem("phone_" + currentEmail);
+
+      if (savedPhone) {
+        phoneSpan.textContent = savedPhone;
+      } else {
+        phoneSpan.textContent = "Belum diisi";
+        phoneInputSection.style.display = "block";
+      }
+    }
+  });
+
+  window.sendOTP = () => {
+    const phoneInput = document.getElementById("phoneInput").value.trim();
+
+    if (!phoneInput.startsWith("08") || phoneInput.length < 10) {
+      alert("Nomor HP tidak valid.");
+      return;
+    }
+
+    // Simpan sementara & generate OTP
+    sessionStorage.setItem("pendingPhone", phoneInput);
+    generatedOTP = Math.floor(1000 + Math.random() * 9000).toString();
+
+    // Buat pesan WhatsApp
+    const message = `
+Halo saya mau melakukan verifikasi akun
+
+Nomor hp: ${phoneInput}
+Email: ${currentEmail}
+Kode otp: ${generatedOTP}
+
+Masukan kode otp setelah mengirim pesan ini`.trim();
+
+    const waLink = `https://wa.me/62${phoneInput.slice(1)}?text=${encodeURIComponent(message)}`;
+    window.open(waLink, "_blank");
+
+    // Munculin form input OTP
+    document.getElementById("otpSection").style.display = "block";
+  };
+
+  window.verifyOTP = () => {
+    const inputOTP = document.getElementById("otpInput").value.trim();
     const finalPhone = sessionStorage.getItem("pendingPhone");
-    const emailKey = "phone_" + email.textContent;
-    localStorage.setItem(emailKey, finalPhone);
-    phone.textContent = finalPhone;
-    alert("Berhasil verifikasi! Akan diarahkan ke WhatsApp.");
-    window.location.href = `https://wa.me/62${finalPhone.slice(1)}?text=Halo%20Admin%20ZESTORE%2C%20saya%20sudah%20verifikasi%20akun.`;
-  } else {
-    alert("OTP salah. Coba lagi.");
-  }
-};
+
+    if (inputOTP === generatedOTP) {
+      localStorage.setItem("phone_" + currentEmail, finalPhone);
+      document.getElementById("phone").textContent = finalPhone;
+      alert("OTP berhasil diverifikasi!");
+    } else {
+      alert("OTP salah. Silakan coba lagi.");
+    }
+  };
 </script>
 
 </body>
