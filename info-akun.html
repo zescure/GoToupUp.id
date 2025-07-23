@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Info Akun | ZESTORE.id</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <button class="menu-btn">&#9776;</button>
+    <div class="logo">ZESTORE.id</div>
+    <div class="account-area">
+      <button class="login-btn" id="loginBtn" style="display: none;" onclick="window.location.href='https://zestore.netlify.app/register-login'">
+        Login
+      </button>
+      <div id="accountInfo" style="display: none;">
+        👤 <span id="usernameDisplay" style="cursor:pointer;"></span> | 
+        <a href="#" id="logoutBtn" style="color: red;">Logout</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- KONTEN INFO AKUN -->
+  <section class="promo">
+    <div class="promo-content">
+      <h2>Informasi Akun</h2>
+      <div class="akun-card">
+        <p><strong>Email:</strong> <span id="userEmail">Memuat...</span></p>
+        <p><strong>Username:</strong> <span id="userName">Memuat...</span></p>
+        <p><strong>Member Sejak:</strong> <span id="userSince">-</span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>&copy; 2025 ZESTORE.id. Semua Hak Dilindungi.</p>
+  </footer>
+
+  <!-- FIREBASE + LOGIKA -->
+  <script type="module">
+    import { auth } from './firebase-config.js';
+    import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+
+    const loginBtn = document.getElementById("loginBtn");
+    const accountInfo = document.getElementById("accountInfo");
+    const usernameDisplay = document.getElementById("usernameDisplay");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const email = user.email || "-";
+        const displayName = user.displayName || email.split('@')[0];
+        const createdAt = new Date(user.metadata.creationTime).toLocaleDateString();
+
+        // Header info
+        loginBtn.style.display = "none";
+        accountInfo.style.display = "inline";
+        usernameDisplay.textContent = displayName;
+
+        // Data utama
+        document.getElementById("userEmail").textContent = email;
+        document.getElementById("userName").textContent = displayName;
+        document.getElementById("userSince").textContent = createdAt;
+
+      } else {
+        // Redirect kalau belum login
+        window.location.href = "/register-login";
+      }
+    });
+
+    // Logout
+    logoutBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      await signOut(auth);
+      window.location.href = "/register-login";
+    });
+  </script>
+
+  <!-- STYLE DALAM -->
+  <style>
+    body {
+      margin: 0;
+      background-color: #001f3f;
+      font-family: sans-serif;
+      color: white;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #011d35;
+      padding: 1rem;
+      box-shadow: 0 0 8px rgba(0, 191, 255, 0.2);
+    }
+
+    .logo {
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+
+    .account-area {
+      font-size: 0.9rem;
+    }
+
+    .promo-content {
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+      background-color: #022c43;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 191, 255, 0.2);
+    }
+
+    .promo-content h2 {
+      text-align: center;
+      color: #00bfff;
+      margin-bottom: 1.5rem;
+    }
+
+    .akun-card p {
+      margin: 0.7rem 0;
+      font-size: 1rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1rem;
+      background: #011d35;
+      font-size: 0.8rem;
+      color: #ccc;
+    }
+  </style>
+</body>
+</html>
