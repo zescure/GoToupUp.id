@@ -453,11 +453,11 @@
     return;
   }
 
-  const priceVal= parseFloat(nomSel.dataset.price);
-  const flat    = parseFloat(paySel.dataset.admin);
-  const percent = parseFloat(paySel.dataset.percent || 0) / 100;
-  const adminVal= Math.ceil(flat + priceVal * percent);
-  const totalVal= priceVal + adminVal;
+  const priceVal = parseFloat(nomSel.dataset.price);
+  const flat     = parseFloat(paySel.dataset.admin);
+  const percent  = parseFloat(paySel.dataset.percent || 0) / 100;
+  const adminVal = Math.ceil(flat + priceVal * percent);
+  const totalVal = priceVal + adminVal;
 
   // Simpan ke Firestore
   firebase.firestore().collection("histori-topup").add({
@@ -477,14 +477,16 @@
     console.error("❌ Gagal menyimpan ke Firestore: ", error);
   });
 
-  // Buka WA
+  // Buka WhatsApp
   const msg =
     `Saya sudah order Genshin Impact *${nomSel.dataset.value} Genesis Crystals*` +
     `\nID: ${idVal} (Server: ${srvVal})` +
     `\nNo. WA: ${waVal}` +
     `\nMetode: ${paySel.dataset.value.replace('_',' ')} VA` +
     `\nTotal bayar: Rp ${totalVal.toLocaleString('id')}`;
-  window.open(`https://wa.me/6285697747768?text=${encodeURIComponent(msg)}`, '_blank');
+
+  // Pakai format API WhatsApp yang benar
+  window.open(`https://api.whatsapp.com/send?phone=6285697747768&text=${encodeURIComponent(msg)}`, '_blank');
 };
 
       // Tambahkan elemen untuk countdown
