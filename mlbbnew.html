@@ -556,7 +556,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import {
-  getFirestore, doc, getDoc, setDoc, updateDoc, increment, serverTimestamp
+  getFirestore, doc, getDoc, setDoc, updateDoc, increment, serverTimestamp, runTransaction
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 const firebaseConfig = {
@@ -804,7 +804,7 @@ async function addToCirculating(amount) {
     tx.update(econRef, { circulatingSupply: currentCirc + amount });
   });
 }
-    
+
 /* =============== BTN DONE (PROSES KOIN SAJA) =============== */
 const btnDone = document.getElementById('btnDone');
 const btnConfirmWA = document.getElementById('btnConfirmWA'); // tombol baru
