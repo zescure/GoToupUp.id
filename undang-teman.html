@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Zestore Rewards & Referral</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* Reset & Layout */
+    /* Reset dasar */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: Arial, sans-serif;
@@ -12,109 +13,86 @@
       color: #fff;
       display: flex;
       justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-      padding: 40px;
+      padding: 20px;
     }
+    /* Kontainer responsif */
     .container {
+      width: 100%;
+      max-width: 400px;
       background: #1e1e40;
       border-radius: 12px;
-      padding: 30px;
-      max-width: 400px;
-      width: 100%;
+      padding: 20px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
-    h2, h3, h4 { text-align: center; margin-bottom: 16px; }
+    h2,h3,h4 { text-align: center; margin-bottom: 12px; }
 
     /* Kotak Reward */
-    .box-card { text-align: center; margin-bottom: 30px; }
-    #dailyBox { width: 150px; cursor: pointer; }
+    .box-card { text-align: center; margin-bottom: 20px; }
+    #dailyBox { width: 120px; cursor: pointer; }
     @keyframes shake {
       0%,100% { transform: translateX(0); }
-      20%,60% { transform: translateX(-8px); }
-      40%,80% { transform: translateX(8px); }
+      20%,60% { transform: translateX(-6px); }
+      40%,80% { transform: translateX(6px); }
     }
     .shake { animation: shake 0.8s infinite; }
-    #dailyStatus { margin-top: 12px; font-size: 1rem; }
+    #dailyStatus { margin-top: 8px; font-size: 0.95rem; }
 
-    /* Referral Teman */
-    .ref-card { text-align: center; margin-bottom: 30px; }
+    /* Referral */
+    .ref-card { text-align: center; margin-bottom: 20px; }
     .ref-card input {
-      width: calc(100% - 20px);
-      padding: 8px;
-      border: none;
-      border-radius: 6px;
-      margin-bottom: 10px;
-      font-size: 1rem;
+      width: 100%; padding: 8px; margin-bottom: 8px;
+      border: none; border-radius: 6px; font-size: 0.95rem;
     }
     .ref-card button {
-      width: 100%;
-      padding: 10px;
-      border: none;
-      border-radius: 6px;
-      background: #4c8bf5;
-      font-size: 1rem;
-      cursor: pointer;
+      width: 100%; padding: 10px;
+      border: none; border-radius: 6px;
+      background: #4c8bf5; font-size: 1rem; cursor: pointer;
       transition: background .3s;
     }
     .ref-card button:hover { background: #3a6ed1; }
-    #referralStatus { margin-top: 8px; font-size: .95rem; }
+    #referralStatus { margin-top: 6px; font-size: 0.9rem; }
 
     /* Histori Klaim */
     .history {
-      background: #2d2d50;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      font-size: .9rem;
-      word-break: break-all;
+      background: #2d2d50; padding: 12px;
+      border-radius: 8px; margin-bottom: 20px;
+      font-size: 0.9rem;
     }
-    .history ul { list-style: none; padding-left: 0; }
-    .history li { padding: 6px 0; border-bottom: 1px solid #444; }
+    .history ul { list-style: none; }
+    .history li {
+      padding: 4px 0; border-bottom: 1px solid #444;
+    }
 
-    /* Redeem Koin */
+    /* Redeem Grid */
     .redeem {
-      background: #2d2d50;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      font-size: .9rem;
-      word-break: break-all;
-      text-align: center;
+      background: #2d2d50; padding: 12px;
+      border-radius: 8px; margin-bottom: 20px;
     }
-    .redeem .coin-balance {
-      font-size: 1.1rem;
-      color: #ffd700;
-      margin-bottom: 10px;
+    .coin-balance {
+      text-align: center; font-size: 1.1rem;
+      color: #ffd700; margin-bottom: 8px;
     }
-    .redeem select, .redeem button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 8px;
-      border: none;
-      border-radius: 6px;
-      font-size: 1rem;
+    .redeem-grid {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      justify-content: center;
     }
-    .redeem button {
-      background: #4c8bf5;
-      color: #fff;
-      cursor: pointer;
-      transition: background .3s;
+    .redeem-item {
+      width: 45%; text-align: center; cursor: pointer;
+      opacity: 1; transition: opacity .3s;
     }
-    .redeem button:disabled {
-      background: #555;
-      cursor: not-allowed;
+    .redeem-item.disabled { opacity: 0.5; cursor: not-allowed; }
+    .redeem-item img {
+      width: 100%; border-radius: 6px;
     }
-    .redeem button:hover:enabled { background: #3a6ed1; }
+    .redeem-item p {
+      margin-top: 4px; font-size: 0.9rem;
+    }
 
     /* Info Akun */
     .user-info {
-      background: #2d2d50;
-      padding: 15px;
-      border-radius: 8px;
-      font-size: .9rem;
-      word-break: break-all;
-      display: none;
+      background: #2d2d50; padding: 12px;
+      border-radius: 8px; font-size: 0.9rem;
+      word-break: break-all; display: none;
     }
     .user-info b { color: #4c8bf5; }
   </style>
@@ -128,7 +106,7 @@
       <img id="dailyBox" class="shake"
            src="https://cdn-icons-png.flaticon.com/512/862/862856.png"
            alt="Kotak Reward">
-      <p id="dailyStatus">Klik kotak di atas untuk klaim!</p>
+      <p id="dailyStatus">Klik kotak untuk klaim!</p>
     </div>
 
     <!-- Referral Teman -->
@@ -145,23 +123,20 @@
       <ul id="claimHistory"></ul>
     </div>
 
-    <!-- Redeem Koin -->
+    <!-- Redeem Koin dengan gambar -->
     <div class="redeem">
       <div class="coin-balance">Saldo Koin: <span id="coinBalance">0</span></div>
-      <select id="redeemSelect">
-        <option value="0">-- Pilih Hadiah --</option>
-        <option value="50">Voucher Rp5.000 (50 koin)</option>
-        <option value="100">Voucher Rp12.000 (100 koin)</option>
-      </select>
-      <button id="redeemBtn" disabled>Tukar Hadiah</button>
-      <p id="redeemStatus"></p>
+      <div class="redeem-grid" id="redeemGrid">
+        <!-- JS akan render hadiah di sini -->
+      </div>
+      <p id="redeemStatus" style="text-align:center; margin-top:8px;"></p>
     </div>
 
     <!-- Info Akun User -->
     <div class="user-info" id="user-info">
       <p><b>UID:</b> <span id="user-uid"></span></p>
       <p><b>Email:</b> <span id="user-email"></span></p>
-      <p><b>Kode Referral Kamu:</b> <span id="user-ref-code"></span></p>
+      <p><b>Kode Referral:</b> <span id="user-ref-code"></span></p>
     </div>
 
   </div>
@@ -176,7 +151,7 @@
     } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
     // Firebase config
-    const firebaseConfig = {
+    const cfg = {
       apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
       authDomain: "zeepaylater-93a94.firebaseapp.com",
       projectId: "zeepaylater-93a94",
@@ -184,16 +159,18 @@
       messagingSenderId: "358065954807",
       appId: "1:358065954807:web:66619211fea82a4b2518f2"
     };
-    const app  = initializeApp(firebaseConfig);
+    const app  = initializeApp(cfg);
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
-    // Constants
-    const CLOSED_IMG = 'https://cdn-icons-png.flaticon.com/512/862/862856.png';
-    const OPEN_IMG   = 'https://cdn-icons-png.flaticon.com/512/4315/4315609.png';
-    const DAILY_REWARDS = [10,15,20,25,30,35,50]; // koin hari 1-7
+    // Rewards & redeem items
+    const DAILY_REWARDS = [10,15,20,25,30,35,50]; 
+    const REDEEM_ITEMS = [
+      { cost: 50, label: 'Voucher Rp5.000', img: 'https://i.ibb.co/0jqHpnp/voucher5k.png' },
+      { cost: 100, label: 'Voucher Rp12.000', img: 'https://i.ibb.co/XC4yvPf/voucher12k.png' }
+    ];
 
-    // UI elemen
+    // Elemen
     const boxImg        = document.getElementById("dailyBox");
     const dailyStatus   = document.getElementById("dailyStatus");
     const referralBtn   = document.getElementById("submitReferral");
@@ -201,8 +178,7 @@
     const referralStatus= document.getElementById("referralStatus");
     const historyList   = document.getElementById("claimHistory");
     const coinBalanceEl = document.getElementById("coinBalance");
-    const redeemSelect  = document.getElementById("redeemSelect");
-    const redeemBtn     = document.getElementById("redeemBtn");
+    const redeemGrid    = document.getElementById("redeemGrid");
     const redeemStatus  = document.getElementById("redeemStatus");
     const userInfoDiv   = document.getElementById("user-info");
     const userUidEl     = document.getElementById("user-uid");
@@ -210,17 +186,17 @@
     const userRefCodeEl = document.getElementById("user-ref-code");
 
     onAuthStateChanged(auth, async user => {
-      if (!user) return window.location.href='/register-login';
+      if (!user) return window.location.href = '/register-login';
       const uid     = user.uid;
       const userRef = doc(db,"users",uid);
 
       // Tampilkan info akun
       userUidEl.textContent     = uid;
-      userEmailEl.textContent   = user.email||'-';
+      userEmailEl.textContent   = user.email || '-';
       userRefCodeEl.textContent = uid.substring(0,6);
       userInfoDiv.style.display = 'block';
 
-      // Inisialisasi user doc
+      // Inisialisasi jika belum ada
       const snap = await getDoc(userRef);
       if (!snap.exists()) {
         await setDoc(userRef, {
@@ -233,107 +209,100 @@
         });
       }
 
-      // Load data user
-      const data = (await getDoc(userRef)).data();
+      let data = (await getDoc(userRef)).data();
       let { coinBalance, lastLogin, streak } = data;
-
-      // Fungsi render box & status
       const today = new Date().toISOString().split('T')[0];
       const lastDate = lastLogin?.toDate?.().toISOString().split('T')[0];
-      const alreadyToday = lastDate===today;
+      const claimedToday = lastDate === today;
 
-      if (alreadyToday) {
-        boxImg.src = OPEN_IMG;
+      // Render kotak reward
+      if (claimedToday) {
+        const reward = DAILY_REWARDS[streak-1] || DAILY_REWARDS[0];
+        boxImg.src = 'https://cdn-icons-png.flaticon.com/512/4315/4315609.png';
         boxImg.classList.remove('shake');
-        dailyStatus.textContent = `+${DAILY_REWARDS[streak-1]||10} koin (hari ke-${streak})`;
+        dailyStatus.textContent = `+${reward} koin (hari ke-${streak})`;
       } else {
-        boxImg.src = CLOSED_IMG;
+        boxImg.src = 'https://cdn-icons-png.flaticon.com/512/862/862856.png';
         boxImg.classList.add('shake');
         dailyStatus.textContent = 'Klik kotak untuk klaim!';
       }
 
-      // Load saldo & histori
-      coinBalanceEl.textContent = coinBalance||0;
-      await renderHistory(uid);
-      checkRedeem();
+      // Render histori
+      historyList.innerHTML = '';
+      const q = query(collection(db,"users",uid,"claims"),
+                      orderBy("timestamp","desc"), limit(7));
+      const snaps = await getDocs(q);
+      snaps.forEach(d => {
+        const dt = d.data().timestamp.toDate()
+                     .toLocaleDateString('id');
+        historyList.innerHTML += `<li>${dt} → +${d.data().coins} koin</li>`;
+      });
 
-      // Event: klik kotak
+      // Render saldo & redeem grid
+      coinBalanceEl.textContent = coinBalance || 0;
+      redeemGrid.innerHTML = '';
+      REDEEM_ITEMS.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'redeem-item' +
+          ((coinBalance||0) < item.cost ? ' disabled':'');
+        div.innerHTML = `
+          <img src="${item.img}" alt="${item.label}">
+          <p>${item.label} (${item.cost} koin)</p>`;
+        if ((coinBalance||0) >= item.cost) {
+          div.onclick = async () => {
+            await updateDoc(userRef, { coinBalance: coinBalance - item.cost });
+            redeemStatus.textContent = `Berhasil tukar ${item.label}!`;
+            location.reload();
+          };
+        }
+        redeemGrid.appendChild(div);
+      });
+
+      // Klaim kotak reward
       boxImg.onclick = async () => {
-        if (alreadyToday) return;
-        // hitung streak baru
-        const y = new Date();
-        y.setDate(y.getDate()-1);
+        if (claimedToday) return;
+        const y = new Date(); y.setDate(y.getDate()-1);
         const yStr = y.toISOString().split('T')[0];
-        const isYest = lastDate===yStr;
-        const newStreak = isYest ? streak+1 : 1;
-        const reward = DAILY_REWARDS[newStreak-1]||10;
-        const newBalance = (coinBalance||0)+reward;
+        const isYest = lastDate === yStr;
+        const newStreak = isYest ? streak + 1 : 1;
+        const reward   = DAILY_REWARDS[newStreak-1] || DAILY_REWARDS[0];
+        const newBal   = (coinBalance||0) + reward;
 
-        // update db
-        await updateDoc(userRef,{
+        await updateDoc(userRef, {
           lastLogin: serverTimestamp(),
           streak: newStreak,
-          coinBalance: newBalance
+          coinBalance: newBal
         });
-        // subcollection claims
         const claimCol = collection(db,"users",uid,"claims");
-        await setDoc(doc(claimCol),{
+        await setDoc(doc(claimCol), {
           timestamp: serverTimestamp(),
           coins: reward
         });
-
-        // reload page
         location.reload();
       };
 
-      // Event: referral
+      // Referral
       referralBtn.onclick = async () => {
         const code = referralInput.value.trim();
-        if (!code||code===uid.substring(0,6)) {
-          referralStatus.textContent='Kode tidak valid atau milikmu sendiri.'; return;
+        if (!code || code === uid.substring(0,6)) {
+          referralStatus.textContent = 'Kode tidak valid atau milikmu sendiri.';
+          return;
         }
         if (data.referralUsed) {
-          referralStatus.textContent='Kamu sudah menggunakan referral.'; return;
+          referralStatus.textContent = 'Kamu sudah menggunakan referral.';
+          return;
         }
         const refDoc = doc(db,"referralCodes",code);
-        const rSnap = await getDoc(refDoc);
+        const rSnap  = await getDoc(refDoc);
         if (!rSnap.exists()) {
-          referralStatus.textContent='Kode referral tidak ditemukan.'; return;
+          referralStatus.textContent = 'Kode referral tidak ditemukan.';
+          return;
         }
-        await updateDoc(userRef,{referralUsed:true,referrer:code});
-        await updateDoc(refDoc,{count:(rSnap.data().count||0)+1});
-        referralStatus.textContent='Kode berhasil digunakan! 🎁';
+        await updateDoc(userRef, { referralUsed:true, referrer:code });
+        await updateDoc(refDoc,   { count:(rSnap.data().count||0)+1 });
+        referralStatus.textContent = 'Kode berhasil digunakan! 🎁';
       };
 
-      // Event: redeem
-      redeemSelect.onchange = checkRedeem;
-      redeemBtn.onclick = async () => {
-        const cost = parseInt(redeemSelect.value,10);
-        if ((coinBalance||0) < cost) return;
-        await updateDoc(userRef,{coinBalance:(coinBalance||0)-cost});
-        redeemStatus.textContent=`Berhasil tukar ${cost} koin!`;
-        location.reload();
-      };
-
-      // Helper: render history
-      async function renderHistory(uid){
-        historyList.innerHTML='';
-        const q = query(collection(db,"users",uid,"claims"),
-                        orderBy("timestamp","desc"), limit(7));
-        const snaps = await getDocs(q);
-        snaps.forEach((d,i)=>{
-          const dt = d.data().timestamp.toDate()
-                     .toLocaleDateString('id');
-          const c = d.data().coins;
-          historyList.innerHTML+=`<li>${dt} → +${c} koin</li>`;
-        });
-      }
-      // Helper: toggle redeem btn
-      function checkRedeem(){
-        const bal = parseInt(coinBalanceEl.textContent,10);
-        const cost= parseInt(redeemSelect.value,10);
-        redeemBtn.disabled = !(cost>0 && bal>=cost);
-      }
     });
   </script>
 </body>
