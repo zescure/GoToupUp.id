@@ -3,58 +3,92 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Info Akun - ZESTORE</title>
+  <title>Info Akun & Transfer - ZESTORE</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',sans-serif;}
-    body{background:#0a0a0f;color:#fff;}
+    body{background:#0a0a0f;color:#fff;display:flex;flex-direction:column;align-items:center;padding:20px;}
 
     header{
+      width:100%;max-width:400px;
       background:#111927;padding:15px 20px;display:flex;justify-content:space-between;
-      align-items:center;position:relative;z-index:10;border-bottom:1px solid #222;
+      align-items:center;border-bottom:1px solid #222;
     }
-    .logo{font-size:20px;font-weight:bold;color:#00bfff;}
+    .logo{font-size:20px;color:#00bfff;font-weight:bold;}
     .menu-btn{background:none;border:none;color:#fff;font-size:24px;cursor:pointer;}
-    .menu-list{display:none;flex-direction:column;background:#111927;position:absolute;
-      top:60px;left:15px;width:160px;border-radius:8px;border:1px solid #333;
-      box-shadow:0 0 10px rgba(0,0,0,0.3);padding:10px;
+    .menu-list{display:none;flex-direction:column;background:#111927;
+      position:absolute;top:60px;left:20px;width:160px;border:1px solid #333;
+      border-radius:8px;box-shadow:0 0 10px rgba(0,0,0,0.3);padding:10px;
     }
-    .menu-list a{color:#fff;text-decoration:none;padding:10px;border-radius:4px;}
+    .menu-list a{color:#fff;text-decoration:none;padding:8px;border-radius:4px;}
     .menu-list a:hover{background:#222;}
 
     .account-box{
-      margin:30px auto;max-width:400px;background:#141b2d;padding:20px;border-radius:10px;
-      border:1px solid #2c3e50;box-shadow:0 0 20px rgba(0,0,0,0.3);
+      width:100%;max-width:400px;background:#141b2d;padding:20px;
+      border:1px solid #2c3e50;border-radius:10px;box-shadow:0 0 20px rgba(0,0,0,0.3);
+      margin-top:20px;
     }
-    .account-box h2{text-align:center;margin-bottom:20px;color:#00bfff;}
-    .account-box p{margin:10px 0;}
+    .account-box h2{text-align:center;color:#00bfff;margin-bottom:15px;}
+    .account-box p{margin:8px 0;}
     .account-box button{
-      width:100%;padding:10px;margin-top:15px;border:none;border-radius:5px;font-size:16px;
-      cursor:pointer;transition:.3s;
+      width:100%;padding:10px;margin-top:12px;border:none;border-radius:5px;
+      cursor:pointer;transition:.3s;font-size:16px;
     }
     .logout-btn{background:#e74c3c;color:#fff;}
     .logout-btn:hover{background:#c0392b;}
-    .back-btn{background:#2c3e50;color:#fff;margin-top:10px;}
+    .back-btn{background:#2c3e50;color:#fff;}
     .back-btn:hover{background:#1f2a38;}
 
-    /* Kontainer saldo koin terpisah */
     .coin-container{
-      margin:20px auto;max-width:400px;background:#1e2537;padding:20px;border-radius:10px;
-      text-align:center;border:1px solid #2c3e50;box-shadow:0 0 20px rgba(0,0,0,0.3);
+      width:100%;max-width:400px;background:#1e2537;padding:20px;
+      border:1px solid #2c3e50;border-radius:10px;box-shadow:0 0 20px rgba(0,0,0,0.3);
+      margin-top:20px;text-align:center;
     }
-    .coin-container p{margin:10px 0;}
-    .coin-display{font-size:1.8rem;color:#ffd700;margin:5px 0;}
+    .coin-container h3{margin-bottom:10px;}
+    .coin-container .coin-display{font-size:2rem;color:#ffd700;margin:10px 0;}
     .coin-container button{
-      background:#00bfff;color:#fff;padding:10px 15px;border:none;border-radius:5px;
-      margin:5px;cursor:pointer;transition:.3s;
+      background:#00bfff;color:#fff;padding:10px 20px;border:none;border-radius:5px;
+      cursor:pointer;transition:.3s;margin:0 5px;
     }
     .coin-container button:hover{opacity:.8;}
 
-    #phoneInputSection,#otpSection{
-      margin-top:20px;display:none;
+    .transfer-popup{
+      position:fixed;top:0;left:0;width:100%;height:100%;
+      background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;
+      z-index:1000;
     }
-    #phoneInput,#otpInput{
-      width:100%;padding:10px;margin-top:5px;border-radius:5px;border:none;outline:none;
+    .transfer-content{
+      background:#1e1e40;padding:20px;border-radius:12px;
+      width:90%;max-width:320px;text-align:left;
     }
+    .transfer-content h3{color:#ffde59;margin-bottom:10px;text-align:center;}
+    .transfer-content label{display:block;margin-top:10px;}
+    .transfer-content input{
+      width:100%;padding:8px;margin-top:5px;border:none;border-radius:5px;
+    }
+    .transfer-content button{
+      width:100%;padding:10px;margin-top:15px;
+      border:none;border-radius:5px;background:#4c8bf5;color:#fff;
+      cursor:pointer;transition:.3s;
+    }
+    .transfer-content button:hover{background:#3a6ed1;}
+    .transfer-content .close-transfer{
+      background:#f54242;margin-top:8px;
+    }
+    .transfer-content p.status{margin-top:8px;color:#ffde59;font-size:.9rem;}
+
+    .history-box{
+      width:100%;max-width:400px;background:#141b2d;padding:20px;
+      border:1px solid #2c3e50;border-radius:10px;box-shadow:0 0 20px rgba(0,0,0,0.3);
+      margin-top:20px;
+    }
+    .history-box h3{text-align:center;color:#4c8bf5;margin-bottom:10px;}
+    .history-box ul{list-style:none;max-height:200px;overflow:auto;padding-left:0;}
+    .history-box li{padding:6px;border-bottom:1px solid #2c3e50;font-size:.9rem;}
+    .history-box li.positive{color:#2ecc71;}
+    .history-box li.negative{color:#e74c3c;}
+
+    #phoneInputSection,#otpSection{display:none;margin-top:15px;}
+    #phoneInput,#otpInput{width:100%;padding:8px;margin-top:5px;border:none;border-radius:5px;}
   </style>
 </head>
 <body>
@@ -69,21 +103,20 @@
     </div>
   </header>
 
-  <!-- Info Akun -->
   <div class="account-box">
-    <h2>Info Akun Anda</h2>
+    <h2>Info Akun</h2>
     <p><strong>Username:</strong> <span id="displayName">Memuat...</span></p>
     <p><strong>Email:</strong> <span id="email">Memuat...</span></p>
     <p><strong>Nomor HP:</strong> <span id="phone">Memuat...</span></p>
-    <p><strong>Wallet Adress:</strong> <span id="uid">Memuat...</span></p>
+    <p><strong>UID:</strong> <span id="uid">Memuat...</span></p>
 
     <div id="phoneInputSection">
-      <label for="phoneInput">Masukkan Nomor HP:</label>
+      <label>Masukkan Nomor HP:</label>
       <input type="tel" id="phoneInput" placeholder="08xxxxxxxxxx">
       <button onclick="sendOTP()">Kirim OTP</button>
     </div>
     <div id="otpSection">
-      <label for="otpInput">Masukkan OTP:</label>
+      <label>Masukkan OTP:</label>
       <input type="text" id="otpInput" placeholder="Kode OTP">
       <button onclick="verifyOTP()">Verifikasi</button>
     </div>
@@ -92,84 +125,142 @@
     <button class="back-btn" onclick="window.location.href='/home'">⬅ Kembali</button>
   </div>
 
-  <!-- SALDO KOIN (TERPISAH) -->
   <div class="coin-container">
-    <p>Saldo Koin Anda</p>
+    <h3>Saldo Koin Anda</h3>
     <p class="coin-display">🪙 <span id="coinBalance">0</span></p>
-    <button id="withdrawBtn">Tarik Koin</button>
-    <button id="depositBtn">Deposit Koin</button>
+    <button id="openTransfer">Transfer Koin</button>
+  </div>
+
+  <div class="transfer-popup" id="transferPopup">
+    <div class="transfer-content">
+      <h3>Transfer Koin</h3>
+      <label>UID Tujuan:</label>
+      <input type="text" id="transferUid" placeholder="Masukkan UID penerima">
+      <label>Jumlah Koin:</label>
+      <input type="number" id="transferAmt" placeholder="Jumlah">
+      <p style="font-size:.85rem;color:#ccc;margin-top:5px;">
+        *Minimal sisa 10 koin. Biaya 1% + 10 koin.
+      </p>
+      <button id="transferBtn">Kirim</button>
+      <button class="close-transfer" id="closeTransfer">Batal</button>
+      <p class="status" id="transferStatus"></p>
+    </div>
+  </div>
+
+  <div class="history-box">
+    <h3>Histori Transaksi</h3>
+    <ul id="txHistory"></ul>
   </div>
 
   <script type="module">
-    import { auth } from './firebase-config.js';
-    import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-    import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    import {
+      getFirestore, doc, getDoc, runTransaction,
+      collection, query, orderBy, limit, getDocs,
+      serverTimestamp
+    } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-    const db = getFirestore();
-    const displayName = document.getElementById("displayName");
-    const emailEl = document.getElementById("email");
-    const uidEl = document.getElementById("uid");
-    const phoneEl = document.getElementById("phone");
-    const coinEl = document.getElementById("coinBalance");
-    const phoneInputSection = document.getElementById("phoneInputSection");
-    const otpSection = document.getElementById("otpSection");
+    const firebaseConfig = {
+      apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
+      authDomain: "zeepaylater-93a94.firebaseapp.com",
+      projectId: "zeepaylater-93a94",
+      storageBucket: "zeepaylater-93a94.appspot.com",
+      messagingSenderId: "358065954807",
+      appId: "1:358065954807:web:66619211fea82a4b2518f2"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    const displayNameEl = document.getElementById('displayName');
+    const emailEl       = document.getElementById('email');
+    const phoneEl       = document.getElementById('phone');
+    const uidEl         = document.getElementById('uid');
+    const coinEl        = document.getElementById('coinBalance');
+    const txHistoryUl   = document.getElementById('txHistory');
+    const openTransfer  = document.getElementById('openTransfer');
+    const transferPopup = document.getElementById('transferPopup');
+    const closeTransfer = document.getElementById('closeTransfer');
+    const transferBtn   = document.getElementById('transferBtn');
+    const transferStatus= document.getElementById('transferStatus');
+
+    let currentUser;
 
     onAuthStateChanged(auth, async user => {
-      if (!user) return window.location.href = "/register-login";
-
-      displayName.textContent = localStorage.getItem("username") || user.displayName || "-";
-      emailEl.textContent = user.email || "-";
-      uidEl.textContent = user.uid;
-      phoneEl.textContent = user.phoneNumber || "-";
-      phoneInputSection.style.display = "block";
-
-      // Ambil saldo koin (pastikan field ada di Firestore)
-      try {
-        const userDoc = await getDoc(doc(db,"users",user.uid));
-        coinEl.textContent = (userDoc.exists() && userDoc.data().coinBalance) || 0;
-      } catch(e) {
-        console.error("Gagal ambil saldo koin:", e);
-        coinEl.textContent = 0;
-      }
+      if (!user) return window.location.href = '/register-login';
+      currentUser = user;
+      displayNameEl.textContent = localStorage.getItem('username')||user.displayName||'-';
+      emailEl.textContent       = user.email||'-';
+      phoneEl.textContent       = user.phoneNumber||'-';
+      uidEl.textContent         = user.uid;
+      await loadBalance();
+      await loadHistory();
     });
 
-    const logoutAll = () => {
+    async function loadBalance(){
+      const ref = doc(db,'users',currentUser.uid);
+      const snap = await getDoc(ref);
+      coinEl.textContent = snap.exists()? (snap.data().coinBalance||0) : 0;
+    }
+
+    async function loadHistory(){
+      txHistoryUl.innerHTML = '';
+      const q = query(collection(db,'users',currentUser.uid,'transactions'),
+                      orderBy('timestamp','desc'), limit(20));
+      const snaps = await getDocs(q);
+      snaps.forEach(d => {
+        const dt = d.data().timestamp.toDate().toLocaleString('id');
+        const am = d.data().amount;
+        const cls= am>0?'positive':'negative';
+        txHistoryUl.innerHTML += `<li class="${cls}">${dt} → ${am>0?'+':''}${am} koin</li>`;
+      });
+    }
+
+    document.getElementById('toggleMenu').onclick = ()=>{
+      const ml = document.getElementById('menuList');
+      ml.style.display = ml.style.display==='flex'?'none':'flex';
+    };
+    document.getElementById('logoutBtn').onclick = document.getElementById('logoutBtn2').onclick = ()=>{
       signOut(auth).then(()=>{
-        localStorage.removeItem("username");
-        window.location.href = "/register-login";
+        localStorage.removeItem('username');
+        window.location.href = '/register-login';
       });
     };
-    document.getElementById("logoutBtn").onclick = logoutAll;
-    document.getElementById("logoutBtn2").onclick = logoutAll;
 
-    document.getElementById("toggleMenu").onclick = () => {
-      const menuList = document.getElementById("menuList");
-      menuList.style.display = menuList.style.display==="flex" ? "none" : "flex";
-    };
+    openTransfer.onclick = ()=>{ transferStatus.textContent=''; transferPopup.style.display='flex'; };
+    closeTransfer.onclick= ()=>transferPopup.style.display='none';
 
-    document.getElementById("withdrawBtn").onclick = () => {
-      window.open(`https://wa.me/?text=${encodeURIComponent(`Halo admin, saya ingin tarik koin sebanyak ${coinEl.textContent}.`)}`,"_blank");
-    };
-    document.getElementById("depositBtn").onclick = () => {
-      alert("Fitur deposit masih dalam pengembangan.");
-    };
-
-    let generatedOTP="";
-    window.sendOTP = () => {
-      const phone = document.getElementById("phoneInput").value.trim();
-      if(!phone) return alert("Masukkan nomor HP dulu!");
-      generatedOTP = Math.floor(1000+Math.random()*9000).toString();
-      otpSection.style.display = "block";
-      window.open(`https://wa.me/?text=${encodeURIComponent(`Verifikasi nomor:\nHP: ${phone}\nOTP: ${generatedOTP}`)}`,"_blank");
-    };
-    window.verifyOTP = () => {
-      if(document.getElementById("otpInput").value === generatedOTP){
-        alert("Nomor berhasil diverifikasi!");
-        phoneEl.textContent = document.getElementById("phoneInput").value;
-        phoneInputSection.style.display="none";
-        otpSection.style.display="none";
-      } else {
-        alert("Kode OTP salah, coba lagi.");
+    transferBtn.onclick = async()=>{
+      const toUid = document.getElementById('transferUid').value.trim();
+      const amt   = parseInt(document.getElementById('transferAmt').value);
+      if(!toUid||!amt||amt<=0){
+        return transferStatus.textContent='Isi UID dan jumlah dengan benar.';
+      }
+      transferStatus.textContent='Memproses...';
+      try{
+        await runTransaction(db, async tx=>{
+          const sRef = doc(db,'users',currentUser.uid);
+          const rRef = doc(db,'users',toUid);
+          const sSnap= await tx.get(sRef);
+          const rSnap= await tx.get(rRef);
+          if(!sSnap.exists()) throw 'Pengirim tidak ditemukan.';
+          if(!rSnap.exists()) throw 'Penerima tidak ditemukan.';
+          const sBal = sSnap.data().coinBalance||0;
+          const fee  = Math.ceil(amt*0.01)+10;
+          if(sBal - amt - fee < 10) throw 'Saldo tidak mencukupi (min sisa 10).';
+          const rBal = rSnap.data().coinBalance||0;
+          tx.update(sRef,{ coinBalance: sBal - amt - fee });
+          tx.update(rRef,{ coinBalance: rBal + amt });
+          const ts = serverTimestamp();
+          tx.set(doc(collection(sRef,'transactions')),{ timestamp:ts, amount: -(amt+fee) });
+          tx.set(doc(collection(rRef,'transactions')),{ timestamp:ts, amount: +amt });
+        });
+        transferStatus.textContent='Transfer berhasil!';
+        await loadBalance();
+        await loadHistory();
+      } catch(e){
+        transferStatus.textContent = 'Error: '+e;
       }
     };
   </script>
