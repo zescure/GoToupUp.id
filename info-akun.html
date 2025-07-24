@@ -349,62 +349,45 @@ transferBtn.onclick = async()=>{
     transferStatus.textContent='Memproses transfer...';
 
     // 3) Jalankan transaksi
-    await runTransaction(db, async (tx) => {
-  const sRef = doc(db, 'users', currentUser.uid);
-  const rRef = doc(db, 'users', toUid);
-  const fRef = doc(db, 'users', FEE_RECEIVER_UID);
+    await runTransaction(db, async tx=>{
+      const sRef = doc(db,'users',currentUser.uid);
+      const rRef = doc(db,'users',toUid);
+      const fRef = doc(db,'users',FEE_RECEIVER_UID);
 
-  const [sSnap, rSnap, fSnap] = await Promise.all([
-    tx.get(sRef),
-    tx.get(rRef),
-    tx.get(fRef)
-  ]);
+      const [sSnap, rSnap, fSnap] = await Promise.all([
+        tx.get(sRef), tx.get(rRef), tx.get(fRef)
+      ]);
 
-  if (!sSnap.exists()) throw new Error('Pengirim tidak ditemukan.');
-  if (!rSnap.exists()) throw new Error('Penerima tidak ditemukan.');
-  if (!fSnap.exists()) throw new Error('Akun fee tidak ditemukan.');
+      if(!sSnap.exists()) throw new Error('Pengirim tidak ditemukan.');
+      if(!rSnap.exists()) throw new Error('Penerima tidak ditemukan.');
+      if(!fSnap.exists()) throw new Error('Akun fee tidak ditemukan.');
 
-  const sBal = Number(sSnap.data().coinBalance || 0);
-  const rBal = Number(rSnap.data().coinBalance || 0);
-  const fBal = Number(fSnap.data().coinBalance || 0);
+      const sBal = Number(sSnap.data().coinBalance||0);
+      const rBal = Number(rSnap.data().coinBalance||0);
+      const fBal = Number(fSnap.data().coinBalance||0);
 
-  const fee = Math.ceil(amt * 0.01) + 10;
-  if (sBal - amt - fee < 10) {
-    throw new Error('Saldo tidak mencukupi (minimal sisa 10 koin).');
+      const fee  = Math.ceil(amt * 0.01) + 10;
+      if (sBal - amt - fee < 10) throw new Error('Saldo tidak mencukupi (minimal sisa 10 koin).');
+
+      // Update balances
+      tx.update(sRef, { coinBalance: sBal - amt - fee });
+      tx.update(rRef, { coinBalance: rBal + amt });
+      tx.update(fRef, { coinBalance: fBal + fee });
+
+      // Log transaksi (semua pihak)
+      const ts = serverTimestamp();
+      tx.set(doc(collection(sRef,'transactions')), { timestamp:ts, amount: -(amt+fee), to: toUid,            type:'transfer-out' });
+      tx.set(doc(collection(rRef,'transactions')), { timestamp:ts, amount: +amt,      from: currentUser.uid, type:'transfer-in'  });
+      tx.set(doc(collection(fRef,'transactions')), { timestamp:ts, amount: +fee,      from: currentUser.uid, type:'fee'           });
+    });
+
+    transferStatus.textContent='Transfer berhasil!';
+    await Promise.all([ loadBalance(currentUser.uid), loadHistory(currentUser.uid) ]);
+  }catch(e){
+    console.error(e);
+    transferStatus.textContent = 'Error: ' + (e?.message || e);
   }
-
-  // Update balances
-  tx.update(sRef, { coinBalance: sBal - amt - fee });
-  tx.update(rRef, { coinBalance: rBal + amt });
-  tx.update(fRef, { coinBalance: fBal + fee });
-
-  // Log transaksi (semua pihak)
-  const ts = serverTimestamp();
-  tx.set(doc(collection(sRef, 'transactions')), {
-    timestamp: ts,
-    amount: -(amt + fee),
-    to: toUid,
-    type: 'transfer-out'
-  });
-  tx.set(doc(collection(rRef, 'transactions')), {
-    timestamp: ts,
-    amount: +amt,
-    from: currentUser.uid,
-    type: 'transfer-in'
-  });
-  tx.set(doc(collection(fRef, 'transactions')), {
-    timestamp: ts,
-    amount: +fee,
-    from: currentUser.uid,
-    type: 'fee'
-  });
-});
-
-transferStatus.textContent = 'Transfer berhasil!';
-await Promise.all([
-  loadBalance(currentUser.uid),
-  loadHistory(currentUser.uid)
-]);
+};
 </script>
 </body>
 </html>
