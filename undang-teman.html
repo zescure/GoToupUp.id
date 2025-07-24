@@ -6,219 +6,119 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
-    body{
-      font-family:Arial,sans-serif;background:#0f0f2d;color:#fff;
-      display:flex;flex-direction:column;align-items:center;padding:20px;
-    }
-    .container{
-      width:100%;max-width:400px;background:#1e1e40;border-radius:12px;
-      padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.5);
-    }
+    body{font-family:Arial,sans-serif;background:#0f0f2d;color:#fff;display:flex;flex-direction:column;align-items:center;padding:20px;}
+    .container{width:100%;max-width:400px;background:#1e1e40;border-radius:12px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.5);}
     h2,h3,h4{text-align:center;margin-bottom:12px;}
-    /* reward box */
     .box-card{text-align:center;margin-bottom:20px;}
     #dailyBox{width:120px;cursor:pointer;}
-    @keyframes shake{
-      0%,100%{transform:translateX(0);}
-      20%,60%{transform:translateX(-6px);}
-      40%,80%{transform:translateX(6px);}
-    }
+    @keyframes shake{0%,100%{transform:translateX(0);}20%,60%{transform:translateX(-6px);}40%,80%{transform:translateX(6px);}}
     .shake{animation:shake 0.8s infinite;}
     #dailyStatus{margin-top:8px;font-size:.95rem;}
-    /* referral */
     .ref-card{text-align:center;margin-bottom:20px;}
-    .ref-card input{
-      width:100%;padding:8px;margin-bottom:8px;border:none;border-radius:6px;font-size:.95rem;
-    }
-    .ref-card button{
-      width:100%;padding:10px;border:none;border-radius:6px;background:#4c8bf5;
-      color:#fff;font-size:1rem;cursor:pointer;transition:background .3s;
-    }
+    .ref-card input{width:100%;padding:8px;margin-bottom:8px;border:none;border-radius:6px;font-size:.95rem;}
+    .ref-card button{width:100%;padding:10px;border:none;border-radius:6px;background:#4c8bf5;color:#fff;font-size:1rem;cursor:pointer;transition:background .3s;}
     .ref-card button:hover{background:#3a6ed1;}
     #referralStatus{margin-top:6px;font-size:.9rem;}
-    /* history */
-    .history{
-      background:#2d2d50;padding:12px;border-radius:8px;margin-bottom:20px;font-size:.9rem;
-    }
+    .history{background:#2d2d50;padding:12px;border-radius:8px;margin-bottom:20px;font-size:.9rem;}
     .history ul{list-style:none;}
     .history li{padding:4px 0;border-bottom:1px solid #444;}
-    /* redeem */
-    .redeem{
-      text-align:center;background:#2d2d50;padding:12px;border-radius:8px;margin-bottom:20px;
-    }
-    .coin-balance{
-      display:flex;align-items:center;justify-content:center;gap:5px;
-      font-size:1.1rem;color:#ffd700;margin-bottom:8px;
-    }
-    .coin-balance button{
-      background:#4c8bf5;border:none;border-radius:50%;width:24px;height:24px;
-      color:#fff;font-weight:bold;cursor:pointer;transition:background .3s;
-    }
+    .redeem{text-align:center;background:#2d2d50;padding:12px;border-radius:8px;margin-bottom:20px;}
+    .coin-balance{display:flex;align-items:center;justify-content:center;gap:5px;font-size:1.1rem;color:#ffd700;margin-bottom:8px;}
+    .coin-balance button{background:#4c8bf5;border:none;border-radius:50%;width:24px;height:24px;color:#fff;font-weight:bold;cursor:pointer;transition:background .3s;}
     .coin-balance button:hover{background:#3a6ed1;}
-    .redeem-grid{
-      display:flex;flex-wrap:wrap;gap:10px;justify-content:center;
-    }
-    .redeem-item{
-      width:45%;text-align:center;transition:opacity .3s;cursor:pointer;
-    }
+    .redeem-grid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;}
+    .redeem-item{width:45%;text-align:center;transition:opacity .3s;cursor:pointer;}
     .redeem-item.disabled{opacity:.5;cursor:not-allowed;}
     .redeem-item img{width:100%;border-radius:6px;}
     .redeem-item p{margin-top:4px;font-size:.9rem;}
-    /* user info */
-    .user-info{
-      background:#2d2d50;padding:12px;border-radius:8px;font-size:.9rem;
-      word-break:break-all;display:none;
-    }
+    .user-info{background:#2d2d50;padding:12px;border-radius:8px;font-size:.9rem;word-break:break-all;display:none;}
     .user-info b{color:#4c8bf5;}
-    /* popup */
-    .popup{
-      position:fixed;top:0;left:0;width:100%;height:100%;
-      background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:1000;
-    }
-    .popup-content{
-      background:#1e1e40;padding:20px;border-radius:12px;max-width:350px;width:90%;
-      text-align:center;position:relative;
-    }
+    .popup{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:1000;}
+    .popup-content{background:#1e1e40;padding:20px;border-radius:12px;max-width:350px;width:90%;text-align:center;position:relative;}
     .popup-content h3{margin-bottom:8px;}
     #resetTimer{font-size:.85rem;color:#ccc;margin-bottom:10px;}
-    .task{
-      background:#2d2d50;padding:8px;margin:8px 0;border-radius:8px;text-align:left;font-size:.9rem;
-    }
-    .task button,.task input{
-      width:100%;padding:6px;margin-top:6px;border:none;border-radius:6px;font-size:.9rem;
-    }
-    .task button{
-      background:#4c8bf5;color:#fff;cursor:pointer;transition:background .3s;
-    }
+    .task{background:#2d2d50;padding:8px;margin:8px 0;border-radius:8px;text-align:left;font-size:.9rem;}
+    .task button,.task input{width:100%;padding:6px;margin-top:6px;border:none;border-radius:6px;font-size:.9rem;}
+    .task button{background:#4c8bf5;color:#fff;cursor:pointer;transition:background .3s;}
     .task input{background:#fff;color:#000;}
-    .close-popup{
-      margin-top:12px;background:#f54242;border:none;border-radius:6px;padding:6px 12px;color:#fff;cursor:pointer;
-    }
-    /* promo & faq */
-    .promo-section{
-      width:100%;max-width:400px;background:#1e1e40;border-radius:12px;color:#fff;
-      padding:20px;margin-top:20px;box-shadow:0 4px 12px rgba(0,0,0,0.5);
-    }
-    .promo-header h2{
-      color:#ffde59;text-align:center;margin-bottom:10px;
-    }
-    .promo-steps ul{
-      list-style:disc;padding-left:20px;
-    }
+    .close-popup{margin-top:12px;background:#f54242;border:none;border-radius:6px;padding:6px 12px;color:#fff;cursor:pointer;}
+    .promo-section{width:100%;max-width:400px;background:#1e1e40;border-radius:12px;color:#fff;padding:20px;margin-top:20px;box-shadow:0 4px 12px rgba(0,0,0,0.5);}
+    .promo-header h2{color:#ffde59;text-align:center;margin-bottom:10px;}
+    .promo-steps ul{list-style:disc;padding-left:20px;}
     .faq-item{margin-top:10px;}
-    .faq-question{
-      background:#4c8bf5;color:#fff;padding:8px;width:100%;border:none;border-radius:6px;
-      text-align:left;cursor:pointer;
-    }
-    .faq-answer{
-      display:none;padding:6px;background:#2d2d50;border-radius:6px;margin-top:5px;
-    }
+    .faq-question{background:#4c8bf5;color:#fff;padding:8px;width:100%;border:none;border-radius:6px;text-align:left;cursor:pointer;}
+    .faq-answer{display:none;padding:6px;background:#2d2d50;border-radius:6px;margin-top:5px;}
   </style>
 </head>
 <body>
-
-  <!-- MAIN CONTENT -->
   <div class="container">
+    <h2>Daily Reward</h2>
     <div class="box-card">
-      <h2>Reward Harian Dan Referral</h2>
-      <img id="dailyBox" class="shake"
-           src="https://twink-x.com/cdn/shop/files/4.gif?v=1721839964&width=2048"
-           alt="Kotak Reward">
-      <p id="dailyStatus">Klik kotak untuk klaim!</p>
+      <img id="dailyBox" src="https://i.ibb.co/8c8YVZf/box.png" alt="Daily Box">
+      <div id="dailyStatus"></div>
     </div>
-
+    <h3>Referral</h3>
     <div class="ref-card">
-      <h3>Referral Teman</h3>
       <input id="referralCode" placeholder="Masukkan kode referral">
-      <button id="submitReferral">Gunakan Kode</button>
-      <p id="referralStatus"></p>
+      <button id="submitReferral">Klaim Referral</button>
+      <div id="referralStatus"></div>
     </div>
-
+    <h3>Riwayat Klaim</h3>
     <div class="history">
-      <h4>7 Hari Terakhir</h4>
       <ul id="claimHistory"></ul>
     </div>
-
+    <h3>Redeem</h3>
     <div class="redeem">
-      <div class="coin-balance">
-        Saldo Koin: <span id="coinBalance">0</span>
-        <button id="showTasks">+</button>
-      </div>
+      <div class="coin-balance"><span id="coinBalance">0</span> Koin</div>
       <div class="redeem-grid" id="redeemGrid"></div>
-      <p id="redeemStatus"></p>
     </div>
-
+    <h3>Info Akun</h3>
     <div class="user-info" id="user-info">
-      <p><b>Wallet Address:</b> <span id="user-uid"></span></p>
+      <p><b>UID:</b> <span id="user-uid"></span></p>
       <p><b>Email:</b> <span id="user-email"></span></p>
-      <p><b>Kode Referral:</b> <span id="user-ref-code"></span></p>
+      <p><b>Referral Code:</b> <span id="user-ref-code"></span></p>
     </div>
+    <button id="showTasks">Tugas Harian</button>
   </div>
 
-  <!-- PROMO & FAQ -->
   <section class="promo-section">
-    <div class="promo-header">
-      <h2>🎉 Promo Event Spesial Zestore</h2>
-      <p>Dapatkan hadiah eksklusif dengan mengikuti misi event ini!</p>
-    </div>
+    <div class="promo-header"><h2>Promo & FAQ</h2></div>
     <div class="promo-steps">
-      <h3>Cara Partisipasi:</h3>
       <ul>
-        <li>Login setiap hari untuk klaim koin.</li>
-        <li>Undang teman menggunakan kode referral Anda.</li>
-        <li>Selesaikan tugas tambahan di halaman ini.</li>
-        <li>Tukar koin untuk hadiah menarik.</li>
+        <li>Bagikan link untuk bonus.</li>
+        <li>Gunakan referral untuk koin tambahan.</li>
       </ul>
     </div>
-    <div class="faq">
-      <h3 style="margin:16px 0 8px;color:#4c8bf5;">FAQ (Pertanyaan Umum)</h3>
-      <div class="faq-item">
-        <button class="faq-question">1. Bagaimana cara mendapatkan koin lebih banyak?</button>
-        <div class="faq-answer">
-          <p>Selesaikan tugas tambahan seperti membagikan link atau memasukkan kode rahasia.</p>
-        </div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question">2. Apakah koin kadaluarsa?</button>
-        <div class="faq-answer">
-          <p>Koin tidak kadaluarsa selama akun aktif.</p>
-        </div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question">3. Bagaimana cara menukar hadiah?</button>
-        <div class="faq-answer">
-          <p>Klik hadiah di bagian Redeem, lalu hubungi admin via WhatsApp.</p>
-        </div>
-      </div>
+    <div class="faq-item">
+      <button class="faq-question">Bagaimana cara klaim?</button>
+      <div class="faq-answer">Klik box harian atau selesaikan tugas.</div>
     </div>
   </section>
 
-  <!-- POPUP -->
   <div class="popup" id="taskPopup">
     <div class="popup-content">
-      <h3>Tugas Tambahan</h3>
+      <h3>Tugas Harian</h3>
       <div id="resetTimer"></div>
       <div class="task">
-        <b>1. Bagikan 5× ke sosmed</b>
+        <p>Bagikan link ke WhatsApp (5x)</p>
         <button id="shareTaskBtn">Bagikan</button>
-        <p id="shareStatus"></p>
+        <div id="shareStatus"></div>
       </div>
       <div class="task">
-        <b>2. Undang & redeem 3 teman</b>
-        <button id="inviteTaskBtn">Cek Progres</button>
-        <p id="inviteStatus"></p>
+        <p>Undang 1 teman</p>
+        <button id="inviteTaskBtn">Cek Undangan</button>
+        <div id="inviteStatus"></div>
       </div>
       <div class="task">
-        <b>3. Masukkan Kode Rahasia</b>
+        <p>Masukkan Kode Rahasia</p>
         <input id="secretCodeInput" placeholder="Kode rahasia">
-        <button id="secretCodeBtn">Klaim Bonus</button>
-        <p id="secretStatus"></p>
+        <button id="secretCodeBtn">Kirim</button>
+        <div id="secretStatus"></div>
       </div>
       <button class="close-popup" id="closePopup">Tutup</button>
     </div>
   </div>
 
-  <!-- JS ALL-IN (tambah economy) -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
@@ -240,7 +140,6 @@
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
-    // --- economy/meta ref ---
     const ECON_REF = doc(db,'economy','meta');
     async function ensureEconomy(){
       const snap = await getDoc(ECON_REF);
@@ -253,51 +152,48 @@
       }
     }
     async function mint(amount){
-      // increase circulatingSupply by amount
-      await updateDoc(ECON_REF,{
-        circulatingSupply: increment(amount)
-      });
+      await updateDoc(ECON_REF,{ circulatingSupply: increment(amount) });
     }
 
+    const FEE_RECEIVER_UID = '5UJtoleUCPVOHFEQWwfHMMZaTgG3';
     const DAILY  = [10,15,20,25,30,35,50];
     const REDEEM = [
       {cost:50,label:'Voucher 5k', img:'https://i.ibb.co/0jqHpnp/voucher5k.png'},
       {cost:100,label:'Voucher 12k',img:'https://i.ibb.co/XC4yvPf/voucher12k.png'}
     ];
+
     let userRef, uid, data;
-    let pendingShare=false, pendingRedeem=null;
+    let pendingShare=false;
 
-    // Elemen
-    const box        = document.getElementById('dailyBox');
-    const status     = document.getElementById('dailyStatus');
-    const histList   = document.getElementById('claimHistory');
-    const coinEl     = document.getElementById('coinBalance');
-    const redeemGrid = document.getElementById('redeemGrid');
-    const refBtn     = document.getElementById('submitReferral');
-    const refInput   = document.getElementById('referralCode');
-    const refStatus  = document.getElementById('referralStatus');
-    const infoDiv    = document.getElementById('user-info');
-    const uidEl      = document.getElementById('user-uid');
-    const emailEl    = document.getElementById('user-email');
-    const codeEl     = document.getElementById('user-ref-code');
-    const popup      = document.getElementById('taskPopup');
-    const showTasks  = document.getElementById('showTasks');
-    const closePopup = document.getElementById('closePopup');
-    const shareBtn   = document.getElementById('shareTaskBtn');
-    const shareSt    = document.getElementById('shareStatus');
-    const inviteBtn  = document.getElementById('inviteTaskBtn');
-    const inviteSt   = document.getElementById('inviteStatus');
-    const secretBtn  = document.getElementById('secretCodeBtn');
-    const secretInp  = document.getElementById('secretCodeInput');
-    const secretSt   = document.getElementById('secretStatus');
-    const timerEl    = document.getElementById('resetTimer');
+    const box=document.getElementById('dailyBox'),
+          status=document.getElementById('dailyStatus'),
+          histList=document.getElementById('claimHistory'),
+          coinEl=document.getElementById('coinBalance'),
+          redeemGrid=document.getElementById('redeemGrid'),
+          refBtn=document.getElementById('submitReferral'),
+          refInput=document.getElementById('referralCode'),
+          refStatus=document.getElementById('referralStatus'),
+          infoDiv=document.getElementById('user-info'),
+          uidEl=document.getElementById('user-uid'),
+          emailEl=document.getElementById('user-email'),
+          codeEl=document.getElementById('user-ref-code'),
+          popup=document.getElementById('taskPopup'),
+          showTasks=document.getElementById('showTasks'),
+          closePopup=document.getElementById('closePopup'),
+          shareBtn=document.getElementById('shareTaskBtn'),
+          shareSt=document.getElementById('shareStatus'),
+          inviteBtn=document.getElementById('inviteTaskBtn'),
+          inviteSt=document.getElementById('inviteStatus'),
+          secretBtn=document.getElementById('secretCodeBtn'),
+          secretInp=document.getElementById('secretCodeInput'),
+          secretSt=document.getElementById('secretStatus'),
+          timerEl=document.getElementById('resetTimer');
 
-    onAuthStateChanged(auth, async u=>{
+    onAuthStateChanged(auth,async u=>{
       if(!u) return location.href='/register-login';
-      uid = u.uid;
-      userRef = doc(db,'users',uid);
-      await ensureEconomy();      // ensure economy meta
-      let snap = await getDoc(userRef);
+      uid=u.uid; userRef=doc(db,'users',uid);
+      await ensureEconomy();
+      let snap=await getDoc(userRef);
       if(!snap.exists()){
         await setDoc(userRef,{
           createdAt:serverTimestamp(),
@@ -306,7 +202,7 @@
           shareCount:0,shareDate:null,shareReward:false,
           inviteDoneDate:null,lastSecretDate:null
         });
-        snap = await getDoc(userRef);
+        snap=await getDoc(userRef);
       }
       data=snap.data();
       renderAll(u,data);
@@ -314,30 +210,26 @@
     });
 
     function renderAll(u,d){
-      uidEl.textContent   = uid;
-      emailEl.textContent = u.email||'-';
-      codeEl.textContent  = uid.slice(0,6);
+      uidEl.textContent=uid;
+      emailEl.textContent=u.email||'-';
+      codeEl.textContent=uid.slice(0,6);
       infoDiv.style.display='block';
-
-      const today = new Date().toISOString().slice(0,10);
-      const ld    = d.lastLogin?.toDate?.().toISOString().slice(0,10);
+      const today=new Date().toISOString().slice(0,10),
+            ld=d.lastLogin?.toDate?.().toISOString().slice(0,10);
       if(ld===today){
         const rw=DAILY[d.streak-1]||DAILY[0];
         box.classList.remove('shake');
-        status.textContent = `+${rw} koin (hari ke-${d.streak})`;
+        status.textContent=`+${rw} koin (hari ke-${d.streak})`;
       } else {
         box.classList.add('shake');
         status.textContent='Klik kotak untuk klaim!';
       }
-
       histList.innerHTML='';
-      getDocs(query(collection(db,'users',uid,'claims'),
-        orderBy('timestamp','desc'),limit(7)))
+      getDocs(query(collection(db,'users',uid,'claims'),orderBy('timestamp','desc'),limit(7)))
       .then(snaps=>snaps.forEach(docSnap=>{
         const dt=docSnap.data().timestamp.toDate().toLocaleDateString('id');
         histList.innerHTML+=`<li>${dt} → +${docSnap.data().coins} koin</li>`;
       }));
-
       coinEl.textContent=d.coinBalance||0;
       redeemGrid.innerHTML='';
       REDEEM.forEach(item=>{
@@ -346,7 +238,12 @@
         div.className='redeem-item'+(ok?'':' disabled');
         div.innerHTML=`<img src="${item.img}"><p>${item.label} (${item.cost})</p>`;
         if(ok) div.onclick=async()=>{
-          await updateDoc(userRef,{coinBalance:d.coinBalance-item.cost});
+          const snap=await getDoc(userRef),dat=snap.data();
+          await updateDoc(userRef,{coinBalance:dat.coinBalance-item.cost});
+          const feeRef=doc(db,'users',FEE_RECEIVER_UID),
+                feeSnap=await getDoc(feeRef),
+                feeBal=feeSnap.data()?.coinBalance||0;
+          await updateDoc(feeRef,{coinBalance:feeBal+item.cost});
           location.reload();
         };
         redeemGrid.appendChild(div);
@@ -354,21 +251,16 @@
     }
 
     box.onclick=async()=>{
-      const snap=await getDoc(userRef), dt=snap.data();
-      const td=new Date().toISOString().slice(0,10);
-      const ld=dt.lastLogin?.toDate?.().toISOString().slice(0,10);
+      const snap=await getDoc(userRef),dt=snap.data();
+      const td=new Date().toISOString().slice(0,10),
+            ld=dt.lastLogin?.toDate?.().toISOString().slice(0,10);
       if(ld===td) return;
       const y=new Date();y.setDate(y.getDate()-1);
-      const yd=y.toISOString().slice(0,10);
-      const st=(ld===yd?dt.streak+1:1);
+      const st=(ld===y.toISOString().slice(0,10)?dt.streak+1:1);
       const rew=DAILY[st-1]||DAILY[0];
-      await updateDoc(userRef,{
-        lastLogin:serverTimestamp(),streak:st,
-        coinBalance:dt.coinBalance+rew
-      });
-      await setDoc(doc(collection(db,'users',uid,'claims')),
-        {timestamp:serverTimestamp(),coins:rew});
-      await mint(rew);               // update economy
+      await updateDoc(userRef,{lastLogin:serverTimestamp(),streak:st,coinBalance:dt.coinBalance+rew});
+      await setDoc(doc(collection(db,'users',uid,'claims')), {timestamp:serverTimestamp(),coins:rew});
+      await mint(rew);
       location.reload();
     };
 
@@ -377,36 +269,30 @@
       if(!code||code===uid.slice(0,6)){refStatus.textContent='Tidak valid';return;}
       const snap=await getDoc(userRef);
       if(snap.data().referralUsed){refStatus.textContent='Sudah pakai';return;}
-      const rd=doc(db,'referralCodes',code), rSnap=await getDoc(rd);
+      const rd=doc(db,'referralCodes',code),rSnap=await getDoc(rd);
       if(!rSnap.exists()){refStatus.textContent='Tdk ditemukan';return;}
-      await updateDoc(userRef,{
-        referralUsed:true,referrer:code,
-        coinBalance:snap.data().coinBalance+5
-      });
+      await updateDoc(userRef,{referralUsed:true,referrer:code,coinBalance:snap.data().coinBalance+5});
       await updateDoc(rd,{count:increment(1)});
-      const ownerRef=doc(db,'users',rSnap.data().owner);
-      const ownerSnap=await getDoc(ownerRef);
+      const ownerRef=doc(db,'users',rSnap.data().owner),ownerSnap=await getDoc(ownerRef);
       await updateDoc(ownerRef,{coinBalance:ownerSnap.data().coinBalance+10});
       refStatus.textContent='Berhasil! (+5 koin)';
-      await mint(5+10);              // update economy for both
+      await mint(15);
       renderAll(auth.currentUser,(await getDoc(userRef)).data());
     };
 
     showTasks.onclick=()=>popup.style.display='flex';
     closePopup.onclick=()=>popup.style.display='none';
     function scheduleReset(){updateTimer();setInterval(updateTimer,1000);}
-    function updateTimer(){
-      const now=new Date(), nxt=new Date(now);
-      nxt.setHours(24,0,0,0);
-      const diff=nxt-now;
-      const h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);
-      timerEl.textContent=`Reset tugas dalam ${h}h ${m}m ${s}s`; if(diff<1000)location.reload();
+    function updateTimer(){const now=new Date(),n=new Date(now);n.setHours(24,0,0,0);
+      const diff=n-now,h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000),
+            s=Math.floor((diff%60000)/1000);
+      timerEl.textContent=`Reset tugas dalam ${h}h ${m}m ${s}s`;
+      if(diff<1000)location.reload();
     }
 
     shareBtn.onclick=()=>{pendingShare=true;window.open('https://wa.me/?text='+encodeURIComponent('https://zestore.netlify.app/home'),'_blank');};
     window.addEventListener('focus',async()=>{
-      if(pendingShare){
-        pendingShare=false;
+      if(pendingShare){pendingShare=false;
         const snap=await getDoc(userRef),d=snap.data();
         const td=new Date().toISOString().slice(0,10);
         let cnt=d.shareCount||0;
@@ -415,53 +301,41 @@
         const upd={shareCount:cnt,shareDate:serverTimestamp()};
         if(cnt>=5&&!d.shareReward){
           upd.coinBalance=d.coinBalance+10;upd.shareReward=true;
-          await mint(10);         // update economy
+          await mint(10);
         }
         await updateDoc(userRef,upd);
         shareSt.textContent=cnt>=5?'Tugas selesai! +10 koin':`Berhasil share (${cnt}/5)`;
         renderAll(auth.currentUser,(await getDoc(userRef)).data());
       }
-      if(pendingRedeem){
-        const item=pendingRedeem;pendingRedeem=null;
-        const snap=await getDoc(userRef),d=snap.data();
-        if(d.coinBalance>=item.cost){
-          await updateDoc(userRef,{coinBalance:d.coinBalance-item.cost});
-          document.getElementById('redeemStatus').textContent=`Tukar ${item.label} berhasil.`;
-        }
-      }
     });
 
     inviteBtn.onclick=async()=>{
       const snap=await getDoc(userRef),d=snap.data();
-      const td=new Date().toISOString().slice(0,10);
-      if(d.inviteDoneDate?.toDate?.().toISOString().slice(0,10)===td){inviteSt.textContent='Sudah klaim';return;}
-      const rcSnap=await getDoc(doc(db,'referralCodes',uid.slice(0,6)));
-      const cnt=rcSnap.data().count||0;
-      if(cnt>=3){
-        await updateDoc(userRef,{coinBalance:d.coinBalance+30,inviteDoneDate:serverTimestamp()});
-        inviteSt.textContent='Tugas selesai! +30 koin';
-        await mint(30);         // update economy
-        renderAll(auth.currentUser,(await getDoc(userRef)).data());
-      } else inviteSt.textContent=`Progres: ${cnt}/3`;
+      const today=new Date().toISOString().slice(0,10),
+            last=d.inviteDoneDate?.toDate?.().toISOString().slice(0,10);
+      if(last===today){inviteSt.textContent='Sudah klaim';return;}
+      await updateDoc(userRef,{inviteDoneDate:serverTimestamp(),coinBalance:d.coinBalance+15});
+      await mint(15);
+      inviteSt.textContent='+15 koin dari undangan';
+      renderAll(auth.currentUser,(await getDoc(userRef)).data());
     };
 
     secretBtn.onclick=async()=>{
-      const code=secretInp.value.trim().toUpperCase();
+      const code=secretInp.value.trim();
+      if(code!=='ZEZY'){secretSt.textContent='Kode salah';return;}
       const snap=await getDoc(userRef),d=snap.data();
-      const td=new Date().toISOString().slice(0,10);
-      if(d.lastSecretDate?.toDate?.().toISOString().slice(0,10)===td){secretSt.textContent='Sudah klaim';return;}
-      if(code==='ZESPECIAL'){
-        await updateDoc(userRef,{coinBalance:d.coinBalance+50,lastSecretDate:serverTimestamp()});
-        secretSt.textContent='Tugas selesai! +50 koin';
-        await mint(50);         // update economy
-        renderAll(auth.currentUser,(await getDoc(userRef)).data());
-      } else secretSt.textContent='Kode salah';
+      const today=new Date().toISOString().slice(0,10),
+            last=d.lastSecretDate?.toDate?.().toISOString().slice(0,10);
+      if(last===today){secretSt.textContent='Sudah klaim';return;}
+      await updateDoc(userRef,{lastSecretDate:serverTimestamp(),coinBalance:d.coinBalance+20});
+      await mint(20);
+      secretSt.textContent='+20 koin dari kode rahasia';
+      renderAll(auth.currentUser,(await getDoc(userRef)).data());
     };
 
     document.querySelectorAll('.faq-question').forEach(btn=>{
       btn.addEventListener('click',()=>{
         const ans=btn.nextElementSibling;
-        document.querySelectorAll('.faq-answer').forEach(el=>{if(el!==ans)el.style.display='none';});
         ans.style.display=ans.style.display==='block'?'none':'block';
       });
     });
