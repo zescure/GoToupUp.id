@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Zestore Rewards & Referral</title>
   <style>
+    /* Reset & Layout */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: Arial, sans-serif;
@@ -23,38 +24,27 @@
       width: 100%;
       box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
-    h2, h3 { margin-bottom: 16px; text-align: center; }
+    h2, h3 { text-align: center; margin-bottom: 16px; }
 
-    .box-card {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    #dailyBox {
-      width: 150px;
-      cursor: pointer;
-    }
+    /* Reward Harian */
+    .box-card { text-align: center; margin-bottom: 30px; }
+    #dailyBox { width: 150px; cursor: pointer; }
     @keyframes shake {
-      0%,100% { transform: translateX(0); }
-      20%,60% { transform: translateX(-8px); }
-      40%,80% { transform: translateX(8px); }
+      0%,100%{transform:translateX(0);}
+      20%,60%{transform:translateX(-8px);}
+      40%,80%{transform:translateX(8px);}
     }
-    .shake {
-      animation: shake 0.8s infinite;
-    }
-    #dailyStatus {
-      margin-top: 12px;
-      font-size: 1rem;
-    }
+    .shake { animation: shake 0.8s infinite; }
+    #dailyStatus { margin-top: 12px; font-size: 1rem; }
 
-    .ref-card {
-      text-align: center;
-    }
+    /* Referral Teman */
+    .ref-card { text-align: center; margin-bottom: 30px; }
     .ref-card input {
       width: calc(100% - 20px);
       padding: 8px;
-      margin-bottom: 12px;
       border: none;
       border-radius: 6px;
+      margin-bottom: 10px;
       font-size: 1rem;
     }
     .ref-card button {
@@ -67,100 +57,91 @@
       cursor: pointer;
       transition: background .3s;
     }
-    .ref-card button:hover {
-      background: #3a6ed1;
-    }
-    #referralStatus {
-      margin-top: 10px;
-      font-size: 0.95rem;
-    }
+    .ref-card button:hover { background: #3a6ed1; }
+    #referralStatus { margin-top: 8px; font-size: .95rem; }
 
+    /* Info Akun */
     .user-info {
-      margin-top: 30px;
-      font-size: 0.9rem;
-      text-align: left;
+      display: none;
       background: #2d2d50;
       padding: 15px;
       border-radius: 8px;
+      font-size: .9rem;
       word-break: break-all;
     }
-    .user-info b {
-      color: #4c8bf5;
-    }
+    .user-info b { color: #4c8bf5; }
   </style>
 </head>
 <body>
-
   <div class="container">
-
+    <!-- Reward Harian -->
     <div class="box-card">
       <h2>Reward Harian</h2>
-      <img id="dailyBox" class="shake" src="CLOSED_IMG_URL" alt="Kotak Reward">
+      <!-- GANTI URL GAMBARNYA -->
+      <img id="dailyBox" class="shake" src="https://cdn-icons-png.flaticon.com/512/862/862856.png" alt="Kotak Reward">
       <p id="dailyStatus">Klik kotak di atas untuk klaim!</p>
     </div>
-
+    <!-- Referral Teman -->
     <div class="ref-card">
       <h3>Referral Teman</h3>
       <input type="text" id="referralCode" placeholder="Masukkan kode referral">
       <button id="submitReferral">Gunakan Kode</button>
       <p id="referralStatus"></p>
     </div>
-
-    <div class="user-info" id="userInfo" style="display:none;">
-      <p><b>Email:</b> <span id="userEmail"></span></p>
-      <p><b>UID:</b> <span id="userUid"></span></p>
-      <p><b>Kode Referral Kamu:</b> <span id="userRefCode"></span></p>
+    <!-- Info Akun User -->
+    <div class="user-info" id="user-info">
+      <p><b>UID:</b> <span id="user-uid"></span></p>
+      <p><b>Email:</b> <span id="user-email"></span></p>
+      <p><b>Kode Referral Kamu:</b> <span id="user-ref-code"></span></p>
     </div>
-
   </div>
 
-  <!-- Firebase & Logic -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
     import {
-      getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp
+      getFirestore, doc, getDoc, setDoc,
+      updateDoc, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
     import {
       getAuth, onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js";
+    // PASTIKAN file ini ada di folder sama
     import { firebaseConfig } from './firebase-config.js';
 
-    const CLOSED_IMG_URL = 'https://cdn-icons-png.flaticon.com/512/862/862856.png';
-    const OPEN_IMG_URL   = 'https://cdn-icons-png.flaticon.com/512/4315/4315609.png';
+    const CLOSED_IMG  = 'https://cdn-icons-png.flaticon.com/512/862/862856.png';
+    const OPEN_IMG    = 'https://cdn-icons-png.flaticon.com/512/4315/4315609.png';
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const app  = initializeApp(firebaseConfig);
+    const db   = getFirestore(app);
     const auth = getAuth(app);
 
-    const boxImg = document.getElementById("dailyBox");
-    const dailyStatus = document.getElementById("dailyStatus");
-    const referralBtn = document.getElementById("submitReferral");
+    const boxImg        = document.getElementById("dailyBox");
+    const dailyStatus   = document.getElementById("dailyStatus");
+    const referralBtn   = document.getElementById("submitReferral");
     const referralInput = document.getElementById("referralCode");
-    const referralStatus = document.getElementById("referralStatus");
-
-    const userInfoDiv = document.getElementById("userInfo");
-    const userEmail = document.getElementById("userEmail");
-    const userUid = document.getElementById("userUid");
-    const userRefCode = document.getElementById("userRefCode");
+    const referralStatus= document.getElementById("referralStatus");
+    const userInfoDiv   = document.getElementById("user-info");
+    const userUidEl     = document.getElementById("user-uid");
+    const userEmailEl   = document.getElementById("user-email");
+    const userRefCodeEl = document.getElementById("user-ref-code");
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.href = "/register-login";
         return;
       }
-
-      const uid = user.uid;
+      const uid     = user.uid;
       const userRef = doc(db, "users", uid);
-      const userSnap = await getDoc(userRef);
 
-      // Tampilkan data akun user
-      userEmail.textContent = user.email;
-      userUid.textContent = uid;
-      userRefCode.textContent = uid.substring(0, 6);
+      // Tampilkan info akun
+      userUidEl.textContent     = uid;
+      userEmailEl.textContent   = user.email || "-";
+      userRefCodeEl.textContent = uid.substring(0,6);
       userInfoDiv.style.display = "block";
 
-      // Buat data kalau belum ada
-      if (!userSnap.exists()) {
+      // Inisialisasi data user
+      const snap = await getDoc(userRef);
+      if (!snap.exists()) {
         await setDoc(userRef, {
           createdAt: serverTimestamp(),
           lastLogin: null,
@@ -170,79 +151,69 @@
         });
       }
 
+      // Setup tampilan kotak
       async function initBox() {
-        const data = (await getDoc(userRef)).data();
-        const last = data.lastLogin?.toDate?.().toISOString().split('T')[0];
+        const data  = (await getDoc(userRef)).data();
+        const last  = data.lastLogin?.toDate?.toISOString().split('T')[0];
         const today = new Date().toISOString().split('T')[0];
+
         if (last === today) {
-          boxImg.src = OPEN_IMG_URL;
+          boxImg.src = OPEN_IMG;
           boxImg.classList.remove("shake");
           dailyStatus.textContent = `Streak kamu: ${data.streak} hari 🎉`;
         } else {
-          boxImg.src = CLOSED_IMG_URL;
+          boxImg.src = CLOSED_IMG;
           boxImg.classList.add("shake");
           dailyStatus.textContent = "Klik kotak untuk klaim reward hari ini!";
         }
       }
-
       await initBox();
 
-      // Klaim kotak
+      // Klaim reward
       boxImg.onclick = async () => {
-        const now = new Date();
+        const now   = new Date();
         const today = now.toISOString().split('T')[0];
-        const data = (await getDoc(userRef)).data();
-        const last = data.lastLogin?.toDate?.().toISOString().split('T')[0];
+        const data  = (await getDoc(userRef)).data();
+        const last  = data.lastLogin?.toDate?.toISOString().split('T')[0];
         if (last === today) return;
 
-        let newStreak = data.streak || 0;
-        const yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1);
-        const isYesterday = last === yesterday.toISOString().split('T')[0];
-        newStreak = isYesterday ? newStreak + 1 : 1;
+        const yesterday = new Date(now); yesterday.setDate(yesterday.getDate()-1);
+        const isYest    = last === yesterday.toISOString().split('T')[0];
+        const newStreak = isYest ? data.streak+1 : 1;
 
         await updateDoc(userRef, {
           lastLogin: serverTimestamp(),
           streak: newStreak
         });
 
-        boxImg.src = OPEN_IMG_URL;
+        boxImg.src = OPEN_IMG;
         boxImg.classList.remove("shake");
         dailyStatus.textContent = `Reward diklaim! Streak kamu: ${newStreak} hari 🎉`;
       };
 
-      // Referral logic
+      // Klaim referral
       referralBtn.onclick = async () => {
         const code = referralInput.value.trim();
-        if (!code || code === uid.substring(0, 6)) {
+        if (!code || code === uid.substring(0,6)) {
           referralStatus.textContent = "Kode tidak valid atau milikmu sendiri.";
           return;
         }
-
-        const data = (await getDoc(userRef)).data();
-        if (data.referralUsed) {
+        const userData = (await getDoc(userRef)).data();
+        if (userData.referralUsed) {
           referralStatus.textContent = "Kamu sudah menggunakan referral.";
           return;
         }
-
-        const refDoc = await getDoc(doc(db, "referralCodes", code));
-        if (!refDoc.exists()) {
+        const refDocRef = doc(db, "referralCodes", code);
+        const refSnap   = await getDoc(refDocRef);
+        if (!refSnap.exists()) {
           referralStatus.textContent = "Kode referral tidak ditemukan.";
           return;
         }
-
-        await updateDoc(userRef, {
-          referralUsed: true,
-          referrer: code
-        });
-
-        await updateDoc(doc(db, "referralCodes", code), {
-          count: (refDoc.data().count || 0) + 1
-        });
-
+        await updateDoc(userRef, { referralUsed: true, referrer: code });
+        await updateDoc(refDocRef,   { count: (refSnap.data().count||0) + 1 });
         referralStatus.textContent = "Kode berhasil digunakan! 🎁";
       };
     });
   </script>
-
 </body>
 </html>
