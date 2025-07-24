@@ -2,183 +2,135 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Zestore Rewards & Referral</title>
+  <title>Rewards & Tasks - Zestore</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
-    body{
-      font-family:Arial,sans-serif;
+    body{font-family:Arial,sans-serif;
       background:#0f0f2d;color:#fff;
-      display:flex;justify-content:center;
-      padding:20px;
-    }
-    .container{
-      width:100%;max-width:400px;
+      display:flex;justify-content:center;padding:20px;}
+    .container{width:100%;max-width:400px;
       background:#1e1e40;border-radius:12px;
-      padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.5);
-      position:relative;
-    }
+      padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.5);}
     h2,h3,h4{text-align:center;margin-bottom:12px;}
+    /* reward box */
     .box-card{text-align:center;margin-bottom:20px;}
     #dailyBox{width:120px;cursor:pointer;}
-    @keyframes shake{
-      0%,100%{transform:translateX(0);}
+    @keyframes shake{0%,100%{transform:translateX(0);}
       20%,60%{transform:translateX(-6px);}
-      40%,80%{transform:translateX(6px);}
-    }
+      40%,80%{transform:translateX(6px);}}
     .shake{animation:shake 0.8s infinite;}
-    #dailyStatus{margin-top:8px;font-size:0.95rem;}
+    #dailyStatus{margin-top:8px;font-size:.95rem;}
+    /* referral */
     .ref-card{text-align:center;margin-bottom:20px;}
-    .ref-card input{
-      width:100%;padding:8px;margin-bottom:8px;
-      border:none;border-radius:6px;font-size:0.95rem;
-    }
-    .ref-card button{
-      width:100%;padding:10px;
-      border:none;border-radius:6px;
-      background:#4c8bf5;font-size:1rem;cursor:pointer;
-      transition:background .3s;
-    }
+    .ref-card input{width:100%;padding:8px;margin-bottom:8px;
+      border:none;border-radius:6px;font-size:.95rem;}
+    .ref-card button{width:100%;padding:10px;
+      border:none;border-radius:6px;background:#4c8bf5;
+      font-size:1rem;cursor:pointer;transition:background .3s;}
     .ref-card button:hover{background:#3a6ed1;}
-    #referralStatus{margin-top:6px;font-size:0.9rem;}
-    .history{
-      background:#2d2d50;padding:12px;
-      border-radius:8px;margin-bottom:20px;
-      font-size:0.9rem;
-    }
+    #referralStatus{margin-top:6px;font-size:.9rem;}
+    /* history */
+    .history{background:#2d2d50;padding:12px;border-radius:8px;
+      margin-bottom:20px;font-size:.9rem;}
     .history ul{list-style:none;}
     .history li{padding:4px 0;border-bottom:1px solid #444;}
-    .redeem{
-      background:#2d2d50;padding:12px;
-      border-radius:8px;margin-bottom:20px;
-      text-align:center;
-    }
-    .coin-balance{
-      text-align:center;font-size:1.1rem;
-      color:#ffd700;margin-bottom:8px;
-      display:flex;align-items:center;justify-content:center;
-      gap:5px;
-    }
-    .coin-balance button{
-      background:#4c8bf5;border:none;border-radius:50%;
-      width:24px;height:24px;color:#fff;font-weight:bold;
-      cursor:pointer;transition:background .3s;
-    }
+    /* redeem */
+    .redeem{text-align:center;background:#2d2d50;padding:12px;
+      border-radius:8px;margin-bottom:20px;}
+    .coin-balance{display:flex;align-items:center;
+      justify-content:center;gap:5px;
+      font-size:1.1rem;color:#ffd700;margin-bottom:8px;}
+    .coin-balance button{background:#4c8bf5;border:none;
+      border-radius:50%;width:24px;height:24px;
+      color:#fff;font-weight:bold;cursor:pointer;
+      transition:background .3s;}
     .coin-balance button:hover{background:#3a6ed1;}
-    .redeem-grid{
-      display:flex;flex-wrap:wrap;gap:10px;
-      justify-content:center;
-    }
-    .redeem-item{
-      width:45%;text-align:center;cursor:pointer;
-      transition:opacity .3s;
-    }
-    .redeem-item.disabled{opacity:0.5;cursor:not-allowed;}
+    .redeem-grid{display:flex;flex-wrap:wrap;gap:10px;
+      justify-content:center;}
+    .redeem-item{width:45%;text-align:center;
+      transition:opacity .3s;cursor:pointer;}
+    .redeem-item.disabled{opacity:.5;cursor:not-allowed;}
     .redeem-item img{width:100%;border-radius:6px;}
-    .redeem-item p{margin-top:4px;font-size:0.9rem;}
-    .user-info{
-      background:#2d2d50;padding:12px;
-      border-radius:8px;font-size:0.9rem;
-      word-break:break-all;display:none;
-    }
+    .redeem-item p{margin-top:4px;font-size:.9rem;}
+    /* user info */
+    .user-info{background:#2d2d50;padding:12px;
+      border-radius:8px;font-size:.9rem;
+      word-break:break-all;display:none;}
     .user-info b{color:#4c8bf5;}
-
-    /* Pop-up Tugas */
-    .popup{
-      position:fixed;top:0;left:0;width:100%;height:100%;
-      background:rgba(0,0,0,0.7);
-      display:none;align-items:center;justify-content:center;
-      z-index:1000;
-    }
-    .popup-content{
-      background:#1e1e40;padding:20px;border-radius:12px;
-      max-width:350px;width:90%;
-      text-align:center;
-    }
-    .popup-content h3{margin-bottom:10px;}
-    .task{
-      background:#2d2d50;padding:8px;margin:8px 0;
-      border-radius:8px;font-size:0.9rem;
-      text-align:left;
-    }
-    .task button{
-      margin-top:6px;width:100%;
-      background:#4c8bf5;border:none;border-radius:6px;
-      padding:6px;color:#fff;cursor:pointer;
-    }
-    .task input{
-      width:100%;padding:5px;margin-top:4px;
-      border-radius:6px;border:none;
-    }
-    .close-popup{
-      margin-top:10px;
-      background:#f54242;border:none;border-radius:6px;
-      padding:6px 12px;color:#fff;cursor:pointer;
-    }
+    /* popup */
+    .popup{position:fixed;top:0;left:0;width:100%;height:100%;
+      background:rgba(0,0,0,0.7);display:none;
+      align-items:center;justify-content:center;z-index:1000;}
+    .popup-content{background:#1e1e40;padding:20px;
+      border-radius:12px;max-width:350px;width:90%;
+      text-align:center;position:relative;}
+    .popup-content h3{margin-bottom:8px;}
+    #resetTimer{font-size:.85rem;color:#ccc;margin-bottom:10px;}
+    .task{background:#2d2d50;padding:8px;margin:8px 0;
+      border-radius:8px;text-align:left;font-size:.9rem;}
+    .task button,.task input{
+      width:100%;padding:6px;margin-top:6px;
+      border:none;border-radius:6px;font-size:.9rem;}
+    .task button{background:#4c8bf5;color:#fff;cursor:pointer;
+      transition:background .3s;}
+    .task input{background:#fff;color:#000;}
+    .close-popup{margin-top:12px;background:#f54242;
+      border:none;border-radius:6px;padding:6px 12px;
+      color:#fff;cursor:pointer;}
   </style>
 </head>
 <body>
   <div class="container">
-
-    <!-- Reward Harian -->
     <div class="box-card">
       <h2>Reward Harian</h2>
       <img id="dailyBox" class="shake"
-           src="https://cdn-icons-png.flaticon.com/512/862/862856.png"
-           alt="Kotak Reward">
+        src="https://cdn-icons-png.flaticon.com/512/862/862856.png">
       <p id="dailyStatus">Klik kotak untuk klaim!</p>
     </div>
-
-    <!-- Referral Teman -->
     <div class="ref-card">
       <h3>Referral Teman</h3>
-      <input type="text" id="referralCode" placeholder="Masukkan kode referral">
+      <input id="referralCode" placeholder="Masukkan kode referral">
       <button id="submitReferral">Gunakan Kode</button>
       <p id="referralStatus"></p>
     </div>
-
-    <!-- Histori Klaim -->
     <div class="history">
       <h4>7 Hari Terakhir</h4>
       <ul id="claimHistory"></ul>
     </div>
-
-    <!-- Redeem Koin dengan gambar -->
     <div class="redeem">
       <div class="coin-balance">
         Saldo Koin: <span id="coinBalance">0</span>
         <button id="showTasks">+</button>
       </div>
       <div class="redeem-grid" id="redeemGrid"></div>
-      <p id="redeemStatus" style="text-align:center;margin-top:8px;"></p>
+      <p id="redeemStatus"></p>
     </div>
-
-    <!-- Info Akun User -->
     <div class="user-info" id="user-info">
       <p><b>UID:</b> <span id="user-uid"></span></p>
       <p><b>Email:</b> <span id="user-email"></span></p>
       <p><b>Kode Referral:</b> <span id="user-ref-code"></span></p>
     </div>
-
   </div>
 
-  <!-- POPUP -->
+  <!-- Popup tugas -->
   <div class="popup" id="taskPopup">
     <div class="popup-content">
       <h3>Tugas Tambahan</h3>
+      <div id="resetTimer"></div>
       <div class="task">
-        <b>1. Bagikan ke Sosial Media (5x)</b>
+        <b>1. Bagikan 5× ke sosmed</b>
         <button id="shareTaskBtn">Bagikan</button>
         <p id="shareStatus"></p>
       </div>
       <div class="task">
-        <b>2. Undang 3 Teman & Redeem</b>
+        <b>2. Undang & redeem 3 teman</b>
         <button id="inviteTaskBtn">Cek Progres</button>
         <p id="inviteStatus"></p>
       </div>
       <div class="task">
         <b>3. Masukkan Kode Rahasia</b>
-        <input type="text" id="secretCodeInput" placeholder="Kode rahasia">
+        <input id="secretCodeInput" placeholder="Kode rahasia">
         <button id="secretCodeBtn">Klaim Bonus</button>
         <p id="secretStatus"></p>
       </div>
@@ -195,217 +147,253 @@
       query, orderBy, limit
     } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-    // Firebase config
+    // config
     const cfg = {
-      apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
-      authDomain: "zeepaylater-93a94.firebaseapp.com",
-      projectId: "zeepaylater-93a94",
-      storageBucket: "zeepaylater-93a94.appspot.com",
-      messagingSenderId: "358065954807",
-      appId: "1:358065954807:web:66619211fea82a4b2518f2"
+      apiKey:"AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
+      authDomain:"zeepaylater-93a94.firebaseapp.com",
+      projectId:"zeepaylater-93a94",
+      storageBucket:"zeepaylater-93a94.appspot.com",
+      messagingSenderId:"358065954807",
+      appId:"1:358065954807:web:66619211fea82a4b2518f2"
     };
-    const app  = initializeApp(cfg);
+    const app = initializeApp(cfg);
     const auth = getAuth(app);
-    const db   = getFirestore(app);
+    const db = getFirestore(app);
 
-    // Rewards
-    const DAILY_REWARDS = [10,15,20,25,30,35,50];
-    const REDEEM_ITEMS = [
-      { cost:50,label:'Voucher Rp5.000',img:'https://i.ibb.co/0jqHpnp/voucher5k.png' },
-      { cost:100,label:'Voucher Rp12.000',img:'https://i.ibb.co/XC4yvPf/voucher12k.png' }
-    ];
+    const DAILY=[10,15,20,25,30,35,50];
+    const REDEEM=[{cost:50,label:'Voucher 5k',img:'https://i.ibb.co/0jqHpnp/voucher5k.png'},
+                  {cost:100,label:'Voucher 12k',img:'https://i.ibb.co/XC4yvPf/voucher12k.png'}];
+    // tugas reset tiap hari
+    let userRef, uid, data;
 
-    // Elemen
-    const boxImg = document.getElementById("dailyBox");
-    const dailyStatus = document.getElementById("dailyStatus");
-    const referralBtn = document.getElementById("submitReferral");
-    const referralInput = document.getElementById("referralCode");
-    const referralStatus = document.getElementById("referralStatus");
-    const historyList = document.getElementById("claimHistory");
-    const coinBalanceEl = document.getElementById("coinBalance");
-    const redeemGrid = document.getElementById("redeemGrid");
-    const redeemStatus = document.getElementById("redeemStatus");
-    const userInfoDiv = document.getElementById("user-info");
-    const userUidEl = document.getElementById("user-uid");
-    const userEmailEl = document.getElementById("user-email");
-    const userRefCodeEl = document.getElementById("user-ref-code");
-    const showTasksBtn = document.getElementById("showTasks");
-    const popup = document.getElementById("taskPopup");
-    const closePopup = document.getElementById("closePopup");
-    const shareBtn = document.getElementById("shareTaskBtn");
-    const shareStatus = document.getElementById("shareStatus");
-    const inviteBtn = document.getElementById("inviteTaskBtn");
-    const inviteStatus = document.getElementById("inviteStatus");
-    const secretBtn = document.getElementById("secretCodeBtn");
-    const secretInput = document.getElementById("secretCodeInput");
-    const secretStatus = document.getElementById("secretStatus");
+    // elemen
+    const box=document.getElementById('dailyBox');
+    const status=document.getElementById('dailyStatus');
+    const histList=document.getElementById('claimHistory');
+    const coinEl=document.getElementById('coinBalance');
+    const redeemGrid=document.getElementById('redeemGrid');
+    const refBtn=document.getElementById('submitReferral');
+    const refInput=document.getElementById('referralCode');
+    const refStatus=document.getElementById('referralStatus');
+    const infoDiv=document.getElementById('user-info');
+    const uidEl=document.getElementById('user-uid');
+    const emailEl=document.getElementById('user-email');
+    const codeEl=document.getElementById('user-ref-code');
+    const popup=document.getElementById('taskPopup');
+    const showTasks=document.getElementById('showTasks');
+    const closePopup=document.getElementById('closePopup');
+    const shareBtn=document.getElementById('shareTaskBtn');
+    const shareSt=document.getElementById('shareStatus');
+    const inviteBtn=document.getElementById('inviteTaskBtn');
+    const inviteSt=document.getElementById('inviteStatus');
+    const secretBtn=document.getElementById('secretCodeBtn');
+    const secretInp=document.getElementById('secretCodeInput');
+    const secretSt=document.getElementById('secretStatus');
+    const timerEl=document.getElementById('resetTimer');
 
-    let currentUserRef, myCode, userData;
+    let pendingShare=false;
 
-    onAuthStateChanged(auth, async user => {
-      if(!user) return window.location.href='/register-login';
-      const uid = user.uid;
-      currentUserRef = doc(db,"users",uid);
-      myCode = uid.substring(0,6);
-
-      // Referral doc
-      const refDoc = doc(db,"referralCodes",myCode);
-      if(!(await getDoc(refDoc)).exists()){
-        await setDoc(refDoc,{owner:uid,count:0});
-      }
-
-      // User doc init
-      let snap = await getDoc(currentUserRef);
+    onAuthStateChanged(auth,async u=>{
+      if(!u) return location.href='/register-login';
+      uid=u.uid; userRef=doc(db,'users',uid);
+      const refCode=uid.slice(0,6);
+      // generate referral-doc
+      const rd=doc(db,'referralCodes',refCode);
+      if(!(await getDoc(rd)).exists()) await setDoc(rd,{owner:uid,count:0});
+      // init user doc
+      let snap=await getDoc(userRef);
       if(!snap.exists()){
-        await setDoc(currentUserRef,{
+        await setDoc(userRef,{
           createdAt:serverTimestamp(),
-          lastLogin:null,
-          streak:0,
-          coinBalance:0,
-          referralUsed:false,
-          referrer:"",
-          shareCount:0,
-          lastSecretDate:null
+          lastLogin:null,streak:0,coinBalance:0,
+          referralUsed:false,referrer:'',
+          shareCount:0,lastShareDate:null,
+          inviteDoneDate:null,lastSecretDate:null
         });
-        snap = await getDoc(currentUserRef);
+        snap=await getDoc(userRef);
       }
-      userData = snap.data();
-      renderUI(user, userData);
+      data=snap.data();
+      renderAll(u,data);
+      scheduleReset();
     });
 
-    function renderUI(user, data){
-      const {coinBalance,streak,lastLogin} = data;
-      // Info akun
-      userUidEl.textContent = user.uid;
-      userEmailEl.textContent = user.email||'-';
-      userRefCodeEl.textContent = myCode;
-      userInfoDiv.style.display='block';
-
-      // Reward
-      const today = new Date().toISOString().split('T')[0];
-      const lastDate = data.lastLogin?.toDate?.().toISOString().split('T')[0];
-      const claimedToday = lastDate===today;
-      if(claimedToday){
-        boxImg.src='https://cdn-icons-png.flaticon.com/512/4315/4315609.png';
-        boxImg.classList.remove('shake');
-        dailyStatus.textContent=`+${DAILY_REWARDS[streak-1]||DAILY_REWARDS[0]} koin (hari ke-${streak})`;
-      }else{
-        boxImg.src='https://cdn-icons-png.flaticon.com/512/862/862856.png';
-        boxImg.classList.add('shake');
-        dailyStatus.textContent='Klik kotak untuk klaim!';
+    function renderAll(u,d){
+      // show user info
+      uidEl.textContent=uid;
+      emailEl.textContent=u.email||'-';
+      codeEl.textContent=uid.slice(0,6);
+      infoDiv.style.display='block';
+      // daily reward
+      const today=new Date().toISOString().slice(0,10);
+      const lastDate=d.lastLogin?.toDate?.().toISOString().slice(0,10);
+      const doneToday=lastDate===today;
+      if(doneToday){
+        const rw=DAILY[d.streak-1]||DAILY[0];
+        box.src='https://cdn-icons-png.flaticon.com/512/4315/4315609.png';
+        box.classList.remove('shake');
+        status.textContent=`+${rw} koin (hari ke-${d.streak})`;
+      } else {
+        box.src='https://cdn-icons-png.flaticon.com/512/862/862856.png';
+        box.classList.add('shake');
+        status.textContent='Klik kotak untuk klaim!';
       }
-
-      // History
-      historyList.innerHTML='';
-      getDocs(query(collection(db,"users",user.uid,"claims"),orderBy("timestamp","desc"),limit(7))).then(snaps=>{
-        snaps.forEach(d=>{
-          const dt = d.data().timestamp.toDate().toLocaleDateString('id');
-          historyList.innerHTML+=`<li>${dt} → +${d.data().coins} koin</li>`;
+      // history
+      histList.innerHTML='';
+      getDocs(query(collection(db,'users',uid,'claims'),
+        orderBy('timestamp','desc'),limit(7)))
+      .then(snaps=>{
+        snaps.forEach(doc=>{
+          const date=doc.data().timestamp.toDate()
+            .toLocaleDateString('id');
+          histList.innerHTML+=`<li>${date} → +${doc.data().coins} koin</li>`;
         });
       });
-
-      // Coin
-      coinBalanceEl.textContent = coinBalance||0;
+      // coin & redeem grid
+      coinEl.textContent=d.coinBalance||0;
       redeemGrid.innerHTML='';
-      REDEEM_ITEMS.forEach(item=>{
-        const ok=(coinBalance||0)>=item.cost;
+      REDEEM.forEach(it=>{
+        const ok=(d.coinBalance||0)>=it.cost;
         const div=document.createElement('div');
         div.className='redeem-item'+(ok?'':' disabled');
-        div.innerHTML=`<img src="${item.img}" alt=""><p>${item.label} (${item.cost} koin)</p>`;
-        if(ok){
-          div.onclick=async()=>{
-            await updateDoc(currentUserRef,{coinBalance:(coinBalance||0)-item.cost});
-            redeemStatus.textContent=`Berhasil tukar ${item.label}!`;
-            location.reload();
-          };
-        }
+        div.innerHTML=`<img src="${it.img}"><p>${it.label} (${it.cost})</p>`;
+        if(ok)div.onclick=async()=>{
+          await updateDoc(userRef,{coinBalance:d.coinBalance-it.cost});
+          location.reload();
+        };
         redeemGrid.appendChild(div);
       });
     }
 
-    // Kotak reward
-    boxImg.onclick=async()=>{
-      const snap = await getDoc(currentUserRef);
-      const d = snap.data();
-      const today = new Date().toISOString().split('T')[0];
-      const lastDate = d.lastLogin?.toDate?.().toISOString().split('T')[0];
-      if(lastDate===today) return;
+    // daily claim
+    box.onclick=async()=>{
+      const snap=await getDoc(userRef);
+      const dt=snap.data();
+      const td=new Date().toISOString().slice(0,10);
+      const ld=dt.lastLogin?.toDate?.().toISOString().slice(0,10);
+      if(ld===td) return;
       const y=new Date();y.setDate(y.getDate()-1);
-      const isY = lastDate===y.toISOString().split('T')[0];
-      const newSt = isY?d.streak+1:1;
-      const rew=DAILY_REWARDS[newSt-1]||DAILY_REWARDS[0];
-      await updateDoc(currentUserRef,{
-        lastLogin:serverTimestamp(),
-        streak:newSt,
-        coinBalance:(d.coinBalance||0)+rew
+      const yd=y.toISOString().slice(0,10);
+      const st=(ld===yd?dt.streak+1:1);
+      const reward=DAILY[st-1]||DAILY[0];
+      await updateDoc(userRef,{
+        lastLogin:serverTimestamp(),streak:st,
+        coinBalance:dt.coinBalance+reward
       });
-      await setDoc(doc(collection(db,"users",auth.currentUser.uid,"claims")),{timestamp:serverTimestamp(),coins:rew});
+      await setDoc(doc(collection(db,'users',uid,'claims')),
+        {timestamp:serverTimestamp(),coins:reward});
       location.reload();
     };
 
-    // Referral
-    referralBtn.onclick=async()=>{
-      const code=referralInput.value.trim();
-      if(!code||code===myCode){referralStatus.textContent='Kode tidak valid.';return;}
-      const snap=await getDoc(currentUserRef);
-      if(snap.data().referralUsed){referralStatus.textContent='Sudah pakai referral.';return;}
-      const rd=doc(db,"referralCodes",code);
+    // referral
+    refBtn.onclick=async()=>{
+      const code=refInput.value.trim();
+      if(!code||code===uid.slice(0,6)){refStatus.textContent='Tidak valid';return;}
+      const snap=await getDoc(userRef);
+      if(snap.data().referralUsed){refStatus.textContent='Sudah pakai';return;}
+      const rd=doc(db,'referralCodes',code);
       const rSnap=await getDoc(rd);
-      if(!rSnap.exists()){referralStatus.textContent='Kode tdk ditemukan.';return;}
-      await updateDoc(currentUserRef,{referralUsed:true,referrer:code,coinBalance:(snap.data().coinBalance||0)+5});
-      await updateDoc(rd,{count:(rSnap.data().count||0)+1});
-      referralStatus.textContent='Referral berhasil! (+5 koin)';
+      if(!rSnap.exists()){refStatus.textContent='Tdk ditemukan';return;}
+      // penerima +5
+      await updateDoc(userRef,{referralUsed:true,referrer:code,
+        coinBalance:snap.data().coinBalance+5});
+      // pemberi +10
+      await updateDoc(rd,{count:rSnap.data().count+1});
+      // find owner uid
+      const ownerRef=doc(db,'users',rSnap.data().owner);
+      await updateDoc(ownerRef,{coinBalance:
+        (await getDoc(ownerRef)).data().coinBalance+10});
+      refStatus.textContent='Berhasil! (+5 koin)';
     };
 
-    // Pop-up Tasks
-    showTasksBtn.onclick=()=>popup.style.display='flex';
+    // popup
+    showTasks.onclick=()=>popup.style.display='flex';
     closePopup.onclick=()=>popup.style.display='none';
 
-    // Bagikan
-    shareBtn.onclick=async()=>{
-      const snap=await getDoc(currentUserRef);
-      const count=snap.data().shareCount||0;
-      const newCount=count+1;
-      await updateDoc(currentUserRef,{shareCount:newCount});
-      if(newCount>=5){
-        await updateDoc(currentUserRef,{coinBalance:(snap.data().coinBalance||0)+10,shareCount:0});
-        shareStatus.textContent='Kamu dapat +10 koin!';
-      } else {
-        shareStatus.textContent=`Berhasil dibagikan (${newCount}/5)`;
-      }
-      window.open('https://zestore.netlify.app/home','_blank');
-    };
+    // countdown timer
+    function scheduleReset(){
+      updateTimer();
+      setInterval(updateTimer,1000);
+    }
+    function updateTimer(){
+      const now=new Date();
+      const nxt=new Date(now);
+      nxt.setHours(24,0,0,0);
+      const diff=nxt-now;
+      const h=Math.floor(diff/3600000);
+      const m=Math.floor((diff%3600000)/60000);
+      const s=Math.floor((diff%60000)/1000);
+      timerEl.textContent=`Reset tugas dalam ${h}h ${m}m ${s}s`;
+      // at midnight reload to reset tasks
+      if(diff<1000) location.reload();
+    }
 
-    // Invite Check
-    inviteBtn.onclick=async()=>{
-      const refDoc = await getDoc(doc(db,"referralCodes",myCode));
-      const count = refDoc.data().count||0;
-      if(count>=3){
-        await updateDoc(currentUserRef,{coinBalance:(userData.coinBalance||0)+30});
-        inviteStatus.textContent='Selamat! +30 koin';
-      } else {
-        inviteStatus.textContent=`Progres undangan: ${count}/3`;
-      }
+    // share task
+    shareBtn.onclick=()=>{
+      pendingShare=true;
+      window.open('https://wa.me/?text='+encodeURIComponent('https://zestore.netlify.app/home'));
     };
-
-    // Secret Code
-    secretBtn.onclick=async()=>{
-      const code=secretInput.value.trim();
-      if(!code){secretStatus.textContent='Masukkan kode';return;}
-      const snap=await getDoc(currentUserRef);
+    window.addEventListener('focus',async()=>{
+      if(!pendingShare) return;
+      pendingShare=false;
+      const snap=await getDoc(userRef);
       const d=snap.data();
-      const today=new Date().toISOString().split('T')[0];
-      const lastSecret=d.lastSecretDate?.toDate?.().toISOString().split('T')[0];
-      if(lastSecret===today){secretStatus.textContent='Sudah klaim hari ini';return;}
-      // validasi kode rahasia (contoh: "ZESPECIAL")
-      if(code.toUpperCase()==="ZESPECIAL"){
-        await updateDoc(currentUserRef,{
-          coinBalance:(d.coinBalance||0)+50,
-          lastSecretDate:serverTimestamp()
-        });
-        secretStatus.textContent='Kode berhasil! +50 koin';
-      }else{
-        secretStatus.textContent='Kode salah';
+      const today=new Date().toISOString().slice(0,10);
+      let cnt=d.shareCount||0;
+      // reset if new day
+      if(d.lastShareDate?.toDate?.().toISOString().slice(0,10)!==today){
+        cnt=0;
+      }
+      cnt++;
+      let msg;
+      if(cnt>=5){
+        await updateDoc(userRef,{coinBalance:d.coinBalance+10,shareCount:0,
+          lastShareDate:serverTimestamp()});
+        msg='Tugas selesai! +10 koin';
+      } else {
+        await updateDoc(userRef,{shareCount:cnt,lastShareDate:serverTimestamp()});
+        msg=`Berhasil dibagi (${cnt}/5)`;
+      }
+      shareSt.textContent=msg;
+      renderAll(auth.currentUser,(await getDoc(userRef)).data());
+    });
+
+    // invite task
+    inviteBtn.onclick=async()=>{
+      const snap=await getDoc(userRef);
+      const d=snap.data();
+      const today=new Date().toISOString().slice(0,10);
+      if(d.inviteDoneDate?.toDate?.().toISOString().slice(0,10)===today){
+        inviteSt.textContent='Sudah klaim hari ini';return;
+      }
+      const rc=doc(db,'referralCodes',uid.slice(0,6));
+      const rcSnap=await getDoc(rc);
+      const count=rcSnap.data().count||0;
+      if(count>=3){
+        await updateDoc(userRef,{coinBalance:d.coinBalance+30,
+          inviteDoneDate:serverTimestamp()});
+        inviteSt.textContent='Tugas selesai! +30 koin';
+        renderAll(auth.currentUser,(await getDoc(userRef)).data());
+      } else {
+        inviteSt.textContent=`Progres: ${count}/3`;
+      }
+    };
+
+    // secret task
+    secretBtn.onclick=async()=>{
+      const code=secretInp.value.trim().toUpperCase();
+      const snap=await getDoc(userRef);
+      const d=snap.data();
+      const today=new Date().toISOString().slice(0,10);
+      if(d.lastSecretDate?.toDate?.().toISOString().slice(0,10)===today){
+        secretSt.textContent='Sudah klaim hari ini';return;
+      }
+      if(code==='ZESPECIAL'){
+        await updateDoc(userRef,{coinBalance:d.coinBalance+50,
+          lastSecretDate:serverTimestamp()});
+        secretSt.textContent='Tugas selesai! +50 koin';
+        renderAll(auth.currentUser,(await getDoc(userRef)).data());
+      } else {
+        secretSt.textContent='Kode salah';
       }
     };
   </script>
