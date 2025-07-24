@@ -1044,47 +1044,46 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-// Login/Register
-const loginBtn = document.getElementById("loginBtn");
-const accountInfo = document.getElementById("accountInfo");
-const usernameDisplay = document.getElementById("usernameDisplay");
-const logoutBtn = document.getElementById("logoutBtn");
+ // Login/Register
+  const loginBtn = document.getElementById("loginBtn");
+  const accountInfo = document.getElementById("accountInfo");
+  const usernameDisplay = document.getElementById("usernameDisplay");
+  const logoutBtn = document.getElementById("logoutBtn");
 
-function updateLoginState() {
-  const username = localStorage.getItem("username");
-  if (username) {
-    loginBtn.style.display = "none";
-    accountInfo.style.display = "block";
-    usernameDisplay.textContent = username;
-  } else {
-    loginBtn.style.display = "inline-block";
-    accountInfo.style.display = "none";
-    usernameDisplay.textContent = "";
+  function updateLoginState() {
+    const username = localStorage.getItem("username");
+    if (username) {
+      loginBtn.style.display = "none";
+      accountInfo.style.display = "block";
+      usernameDisplay.textContent = username;
+    } else {
+      loginBtn.style.display = "inline-block";
+      accountInfo.style.display = "none";
+      usernameDisplay.textContent = "";
+    }
   }
-}
 
-loginBtn?.addEventListener("click", () => {
-  // Reset username lama biar gak auto-login
-  localStorage.removeItem("username");
+  loginBtn?.addEventListener("click", () => {
+    const username = prompt("Masukkan nama pengguna:");
+    if (username) {
+      localStorage.setItem("username", username);
+      updateLoginState();
+    } else {
+      window.location.href = 'https://zestore.netlify.app/register-login';
+    }
+  });
 
-  const username = prompt("Masukkan nama pengguna:");
-  if (username) {
-    localStorage.setItem("username", username);
+  logoutBtn?.addEventListener("click", () => {
+    localStorage.removeItem("username");
     updateLoginState();
-  } else {
-    window.location.href = 'https://zestore.netlify.app/register-login';
-  }
-});
+  });
 
-logoutBtn?.addEventListener("click", () => {
-  localStorage.removeItem("username");
   updateLoginState();
 });
 
-updateLoginState();
 
-// Floating Gift
-document.getElementById('floatingGift').addEventListener('click', () => {
+    document.getElementById('floatingGift').addEventListener('click', () => {
+  // Arahkan ke halaman reward
   window.location.href = '/undang-teman.html';
 });
   </script>
