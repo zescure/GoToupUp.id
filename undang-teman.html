@@ -80,11 +80,13 @@
       color:#fff;cursor:pointer;}
 
     .promo-faq-wrapper {
+  width: 100%;
+  display: block;
   background: #1e1e40;
   border-radius: 10px;
   padding: 20px;
   margin-top: 20px;
-  display: block;  /* Supaya tidak ikut flex row */
+  box-sizing: border-box;
 }
 
 .promo-section h2 {
@@ -217,7 +219,7 @@
   <script type="module" src="reward.js"></script>
 
 <!-- Promo Section -->
-<section class="promo-section">
+<section class="container">
   <div class="promo-header">
     <h2>🎉 Promo Event Spesial Zestore</h2>
     <p>Dapatkan hadiah eksklusif dengan mengikuti misi event ini!</p>
