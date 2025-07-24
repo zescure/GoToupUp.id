@@ -85,19 +85,23 @@
     <div class="box-card">
       <h2>Reward Harian</h2>
       <img id="dailyBox" class="shake"
-        src="https://cdn-icons-png.flaticon.com/512/862/862856.png">
+           src="https://cdn-icons-png.flaticon.com/512/862/862856.png"
+           alt="Kotak Reward">
       <p id="dailyStatus">Klik kotak untuk klaim!</p>
     </div>
+
     <div class="ref-card">
       <h3>Referral Teman</h3>
       <input id="referralCode" placeholder="Masukkan kode referral">
       <button id="submitReferral">Gunakan Kode</button>
       <p id="referralStatus"></p>
     </div>
+
     <div class="history">
       <h4>7 Hari Terakhir</h4>
       <ul id="claimHistory"></ul>
     </div>
+
     <div class="redeem">
       <div class="coin-balance">
         Saldo Koin: <span id="coinBalance">0</span>
@@ -106,6 +110,7 @@
       <div class="redeem-grid" id="redeemGrid"></div>
       <p id="redeemStatus"></p>
     </div>
+
     <div class="user-info" id="user-info">
       <p><b>UID:</b> <span id="user-uid"></span></p>
       <p><b>Email:</b> <span id="user-email"></span></p>
@@ -113,7 +118,6 @@
     </div>
   </div>
 
-  <!-- Popup tugas -->
   <div class="popup" id="taskPopup">
     <div class="popup-content">
       <h3>Tugas Tambahan</h3>
@@ -147,7 +151,6 @@
       query, orderBy, limit
     } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-    // config
     const cfg = {
       apiKey:"AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
       authDomain:"zeepaylater-93a94.firebaseapp.com",
@@ -156,242 +159,250 @@
       messagingSenderId:"358065954807",
       appId:"1:358065954807:web:66619211fea82a4b2518f2"
     };
-    const app = initializeApp(cfg);
+    const app  = initializeApp(cfg);
     const auth = getAuth(app);
-    const db = getFirestore(app);
+    const db   = getFirestore(app);
 
-    const DAILY=[10,15,20,25,30,35,50];
-    const REDEEM=[{cost:50,label:'Voucher 5k',img:'https://i.ibb.co/0jqHpnp/voucher5k.png'},
-                  {cost:100,label:'Voucher 12k',img:'https://i.ibb.co/XC4yvPf/voucher12k.png'}];
-    // tugas reset tiap hari
+    const DAILY    = [10,15,20,25,30,35,50];
+    const REDEEM   = [
+      {cost:50,label:'Voucher 5k',img:'https://i.ibb.co/0jqHpnp/voucher5k.png'},
+      {cost:100,label:'Voucher 12k',img:'https://i.ibb.co/XC4yvPf/voucher12k.png'}
+    ];
     let userRef, uid, data;
+    let pendingShare = false, pendingRedeem = null;
 
-    // elemen
-    const box=document.getElementById('dailyBox');
-    const status=document.getElementById('dailyStatus');
-    const histList=document.getElementById('claimHistory');
-    const coinEl=document.getElementById('coinBalance');
-    const redeemGrid=document.getElementById('redeemGrid');
-    const refBtn=document.getElementById('submitReferral');
-    const refInput=document.getElementById('referralCode');
-    const refStatus=document.getElementById('referralStatus');
-    const infoDiv=document.getElementById('user-info');
-    const uidEl=document.getElementById('user-uid');
-    const emailEl=document.getElementById('user-email');
-    const codeEl=document.getElementById('user-ref-code');
-    const popup=document.getElementById('taskPopup');
-    const showTasks=document.getElementById('showTasks');
-    const closePopup=document.getElementById('closePopup');
-    const shareBtn=document.getElementById('shareTaskBtn');
-    const shareSt=document.getElementById('shareStatus');
-    const inviteBtn=document.getElementById('inviteTaskBtn');
-    const inviteSt=document.getElementById('inviteStatus');
-    const secretBtn=document.getElementById('secretCodeBtn');
-    const secretInp=document.getElementById('secretCodeInput');
-    const secretSt=document.getElementById('secretStatus');
-    const timerEl=document.getElementById('resetTimer');
+    // Elemen
+    const box         = document.getElementById('dailyBox');
+    const status      = document.getElementById('dailyStatus');
+    const histList    = document.getElementById('claimHistory');
+    const coinEl      = document.getElementById('coinBalance');
+    const redeemGrid  = document.getElementById('redeemGrid');
+    const refBtn      = document.getElementById('submitReferral');
+    const refInput    = document.getElementById('referralCode');
+    const refStatus   = document.getElementById('referralStatus');
+    const infoDiv     = document.getElementById('user-info');
+    const uidEl       = document.getElementById('user-uid');
+    const emailEl     = document.getElementById('user-email');
+    const codeEl      = document.getElementById('user-ref-code');
+    const popup       = document.getElementById('taskPopup');
+    const showTasks   = document.getElementById('showTasks');
+    const closePopup  = document.getElementById('closePopup');
+    const shareBtn    = document.getElementById('shareTaskBtn');
+    const shareSt     = document.getElementById('shareStatus');
+    const inviteBtn   = document.getElementById('inviteTaskBtn');
+    const inviteSt    = document.getElementById('inviteStatus');
+    const secretBtn   = document.getElementById('secretCodeBtn');
+    const secretInp   = document.getElementById('secretCodeInput');
+    const secretSt    = document.getElementById('secretStatus');
+    const timerEl     = document.getElementById('resetTimer');
 
-    let pendingShare=false;
+    onAuthStateChanged(auth, async u => {
+      if (!u) return location.href='/register-login';
+      uid     = u.uid;
+      userRef = doc(db,'users',uid);
 
-    onAuthStateChanged(auth,async u=>{
-      if(!u) return location.href='/register-login';
-      uid=u.uid; userRef=doc(db,'users',uid);
-      const refCode=uid.slice(0,6);
-      // generate referral-doc
-      const rd=doc(db,'referralCodes',refCode);
-      if(!(await getDoc(rd)).exists()) await setDoc(rd,{owner:uid,count:0});
+      // generate referral doc
+      const refCode = uid.slice(0,6);
+      const rd      = doc(db,'referralCodes',refCode);
+      if (!(await getDoc(rd)).exists()) {
+        await setDoc(rd,{owner:uid,count:0});
+      }
+
       // init user doc
-      let snap=await getDoc(userRef);
-      if(!snap.exists()){
+      let snap = await getDoc(userRef);
+      if (!snap.exists()) {
         await setDoc(userRef,{
           createdAt:serverTimestamp(),
           lastLogin:null,streak:0,coinBalance:0,
           referralUsed:false,referrer:'',
-          shareCount:0,lastShareDate:null,
+          shareCount:0,shareDate:null,
           inviteDoneDate:null,lastSecretDate:null
         });
-        snap=await getDoc(userRef);
+        snap = await getDoc(userRef);
       }
-      data=snap.data();
+      data = snap.data();
       renderAll(u,data);
       scheduleReset();
     });
 
     function renderAll(u,d){
-      // show user info
-      uidEl.textContent=uid;
-      emailEl.textContent=u.email||'-';
-      codeEl.textContent=uid.slice(0,6);
+      // user info
+      uidEl.textContent   = uid;
+      emailEl.textContent = u.email||'-';
+      codeEl.textContent  = uid.slice(0,6);
       infoDiv.style.display='block';
-      // daily reward
-      const today=new Date().toISOString().slice(0,10);
-      const lastDate=d.lastLogin?.toDate?.().toISOString().slice(0,10);
-      const doneToday=lastDate===today;
-      if(doneToday){
-        const rw=DAILY[d.streak-1]||DAILY[0];
-        box.src='https://cdn-icons-png.flaticon.com/512/4315/4315609.png';
+
+      // daily
+      const today    = new Date().toISOString().slice(0,10);
+      const lastDate = d.lastLogin?.toDate?.().toISOString().slice(0,10);
+      if (lastDate===today) {
+        const rw = DAILY[d.streak-1]||DAILY[0];
+        box.src = 'https://cdn-icons-png.flaticon.com/512/4315/4315609.png';
         box.classList.remove('shake');
-        status.textContent=`+${rw} koin (hari ke-${d.streak})`;
+        status.textContent = `+${rw} koin (hari ke-${d.streak})`;
       } else {
-        box.src='https://cdn-icons-png.flaticon.com/512/862/862856.png';
+        box.src = 'https://cdn-icons-png.flaticon.com/512/862/862856.png';
         box.classList.add('shake');
-        status.textContent='Klik kotak untuk klaim!';
+        status.textContent = 'Klik kotak untuk klaim!';
       }
+
       // history
-      histList.innerHTML='';
+      histList.innerHTML = '';
       getDocs(query(collection(db,'users',uid,'claims'),
         orderBy('timestamp','desc'),limit(7)))
-      .then(snaps=>{
-        snaps.forEach(doc=>{
-          const date=doc.data().timestamp.toDate()
-            .toLocaleDateString('id');
-          histList.innerHTML+=`<li>${date} → +${doc.data().coins} koin</li>`;
-        });
-      });
-      // coin & redeem grid
-      coinEl.textContent=d.coinBalance||0;
-      redeemGrid.innerHTML='';
-      REDEEM.forEach(it=>{
-        const ok=(d.coinBalance||0)>=it.cost;
-        const div=document.createElement('div');
-        div.className='redeem-item'+(ok?'':' disabled');
-        div.innerHTML=`<img src="${it.img}"><p>${it.label} (${it.cost})</p>`;
-        if(ok)div.onclick=async()=>{
-          await updateDoc(userRef,{coinBalance:d.coinBalance-it.cost});
-          location.reload();
-        };
+      .then(snaps=>snaps.forEach(doc=>{
+        const dt = doc.data().timestamp.toDate()
+                      .toLocaleDateString('id');
+        histList.innerHTML += `<li>${dt} → +${doc.data().coins} koin</li>`;
+      }));
+
+      // coin & redeem
+      coinEl.textContent = d.coinBalance||0;
+      redeemGrid.innerHTML = '';
+      REDEEM.forEach(item=>{
+        const ok = (d.coinBalance||0)>=item.cost;
+        const div = document.createElement('div');
+        div.className = 'redeem-item'+(ok?'':' disabled');
+        div.innerHTML = `<img src="${item.img}"><p>${item.label} (${item.cost})</p>`;
+        if (ok) {
+          div.onclick = ()=>{
+            pendingRedeem = item;
+            const msg = `Hallo admin saya ingin menukarkan hadiah ${item.label} senilai ${item.cost} koin. Tolong konfirmasi.`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+          };
+        }
         redeemGrid.appendChild(div);
       });
     }
 
     // daily claim
-    box.onclick=async()=>{
-      const snap=await getDoc(userRef);
-      const dt=snap.data();
-      const td=new Date().toISOString().slice(0,10);
-      const ld=dt.lastLogin?.toDate?.().toISOString().slice(0,10);
-      if(ld===td) return;
-      const y=new Date();y.setDate(y.getDate()-1);
-      const yd=y.toISOString().slice(0,10);
-      const st=(ld===yd?dt.streak+1:1);
-      const reward=DAILY[st-1]||DAILY[0];
+    box.onclick = async()=>{
+      const snap = await getDoc(userRef);
+      const dt   = snap.data();
+      const td   = new Date().toISOString().slice(0,10);
+      const ld   = dt.lastLogin?.toDate?.().toISOString().slice(0,10);
+      if (ld===td) return;
+      const y    = new Date(); y.setDate(y.getDate()-1);
+      const yd   = y.toISOString().slice(0,10);
+      const st   = (ld===yd?dt.streak+1:1);
+      const rew  = DAILY[st-1]||DAILY[0];
       await updateDoc(userRef,{
         lastLogin:serverTimestamp(),streak:st,
-        coinBalance:dt.coinBalance+reward
+        coinBalance:dt.coinBalance+rew
       });
-      await setDoc(doc(collection(db,'users',uid,'claims')),
-        {timestamp:serverTimestamp(),coins:reward});
+      await setDoc(doc(collection(db,'users',uid,'claims')),{
+        timestamp:serverTimestamp(),coins:rew
+      });
       location.reload();
     };
 
     // referral
-    refBtn.onclick=async()=>{
-      const code=refInput.value.trim();
-      if(!code||code===uid.slice(0,6)){refStatus.textContent='Tidak valid';return;}
-      const snap=await getDoc(userRef);
-      if(snap.data().referralUsed){refStatus.textContent='Sudah pakai';return;}
-      const rd=doc(db,'referralCodes',code);
-      const rSnap=await getDoc(rd);
-      if(!rSnap.exists()){refStatus.textContent='Tdk ditemukan';return;}
+    refBtn.onclick = async()=>{
+      const code = refInput.value.trim();
+      if (!code || code===uid.slice(0,6)) {
+        refStatus.textContent = 'Kode tidak valid'; return;
+      }
+      const snap = await getDoc(userRef);
+      if (snap.data().referralUsed) {
+        refStatus.textContent = 'Sudah pakai referral'; return;
+      }
+      const rd    = doc(db,'referralCodes',code);
+      const rSnap = await getDoc(rd);
+      if (!rSnap.exists()) {
+        refStatus.textContent = 'Kode tidak ditemukan'; return;
+      }
       // penerima +5
-      await updateDoc(userRef,{referralUsed:true,referrer:code,
-        coinBalance:snap.data().coinBalance+5});
+      await updateDoc(userRef,{
+        referralUsed:true,referrer:code,
+        coinBalance:snap.data().coinBalance+5
+      });
       // pemberi +10
       await updateDoc(rd,{count:rSnap.data().count+1});
-      // find owner uid
-      const ownerRef=doc(db,'users',rSnap.data().owner);
+      const ownerRef = doc(db,'users',rSnap.data().owner);
       await updateDoc(ownerRef,{coinBalance:
         (await getDoc(ownerRef)).data().coinBalance+10});
-      refStatus.textContent='Berhasil! (+5 koin)';
+      refStatus.textContent = 'Berhasil! (+5 koin)';
     };
 
     // popup
-    showTasks.onclick=()=>popup.style.display='flex';
-    closePopup.onclick=()=>popup.style.display='none';
+    showTasks.onclick = ()=>popup.style.display='flex';
+    closePopup.onclick= ()=>popup.style.display='none';
 
-    // countdown timer
+    // countdown reset
     function scheduleReset(){
       updateTimer();
       setInterval(updateTimer,1000);
     }
     function updateTimer(){
-      const now=new Date();
-      const nxt=new Date(now);
+      const now = new Date(), nxt = new Date(now);
       nxt.setHours(24,0,0,0);
-      const diff=nxt-now;
-      const h=Math.floor(diff/3600000);
-      const m=Math.floor((diff%3600000)/60000);
-      const s=Math.floor((diff%60000)/1000);
-      timerEl.textContent=`Reset tugas dalam ${h}h ${m}m ${s}s`;
-      // at midnight reload to reset tasks
-      if(diff<1000) location.reload();
+      const diff = nxt - now;
+      const h = Math.floor(diff/3600000),
+            m = Math.floor((diff%3600000)/60000),
+            s = Math.floor((diff%60000)/1000);
+      timerEl.textContent = `Reset tugas dalam ${h}h ${m}m ${s}s`;
+      if (diff<1000) location.reload();
     }
 
     // share task
-    shareBtn.onclick=()=>{
-      pendingShare=true;
-      window.open('https://wa.me/?text='+encodeURIComponent('https://zestore.netlify.app/home'));
+    shareBtn.onclick = ()=>{
+      pendingShare = true;
+      window.open('https://wa.me/?text='+encodeURIComponent('https://zestore.netlify.app/home'), '_blank');
     };
-    window.addEventListener('focus',async()=>{
-      if(!pendingShare) return;
-      pendingShare=false;
-      const snap=await getDoc(userRef);
-      const d=snap.data();
-      const today=new Date().toISOString().slice(0,10);
-      let cnt=d.shareCount||0;
-      // reset if new day
-      if(d.lastShareDate?.toDate?.().toISOString().slice(0,10)!==today){
-        cnt=0;
+    window.addEventListener('focus', async ()=>{
+      if (!pendingShare) return;
+      pendingShare = false;
+      const snap = await getDoc(userRef), d = snap.data();
+      const today = new Date().toISOString().slice(0,10);
+      let cnt = d.shareCount||0;
+      if (d.shareDate?.toDate?.().toISOString().slice(0,10)!==today){
+        cnt = 0;
       }
       cnt++;
-      let msg;
-      if(cnt>=5){
-        await updateDoc(userRef,{coinBalance:d.coinBalance+10,shareCount:0,
-          lastShareDate:serverTimestamp()});
-        msg='Tugas selesai! +10 koin';
-      } else {
-        await updateDoc(userRef,{shareCount:cnt,lastShareDate:serverTimestamp()});
-        msg=`Berhasil dibagi (${cnt}/5)`;
+      let upd = { shareCount:cnt, shareDate:serverTimestamp() };
+      if (cnt>=5 && !d.shareReward){
+        upd.coinBalance = d.coinBalance+10;
+        upd.shareReward = true;
       }
-      shareSt.textContent=msg;
-      renderAll(auth.currentUser,(await getDoc(userRef)).data());
+      await updateDoc(userRef,upd);
+      shareSt.textContent = cnt>=5? 'Tugas selesai! +10 koin' : `Berhasil share (${cnt}/5)`;
+      renderAll(auth.currentUser, (await getDoc(userRef)).data());
     });
 
-    // invite task
-    inviteBtn.onclick=async()=>{
-      const snap=await getDoc(userRef);
-      const d=snap.data();
-      const today=new Date().toISOString().slice(0,10);
-      if(d.inviteDoneDate?.toDate?.().toISOString().slice(0,10)===today){
-        inviteSt.textContent='Sudah klaim hari ini';return;
+    // invite task & secret task as before...
+    inviteBtn.onclick = async()=>{
+      const snap = await getDoc(userRef), d = snap.data();
+      const today = new Date().toISOString().slice(0,10);
+      if (d.inviteDoneDate?.toDate?.().toISOString().slice(0,10)===today){
+        inviteSt.textContent='Sudah klaim hari ini'; return;
       }
-      const rc=doc(db,'referralCodes',uid.slice(0,6));
-      const rcSnap=await getDoc(rc);
-      const count=rcSnap.data().count||0;
-      if(count>=3){
-        await updateDoc(userRef,{coinBalance:d.coinBalance+30,
-          inviteDoneDate:serverTimestamp()});
+      const rcSnap = await getDoc(doc(db,'referralCodes',uid.slice(0,6))),
+            cnt = rcSnap.data().count||0;
+      if (cnt>=3){
+        await updateDoc(userRef,{
+          coinBalance: d.coinBalance+30,
+          inviteDoneDate: serverTimestamp()
+        });
         inviteSt.textContent='Tugas selesai! +30 koin';
-        renderAll(auth.currentUser,(await getDoc(userRef)).data());
+        renderAll(auth.currentUser, (await getDoc(userRef)).data());
       } else {
-        inviteSt.textContent=`Progres: ${count}/3`;
+        inviteSt.textContent=`Progres: ${cnt}/3`;
       }
     };
-
-    // secret task
-    secretBtn.onclick=async()=>{
-      const code=secretInp.value.trim().toUpperCase();
-      const snap=await getDoc(userRef);
-      const d=snap.data();
-      const today=new Date().toISOString().slice(0,10);
-      if(d.lastSecretDate?.toDate?.().toISOString().slice(0,10)===today){
-        secretSt.textContent='Sudah klaim hari ini';return;
+    secretBtn.onclick = async()=>{
+      const code = secretInp.value.trim().toUpperCase();
+      const snap = await getDoc(userRef), d = snap.data();
+      const today = new Date().toISOString().slice(0,10);
+      if (d.lastSecretDate?.toDate?.().toISOString().slice(0,10)===today){
+        secretSt.textContent='Sudah klaim hari ini'; return;
       }
-      if(code==='ZESPECIAL'){
-        await updateDoc(userRef,{coinBalance:d.coinBalance+50,
-          lastSecretDate:serverTimestamp()});
+      if (code==='ZESPECIAL'){
+        await updateDoc(userRef,{
+          coinBalance: d.coinBalance+50,
+          lastSecretDate: serverTimestamp()
+        });
         secretSt.textContent='Tugas selesai! +50 koin';
-        renderAll(auth.currentUser,(await getDoc(userRef)).data());
+        renderAll(auth.currentUser, (await getDoc(userRef)).data());
       } else {
         secretSt.textContent='Kode salah';
       }
