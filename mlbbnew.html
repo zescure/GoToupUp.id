@@ -304,6 +304,7 @@
 
       <div class="modal-footer">
         <button id="btnDone">Sudah Bayar</button>
+<button id="btnConfirmWA" style="display:none;">Konfirmasi Pembayaran</button>
         <button id="btnClose">Tutup</button>
       </div>
     </div>
@@ -508,67 +509,68 @@ document.getElementById('btnClose').onclick = ()=>{
 };
 
 /* =============== BTN DONE =============== */
-document.getElementById('btnDone').onclick = async () => {
+const btnDone = document.getElementById('btnDone');
+const btnConfirmWA = document.getElementById('btnConfirmWA'); // tombol baru
+
+btnDone.onclick = async () => {
   if (!lastCalc) return;
   if (!currentUser) {
-    location.href = '/register-login';
-    return;
+    alert('Kamu belum login di halaman utama.');
+    return location.href='/register-login';
   }
 
-  const {
-    uid, idSel, srvSel, waSel, value, price, adminCalc, total,
-    buyerCB, refCB, payMethod, referralCode, referralOwnerUid
-  } = lastCalc;
+  const { uid, idSel, srvSel, waSel, value, price, adminCalc, total,
+          buyerCB, refCB, payMethod, referralCode, referralOwnerUid } = lastCalc;
 
   try {
-    // 1) Buat order log
-    const orderId = crypto.randomUUID();
-    await setDoc(doc(db, 'orders', orderId), {
-      uid,
-      game: 'mlbb',
-      productValue: value,
-      price,
-      admin: adminCalc,
-      total,
+    // Simpan order
+    const orderRef = doc(db, 'orders', crypto.randomUUID());
+    await setDoc(orderRef, {
+      uid, game: 'mlbb', productValue: value, price, admin: adminCalc, total,
       referralCode: referralCode || null,
       referralOwnerUid: referralOwnerUid || null,
-      cbBuyer: referralCode ? buyerCB : 0,
-      cbRef: referralCode ? refCB : 0,
+      cbBuyer: (referralCode ? buyerCB : 0),
+      cbRef: (referralCode ? refCB : 0),
       payMethod,
       createdAt: serverTimestamp(),
       status: 'paid'
     });
 
-    // 2) Update saldo koin jika referral valid
+    // Update koin
     if (referralCode && referralOwnerUid) {
-      const buyerRef = doc(db, 'users', uid);
-      await updateDoc(buyerRef, { coinBalance: increment(buyerCB) });
-
-      const ownerRef = doc(db, 'users', referralOwnerUid);
-      const ownerSnap = await getDoc(ownerRef);
-      if (ownerSnap.exists()) {
-        await updateDoc(ownerRef, { coinBalance: increment(refCB) });
+      try {
+        await updateDoc(doc(db,'users', uid), { coinBalance: increment(buyerCB) });
+        const ownerSnap = await getDoc(doc(db,'users', referralOwnerUid));
+        if (ownerSnap.exists()) {
+          await updateDoc(doc(db,'users', referralOwnerUid), { coinBalance: increment(refCB) });
+        }
+      } catch (e) {
+        console.warn('Cashback update error:', e);
       }
     }
 
-    // 3) Setelah semua sukses, baru buka WA
-    const msg =
-      `Saya sudah order Mobile Legends *${value} Diamonds MlbbNew*` +
-      `\nID: ${idSel} (Server: ${srvSel})` +
-      `\nNo. WA: ${waSel}` +
-      `\nMetode: ${payMethod.replace('_', ' ')}` +
-      `\nTotal bayar: Rp ${total.toLocaleString('id')}` +
-      (referralCode ? `\nReferral: ${referralCode}` : '');
-    window.open(`https://wa.me/6285697747768?text=${encodeURIComponent(msg)}`, '_blank');
-
-    // Reset modal
-    document.getElementById('modalOverlay').style.display = 'none';
-    lastCalc = null;
+    // Sukses → tampilkan tombol Konfirmasi WA
+    btnDone.style.display = 'none';
+    btnConfirmWA.style.display = 'inline-block';
 
   } catch (e) {
-    console.error('Order or cashback error:', e);
+    console.error('Order write error:', e);
     alert('Terjadi kesalahan saat memproses pembayaran.');
   }
+};
+
+// Tombol konfirmasi WA
+btnConfirmWA.onclick = () => {
+  if (!lastCalc) return;
+  const { idSel, srvSel, waSel, value, total, payMethod, referralCode } = lastCalc;
+  const msg =
+    `Saya sudah order Mobile Legends *${value} Diamonds MlbbNew*`+
+    `\nID: ${idSel} (Server: ${srvSel})`+
+    `\nNo. WA: ${waSel}`+
+    `\nMetode: ${payMethod.replace('_',' ')}`+
+    `\nTotal bayar: Rp ${total.toLocaleString('id')}`+
+    (referralCode ? `\nReferral: ${referralCode}` : '');
+  window.open(`https://wa.me/6285697747768?text=${encodeURIComponent(msg)}`, '_blank');
 };
 
 /* =============== COPY BUTTONS =============== */
