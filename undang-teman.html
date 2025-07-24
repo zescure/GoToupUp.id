@@ -51,69 +51,102 @@
   </style>
 </head>
 <body>
+    <!-- MAIN CONTENT -->
   <div class="container">
-    <h2>Daily Reward</h2>
     <div class="box-card">
-      <img id="dailyBox" src="https://i.ibb.co/8c8YVZf/box.png" alt="Daily Box">
-      <div id="dailyStatus"></div>
+      <h2>Reward Harian Dan Referral</h2>
+      <img id="dailyBox" class="shake"
+           src="https://twink-x.com/cdn/shop/files/4.gif?v=1721839964&width=2048"
+           alt="Kotak Reward">
+      <p id="dailyStatus">Klik kotak untuk klaim!</p>
     </div>
-    <h3>Referral</h3>
+
     <div class="ref-card">
+      <h3>Referral Teman</h3>
       <input id="referralCode" placeholder="Masukkan kode referral">
-      <button id="submitReferral">Klaim Referral</button>
-      <div id="referralStatus"></div>
+      <button id="submitReferral">Gunakan Kode</button>
+      <p id="referralStatus"></p>
     </div>
-    <h3>Riwayat Klaim</h3>
+
     <div class="history">
+      <h4>7 Hari Terakhir</h4>
       <ul id="claimHistory"></ul>
     </div>
-    <h3>Redeem</h3>
+
     <div class="redeem">
-      <div class="coin-balance"><span id="coinBalance">0</span> Koin</div>
+      <div class="coin-balance">
+        Saldo Koin: <span id="coinBalance">0</span>
+        <button id="showTasks">+</button>
+      </div>
       <div class="redeem-grid" id="redeemGrid"></div>
+      <p id="redeemStatus"></p>
     </div>
-    <h3>Info Akun</h3>
+
     <div class="user-info" id="user-info">
-      <p><b>UID:</b> <span id="user-uid"></span></p>
+      <p><b>Wallet Address:</b> <span id="user-uid"></span></p>
       <p><b>Email:</b> <span id="user-email"></span></p>
-      <p><b>Referral Code:</b> <span id="user-ref-code"></span></p>
+      <p><b>Kode Referral:</b> <span id="user-ref-code"></span></p>
     </div>
-    <button id="showTasks">Tugas Harian</button>
   </div>
 
+  <!-- PROMO & FAQ -->
   <section class="promo-section">
-    <div class="promo-header"><h2>Promo & FAQ</h2></div>
+    <div class="promo-header">
+      <h2>🎉 Promo Event Spesial Zestore</h2>
+      <p>Dapatkan hadiah eksklusif dengan mengikuti misi event ini!</p>
+    </div>
     <div class="promo-steps">
+      <h3>Cara Partisipasi:</h3>
       <ul>
-        <li>Bagikan link untuk bonus.</li>
-        <li>Gunakan referral untuk koin tambahan.</li>
+        <li>Login setiap hari untuk klaim koin.</li>
+        <li>Undang teman menggunakan kode referral Anda.</li>
+        <li>Selesaikan tugas tambahan di halaman ini.</li>
+        <li>Tukar koin untuk hadiah menarik.</li>
       </ul>
     </div>
-    <div class="faq-item">
-      <button class="faq-question">Bagaimana cara klaim?</button>
-      <div class="faq-answer">Klik box harian atau selesaikan tugas.</div>
+    <div class="faq">
+      <h3 style="margin:16px 0 8px;color:#4c8bf5;">FAQ (Pertanyaan Umum)</h3>
+      <div class="faq-item">
+        <button class="faq-question">1. Bagaimana cara mendapatkan koin lebih banyak?</button>
+        <div class="faq-answer">
+          <p>Selesaikan tugas tambahan seperti membagikan link atau memasukkan kode rahasia.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">2. Apakah koin kadaluarsa?</button>
+        <div class="faq-answer">
+          <p>Koin tidak kadaluarsa selama akun aktif.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">3. Bagaimana cara menukar hadiah?</button>
+        <div class="faq-answer">
+          <p>Klik hadiah di bagian Redeem, lalu hubungi admin via WhatsApp.</p>
+        </div>
+      </div>
     </div>
   </section>
 
+  <!-- POPUP -->
   <div class="popup" id="taskPopup">
     <div class="popup-content">
-      <h3>Tugas Harian</h3>
+      <h3>Tugas Tambahan</h3>
       <div id="resetTimer"></div>
       <div class="task">
-        <p>Bagikan link ke WhatsApp (5x)</p>
+        <b>1. Bagikan 5× ke sosmed</b>
         <button id="shareTaskBtn">Bagikan</button>
-        <div id="shareStatus"></div>
+        <p id="shareStatus"></p>
       </div>
       <div class="task">
-        <p>Undang 1 teman</p>
-        <button id="inviteTaskBtn">Cek Undangan</button>
-        <div id="inviteStatus"></div>
+        <b>2. Undang & redeem 3 teman</b>
+        <button id="inviteTaskBtn">Cek Progres</button>
+        <p id="inviteStatus"></p>
       </div>
       <div class="task">
-        <p>Masukkan Kode Rahasia</p>
+        <b>3. Masukkan Kode Rahasia</b>
         <input id="secretCodeInput" placeholder="Kode rahasia">
-        <button id="secretCodeBtn">Kirim</button>
-        <div id="secretStatus"></div>
+        <button id="secretCodeBtn">Klaim Bonus</button>
+        <p id="secretStatus"></p>
       </div>
       <button class="close-popup" id="closePopup">Tutup</button>
     </div>
