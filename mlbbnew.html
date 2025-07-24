@@ -793,6 +793,18 @@ document.getElementById('btnClose').onclick = ()=>{
   document.getElementById('modalOverlay').style.display = 'none';
 };
 
+/* =============== ADD TO CIRCULATING =============== */
+async function addToCirculating(amount) {
+  if (!amount || amount <= 0) return;
+  await runTransaction(db, async (tx) => {
+    const econRef = doc(db, 'economy', 'meta');
+    const econSnap = await tx.get(econRef);
+    if (!econSnap.exists()) throw 'Dokumen ekonomi tidak ditemukan.';
+    const currentCirc = econSnap.data().circulatingSupply || 0;
+    tx.update(econRef, { circulatingSupply: currentCirc + amount });
+  });
+}
+    
 /* =============== BTN DONE (PROSES KOIN SAJA) =============== */
 const btnDone = document.getElementById('btnDone');
 const btnConfirmWA = document.getElementById('btnConfirmWA'); // tombol baru
@@ -805,14 +817,16 @@ btnDone.onclick = async () => {
   }
 
   const {
-    uid, idSel, srvSel, waSel, value, total,
-    buyerCB, refCB, payMethod, referralCode, referralOwnerUid
+    uid, buyerCB, refCB, referralCode, referralOwnerUid
   } = lastCalc;
 
   try {
-    // SELALU tambah koin buyer (sesuai permintaan)
+    let totalCashback = 0;
+
+    // SELALU tambah koin buyer
     if (buyerCB > 0) {
       await updateDoc(doc(db,'users', uid), { coinBalance: increment(buyerCB) });
+      totalCashback += buyerCB;
     }
 
     // Jika referral valid → tambah koin referrer
@@ -821,10 +835,16 @@ btnDone.onclick = async () => {
       const ownerSnap = await getDoc(ownerRef);
       if (ownerSnap.exists()) {
         await updateDoc(ownerRef, { coinBalance: increment(refCB) });
+        totalCashback += refCB;
       }
     }
 
-    // Sukses → tampilkan tombol Konfirmasi WA, sembunyikan tombol ini
+    // Tambahkan total cashback ke circulatingSupply
+    if (totalCashback > 0) {
+      await addToCirculating(totalCashback);
+    }
+
+    // Sukses → tampilkan tombol Konfirmasi WA
     btnDone.style.display = 'none';
     btnConfirmWA.style.display = 'inline-block';
 
