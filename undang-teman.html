@@ -78,6 +78,95 @@
     .close-popup{margin-top:12px;background:#f54242;
       border:none;border-radius:6px;padding:6px 12px;
       color:#fff;cursor:pointer;}
+
+    body {
+  font-family: Arial, sans-serif;
+  background: #0f0f2d;
+  color: #fff;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Promo Section */
+.promo-section {
+  background: #1e1e40;
+  border-radius: 10px;
+  padding: 15px;
+  margin-top: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.promo-header h2 {
+  text-align: center;
+  color: #ffcc00;
+}
+
+.promo-header p {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #ddd;
+}
+
+.promo-steps h3 {
+  margin-top: 15px;
+  color: #4c8bf5;
+}
+
+.promo-steps ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.promo-steps li {
+  margin: 8px 0;
+  padding: 6px;
+  background: #2d2d50;
+  border-radius: 6px;
+}
+
+/* FAQ */
+.faq-section h3 {
+  margin-top: 20px;
+  color: #4c8bf5;
+}
+
+.faq-item {
+  margin-top: 10px;
+  border: 1px solid #333;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.faq-question {
+  width: 100%;
+  padding: 10px;
+  background: #2d2d50;
+  color: #fff;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+}
+
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  background: #1e1e40;
+  padding: 0 10px;
+}
+
+.faq-answer p {
+  font-size: 0.9rem;
+  color: #ddd;
+  margin: 10px 0;
+}
   </style>
 </head>
 <body>
@@ -142,6 +231,69 @@
     </div>
   </div>
 
+ <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reward Zestore</title>
+  <link rel="stylesheet" href="reward.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Bagian reward & user info -->
+    <div class="box-card">
+      <h2>Reward Harian</h2>
+      <img id="dailyBox" class="shake"
+        src="https://cdn-icons-png.flaticon.com/512/862/862856.png">
+      <p id="dailyStatus">Klik kotak untuk klaim!</p>
+    </div>
+    <div class="user-info" id="user-info">
+      <p><b>UID:</b> <span id="user-uid"></span></p>
+      <p><b>Email:</b> <span id="user-email"></span></p>
+      <p><b>Kode Referral:</b> <span id="user-ref-code"></span></p>
+    </div>
+
+    <!-- Bagian Branding Promosi Event -->
+    <section class="promo-section">
+      <div class="promo-header">
+        <h2>🎉 Promo Event Spesial Zestore</h2>
+        <p>Dapatkan hadiah eksklusif dengan mengikuti misi event ini!</p>
+      </div>
+
+      <div class="promo-steps">
+        <h3>Cara Partisipasi:</h3>
+        <ul>
+          <li>Login setiap hari untuk klaim koin.</li>
+          <li>Undang teman menggunakan kode referral Anda.</li>
+          <li>Selesaikan tugas tambahan di halaman ini.</li>
+          <li>Tukar koin untuk hadiah menarik.</li>
+        </ul>
+      </div>
+
+      <div class="faq-section">
+        <h3>FAQ (Pertanyaan Umum)</h3>
+        <div class="faq-item">
+          <button class="faq-question">1. Bagaimana cara mendapatkan koin lebih banyak?</button>
+          <div class="faq-answer">
+            <p>Kamu bisa menyelesaikan tugas tambahan seperti membagikan link atau memasukkan kode rahasia.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">2. Apakah koin kadaluarsa?</button>
+          <div class="faq-answer">
+            <p>Koin tidak kadaluarsa selama akun aktif.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">3. Bagaimana cara menukar hadiah?</button>
+          <div class="faq-answer">
+            <p>Kamu bisa klik tombol "Tukar" pada hadiah yang tersedia di halaman ini.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="reward.js"></script>
+  
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
@@ -407,6 +559,27 @@
         secretSt.textContent='Kode salah';
       }
     };
+
+    // FAQ Accordion
+const faqButtons = document.querySelectorAll('.faq-question');
+
+faqButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const answer = btn.nextElementSibling;
+
+    // Tutup FAQ lain jika dibuka
+    document.querySelectorAll('.faq-answer').forEach(el => {
+      if (el !== answer) el.style.maxHeight = null;
+    });
+
+    // Toggle open
+    if (answer.style.maxHeight) {
+      answer.style.maxHeight = null;
+    } else {
+      answer.style.maxHeight = answer.scrollHeight + 'px';
+    }
+  });
+});
   </script>
 </body>
 </html>
