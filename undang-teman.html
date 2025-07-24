@@ -4,76 +4,74 @@
   <meta charset="UTF-8">
   <title>Zestore Rewards & Referral</title>
   <style>
-    /* Reset & Layout */
+    /* ---- Reset & Layout ---- */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: Arial, sans-serif;
-      background: #0f0f2d;
-      color: #fff;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
+      background: #0f0f2d; color: #fff;
+      display: flex; justify-content: center;
+      align-items: flex-start; min-height: 100vh;
       padding: 40px;
     }
     .container {
-      background: #1e1e40;
-      border-radius: 12px;
-      padding: 30px;
-      max-width: 400px;
-      width: 100%;
+      background: #1e1e40; border-radius: 12px;
+      padding: 30px; max-width: 500px; width: 100%;
       box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
-    h2, h3 { text-align: center; margin-bottom: 16px; }
+    h2,h3,h4 { text-align: center; margin-bottom: 16px; }
 
-    /* Reward Harian */
+    /* Kotak Reward */
     .box-card { text-align: center; margin-bottom: 30px; }
-    #dailyBox { width: 150px; cursor: pointer; }
+    #dailyBox { width: 120px; cursor: pointer; }
     @keyframes shake {
       0%,100%{transform:translateX(0);}
-      20%,60%{transform:translateX(-8px);}
-      40%,80%{transform:translateX(8px);}
+      20%,60%{transform:translateX(-6px);}
+      40%,80%{transform:translateX(6px);}
     }
     .shake { animation: shake 0.8s infinite; }
     #dailyStatus { margin-top: 12px; font-size: 1rem; }
 
-    /* Referral Teman */
+    /* Referral */
     .ref-card { text-align: center; margin-bottom: 30px; }
     .ref-card input {
-      width: calc(100% - 20px);
-      padding: 8px;
-      border: none;
-      border-radius: 6px;
-      margin-bottom: 10px;
-      font-size: 1rem;
+      width: calc(100% - 20px); padding: 8px; border: none;
+      border-radius: 6px; margin-bottom: 10px; font-size: 1rem;
     }
     .ref-card button {
-      width: 100%;
-      padding: 10px;
-      border: none;
-      border-radius: 6px;
-      background: #4c8bf5;
-      font-size: 1rem;
-      cursor: pointer;
+      width: 100%; padding: 10px; border: none;
+      border-radius: 6px; background: #4c8bf5;
+      font-size: 1rem; cursor: pointer;
       transition: background .3s;
     }
     .ref-card button:hover { background: #3a6ed1; }
     #referralStatus { margin-top: 8px; font-size: .95rem; }
 
-    /* Info Akun */
-    .user-info {
-      display: none;
-      background: #2d2d50;
-      padding: 15px;
-      border-radius: 8px;
-      font-size: .9rem;
-      word-break: break-all;
+    /* Histori & Redeem */
+    .history, .redeem, .user-info {
+      background: #2d2d50; padding: 15px;
+      border-radius: 8px; margin-bottom: 20px;
+      font-size: .9rem; word-break: break-all;
     }
+    .history ul { list-style: none; padding-left: 0; }
+    .history li { padding: 6px 0; border-bottom: 1px solid #444; }
+    .redeem select, .redeem button {
+      width: 100%; padding: 8px; margin-top: 8px;
+      border: none; border-radius: 6px; font-size: 1rem;
+    }
+    .redeem button {
+      background: #4c8bf5; color: #fff; cursor: pointer;
+      transition: background .3s;
+    }
+    .redeem button:disabled { background: #555; cursor: not-allowed; }
+    .redeem button:hover:enabled { background: #3a6ed1; }
+
+    /* Info Akun */
     .user-info b { color: #4c8bf5; }
   </style>
 </head>
 <body>
   <div class="container">
+
     <!-- Reward Harian -->
     <div class="box-card">
       <h2>Reward Harian</h2>
@@ -91,12 +89,33 @@
       <p id="referralStatus"></p>
     </div>
 
+    <!-- Histori Klaim -->
+    <div class="history">
+      <h4>7 Hari Terakhir</h4>
+      <ul id="claimHistory">
+        <!-- list item di-isi JS -->
+      </ul>
+    </div>
+
+    <!-- Saldo & Redeem -->
+    <div class="redeem">
+      <h4>Saldo Koin: <span id="coinBalance">0</span></h4>
+      <select id="redeemSelect">
+        <option value="0">-- Pilih Hadiah --</option>
+        <option value="50">Voucher Rp5.000 (50 koin)</option>
+        <option value="100">Voucher Rp12.000 (100 koin)</option>
+      </select>
+      <button id="redeemBtn" disabled>Tukar Hadiah</button>
+      <p id="redeemStatus"></p>
+    </div>
+
     <!-- Info Akun User -->
     <div class="user-info" id="user-info">
       <p><b>UID:</b> <span id="user-uid"></span></p>
       <p><b>Email:</b> <span id="user-email"></span></p>
       <p><b>Kode Referral Kamu:</b> <span id="user-ref-code"></span></p>
     </div>
+
   </div>
 
   <script type="module">
@@ -105,10 +124,12 @@
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
     import {
       getFirestore, doc, getDoc, setDoc,
-      updateDoc, serverTimestamp
+      updateDoc, serverTimestamp,
+      collection, query, orderBy,
+      limit, getDocs
     } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-    // Firebase config langsung di sini
+    // Config langsung di sini
     const firebaseConfig = {
       apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
       authDomain: "zeepaylater-93a94.firebaseapp.com",
@@ -132,17 +153,21 @@
     const userUidEl     = document.getElementById("user-uid");
     const userEmailEl   = document.getElementById("user-email");
     const userRefCodeEl = document.getElementById("user-ref-code");
+    const historyList   = document.getElementById("claimHistory");
+    const coinBalanceEl = document.getElementById("coinBalance");
+    const redeemSelect  = document.getElementById("redeemSelect");
+    const redeemBtn     = document.getElementById("redeemBtn");
+    const redeemStatus  = document.getElementById("redeemStatus");
 
     const CLOSED_IMG = 'https://cdn-icons-png.flaticon.com/512/862/862856.png';
     const OPEN_IMG   = 'https://cdn-icons-png.flaticon.com/512/4315/4315609.png';
+    const DAILY_COINS = 10; // koin per klaim
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        // Belum login → redirect
         window.location.href = "/register-login";
         return;
       }
-
       const uid     = user.uid;
       const userRef = doc(db, "users", uid);
 
@@ -160,71 +185,123 @@
           lastLogin: null,
           referralUsed: false,
           referrer: "",
-          streak: 0
+          streak: 0,
+          coinBalance: 0
         });
       }
 
-      // Setup tampilan reward box
-      async function initBox() {
-        const data  = (await getDoc(userRef)).data();
-        const last  = data.lastLogin?.toDate?.toISOString().split('T')[0];
-        const today = new Date().toISOString().split('T')[0];
+      // Helper: update UI koin & history
+      async function loadBalance() {
+        const data = (await getDoc(userRef)).data();
+        coinBalanceEl.textContent = data.coinBalance || 0;
+        checkRedeemButton();
+      }
+      async function loadHistory() {
+        historyList.innerHTML = "";
+        const q = query(
+          collection(db,"users",uid,"claims"),
+          orderBy("timestamp","desc"), limit(7)
+        );
+        const snaps = await getDocs(q);
+        snaps.forEach(docSnap => {
+          const d = docSnap.data();
+          const date = d.timestamp.toDate().toLocaleDateString("id");
+          historyList.innerHTML +=
+            `<li>${date} → +${d.coins} koin</li>`;
+        });
+      }
+      function checkRedeemButton() {
+        const bal = parseInt(coinBalanceEl.textContent,10);
+        const cost = parseInt(redeemSelect.value,10);
+        redeemBtn.disabled = !(cost>0 && bal>=cost);
+      }
 
+      // Inisialisasi kotak & data
+      async function initAll() {
+        // reward box
+        const u = (await getDoc(userRef)).data();
+        const last = u.lastLogin?.toDate().toISOString().split('T')[0];
+        const today = new Date().toISOString().split('T')[0];
         if (last === today) {
-          boxImg.src = OPEN_IMG;
-          boxImg.classList.remove("shake");
-          dailyStatus.textContent = `Streak kamu: ${data.streak} hari 🎉`;
+          boxImg.src = OPEN_IMG; boxImg.classList.remove("shake");
+          dailyStatus.textContent = `Streak: ${u.streak} hari 🎉`;
         } else {
-          boxImg.src = CLOSED_IMG;
-          boxImg.classList.add("shake");
+          boxImg.src = CLOSED_IMG; boxImg.classList.add("shake");
           dailyStatus.textContent = "Klik kotak untuk klaim reward hari ini!";
         }
+        await loadBalance();
+        await loadHistory();
       }
-      await initBox();
+      await initAll();
 
-      // Event: klik kotak reward
+      // Klik kotak reward
       boxImg.onclick = async () => {
         const now   = new Date();
         const today = now.toISOString().split('T')[0];
-        const data  = (await getDoc(userRef)).data();
-        const last  = data.lastLogin?.toDate?.toISOString().split('T')[0];
-        if (last === today) return; // udah klaim
+        const u     = (await getDoc(userRef)).data();
+        const last  = u.lastLogin?.toDate().toISOString().split('T')[0];
+        if (last === today) return;
 
+        // hitung streak
         const yest = new Date(now); yest.setDate(yest.getDate()-1);
         const isY  = last === yest.toISOString().split('T')[0];
-        const newSt = isY ? data.streak + 1 : 1;
+        const newSt= isY ? u.streak+1 : 1;
+        const newBal = (u.coinBalance||0) + DAILY_COINS;
 
+        // update Firestore
         await updateDoc(userRef, {
           lastLogin: serverTimestamp(),
-          streak: newSt
+          streak: newSt,
+          coinBalance: newBal
+        });
+        const claimRef = doc(collection(db,"users",uid,"claims"));
+        await setDoc(claimRef, {
+          timestamp: serverTimestamp(),
+          coins: DAILY_COINS
         });
 
-        boxImg.src = OPEN_IMG;
-        boxImg.classList.remove("shake");
-        dailyStatus.textContent = `Reward diklaim! Streak kamu: ${newSt} hari 🎉`;
+        // update UI
+        boxImg.src = OPEN_IMG; boxImg.classList.remove("shake");
+        dailyStatus.textContent = `Reward diklaim! +${DAILY_COINS} koin`;
+        await loadBalance();
+        await loadHistory();
       };
 
-      // Event: klik referral
+      // Referral (tetap)
       referralBtn.onclick = async () => {
         const code = referralInput.value.trim();
         if (!code || code === uid.substring(0,6)) {
           referralStatus.textContent = "Kode tidak valid atau milikmu sendiri.";
           return;
         }
-        const udata = (await getDoc(userRef)).data();
-        if (udata.referralUsed) {
+        const u = (await getDoc(userRef)).data();
+        if (u.referralUsed) {
           referralStatus.textContent = "Kamu sudah menggunakan referral.";
           return;
         }
-        const refDoc = doc(db, "referralCodes", code);
-        const rsnap  = await getDoc(refDoc);
-        if (!rsnap.exists()) {
+        const refDoc = doc(db,"referralCodes",code);
+        const rSnap  = await getDoc(refDoc);
+        if (!rSnap.exists()) {
           referralStatus.textContent = "Kode referral tidak ditemukan.";
           return;
         }
-        await updateDoc(userRef, { referralUsed: true, referrer: code });
-        await updateDoc(refDoc,   { count: (rsnap.data().count||0) + 1 });
+        await updateDoc(userRef, { referralUsed:true, referrer:code });
+        await updateDoc(refDoc,   { count:(rSnap.data().count||0)+1 });
         referralStatus.textContent = "Kode berhasil digunakan! 🎁";
+      };
+
+      // Redeem hadiah
+      redeemSelect.onchange = checkRedeemButton;
+      redeemBtn.onclick = async () => {
+        const cost = parseInt(redeemSelect.value,10);
+        if (cost<=0) return;
+        const u = (await getDoc(userRef)).data();
+        if ((u.coinBalance||0) < cost) return;
+
+        // update balance
+        await updateDoc(userRef, { coinBalance: (u.coinBalance||0) - cost });
+        redeemStatus.textContent = `Berhasil tukar dengan ${cost} koin!`;
+        await loadBalance();
       };
     });
   </script>
