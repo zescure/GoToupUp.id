@@ -311,369 +311,320 @@
 
   <!-- ========================= JS ========================= -->
   <script type="module">
-    /* ===== Firebase: tempel key kamu (tanpa login ulang) ===== */
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-    import {
-      getAuth, onAuthStateChanged
-    } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-    import {
-      getFirestore, doc, getDoc, setDoc, updateDoc, increment, serverTimestamp
-    } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+/* ===== Firebase Config ===== */
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import {
+  getFirestore, doc, getDoc, setDoc, updateDoc, increment, serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
-      authDomain: "zeepaylater-93a94.firebaseapp.com",
-      projectId: "zeepaylater-93a94",
-      storageBucket: "zeepaylater-93a94.appspot.com",
-      messagingSenderId: "358065954807",
-      appId: "1:358065954807:web:66619211fea82a4b2518f2"
-    };
-
-    const app  = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db   = getFirestore(app);
-
-    /* ==========================================================
-       1) CASHBACK TABLE – EDIT DI SINI SAJA!
-       key   = diamond value persis seperti data-value pada kartu nominal
-       buyer = koin untuk pembeli
-       ref   = koin untuk pemilik referral
-       ========================================================== */
-    const CASHBACK_TABLE = {
-      "3":   { buyer: 1,  ref: 1 },
-      "5":   { buyer: 2,  ref: 1 },
-      "18":  { buyer: 4,  ref: 2 },
-      "33":  { buyer: 6,  ref: 3 },
-      "46":  { buyer: 7,  ref: 3 },
-      "56":  { buyer: 8,  ref: 4 },
-      // ... Tambah sesuka kamu
-      // "WEEKLY DIAMOND PASS": { buyer: 10, ref: 5 },
-    };
-
-    // helper: dapetin cashback dari tabel
-    function getCashbackByValue(value){
-      return CASHBACK_TABLE[value] || { buyer: 0, ref: 0 };
-    }
-
-    let currentUser = null;
-    let appliedReferralCode = null;  // referral yang dipakai user (jika valid)
-    let referralOwnerUid    = null;  // pemilik referral (UID) untuk di-credit cashback
-
-    onAuthStateChanged(auth, async (u)=>{
-      if(!u){
-        // user belum login dari halaman utama → redirect
-        location.href = '/register-login';
-        return;
-      }
-      currentUser = u;
-      // pastikan dokumen user ada
-      const uref = doc(db,'users',u.uid);
-      const usnap = await getDoc(uref);
-      if(!usnap.exists()){
-        await setDoc(uref,{
-          coinBalance: 0,
-          createdAt: serverTimestamp()
-        });
-      }
-    });
-
-    /* ======================== UI Logic ======================== */
-    const mobileMenu = document.getElementById('mobileMenu');
-    document.querySelector('.menu-btn').onclick = ()=> mobileMenu.classList.toggle('open');
-
-    const nominalCards = document.querySelectorAll('.nominal-card');
-    const paymentCards = document.querySelectorAll('.payment-card');
-    const vaBRICard    = document.getElementById('vaBRICard');
-    const vaBNICard    = document.getElementById('vaBNICard');
-    const vaMandiriCard= document.getElementById('vaMandiriCard');
-    const vaCards      = [vaBRICard, vaBNICard, vaMandiriCard];
-
-    const qrSection    = document.getElementById('qrSection');
-    const vaSection    = document.getElementById('vaSection');
-    const vaBankName   = document.getElementById('vaBankName');
-    const vaNumber     = document.getElementById('vaNumber');
-
-    const vaData = {
-      VA_BRI:     { name: 'Bank BRI Virtual Account',     number: '5790-8569-7747-768' },
-      VA_BNI:     { name: 'Bank BNI Virtual Account',     number: '9888-3081-0216-1147' },
-      VA_MANDIRI: { name: 'Bank Mandiri Virtual Account', number: '8889-8285-6977-4776-8' }
-    };
-
-    nominalCards.forEach(c=>{
-      c.onclick = ()=>{
-        nominalCards.forEach(x=> x.classList.remove('selected'));
-        c.classList.add('selected');
-        const price = parseFloat(c.dataset.price);
-        vaCards.forEach(vc=>{
-          if(price < 10000) {
-            vc.classList.add('disabled');
-            vc.classList.remove('selected');
-          } else {
-            vc.classList.remove('disabled');
-          }
-        });
-      };
-    });
-
-    paymentCards.forEach(c=>{
-      c.onclick = ()=>{
-        if(c.classList.contains('disabled')) return;
-        paymentCards.forEach(x=> x.classList.remove('selected'));
-        c.classList.add('selected');
-      };
-    });
-
-    // Terapkan referral (cek valid / tidak, tapi cashback baru diberikan saat “Sudah Bayar”)
-    const referralInput = document.getElementById('referralCode');
-    const referralMsg   = document.getElementById('referralMsg');
-    document.getElementById('btnApplyReferral').onclick = async ()=>{
-      const code = referralInput.value.trim().toUpperCase();
-      if(code.length !== 6){
-        referralMsg.style.color = 'red';
-        referralMsg.textContent = 'Kode referral harus 6 karakter.';
-        appliedReferralCode = null; referralOwnerUid = null;
-        return;
-      }
-      if(!currentUser){
-        referralMsg.style.color = 'red';
-        referralMsg.textContent = 'Silakan login dulu (redirect otomatis).';
-        return;
-      }
-      if(code === currentUser.uid.slice(0,6)){
-        referralMsg.style.color = 'red';
-        referralMsg.textContent = 'Kode referral tidak boleh milik sendiri.';
-        appliedReferralCode = null; referralOwnerUid = null;
-        return;
-      }
-
-      const rRef = doc(db,'referralCodes',code);
-      const rSnap = await getDoc(rRef);
-      if(!rSnap.exists()){
-        referralMsg.style.color = 'red';
-        referralMsg.textContent = 'Kode referral tidak ditemukan.';
-        appliedReferralCode = null; referralOwnerUid = null;
-        return;
-      }
-      appliedReferralCode = code;
-      referralOwnerUid    = rSnap.data().owner;
-      referralMsg.style.color = 'lightgreen';
-      referralMsg.textContent = 'Kode referral valid. Cashback akan aktif saat pembayaran selesai.';
-    };
-
-    // Checkout → hitung total + tampil modal
-    const outId       = document.getElementById('outId');
-    const outDiam     = document.getElementById('outDiam');
-    const outPrice    = document.getElementById('outPrice');
-    const outAdmin    = document.getElementById('outAdmin');
-    const outTotal    = document.getElementById('outTotal');
-    const outCBBuyer  = document.getElementById('outCBBuyer');
-    const outCBRef    = document.getElementById('outCBRef');
-
-    let lastCalc = null; // simpan data yang dihitung untuk dipakai saat “Sudah Bayar”
-
-    document.getElementById('btnCheckout').onclick = ()=>{
-      const idSel = document.getElementById('userId').value.trim();
-      const srvSel= document.getElementById('server').value.trim();
-      const waSel = document.getElementById('whatsapp').value.trim();
-      if(!idSel||!srvSel||!waSel) return alert('Lengkapi data dulu ya.');
-
-      const nomSel = document.querySelector('.nominal-card.selected');
-      if(!nomSel) return alert('Pilih nominal dulu ya.');
-      const paySel = document.querySelector('.payment-card.selected');
-      if(!paySel) return alert('Pilih metode pembayaran dulu ya.');
-
-      const value     = nomSel.dataset.value;
-      const price     = parseFloat(nomSel.dataset.price);
-      const flatAdmin = parseFloat(paySel.dataset.admin);
-      const percent   = parseFloat(paySel.dataset.percent||0)/100;
-      const adminCalc = Math.ceil(flatAdmin + price*percent);
-      const total     = price + adminCalc;
-
-      // get cashback config
-      const cb = getCashbackByValue(value);
-      const buyerCB = cb.buyer || 0;
-      const refCB   = cb.ref   || 0;
-
-      // Isi modal
-      outId.textContent    = `${idSel} (Srv: ${srvSel})`;
-      outDiam.textContent  = value;
-      outPrice.textContent = price.toLocaleString('id');
-      outAdmin.textContent = adminCalc.toLocaleString('id');
-      outTotal.textContent = total.toLocaleString('id');
-
-      // Tampilkan potensi cashback (hanya akan dikredit kalau referral valid saat "Sudah Bayar")
-      outCBBuyer.textContent = buyerCB;
-      outCBRef.textContent   = refCB;
-
-      // show QR / VA
-      if(paySel.dataset.value.startsWith('VA_')){
-        qrSection.style.display = 'none';
-        vaSection.style.display = 'block';
-        const data = vaData[paySel.dataset.value];
-        vaBankName.textContent = data.name;
-        vaNumber.textContent   = data.number;
-      } else {
-        vaSection.style.display = 'none';
-        qrSection.style.display = 'block';
-        const qr = document.getElementById('qrCode');
-        switch(paySel.dataset.value) {
-          case 'DANA':   qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png'; break;
-          case 'SHOPEE': qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjL8xRyiYxTJJCxDisZZJqBpMuBMpq1K7Z_uoTTb1fo-YRCCn4S3UXvYHG3eqjAF8ZFy1ouRKa4S4hHQfbAi_VBlKUWt8nV7ThT8ZzFB_Bw5jrn8stCQ_5oK15Pxd9DjsGUmG7TEmeuW5XApanfO_DeYcWNoMsmhe3uk9_r3zHDvqmVTOTdHXRXL7Y2wPLJ/s320/20250206_101339.jpg'; break;
-          case 'GOPAY':  qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgrpYxkkJADDVoGJ0YI-UfcK2roO_JWFbzeVoFiMkKGBvFoze_096vm00gNoFkPMaMGnU0KoWvjpFScv4eP41WgRuYA7kF-UBCmw2lq6hyPkrfoxzi9oFWVoIxjZ1wCb2HIvhYKkCE2DYwixXiJGR-9xsdoEv3z9EdyKaYOa0aKMuImxXLTqpvlf6GkhQ/s320/IMG_1040.jpeg'; break;
-          case 'QRIS':   qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjL8xRyiYxTJJCxDisZZJqBpMuBMpq1K7Z_uoTTb1fo-YRCCn4S3UXvYHG3eqjAF8ZFy1ouRKa4S4hHQfbAi_VBlKUWt8nV7ThT8ZzFB_Bw5jrn8stCQ_5oK15Pxd9DjsGUmG7TEmeuW5XApanfO_DeYcWNoMsmhe3uk9_r3zHDvqmVTOTdHXRXL7Y2wPLJ/s320/20250206_101339.jpg'; break;
-        }
-      }
-
-    // simpan snapshot kalkulasi buat dipakai waktu “Sudah Bayar”
-lastCalc = {
-  uid: currentUser?.uid || null,
-  idSel, srvSel, waSel,
-  value, price, adminCalc, total,
-  buyerCB, refCB,
-  payMethod: paySel.dataset.value,
-  referralCode: appliedReferralCode,
-  referralOwnerUid
+const firebaseConfig = {
+  apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
+  authDomain: "zeepaylater-93a94.firebaseapp.com",
+  projectId: "zeepaylater-93a94",
+  storageBucket: "zeepaylater-93a94.appspot.com",
+  messagingSenderId: "358065954807",
+  appId: "1:358065954807:web:66619211fea82a4b2518f2"
 };
 
-document.getElementById('modalOverlay').style.display = 'flex';
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
 
-// start countdown 14 menit
-startCountdown();
+/* =============== CASHBACK TABLE =============== */
+const CASHBACK_TABLE = {
+  "3":  { buyer: 1,  ref: 1 },
+  "5":  { buyer: 2,  ref: 1 },
+  "18": { buyer: 4,  ref: 2 },
+  "33": { buyer: 6,  ref: 3 },
+  "46": { buyer: 7,  ref: 3 },
+  "56": { buyer: 8,  ref: 4 },
+};
+const getCashbackByValue = v => CASHBACK_TABLE[v] || { buyer:0, ref:0 };
+
+let currentUser = null;
+let appliedReferralCode = null;
+let referralOwnerUid    = null;
+
+/* =============== AUTH CHECK =============== */
+onAuthStateChanged(auth, async (u)=>{
+  if(!u){ location.href='/register-login'; return; }
+  currentUser = u;
+  const uref = doc(db,'users',u.uid);
+  const usnap = await getDoc(uref);
+  if(!usnap.exists()){
+    await setDoc(uref,{ coinBalance:0, createdAt:serverTimestamp() });
+  }
+});
+
+/* =============== UI ELEMENTS =============== */
+const mobileMenu = document.getElementById('mobileMenu');
+document.querySelector('.menu-btn').onclick = ()=> mobileMenu.classList.toggle('open');
+
+const nominalCards = document.querySelectorAll('.nominal-card');
+const paymentCards = document.querySelectorAll('.payment-card');
+const vaBRICard    = document.getElementById('vaBRICard');
+const vaBNICard    = document.getElementById('vaBNICard');
+const vaMandiriCard= document.getElementById('vaMandiriCard');
+const vaCards      = [vaBRICard, vaBNICard, vaMandiriCard];
+
+const qrSection    = document.getElementById('qrSection');
+const vaSection    = document.getElementById('vaSection');
+const vaBankName   = document.getElementById('vaBankName');
+const vaNumber     = document.getElementById('vaNumber');
+
+const vaData = {
+  VA_BRI:     { name:'Bank BRI Virtual Account',     number:'5790-8569-7747-768' },
+  VA_BNI:     { name:'Bank BNI Virtual Account',     number:'9888-3081-0216-1147' },
+  VA_MANDIRI: { name:'Bank Mandiri Virtual Account', number:'8889-8285-6977-4776-8' }
+};
+
+/* =============== CARD SELECTION =============== */
+nominalCards.forEach(c=>{
+  c.onclick = ()=>{
+    nominalCards.forEach(x=> x.classList.remove('selected'));
+    c.classList.add('selected');
+    const price = parseFloat(c.dataset.price);
+    vaCards.forEach(vc=>{
+      if(price < 10000) {
+        vc.classList.add('disabled'); vc.classList.remove('selected');
+      } else {
+        vc.classList.remove('disabled');
+      }
+    });
+  };
+});
+paymentCards.forEach(c=>{
+  c.onclick = ()=>{
+    if(c.classList.contains('disabled')) return;
+    paymentCards.forEach(x=> x.classList.remove('selected'));
+    c.classList.add('selected');
+  };
+});
+
+/* =============== REFERRAL CODE =============== */
+const referralInput = document.getElementById('referralCode');
+const referralMsg   = document.getElementById('referralMsg');
+document.getElementById('btnApplyReferral').onclick = async ()=>{
+  const code = referralInput.value.trim().toUpperCase();
+  if(code.length !== 6){
+    referralMsg.style.color='red'; referralMsg.textContent='Kode referral harus 6 karakter.';
+    appliedReferralCode=null; referralOwnerUid=null; return;
+  }
+  if(!currentUser){
+    referralMsg.style.color='red'; referralMsg.textContent='Silakan login dulu.';
+    return;
+  }
+  if(code === currentUser.uid.slice(0,6)){
+    referralMsg.style.color='red'; referralMsg.textContent='Kode referral tidak boleh milik sendiri.';
+    appliedReferralCode=null; referralOwnerUid=null; return;
+  }
+
+  const rRef = doc(db,'referralCodes',code);
+  const rSnap = await getDoc(rRef);
+  if(!rSnap.exists()){
+    referralMsg.style.color='red'; referralMsg.textContent='Kode referral tidak ditemukan.';
+    appliedReferralCode=null; referralOwnerUid=null; return;
+  }
+  appliedReferralCode = code;
+  referralOwnerUid    = rSnap.data().owner;
+  referralMsg.style.color='lightgreen';
+  referralMsg.textContent = 'Kode referral valid. Cashback akan aktif saat pembayaran selesai.';
+};
+
+/* =============== MODAL CHECKOUT =============== */
+const outId      = document.getElementById('outId');
+const outDiam    = document.getElementById('outDiam');
+const outPrice   = document.getElementById('outPrice');
+const outAdmin   = document.getElementById('outAdmin');
+const outTotal   = document.getElementById('outTotal');
+const outCBBuyer = document.getElementById('outCBBuyer');
+const outCBRef   = document.getElementById('outCBRef');
+
+let lastCalc = null;
+
+document.getElementById('btnCheckout').onclick = ()=>{
+  const idSel = document.getElementById('userId').value.trim();
+  const srvSel= document.getElementById('server').value.trim();
+  const waSel = document.getElementById('whatsapp').value.trim();
+  if(!idSel||!srvSel||!waSel) return alert('Lengkapi data dulu ya.');
+
+  const nomSel = document.querySelector('.nominal-card.selected');
+  if(!nomSel) return alert('Pilih nominal dulu ya.');
+  const paySel = document.querySelector('.payment-card.selected');
+  if(!paySel) return alert('Pilih metode pembayaran dulu ya.');
+
+  const value     = nomSel.dataset.value;
+  const price     = parseFloat(nomSel.dataset.price);
+  const flatAdmin = parseFloat(paySel.dataset.admin);
+  const percent   = parseFloat(paySel.dataset.percent||0)/100;
+  const adminCalc = Math.ceil(flatAdmin + price*percent);
+  const total     = price + adminCalc;
+
+  const { buyer:buyerCB, ref:refCB } = getCashbackByValue(value);
+
+  outId.textContent    = `${idSel} (Srv: ${srvSel})`;
+  outDiam.textContent  = value;
+  outPrice.textContent = price.toLocaleString('id');
+  outAdmin.textContent = adminCalc.toLocaleString('id');
+  outTotal.textContent = total.toLocaleString('id');
+  outCBBuyer.textContent = buyerCB;
+  outCBRef.textContent   = refCB;
+
+  if(paySel.dataset.value.startsWith('VA_')){
+    qrSection.style.display = 'none';
+    vaSection.style.display = 'block';
+    const data = vaData[paySel.dataset.value];
+    vaBankName.textContent = data.name;
+    vaNumber.textContent   = data.number;
+  } else {
+    vaSection.style.display = 'none';
+    qrSection.style.display = 'block';
+    const qr = document.getElementById('qrCode');
+    switch(paySel.dataset.value) {
+      case 'DANA':   qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png'; break;
+      case 'SHOPEE': qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjL8xRyiYxTJJCxDisZZJqBpMuBMpq1K7Z_uoTTb1fo-YRCCn4S3UXvYHG3eqjAF8ZFy1ouRKa4S4hHQfbAi_VBlKUWt8nV7ThT8ZzFB_Bw5jrn8stCQ_5oK15Pxd9DjsGUmG7TEmeuW5XApanfO_DeYcWNoMsmhe3uk9_r3zHDvqmVTOTdHXRXL7Y2wPLJ/s320/20250206_101339.jpg'; break;
+      case 'GOPAY':  qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgrpYxkkJADDVoGJ0YI-UfcK2roO_JWFbzeVoFiMkKGBvFoze_096vm00gNoFkPMaMGnU0KoWvjpFScv4eP41WgRuYA7kF-UBCmw2lq6hyPkrfoxzi9oFWVoIxjZ1wCb2HIvhYKkCE2DYwixXiJGR-9xsdoEv3z9EdyKaYOa0aKMuImxXLTqpvlf6GkhQ/s320/IMG_1040.jpeg'; break;
+      case 'QRIS':   qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjL8xRyiYxTJJCxDisZZJqBpMuBMpq1K7Z_uoTTb1fo-YRCCn4S3UXvYHG3eqjAF8ZFy1ouRKa4S4hHQfbAi_VBlKUWt8nV7ThT8ZzFB_Bw5jrn8stCQ_5oK15Pxd9DjsGUmG7TEmeuW5XApanfO_DeYcWNoMsmhe3uk9_r3zHDvqmVTOTdHXRXL7Y2wPLJ/s320/20250206_101339.jpg'; break;
+    }
+  }
+
+  lastCalc = {
+    uid: currentUser?.uid || null,
+    idSel, srvSel, waSel,
+    value, price, adminCalc, total,
+    buyerCB, refCB,
+    payMethod: paySel.dataset.value,
+    referralCode: appliedReferralCode,
+    referralOwnerUid
+  };
+
+  document.getElementById('modalOverlay').style.display = 'flex';
+  startCountdown();
 };
 
 document.getElementById('btnClose').onclick = ()=>{
   document.getElementById('modalOverlay').style.display = 'none';
 };
 
-// “Sudah Bayar”: kirim ke WA & kredit cashback jika valid
-document.getElementById('btnDone').onclick = async ()=>{
-  if(!lastCalc){ return; }
-  if(!currentUser){
-    alert('Kamu belum login di halaman utama.');
-    return location.href='/register-login';
-  }
+/* =============== BTN DONE =============== */
+document.getElementById('btnDone').onclick = ()=>{
+  if(!lastCalc) return;
+  if(!currentUser){ location.href='/register-login'; return; }
 
-  const { uid, idSel, srvSel, waSel, value, price, adminCalc, total,
-          buyerCB, refCB, payMethod, referralCode, referralOwnerUid } = lastCalc;
+  const {
+    uid, idSel, srvSel, waSel, value, price, adminCalc, total,
+    buyerCB, refCB, payMethod, referralCode, referralOwnerUid
+  } = lastCalc;
 
-  try {
-    // 1) Buat order log
-    const orderRef = doc(getFirestore(), 'orders', crypto.randomUUID());
-    await setDoc(orderRef, {
-      uid,
-      game: 'mlbb',
-      productValue: value,
-      price,
-      admin: adminCalc,
-      total,
-      referralCode: referralCode || null,
-      referralOwnerUid: referralOwnerUid || null,
-      cbBuyer: (referralCode ? buyerCB : 0),
-      cbRef:   (referralCode ? refCB   : 0),
-      payMethod,
-      createdAt: serverTimestamp(),
-      status: 'paid'
-    });
+  const msg =
+    `Saya sudah order Mobile Legends *${value} Diamonds MlbbNew*`+
+    `\nID: ${idSel} (Server: ${srvSel})`+
+    `\nNo. WA: ${waSel}`+
+    `\nMetode: ${payMethod.replace('_',' ')}`+
+    `\nTotal bayar: Rp ${total.toLocaleString('id')}`+
+    (referralCode ? `\nReferral: ${referralCode}` : '');
+  window.open(`https://wa.me/6285697747768?text=${encodeURIComponent(msg)}`, '_blank');
 
-    // 2) Cashback only if referral valid (silent mode)
-    if (referralCode && referralOwnerUid) {
-      try {
-        // kredit buyer
-        const buyerRef = doc(db,'users', uid);
-        await updateDoc(buyerRef, { coinBalance: increment(buyerCB) });
+  (async ()=>{
+    try {
+      const orderId = crypto.randomUUID();
+      await setDoc(doc(db,'orders',orderId),{
+        uid,
+        game: 'mlbb',
+        productValue: value,
+        price,
+        admin: adminCalc,
+        total,
+        referralCode: referralCode || null,
+        referralOwnerUid: referralOwnerUid || null,
+        cbBuyer: (referralCode ? buyerCB : 0),
+        cbRef:   (referralCode ? refCB   : 0),
+        payMethod,
+        createdAt: serverTimestamp(),
+        status: 'paid'
+      });
 
-        // kredit referrer
-        const ownerRef = doc(db,'users', referralOwnerUid);
-        const ownerSnap = await getDoc(ownerRef);
-        if(ownerSnap.exists()){
-          await updateDoc(ownerRef, { coinBalance: increment(refCB) });
+      if (referralCode && referralOwnerUid) {
+        try {
+          await updateDoc(doc(db,'users', uid), { coinBalance: increment(buyerCB) });
+          const ownerRef = doc(db,'users', referralOwnerUid);
+          const ownerSnap = await getDoc(ownerRef);
+          if(ownerSnap.exists()){
+            await updateDoc(ownerRef, { coinBalance: increment(refCB) });
+          }
+        } catch (e) {
+          console.warn('Cashback update error:', e);
         }
-      } catch (e) {
-        console.warn('Cashback update error:', e);
       }
+    } catch (e) {
+      console.error('Order write error:', e);
+    } finally {
+      document.getElementById('modalOverlay').style.display = 'none';
+      lastCalc = null;
     }
-
-    // 3) Direct WA admin
-    const msg =
-      `Saya sudah order Mobile Legends *${value} Diamonds MlbbNew*`+
-      `\nID: ${idSel} (Server: ${srvSel})`+
-      `\nNo. WA: ${waSel}`+
-      `\nMetode: ${payMethod.replace('_',' ')}`+
-      `\nTotal bayar: Rp ${total.toLocaleString('id')}`+
-      (referralCode ? `\nReferral: ${referralCode}` : '');
-    window.open(`https://wa.me/6285697747768?text=${encodeURIComponent(msg)}`, '_blank');
-
-    // tutup modal + reset state
-    document.getElementById('modalOverlay').style.display = 'none';
-    lastCalc = null;
-  } catch (e) {
-    console.error(e);
-    alert('Terjadi kesalahan saat memproses pembayaran.');
-  }
+  })();
 };
 
-    // Copy total & VA
-    const btnCopyTotal = document.createElement('button');
-    btnCopyTotal.textContent = 'Copy Total';
-    btnCopyTotal.style = 'margin-left:8px;padding:4px 8px;cursor:pointer';
-    document.addEventListener('DOMContentLoaded', ()=>{
-      const totalP = document.querySelector('.modal-body p.total');
-      if(totalP) totalP.appendChild(btnCopyTotal);
-    });
-    btnCopyTotal.onclick = ()=>{
-      navigator.clipboard.writeText(document.getElementById('outTotal').textContent)
-        .then(()=> alert('Total bayar disalin'));
-    };
+/* =============== COPY BUTTONS =============== */
+const btnCopyTotal = document.createElement('button');
+btnCopyTotal.textContent = 'Copy Total';
+btnCopyTotal.style = 'margin-left:8px;padding:4px 8px;cursor:pointer';
+document.addEventListener('DOMContentLoaded', ()=>{
+  const totalP = document.querySelector('.modal-body p.total');
+  if(totalP) totalP.appendChild(btnCopyTotal);
+});
+btnCopyTotal.onclick = ()=>{
+  navigator.clipboard.writeText(document.getElementById('outTotal').textContent)
+    .then(()=> alert('Total bayar disalin'));
+};
+document.getElementById('btnCopyVA')?.addEventListener('click', ()=>{
+  navigator.clipboard.writeText(document.getElementById('vaNumber').textContent)
+    .then(()=> alert('No. VA disalin'));
+});
 
-    document.getElementById('btnCopyVA')?.addEventListener('click', ()=>{
-      navigator.clipboard.writeText(document.getElementById('vaNumber').textContent)
-        .then(()=> alert('No. VA disalin'));
-    });
-
-    /* =================== Countdown 14 menit =================== */
-    let countdownInterval=null;
-    function startCountdown(){
+/* =============== COUNTDOWN =============== */
+let countdownInterval=null;
+function startCountdown(){
+  clearInterval(countdownInterval);
+  let bayarSebelum = document.getElementById('bayarSebelum');
+  if (!bayarSebelum) {
+    bayarSebelum = document.createElement('span');
+    bayarSebelum.id = 'bayarSebelum';
+    bayarSebelum.style = 'margin-left:10px; font-size:12px; font-weight:bold;';
+    document.querySelector('.modal-body p.total').appendChild(bayarSebelum);
+  }
+  let sisaDetik = 14 * 60;
+  const updateCountdown = () => {
+    if (sisaDetik <= 0) {
+      bayarSebelum.innerHTML = `<span style="color:red">⏰ Waktu habis!</span>`;
       clearInterval(countdownInterval);
-      let bayarSebelum = document.getElementById('bayarSebelum');
-      if (!bayarSebelum) {
-        bayarSebelum = document.createElement('span');
-        bayarSebelum.id = 'bayarSebelum';
-        bayarSebelum.style = 'margin-left:10px; font-size:12px; font-weight:bold;';
-        document.querySelector('.modal-body p.total').appendChild(bayarSebelum);
-      }
-      let sisaDetik = 14 * 60;
-      const updateCountdown = () => {
-        if (sisaDetik <= 0) {
-          bayarSebelum.innerHTML = `<span style="color:red">⏰ Waktu habis!</span>`;
-          clearInterval(countdownInterval);
-          return;
-        }
-        const m = Math.floor(sisaDetik / 60).toString().padStart(2, '0');
-        const d = (sisaDetik % 60).toString().padStart(2, '0');
-        bayarSebelum.innerHTML = `(Bayar sebelum <span style="color:red">${m}:${d}</span>)`;
-        sisaDetik--;
-      };
-      updateCountdown();
-      countdownInterval = setInterval(updateCountdown, 1000);
+      return;
     }
+    const m = Math.floor(sisaDetik / 60).toString().padStart(2, '0');
+    const d = (sisaDetik % 60).toString().padStart(2, '0');
+    bayarSebelum.innerHTML = `(Bayar sebelum <span style="color:red">${m}:${d}</span>)`;
+    sisaDetik--;
+  };
+  updateCountdown();
+  countdownInterval = setInterval(updateCountdown, 1000);
+}
 
-    /* =================== Auto Scroll helper =================== */
-    (function(){
-      const nominalGrid = document.getElementById('nominalGrid');
-      const paymentGrid = document.getElementById('paymentGrid');
-      const btnCheckout = document.getElementById('btnCheckout');
+/* =============== AUTO SCROLL =============== */
+(function(){
+  const nominalGrid = document.getElementById('nominalGrid');
+  const paymentGrid = document.getElementById('paymentGrid');
+  const btnCheckout = document.getElementById('btnCheckout');
 
-      function smoothTo(el){ el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-
-      nominalGrid.addEventListener('click', e=>{
-        if (e.target.closest('.nominal-card')) smoothTo(paymentGrid);
-      });
-
-      paymentGrid.addEventListener('click', e=>{
-        const card = e.target.closest('.payment-card');
-        if (card && !card.classList.contains('disabled')) smoothTo(btnCheckout);
-      });
-    })();
-  </script>
+  function smoothTo(el){ el.scrollIntoView({ behavior:'smooth', block:'start' }); }
+  nominalGrid.addEventListener('click', e=>{
+    if (e.target.closest('.nominal-card')) smoothTo(paymentGrid);
+  });
+  paymentGrid.addEventListener('click', e=>{
+    const card = e.target.closest('.payment-card');
+    if (card && !card.classList.contains('disabled')) smoothTo(btnCheckout);
+  });
+})();
+</script>
 </body>
 </html>
