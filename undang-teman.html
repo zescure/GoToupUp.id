@@ -77,10 +77,12 @@
     <!-- Reward Harian -->
     <div class="box-card">
       <h2>Reward Harian</h2>
-      <!-- GANTI URL GAMBARNYA -->
-      <img id="dailyBox" class="shake" src="https://cdn-icons-png.flaticon.com/512/862/862856.png" alt="Kotak Reward">
+      <img id="dailyBox" class="shake"
+           src="https://cdn-icons-png.flaticon.com/512/862/862856.png"
+           alt="Kotak Reward">
       <p id="dailyStatus">Klik kotak di atas untuk klaim!</p>
     </div>
+
     <!-- Referral Teman -->
     <div class="ref-card">
       <h3>Referral Teman</h3>
@@ -88,6 +90,7 @@
       <button id="submitReferral">Gunakan Kode</button>
       <p id="referralStatus"></p>
     </div>
+
     <!-- Info Akun User -->
     <div class="user-info" id="user-info">
       <p><b>UID:</b> <span id="user-uid"></span></p>
@@ -97,24 +100,29 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+    // Firebase SDK
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
     import {
       getFirestore, doc, getDoc, setDoc,
       updateDoc, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
-    import {
-      getAuth, onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js";
-    // PASTIKAN file ini ada di folder sama
-    import { firebaseConfig } from './firebase-config.js';
+    } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-    const CLOSED_IMG  = 'https://cdn-icons-png.flaticon.com/512/862/862856.png';
-    const OPEN_IMG    = 'https://cdn-icons-png.flaticon.com/512/4315/4315609.png';
+    // Firebase config langsung di sini
+    const firebaseConfig = {
+      apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
+      authDomain: "zeepaylater-93a94.firebaseapp.com",
+      projectId: "zeepaylater-93a94",
+      storageBucket: "zeepaylater-93a94.appspot.com",
+      messagingSenderId: "358065954807",
+      appId: "1:358065954807:web:66619211fea82a4b2518f2"
+    };
 
     const app  = initializeApp(firebaseConfig);
-    const db   = getFirestore(app);
     const auth = getAuth(app);
+    const db   = getFirestore(app);
 
+    // Elemen UI
     const boxImg        = document.getElementById("dailyBox");
     const dailyStatus   = document.getElementById("dailyStatus");
     const referralBtn   = document.getElementById("submitReferral");
@@ -125,11 +133,16 @@
     const userEmailEl   = document.getElementById("user-email");
     const userRefCodeEl = document.getElementById("user-ref-code");
 
+    const CLOSED_IMG = 'https://cdn-icons-png.flaticon.com/512/862/862856.png';
+    const OPEN_IMG   = 'https://cdn-icons-png.flaticon.com/512/4315/4315609.png';
+
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
+        // Belum login → redirect
         window.location.href = "/register-login";
         return;
       }
+
       const uid     = user.uid;
       const userRef = doc(db, "users", uid);
 
@@ -151,7 +164,7 @@
         });
       }
 
-      // Setup tampilan kotak
+      // Setup tampilan reward box
       async function initBox() {
         const data  = (await getDoc(userRef)).data();
         const last  = data.lastLogin?.toDate?.toISOString().split('T')[0];
@@ -169,48 +182,48 @@
       }
       await initBox();
 
-      // Klaim reward
+      // Event: klik kotak reward
       boxImg.onclick = async () => {
         const now   = new Date();
         const today = now.toISOString().split('T')[0];
         const data  = (await getDoc(userRef)).data();
         const last  = data.lastLogin?.toDate?.toISOString().split('T')[0];
-        if (last === today) return;
+        if (last === today) return; // udah klaim
 
-        const yesterday = new Date(now); yesterday.setDate(yesterday.getDate()-1);
-        const isYest    = last === yesterday.toISOString().split('T')[0];
-        const newStreak = isYest ? data.streak+1 : 1;
+        const yest = new Date(now); yest.setDate(yest.getDate()-1);
+        const isY  = last === yest.toISOString().split('T')[0];
+        const newSt = isY ? data.streak + 1 : 1;
 
         await updateDoc(userRef, {
           lastLogin: serverTimestamp(),
-          streak: newStreak
+          streak: newSt
         });
 
         boxImg.src = OPEN_IMG;
         boxImg.classList.remove("shake");
-        dailyStatus.textContent = `Reward diklaim! Streak kamu: ${newStreak} hari 🎉`;
+        dailyStatus.textContent = `Reward diklaim! Streak kamu: ${newSt} hari 🎉`;
       };
 
-      // Klaim referral
+      // Event: klik referral
       referralBtn.onclick = async () => {
         const code = referralInput.value.trim();
         if (!code || code === uid.substring(0,6)) {
           referralStatus.textContent = "Kode tidak valid atau milikmu sendiri.";
           return;
         }
-        const userData = (await getDoc(userRef)).data();
-        if (userData.referralUsed) {
+        const udata = (await getDoc(userRef)).data();
+        if (udata.referralUsed) {
           referralStatus.textContent = "Kamu sudah menggunakan referral.";
           return;
         }
-        const refDocRef = doc(db, "referralCodes", code);
-        const refSnap   = await getDoc(refDocRef);
-        if (!refSnap.exists()) {
+        const refDoc = doc(db, "referralCodes", code);
+        const rsnap  = await getDoc(refDoc);
+        if (!rsnap.exists()) {
           referralStatus.textContent = "Kode referral tidak ditemukan.";
           return;
         }
         await updateDoc(userRef, { referralUsed: true, referrer: code });
-        await updateDoc(refDocRef,   { count: (refSnap.data().count||0) + 1 });
+        await updateDoc(refDoc,   { count: (rsnap.data().count||0) + 1 });
         referralStatus.textContent = "Kode berhasil digunakan! 🎁";
       };
     });
