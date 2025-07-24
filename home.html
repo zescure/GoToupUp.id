@@ -1044,48 +1044,43 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
- // Login/Register
+  // login register
+import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  const auth = getAuth();
   const loginBtn = document.getElementById("loginBtn");
   const accountInfo = document.getElementById("accountInfo");
   const usernameDisplay = document.getElementById("usernameDisplay");
   const logoutBtn = document.getElementById("logoutBtn");
 
-  function updateLoginState() {
-    const username = localStorage.getItem("username");
-    if (username) {
+  // Pantau status user
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
       loginBtn.style.display = "none";
       accountInfo.style.display = "block";
-      usernameDisplay.textContent = username;
+      usernameDisplay.textContent = user.email || "User";
     } else {
       loginBtn.style.display = "inline-block";
       accountInfo.style.display = "none";
       usernameDisplay.textContent = "";
     }
-  }
+  });
 
+  // Tombol login (redirect ke halaman login)
   loginBtn?.addEventListener("click", () => {
-    const username = prompt("Masukkan nama pengguna:");
-    if (username) {
-      localStorage.setItem("username", username);
-      updateLoginState();
-    } else {
-      window.location.href = 'https://zestore.netlify.app/register-login';
-    }
+    window.location.href = '/register-login';
   });
 
-  logoutBtn?.addEventListener("click", () => {
-    localStorage.removeItem("username");
-    updateLoginState();
+  // Tombol logout
+  logoutBtn?.addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.href = '/register-login'; // Redirect ke login
   });
 
-  updateLoginState();
-});
-
-
-    document.getElementById('floatingGift').addEventListener('click', () => {
-  // Arahkan ke halaman reward
-  window.location.href = '/undang-teman.html';
-});
+  // Floating gift
+  document.getElementById('floatingGift').addEventListener('click', () => {
+    window.location.href = '/undang-teman.html';
+  });
   </script>
 </body>
 </html>
