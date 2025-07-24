@@ -524,93 +524,93 @@
         }
       }
 
-      // simpan snapshot kalkulasi buat dipakai waktu “Sudah Bayar”
-      lastCalc = {
-        uid: currentUser?.uid || null,
-        idSel, srvSel, waSel,
-        value, price, adminCalc, total,
-        buyerCB, refCB,
-        payMethod: paySel.dataset.value,
-        referralCode: appliedReferralCode,
-        referralOwnerUid
-      };
+    // simpan snapshot kalkulasi buat dipakai waktu “Sudah Bayar”
+lastCalc = {
+  uid: currentUser?.uid || null,
+  idSel, srvSel, waSel,
+  value, price, adminCalc, total,
+  buyerCB, refCB,
+  payMethod: paySel.dataset.value,
+  referralCode: appliedReferralCode,
+  referralOwnerUid
+};
 
-      document.getElementById('modalOverlay').style.display = 'flex';
+document.getElementById('modalOverlay').style.display = 'flex';
 
-      // start countdown 14 menit
-      startCountdown();
-    };
+// start countdown 14 menit
+startCountdown();
+};
 
-    document.getElementById('btnClose').onclick = ()=>{
-      document.getElementById('modalOverlay').style.display = 'none';
-    };
+document.getElementById('btnClose').onclick = ()=>{
+  document.getElementById('modalOverlay').style.display = 'none';
+};
 
-    // “Sudah Bayar”: kirim ke WA & kredit cashback jika valid
-    document.getElementById('btnDone').onclick = async ()=>{
-      if(!lastCalc){ return; }
-      if(!currentUser){
-        alert('Kamu belum login di halaman utama.');
-        return location.href='/register-login';
-      }
+// “Sudah Bayar”: kirim ke WA & kredit cashback jika valid
+document.getElementById('btnDone').onclick = async ()=>{
+  if(!lastCalc){ return; }
+  if(!currentUser){
+    alert('Kamu belum login di halaman utama.');
+    return location.href='/register-login';
+  }
 
-      const { uid, idSel, srvSel, waSel, value, price, adminCalc, total,
-              buyerCB, refCB, payMethod, referralCode, referralOwnerUid } = lastCalc;
+  const { uid, idSel, srvSel, waSel, value, price, adminCalc, total,
+          buyerCB, refCB, payMethod, referralCode, referralOwnerUid } = lastCalc;
 
+  try {
+    // 1) Buat order log
+    const orderRef = doc(getFirestore(), 'orders', crypto.randomUUID());
+    await setDoc(orderRef, {
+      uid,
+      game: 'mlbb',
+      productValue: value,
+      price,
+      admin: adminCalc,
+      total,
+      referralCode: referralCode || null,
+      referralOwnerUid: referralOwnerUid || null,
+      cbBuyer: (referralCode ? buyerCB : 0),
+      cbRef:   (referralCode ? refCB   : 0),
+      payMethod,
+      createdAt: serverTimestamp(),
+      status: 'paid'
+    });
+
+    // 2) Cashback only if referral valid (silent mode)
+    if (referralCode && referralOwnerUid) {
       try {
-        // 1) Buat order log (opsional tapi bagus untuk audit)
-        const orderRef = doc(getFirestore(), 'orders', crypto.randomUUID());
-        await setDoc(orderRef, {
-          uid,
-          game: 'mlbb',
-          productValue: value,
-          price,
-          admin: adminCalc,
-          total,
-          referralCode: referralCode || null,
-          referralOwnerUid: referralOwnerUid || null,
-          cbBuyer: (referralCode ? buyerCB : 0),
-          cbRef:   (referralCode ? refCB   : 0),
-          payMethod,
-          createdAt: serverTimestamp(),
-          status: 'paid'
-        });
+        // kredit buyer
+        const buyerRef = doc(db,'users', uid);
+        await updateDoc(buyerRef, { coinBalance: increment(buyerCB) });
 
-        // 2) Cashback only if referral valid
-        if (referralCode && referralOwnerUid) {
-          // kredit buyer
-          const buyerRef = doc(db,'users', uid);
-          await updateDoc(buyerRef, { coinBalance: increment(buyerCB) });
-
-          // kredit referrer
-          const ownerRef = doc(db,'users', referralOwnerUid);
-          const ownerSnap = await getDoc(ownerRef);
-          if(ownerSnap.exists()){
-            await updateDoc(ownerRef, { coinBalance: increment(refCB) });
-          }
-
-          alert(`Pembayaran diproses!\nCashback: Buyer +${buyerCB} koin, Referrer +${refCB} koin`);
-        } else {
-          alert('Pembayaran diproses tanpa cashback (referral tidak diisi / tidak valid).');
+        // kredit referrer
+        const ownerRef = doc(db,'users', referralOwnerUid);
+        const ownerSnap = await getDoc(ownerRef);
+        if(ownerSnap.exists()){
+          await updateDoc(ownerRef, { coinBalance: increment(refCB) });
         }
-
-        // 3) Direct WA admin
-        const msg =
-          `Saya sudah order Mobile Legends *${value} Diamonds MlbbNew*`+
-          `\nID: ${idSel} (Server: ${srvSel})`+
-          `\nNo. WA: ${waSel}`+
-          `\nMetode: ${payMethod.replace('_',' ')}`+
-          `\nTotal bayar: Rp ${total.toLocaleString('id')}`+
-          (referralCode ? `\nReferral: ${referralCode}` : '');
-        window.open(`https://wa.me/6285697747768?text=${encodeURIComponent(msg)}`, '_blank');
-
-        // tutup modal + reset state
-        document.getElementById('modalOverlay').style.display = 'none';
-        lastCalc = null;
       } catch (e) {
-        console.error(e);
-        alert('Terjadi kesalahan saat memproses pembayaran.');
+        console.warn('Cashback update error:', e);
       }
-    };
+    }
+
+    // 3) Direct WA admin
+    const msg =
+      `Saya sudah order Mobile Legends *${value} Diamonds MlbbNew*`+
+      `\nID: ${idSel} (Server: ${srvSel})`+
+      `\nNo. WA: ${waSel}`+
+      `\nMetode: ${payMethod.replace('_',' ')}`+
+      `\nTotal bayar: Rp ${total.toLocaleString('id')}`+
+      (referralCode ? `\nReferral: ${referralCode}` : '');
+    window.open(`https://wa.me/6285697747768?text=${encodeURIComponent(msg)}`, '_blank');
+
+    // tutup modal + reset state
+    document.getElementById('modalOverlay').style.display = 'none';
+    lastCalc = null;
+  } catch (e) {
+    console.error(e);
+    alert('Terjadi kesalahan saat memproses pembayaran.');
+  }
+};
 
     // Copy total & VA
     const btnCopyTotal = document.createElement('button');
