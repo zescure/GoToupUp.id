@@ -94,14 +94,14 @@
     <p><strong>Username:</strong> <span id="displayName">–</span></p>
     <p><strong>Email:</strong> <span id="email">–</span></p>
     <p><strong>Nomor HP:</strong> <span id="phone">–</span></p>
-    <p><strong>UID:</strong> <span id="uid">–</span></p>
+    <p><strong>Wallet Adress:</strong> <span id="uid">–</span></p>
     <button class="logout-btn" id="logoutBtn2">Logout</button>
     <button class="back-btn" onclick="location.href='/home'">⬅ Kembali</button>
   </div>
 
   <!-- Saldo Koin -->
   <div class="card coin-container">
-    <h3>Saldo Koin Anda</h3>
+    <h3>Saldo Koin ZRC Anda</h3>
     <p class="coin-display">🪙 <span id="coinBalance">0</span></p>
     <p style="text-align:center;color:#ccc;font-size:.9rem;">≈ Rp <span id="coinBalanceIDR">0</span></p>
     <button id="openTransfer">Transfer Koin</button>
@@ -109,7 +109,7 @@
 
   <!-- Ekonomi Koin -->
   <div class="card economy-box">
-    <h3>Ekonomi Koin Zestore</h3>
+    <h3>Ekonomi Koin ZRC Zestore</h3>
     <div class="economy-row"><span>Kurs Tetap</span><strong>10 koin = Rp 10</strong></div>
     <div class="economy-row"><span>Total Suplai</span><strong id="totalSupply">0</strong></div>
     <div class="economy-row"><span>Koin Beredar</span><strong id="circulating">0</strong></div>
@@ -120,15 +120,15 @@
 <div class="transfer-popup" id="transferPopup">
   <div class="transfer-content">
     <h3>Transfer Koin</h3>
-    <label>UID Penerima:</label>
-    <input type="text" id="transferUid" placeholder="Masukkan UID">
-    <label>Jumlah Koin:</label>
+    <label>Wallet Adress Penerima:</label>
+    <input type="text" id="transferUid" placeholder="Masukkan Wallet Adress">
+    <label>Jumlah Koin ZRC:</label>
     <input type="number" id="transferAmt" placeholder="Jumlah">
 
     <div id="recipientInfo" style="font-size:.9rem;color:#0f0;margin:5px 0;"></div>
 
     <p style="font-size:.85rem;color:#ccc;margin-top:5px;">
-      *Minimal sisa 10 koin. Biaya = 1% + 10 koin (dikirim ke wallet fee).
+      *Minimal sisa 10 koin ZRC. Biaya = 1% + 10 koin (dikirim ke wallet fee).
     </p>
     <button id="transferBtn">Kirim</button>
     <button class="close-transfer" id="closeTransfer">Batal</button>
@@ -170,7 +170,7 @@
   const RATE_COINS  = 10;
   const RATE_IDR    = 10;           // 10 coin = Rp 10
 
-  const FEE_RECEIVER_UID = '5UJtoleUCPVOHFEQWwfHMMZaTgG3';
+  const FEE_RECEIVER_UID = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52';
 
   // ----------------- DOM ELEM -----------------
   const displayNameEl = document.getElementById('displayName');
