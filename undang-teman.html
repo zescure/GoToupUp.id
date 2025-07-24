@@ -79,7 +79,77 @@
       border:none;border-radius:6px;padding:6px 12px;
       color:#fff;cursor:pointer;}
 
-    
+    .promo-faq-wrapper {
+  background: #1e1e40;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+  display: block;  /* Supaya tidak ikut flex row */
+}
+
+.promo-section h2 {
+  color: #ffcc00;
+  text-align: center;
+}
+
+.promo-section p {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.promo-section h3 {
+  color: #4c8bf5;
+  margin-top: 15px;
+}
+
+.promo-section ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.promo-section li {
+  margin: 6px 0;
+  padding: 6px;
+  background: #2d2d50;
+  border-radius: 6px;
+}
+
+/* FAQ */
+.faq-section h3 {
+  margin-top: 20px;
+  color: #4c8bf5;
+}
+
+.faq-item {
+  margin-top: 10px;
+  border: 1px solid #333;
+  border-radius: 6px;
+}
+
+.faq-question {
+  width: 100%;
+  padding: 10px;
+  background: #2d2d50;
+  color: #fff;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  background: #1e1e40;
+  padding: 0 10px;
+}
+
+.faq-answer p {
+  font-size: 0.9rem;
+  color: #ddd;
+  margin: 10px 0;
+}
   </style>
 </head>
 <body>
@@ -452,24 +522,15 @@
       }
     };
 
-    // FAQ Accordion
-const faqButtons = document.querySelectorAll('.faq-question');
-
-faqButtons.forEach(btn => {
+   document.querySelectorAll('.faq-question').forEach(btn => {
   btn.addEventListener('click', () => {
     const answer = btn.nextElementSibling;
 
-    // Tutup FAQ lain jika dibuka
     document.querySelectorAll('.faq-answer').forEach(el => {
       if (el !== answer) el.style.maxHeight = null;
     });
 
-    // Toggle open
-    if (answer.style.maxHeight) {
-      answer.style.maxHeight = null;
-    } else {
-      answer.style.maxHeight = answer.scrollHeight + 'px';
-    }
+    answer.style.maxHeight = answer.style.maxHeight ? null : answer.scrollHeight + 'px';
   });
 });
   </script>
