@@ -339,7 +339,7 @@ const CASHBACK_TABLE = {
   "18": { buyer: 4,  ref: 2 },
   "33": { buyer: 6,  ref: 3 },
   "46": { buyer: 7,  ref: 3 },
-  "56": { buyer: 8,  ref: 4 },
+  "56": { buyer: 10,  ref: 4 },
 };
 const getCashbackByValue = v => CASHBACK_TABLE[v] || { buyer:0, ref:0 };
 
@@ -508,7 +508,7 @@ document.getElementById('btnClose').onclick = ()=>{
   document.getElementById('modalOverlay').style.display = 'none';
 };
 
-/* =============== BTN DONE =============== */
+/* =============== BTN DONE (PROSES KOIN SAJA) =============== */
 const btnDone = document.getElementById('btnDone');
 const btnConfirmWA = document.getElementById('btnConfirmWA'); // tombol baru
 
@@ -519,47 +519,37 @@ btnDone.onclick = async () => {
     return location.href='/register-login';
   }
 
-  const { uid, idSel, srvSel, waSel, value, price, adminCalc, total,
-          buyerCB, refCB, payMethod, referralCode, referralOwnerUid } = lastCalc;
+  const {
+    uid, idSel, srvSel, waSel, value, total,
+    buyerCB, refCB, payMethod, referralCode, referralOwnerUid
+  } = lastCalc;
 
   try {
-    // Simpan order
-    const orderRef = doc(db, 'orders', crypto.randomUUID());
-    await setDoc(orderRef, {
-      uid, game: 'mlbb', productValue: value, price, admin: adminCalc, total,
-      referralCode: referralCode || null,
-      referralOwnerUid: referralOwnerUid || null,
-      cbBuyer: (referralCode ? buyerCB : 0),
-      cbRef: (referralCode ? refCB : 0),
-      payMethod,
-      createdAt: serverTimestamp(),
-      status: 'paid'
-    });
+    // SELALU tambah koin buyer (sesuai permintaan)
+    if (buyerCB > 0) {
+      await updateDoc(doc(db,'users', uid), { coinBalance: increment(buyerCB) });
+    }
 
-    // Update koin
-    if (referralCode && referralOwnerUid) {
-      try {
-        await updateDoc(doc(db,'users', uid), { coinBalance: increment(buyerCB) });
-        const ownerSnap = await getDoc(doc(db,'users', referralOwnerUid));
-        if (ownerSnap.exists()) {
-          await updateDoc(doc(db,'users', referralOwnerUid), { coinBalance: increment(refCB) });
-        }
-      } catch (e) {
-        console.warn('Cashback update error:', e);
+    // Jika referral valid → tambah koin referrer
+    if (referralCode && referralOwnerUid && refCB > 0) {
+      const ownerRef = doc(db,'users', referralOwnerUid);
+      const ownerSnap = await getDoc(ownerRef);
+      if (ownerSnap.exists()) {
+        await updateDoc(ownerRef, { coinBalance: increment(refCB) });
       }
     }
 
-    // Sukses → tampilkan tombol Konfirmasi WA
+    // Sukses → tampilkan tombol Konfirmasi WA, sembunyikan tombol ini
     btnDone.style.display = 'none';
     btnConfirmWA.style.display = 'inline-block';
 
   } catch (e) {
-    console.error('Order write error:', e);
-    alert('Terjadi kesalahan saat memproses pembayaran.');
+    console.error('Coin update error:', e);
+    alert('Terjadi kesalahan saat memproses koin.');
   }
 };
 
-// Tombol konfirmasi WA
+// Tombol konfirmasi WA (hanya direct WA)
 btnConfirmWA.onclick = () => {
   if (!lastCalc) return;
   const { idSel, srvSel, waSel, value, total, payMethod, referralCode } = lastCalc;
@@ -571,6 +561,10 @@ btnConfirmWA.onclick = () => {
     `\nTotal bayar: Rp ${total.toLocaleString('id')}`+
     (referralCode ? `\nReferral: ${referralCode}` : '');
   window.open(`https://wa.me/6285697747768?text=${encodeURIComponent(msg)}`, '_blank');
+
+  // Optional: tutup modal
+  document.getElementById('modalOverlay').style.display = 'none';
+  lastCalc = null;
 };
 
 /* =============== COPY BUTTONS =============== */
