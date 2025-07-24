@@ -426,6 +426,48 @@ html {
 
 
 
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #0f0f2d;
+  height: 2000px; /* supaya ada scroll untuk demo */
+}
+
+#floatingGift {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  background: #ffcc00;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  animation: bounce 2s infinite;
+  transition: transform 0.2s ease;
+  z-index: 1000;
+}
+
+#floatingGift img {
+  width: 70%;
+  height: 70%;
+}
+
+#floatingGift:hover {
+  transform: scale(1.1);
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+    
+
+    
   </style>
 </head>
 <body>
@@ -843,6 +885,19 @@ html {
     <div class="copyright">
       <p>Copyright &copy;2025 Cv.Kreativitas tanpa batas. All rights reserved.</p>
     </div>
+
+
+     <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Floating Gift Button</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="floatingGift">
+    <img src="https://cdn-icons-png.flaticon.com/512/1041/1041903.png" alt="Hadiah">
+  </div>
+
+  <script src="script.js"></script>
   </footer>
 
   <script>
@@ -1025,7 +1080,11 @@ document.addEventListener("DOMContentLoaded", () => {
   updateLoginState();
 });
 
-    
+
+    document.getElementById('floatingGift').addEventListener('click', () => {
+  // Arahkan ke halaman reward
+  window.location.href = '/reward.html';
+});
   </script>
 </body>
 </html>
