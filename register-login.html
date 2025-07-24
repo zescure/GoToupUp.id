@@ -47,7 +47,7 @@
       border: none;
       margin-top: 5px;
       background: #1f2a40;
-      color: white;
+      color: white.
     }
     .btn {
       width: 100%;
@@ -111,15 +111,17 @@
   <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { 
-      getAuth, 
-      createUserWithEmailAndPassword, 
-      signInWithEmailAndPassword, 
-      signInWithPopup, 
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signInWithPopup,
       GoogleAuthProvider,
-      signOut,
       onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
@@ -130,8 +132,9 @@
       appId: "1:358065954807:web:66619211fea82a4b2518f2"
     };
 
-    const app = initializeApp(firebaseConfig);
+    const app  = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db   = getFirestore(app);
 
     // DOM
     const formTitle = document.getElementById('formTitle');
@@ -147,11 +150,49 @@
 
     let isLogin = true;
 
-    // ==== FIX AUTO LOGIN BUG ====
-    onAuthStateChanged(auth, (user) => {
+    // === Helper: pastikan user doc & referralCodes ada ===
+    async function ensureUserDocuments(user){
+      const uid  = user.uid;
+      const code = uid.slice(0,6).toUpperCase(); // standard 6 kode (uppercase)
+
+      // users/{uid}
+      const uRef  = doc(db, 'users', uid);
+      const uSnap = await getDoc(uRef);
+      if (!uSnap.exists()) {
+        await setDoc(uRef, {
+          coinBalance: 0,
+          referralCode: code,
+          createdAt: serverTimestamp()
+        });
+      } else {
+        // kalau belum punya field referralCode, tambahin
+        if (!uSnap.data().referralCode) {
+          await updateDoc(uRef, { referralCode: code });
+        }
+      }
+
+      // referralCodes/{code}
+      const rRef  = doc(db, 'referralCodes', code);
+      const rSnap = await getDoc(rRef);
+      if (!rSnap.exists()) {
+        await setDoc(rRef, {
+          owner: uid,
+          count: 0,
+          createdAt: serverTimestamp()
+        });
+      }
+    }
+
+    // Kalau user sudah login, langsung pastikan dokumen + redirect
+    onAuthStateChanged(auth, async (user)=>{
       if (user) {
-        console.log("User masih login sebelumnya, memaksa logout...");
-        signOut(auth); // clear session lama agar bisa login akun lain
+        try {
+          await ensureUserDocuments(user);
+        } catch(e) {
+          console.error('ensureUserDocuments error:', e);
+        }
+        // Redirect ke home
+        window.location.href = "https://zestore.netlify.app/home";
       }
     });
 
@@ -176,9 +217,11 @@
 
       try {
         if (isLogin) {
-          await signInWithEmailAndPassword(auth, email, password);
+          const { user } = await signInWithEmailAndPassword(auth, email, password);
+          await ensureUserDocuments(user);
         } else {
-          await createUserWithEmailAndPassword(auth, email, password);
+          const { user } = await createUserWithEmailAndPassword(auth, email, password);
+          await ensureUserDocuments(user);
         }
         window.location.href = "https://zestore.netlify.app/home";
       } catch (err) {
@@ -189,7 +232,8 @@
     googleLoginBtn.addEventListener('click', async () => {
       const provider = new GoogleAuthProvider();
       try {
-        await signInWithPopup(auth, provider);
+        const { user } = await signInWithPopup(auth, provider);
+        await ensureUserDocuments(user);
         window.location.href = "https://zestore.netlify.app/home";
       } catch (err) {
         alertText.textContent = err.message;
