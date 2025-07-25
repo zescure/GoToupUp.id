@@ -163,6 +163,7 @@
     query, orderBy, limit
   } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
+  /* ================== Firebase ================== */
   const cfg = {
     apiKey:"AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
     authDomain:"zeepaylater-93a94.firebaseapp.com",
@@ -175,23 +176,40 @@
   const auth = getAuth(app);
   const db   = getFirestore(app);
 
+  /* ================== Economy ================== */
   const ECON_REF = doc(db,'economy','meta');
+  const TOTAL_SUPPLY = 210_000_000;
+
   async function ensureEconomy(){
     const snap = await getDoc(ECON_REF);
     if(!snap.exists()){
       await setDoc(ECON_REF,{
-        totalSupply:210000000,
-        circulatingSupply:0,
+        totalSupply: TOTAL_SUPPLY,
+        circulatingSupply: 0,
         rate:{coins:10,idr:10}
       });
     }
   }
+
+  // Aman kalau dokumen belum ada
   async function mint(amount){
-    await updateDoc(ECON_REF,{ circulatingSupply: increment(amount) });
+    if (!amount || amount <= 0) return;
+    const snap = await getDoc(ECON_REF);
+    if(!snap.exists()){
+      await setDoc(ECON_REF,{
+        totalSupply: TOTAL_SUPPLY,
+        circulatingSupply: amount,
+        rate:{coins:10,idr:10}
+      }, { merge:true });
+    } else {
+      await updateDoc(ECON_REF,{ circulatingSupply: increment(amount) });
+    }
   }
 
+  /* ================== Const ================== */
   const FEE_RECEIVER_UID = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52';
-  const ADMIN_WA = '6285697747768'; // Ganti ke nomor admin WA
+  const ADMIN_WA         = '6285697747768';  // nomor WA admin
+
   const DAILY  = [10,10,10,10,10,10,10];
   const REDEEM = [
     {cost:1770,label:'3💎 MLBB', img:'https://play-lh.googleusercontent.com/7o9wSxSDGZL9-TEpuLN0w849JeH7H9ks4bR3Qxzbg3BagRHpO6cGYIzPg7pWNdkPsbo'},
@@ -212,209 +230,313 @@
     {cost:1000000,label:'Investasi Holez',img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSWiASOFhn-jiJghWSLjarqVHDarfgd5zXMY2zuYkjtCOWxggu7VAhv7HZ&s=10'}
   ];
 
+  /* ================== DOM ================== */
   let userRef, uid, data;
-  let pendingShare=false;
+  let pendingShare = false;
 
-  const box=document.getElementById('dailyBox'),
-        status=document.getElementById('dailyStatus'),
-        histList=document.getElementById('claimHistory'),
-        coinEl=document.getElementById('coinBalance'),
-        redeemGrid=document.getElementById('redeemGrid'),
-        refBtn=document.getElementById('submitReferral'),
-        refInput=document.getElementById('referralCode'),
-        refStatus=document.getElementById('referralStatus'),
-        infoDiv=document.getElementById('user-info'),
-        uidEl=document.getElementById('user-uid'),
-        emailEl=document.getElementById('user-email'),
-        codeEl=document.getElementById('user-ref-code'),
-        popup=document.getElementById('taskPopup'),
-        showTasks=document.getElementById('showTasks'),
-        closePopup=document.getElementById('closePopup'),
-        shareBtn=document.getElementById('shareTaskBtn'),
-        shareSt=document.getElementById('shareStatus'),
-        inviteBtn=document.getElementById('inviteTaskBtn'),
-        inviteSt=document.getElementById('inviteStatus'),
-        secretBtn=document.getElementById('secretCodeBtn'),
-        secretInp=document.getElementById('secretCodeInput'),
-        secretSt=document.getElementById('secretStatus'),
-        timerEl=document.getElementById('resetTimer');
+  const box          = document.getElementById('dailyBox');
+  const status       = document.getElementById('dailyStatus');
+  const histList     = document.getElementById('claimHistory');
+  const coinEl       = document.getElementById('coinBalance');
+  const redeemGrid   = document.getElementById('redeemGrid');
+  const refBtn       = document.getElementById('submitReferral');
+  const refInput     = document.getElementById('referralCode');
+  const refStatus    = document.getElementById('referralStatus');
+  const infoDiv      = document.getElementById('user-info');
+  const uidEl        = document.getElementById('user-uid');
+  const emailEl      = document.getElementById('user-email');
+  const codeEl       = document.getElementById('user-ref-code');
+  const popup        = document.getElementById('taskPopup');
+  const showTasks    = document.getElementById('showTasks');
+  const closePopup   = document.getElementById('closePopup');
+  const shareBtn     = document.getElementById('shareTaskBtn');
+  const shareSt      = document.getElementById('shareStatus');
+  const inviteBtn    = document.getElementById('inviteTaskBtn');
+  const inviteSt     = document.getElementById('inviteStatus');
+  const secretBtn    = document.getElementById('secretCodeBtn');
+  const secretInp    = document.getElementById('secretCodeInput');
+  const secretSt     = document.getElementById('secretStatus');
+  const timerEl      = document.getElementById('resetTimer');
 
-  onAuthStateChanged(auth,async u=>{
+  /* ================== Auth ================== */
+  onAuthStateChanged(auth, async (u)=>{
     if(!u) return location.href='/register-login';
-    uid=u.uid; userRef=doc(db,'users',uid);
+    uid = u.uid;
+    userRef = doc(db,'users',uid);
+
     await ensureEconomy();
-    let snap=await getDoc(userRef);
+
+    let snap = await getDoc(userRef);
     if(!snap.exists()){
       await setDoc(userRef,{
-        createdAt:serverTimestamp(),
-        lastLogin:null,streak:0,coinBalance:0,
-        referralUsed:false,referrer:'',
-        shareCount:0,shareDate:null,shareReward:false,
-        inviteDoneDate:null,lastSecretDate:null
+        createdAt: serverTimestamp(),
+        lastLogin: null,
+        streak: 0,
+        coinBalance: 0,
+        referralUsed: false,
+        referrer: '',
+        shareCount: 0,
+        shareDate: null,
+        shareReward: false,
+        inviteDoneDate: null,
+        lastSecretDate: null
       });
-      snap=await getDoc(userRef);
+      snap = await getDoc(userRef);
     }
-    data=snap.data();
-    renderAll(u,data);
+    data = snap.data();
+    renderAll(u, data);
     scheduleReset();
   });
 
+  /* ================== Render ================== */
   function renderAll(u,d){
-    uidEl.textContent=uid;
-    emailEl.textContent=u.email||'-';
-    codeEl.textContent=uid.slice(0,6);
+    uidEl.textContent = uid;
+    emailEl.textContent = u.email || '-';
+    codeEl.textContent = uid.slice(0,6);
     infoDiv.style.display='block';
-    const today=new Date().toISOString().slice(0,10),
-          ld=d.lastLogin?.toDate?.().toISOString().slice(0,10);
-    if(ld===today){
-      const rw=DAILY[d.streak-1]||DAILY[0];
+
+    const today = new Date().toISOString().slice(0,10);
+    const ld    = d.lastLogin?.toDate?.().toISOString().slice(0,10);
+
+    if(ld === today){
+      const rw = DAILY[d.streak-1] || DAILY[0];
       box.classList.remove('shake');
-      status.textContent=`+${rw} koin (hari ke-${d.streak})`;
+      status.textContent = `+${rw} koin (hari ke-${d.streak})`;
     } else {
       box.classList.add('shake');
-      status.textContent='Klik kotak untuk klaim!';
+      status.textContent = 'Klik kotak untuk klaim!';
     }
-    histList.innerHTML='';
-    getDocs(query(collection(db,'users',uid,'claims'),orderBy('timestamp','desc'),limit(7)))
-    .then(snaps=>snaps.forEach(docSnap=>{
-      const dt=docSnap.data().timestamp.toDate().toLocaleDateString('id');
-      histList.innerHTML+=`<li>${dt} → +${docSnap.data().coins} koin</li>`;
-    }));
-    coinEl.textContent=d.coinBalance||0;
-    redeemGrid.innerHTML='';
+
+    histList.innerHTML = '';
+    getDocs(query(collection(db,'users',uid,'claims'), orderBy('timestamp','desc'), limit(7)))
+      .then(snaps => snaps.forEach(docSnap=>{
+        const dt = docSnap.data().timestamp.toDate().toLocaleDateString('id');
+        histList.innerHTML += `<li>${dt} → +${docSnap.data().coins} koin</li>`;
+      }));
+
+    coinEl.textContent = d.coinBalance || 0;
+
+    // === REDEEM ===
+    redeemGrid.innerHTML = '';
     REDEEM.forEach(item => {
-  const ok = (data.coinBalance || 0) >= item.cost;
-  const div = document.createElement('div');
-  div.className = 'redeem-item' + (ok ? '' : ' disabled');
-  div.innerHTML = `<img src="${item.img}"><p>${item.label} (${item.cost})</p>`;
-  
-  if (ok) {
-    div.onclick = async () => {
-      try {
-        // Ambil data user terbaru
-        const snap = await getDoc(userRef);
-        const dat = snap.data();
-        if ((dat.coinBalance || 0) < item.cost) return alert('Saldo tidak cukup!');
+      const ok  = (d.coinBalance || 0) >= item.cost;
+      const div = document.createElement('div');
+      div.className = 'redeem-item' + (ok ? '' : ' disabled');
+      div.innerHTML = `<img src="${item.img}"><p>${item.label} (${item.cost})</p>`;
 
-        // Potong saldo user
-        await updateDoc(userRef, { coinBalance: dat.coinBalance - item.cost });
+      if (ok) {
+        div.onclick = async () => {
+          try {
+            // data terbaru
+            const fresh = await getDoc(userRef);
+            const cur   = fresh.data();
+            if ((cur.coinBalance || 0) < item.cost) return alert('Saldo tidak cukup!');
 
-        // Transfer ke akun penampung
-        const feeRef = doc(db, 'users', FEE_RECEIVER_UID);
-        const feeSnap = await getDoc(feeRef);
-        const feeBal = feeSnap.data()?.coinBalance || 0;
-        await updateDoc(feeRef, { coinBalance: feeBal + item.cost });
+            // potong user
+            await updateDoc(userRef, {
+              coinBalance: cur.coinBalance - item.cost
+            });
 
-        // Kirim WA admin
-        const msg = `Halo Admin, saya sudah redeem hadiah.\n\n` +
-                    `- Item: ${item.label}\n` +
-                    `- Biaya: ${item.cost} koin\n` +
-                    `- UID: ${uid}\n` +
-                    `- Email: ${auth.currentUser.email}\n` +
-                    `- Sisa saldo: ${dat.coinBalance - item.cost} koin\n\n` +
-                    `Mohon segera diproses 🙏`;
-        window.open(`https://wa.me/6281234567890?text=${encodeURIComponent(msg)}`, '_blank');
+            // tambah ke akun penampung
+            const feeRef  = doc(db,'users',FEE_RECEIVER_UID);
+            const feeSnap = await getDoc(feeRef);
+            const feeBal  = feeSnap.data()?.coinBalance || 0;
+            await updateDoc(feeRef, { coinBalance: feeBal + item.cost });
 
-        // Reload untuk update tampilan
-        location.reload();
-      } catch (err) {
-        console.error('Redeem error:', err);
-        alert('Terjadi kesalahan saat redeem.');
+            // log transaksi (optional, tapi berguna)
+            const ts = serverTimestamp();
+            await setDoc(doc(collection(userRef,'transactions')), {
+              timestamp: ts, amount: -item.cost, type: 'redeem', item: item.label
+            });
+            await setDoc(doc(collection(feeRef,'transactions')), {
+              timestamp: ts, amount: +item.cost, type: 'redeem-income', from: uid, item: item.label
+            });
+
+            // Direct WA
+            const msg =
+              `Halo Admin, saya sudah redeem hadiah.\n\n` +
+              `- Item: ${item.label}\n` +
+              `- Biaya: ${item.cost} koin\n` +
+              `- UID: ${uid}\n` +
+              `- Email: ${auth.currentUser.email}\n` +
+              `- Sisa saldo: ${cur.coinBalance - item.cost} koin\n\n` +
+              `Mohon segera diproses 🙏`;
+            window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(msg)}`,'_blank');
+
+            location.reload();
+          } catch (err) {
+            console.error('Redeem error:', err);
+            alert('Terjadi kesalahan saat redeem.');
+          }
+        };
       }
-    };
+
+      redeemGrid.appendChild(div);
+    });
   }
 
-  redeemGrid.appendChild(div);
-});
-  }
+  /* ================== Daily claim ================== */
+  box.onclick = async ()=>{
+    const snap = await getDoc(userRef);
+    const dt   = snap.data();
 
-  box.onclick=async()=>{
-    const snap=await getDoc(userRef),dt=snap.data();
-    const td=new Date().toISOString().slice(0,10),
-          ld=dt.lastLogin?.toDate?.().toISOString().slice(0,10);
-    if(ld===td) return;
-    const y=new Date();y.setDate(y.getDate()-1);
-    const st=(ld===y.toISOString().slice(0,10)?dt.streak+1:1);
-    const rew=DAILY[st-1]||DAILY[0];
-    await updateDoc(userRef,{lastLogin:serverTimestamp(),streak:st,coinBalance:dt.coinBalance+rew});
-    await setDoc(doc(collection(db,'users',uid,'claims')), {timestamp:serverTimestamp(),coins:rew});
+    const td   = new Date().toISOString().slice(0,10);
+    const ld   = dt.lastLogin?.toDate?.().toISOString().slice(0,10);
+    if(ld === td) return;
+
+    const y  = new Date(); y.setDate(y.getDate()-1);
+    const st = (ld === y.toISOString().slice(0,10) ? dt.streak + 1 : 1);
+    const rew= DAILY[st-1] || DAILY[0];
+
+    await updateDoc(userRef,{
+      lastLogin: serverTimestamp(),
+      streak: st,
+      coinBalance: (dt.coinBalance || 0) + rew
+    });
+
+    await setDoc(doc(collection(db,'users',uid,'claims')), {
+      timestamp: serverTimestamp(),
+      coins: rew
+    });
+
     await mint(rew);
     location.reload();
   };
 
-  refBtn.onclick=async()=>{
-    const code=refInput.value.trim();
-    if(!code||code===uid.slice(0,6)){refStatus.textContent='Tidak valid';return;}
-    const snap=await getDoc(userRef);
-    if(snap.data().referralUsed){refStatus.textContent='Sudah pakai';return;}
-    const rd=doc(db,'referralCodes',code),rSnap=await getDoc(rd);
-    if(!rSnap.exists()){refStatus.textContent='Tdk ditemukan';return;}
-    await updateDoc(userRef,{referralUsed:true,referrer:code,coinBalance:snap.data().coinBalance+5});
-    await updateDoc(rd,{count:increment(1)});
-    const ownerRef=doc(db,'users',rSnap.data().owner),ownerSnap=await getDoc(ownerRef);
-    await updateDoc(ownerRef,{coinBalance:ownerSnap.data().coinBalance+10});
+  /* ================== Referral ================== */
+  refBtn.onclick = async()=>{
+    const code = refInput.value.trim();
+    if(!code || code === uid.slice(0,6)){
+      refStatus.textContent='Tidak valid'; return;
+    }
+    const snap = await getDoc(userRef);
+    if(snap.data().referralUsed){
+      refStatus.textContent='Sudah pakai'; return;
+    }
+    const rd   = doc(db,'referralCodes',code);
+    const rSnap= await getDoc(rd);
+    if(!rSnap.exists()){
+      refStatus.textContent='Tdk ditemukan'; return;
+    }
+
+    await updateDoc(userRef,{
+      referralUsed:true,
+      referrer:code,
+      coinBalance: snap.data().coinBalance + 5
+    });
+    await updateDoc(rd,{ count: increment(1) });
+
+    const ownerRef  = doc(db,'users',rSnap.data().owner);
+    const ownerSnap = await getDoc(ownerRef);
+    await updateDoc(ownerRef,{
+      coinBalance: (ownerSnap.data().coinBalance || 0) + 10
+    });
+
     refStatus.textContent='Berhasil! (+5 koin)';
     await mint(15);
     renderAll(auth.currentUser,(await getDoc(userRef)).data());
   };
 
-  showTasks.onclick=()=>popup.style.display='flex';
-  closePopup.onclick=()=>popup.style.display='none';
-  function scheduleReset(){updateTimer();setInterval(updateTimer,1000);}
-  function updateTimer(){const now=new Date(),n=new Date(now);n.setHours(24,0,0,0);
-    const diff=n-now,h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000),
-          s=Math.floor((diff%60000)/1000);
-    timerEl.textContent=`Reset tugas dalam ${h}h ${m}m ${s}s`;
-    if(diff<1000)location.reload();
+  /* ================== Misc (popup & timer) ================== */
+  showTasks.onclick  = ()=> popup.style.display='flex';
+  closePopup.onclick = ()=> popup.style.display='none';
+
+  function scheduleReset(){
+    updateTimer();
+    setInterval(updateTimer, 1000);
+  }
+  function updateTimer(){
+    const now = new Date(), n = new Date(now);
+    n.setHours(24,0,0,0);
+    const diff = n - now;
+    const h = Math.floor(diff/3600000),
+          m = Math.floor((diff%3600000)/60000),
+          s = Math.floor((diff%60000)/1000);
+    timerEl.textContent = `Reset tugas dalam ${h}h ${m}m ${s}s`;
+    if(diff < 1000) location.reload();
   }
 
-  shareBtn.onclick=()=>{pendingShare=true;window.open('https://wa.me/?text='+encodeURIComponent('https://zestore.netlify.app/home'),'_blank');};
-  window.addEventListener('focus',async()=>{
-    if(pendingShare){pendingShare=false;
-      const snap=await getDoc(userRef),d=snap.data();
-      const td=new Date().toISOString().slice(0,10);
-      let cnt=d.shareCount||0;
-      if(d.shareDate?.toDate?.().toISOString().slice(0,10)!==td)cnt=0;
-      cnt++;
-      const upd={shareCount:cnt,shareDate:serverTimestamp()};
-      if(cnt>=5&&!d.shareReward){
-        upd.coinBalance=d.coinBalance+10;upd.shareReward=true;
-        await mint(10);
-      }
-      await updateDoc(userRef,upd);
-      shareSt.textContent=cnt>=5?'Tugas selesai! +10 koin':`Berhasil share (${cnt}/5)`;
-      renderAll(auth.currentUser,(await getDoc(userRef)).data());
+  /* ================== Share Task ================== */
+  shareBtn.onclick = ()=>{
+    pendingShare = true;
+    window.open(
+      'https://wa.me/?text=' + encodeURIComponent('https://zestore.netlify.app/home'),
+      '_blank'
+    );
+  };
+
+  window.addEventListener('focus', async ()=>{
+    if(!pendingShare) return;
+    pendingShare = false;
+
+    const snap = await getDoc(userRef);
+    const d    = snap.data();
+    const td   = new Date().toISOString().slice(0,10);
+
+    let cnt = d.shareCount || 0;
+    if(d.shareDate?.toDate?.().toISOString().slice(0,10) !== td) cnt = 0;
+    cnt++;
+
+    const upd = { shareCount: cnt, shareDate: serverTimestamp() };
+    if(cnt >= 5 && !d.shareReward){
+      upd.coinBalance = (d.coinBalance || 0) + 10;
+      upd.shareReward = true;
+      await mint(10);
     }
+    await updateDoc(userRef, upd);
+
+    shareSt.textContent = cnt >= 5
+      ? 'Tugas selesai! +10 koin'
+      : `Berhasil share (${cnt}/5)`;
+
+    renderAll(auth.currentUser,(await getDoc(userRef)).data());
   });
 
-  inviteBtn.onclick=async()=>{
-    const snap=await getDoc(userRef),d=snap.data();
-    const today=new Date().toISOString().slice(0,10),
-          last=d.inviteDoneDate?.toDate?.().toISOString().slice(0,10);
-    if(last===today){inviteSt.textContent='Sudah klaim';return;}
-    await updateDoc(userRef,{inviteDoneDate:serverTimestamp(),coinBalance:d.coinBalance+10});
+  /* ================== Invite Task ================== */
+  inviteBtn.onclick = async()=>{
+    const snap = await getDoc(userRef);
+    const d    = snap.data();
+    const today= new Date().toISOString().slice(0,10);
+    const last = d.inviteDoneDate?.toDate?.().toISOString().slice(0,10);
+    if(last === today){
+      inviteSt.textContent='Sudah klaim'; return;
+    }
+    await updateDoc(userRef,{
+      inviteDoneDate: serverTimestamp(),
+      coinBalance: (d.coinBalance || 0) + 10
+    });
     await mint(15);
     inviteSt.textContent='+10 koin dari undangan';
     renderAll(auth.currentUser,(await getDoc(userRef)).data());
   };
 
-  secretBtn.onclick=async()=>{
-    const code=secretInp.value.trim();
-    if(code!=='ZESPECIAL'){secretSt.textContent='Kode salah';return;}
-    const snap=await getDoc(userRef),d=snap.data();
-    const today=new Date().toISOString().slice(0,10),
-          last=d.lastSecretDate?.toDate?.().toISOString().slice(0,10);
-    if(last===today){secretSt.textContent='Sudah klaim';return;}
-    await updateDoc(userRef,{lastSecretDate:serverTimestamp(),coinBalance:d.coinBalance+650000});
+  /* ================== Secret Code ================== */
+  secretBtn.onclick = async ()=>{
+    const code = secretInp.value.trim();
+    if(code !== 'ZESPECIAL'){
+      secretSt.textContent='Kode salah'; return;
+    }
+    const snap = await getDoc(userRef);
+    const d    = snap.data();
+    const today= new Date().toISOString().slice(0,10);
+    const last = d.lastSecretDate?.toDate?.().toISOString().slice(0,10);
+    if(last === today){
+      secretSt.textContent='Sudah klaim'; return;
+    }
+    await updateDoc(userRef,{
+      lastSecretDate: serverTimestamp(),
+      coinBalance: (d.coinBalance || 0) + 650000
+    });
     await mint(20);
     secretSt.textContent='+650000 koin dari kode rahasia';
     renderAll(auth.currentUser,(await getDoc(userRef)).data());
   };
 
+  /* ================== FAQ Toggle ================== */
   document.querySelectorAll('.faq-question').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      const ans=btn.nextElementSibling;
-      ans.style.display=ans.style.display==='block'?'none':'block';
+    btn.addEventListener('click', ()=>{
+      const ans = btn.nextElementSibling;
+      ans.style.display = ans.style.display === 'block' ? 'none' : 'block';
     });
   });
 </script>
