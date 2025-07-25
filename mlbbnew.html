@@ -468,9 +468,13 @@
       <div class="step-header">Metode Pembayaran</div>
       <div class="step-content">
         <div class="payment-grid" id="paymentGrid">
-          <div class="payment-card" data-value="DANA" data-admin="999" data-percent="0">
+          <div class="payment-card" data-value="DANA PREM" data-admin="999" data-percent="0">
             <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQSzuYLZ06ATosE2rxtWLCDIFJjZIPRfbgv-C0q6-dw4w&s" alt="DANA">
-            <div class="name">DANA</div><div class="fee">Admin Rp 999</div>
+            <div class="name">DANA FAST</div><div class="fee">Admin Rp 999</div>
+          </div>
+          <div class="payment-card" data-value="DANA" data-admin="999" data-percent="0">
+          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQBNxOBzJ2MEGS9yD-6FFy24sIKWJU6H2L0BI1FR52EqQ&s" alt="ShopeePay">
+            <div class="name">DANA QR</div><div class="fee">Admin Rp 999</div>
           </div>
           <div class="payment-card" data-value="SHOPEE" data-admin="999" data-percent="0">
           <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQBNxOBzJ2MEGS9yD-6FFy24sIKWJU6H2L0BI1FR52EqQ&s" alt="ShopeePay">
@@ -768,10 +772,11 @@ document.getElementById('btnCheckout').onclick = ()=>{
     qrSection.style.display = 'block';
     const qr = document.getElementById('qrCode');
     switch(paySel.dataset.value) {
-      case 'DANA':   qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png'; break;
+      case 'DANA PREM':   qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png'; break;
+      case 'DANA': qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiVDndM5uLTlO9zHYppGE1CVB5TWzJ_EwEJcQhVRDvsitxVTfVUzuvgCbX9f8Ld3ku7MAA6vGZ942UuDmfQZitwbCs1ANvK_hjvcuAy-VGQ2Gkj6nIvUlWRRuotZs0yXAIOg0iBygjAYnuqVVzswPdbsb2wSA3rHrPcacWdqBuI5V9GYp9gZkp_H84JDQ/s992/de7c3eca-57a8-41f1-a1b4-9bc76fb2e719.jpeg'; break;
       case 'SHOPEE': qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjL8xRyiYxTJJCxDisZZJqBpMuBMpq1K7Z_uoTTb1fo-YRCCn4S3UXvYHG3eqjAF8ZFy1ouRKa4S4hHQfbAi_VBlKUWt8nV7ThT8ZzFB_Bw5jrn8stCQ_5oK15Pxd9DjsGUmG7TEmeuW5XApanfO_DeYcWNoMsmhe3uk9_r3zHDvqmVTOTdHXRXL7Y2wPLJ/s320/20250206_101339.jpg'; break;
       case 'GOPAY':  qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgrpYxkkJADDVoGJ0YI-UfcK2roO_JWFbzeVoFiMkKGBvFoze_096vm00gNoFkPMaMGnU0KoWvjpFScv4eP41WgRuYA7kF-UBCmw2lq6hyPkrfoxzi9oFWVoIxjZ1wCb2HIvhYKkCE2DYwixXiJGR-9xsdoEv3z9EdyKaYOa0aKMuImxXLTqpvlf6GkhQ/s320/IMG_1040.jpeg'; break;
-      case 'QRIS':   qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjL8xRyiYxTJJCxDisZZJqBpMuBMpq1K7Z_uoTTb1fo-YRCCn4S3UXvYHG3eqjAF8ZFy1ouRKa4S4hHQfbAi_VBlKUWt8nV7ThT8ZzFB_Bw5jrn8stCQ_5oK15Pxd9DjsGUmG7TEmeuW5XApanfO_DeYcWNoMsmhe3uk9_r3zHDvqmVTOTdHXRXL7Y2wPLJ/s320/20250206_101339.jpg'; break;
+      case 'QRIS':   qr.src = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh4pgwvZu8WTj-V3pvVsadG9zIJJYWVsP03-YPlhqHd47AQjpwioq-wgHQOWFAdsiyvVYJsy2UMl3A6wKRfj3Gqwg_ztB7uVUfmSLBypWSRnUiIyrm459arhYxnHsOYqKnV1Lzhu38_ELI6aGmFyIK6ne9Mja-I4majEAqKfV1PtXiOCGTrVOaLrmgZrA/s1240/ae96baaf-2d65-4b60-b180-463c3a8c6838.jpeg'; break;
     }
   }
 
