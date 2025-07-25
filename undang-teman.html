@@ -191,7 +191,7 @@
   }
 
   const FEE_RECEIVER_UID = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52';
-  const ADMIN_WA = '6281234567890'; // Ganti ke nomor admin WA
+  const ADMIN_WA = '6285697747768'; // Ganti ke nomor admin WA
   const DAILY  = [10,10,10,10,10,10,10];
   const REDEEM = [
     {cost:1770,label:'3💎 MLBB', img:'https://play-lh.googleusercontent.com/7o9wSxSDGZL9-TEpuLN0w849JeH7H9ks4bR3Qxzbg3BagRHpO6cGYIzPg7pWNdkPsbo'},
@@ -282,28 +282,50 @@
     }));
     coinEl.textContent=d.coinBalance||0;
     redeemGrid.innerHTML='';
-    REDEEM.forEach(item=>{
-      const ok=(d.coinBalance||0)>=item.cost;
-      const div=document.createElement('div');
-      div.className='redeem-item'+(ok?'':' disabled');
-      div.innerHTML=`<img src="${item.img}"><p>${item.label} (${item.cost})</p>`;
-      if(ok) div.onclick=async()=>{
-        const snap=await getDoc(userRef),dat=snap.data();
-        const newBal = dat.coinBalance - item.cost;
-        await updateDoc(userRef,{coinBalance:newBal});
-        const feeRef=doc(db,'users',FEE_RECEIVER_UID),
-              feeSnap=await getDoc(feeRef),
-              feeBal=feeSnap.data()?.coinBalance||0;
-        await updateDoc(feeRef,{coinBalance:feeBal+item.cost});
+    REDEEM.forEach(item => {
+  const ok = (data.coinBalance || 0) >= item.cost;
+  const div = document.createElement('div');
+  div.className = 'redeem-item' + (ok ? '' : ' disabled');
+  div.innerHTML = `<img src="${item.img}"><p>${item.label} (${item.cost})</p>`;
+  
+  if (ok) {
+    div.onclick = async () => {
+      try {
+        // Ambil data user terbaru
+        const snap = await getDoc(userRef);
+        const dat = snap.data();
+        if ((dat.coinBalance || 0) < item.cost) return alert('Saldo tidak cukup!');
 
-        // Auto direct ke WhatsApp admin
-        const waText = `Halo Admin, saya sudah redeem:\n- Item: ${item.label}\n- Biaya: ${item.cost} koin\n- UID: ${uid}\n- Email: ${u.email || '-'}\nSisa saldo: ${newBal} koin.`;
-        window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(waText)}`,'_blank');
+        // Potong saldo user
+        await updateDoc(userRef, { coinBalance: dat.coinBalance - item.cost });
 
+        // Transfer ke akun penampung
+        const feeRef = doc(db, 'users', FEE_RECEIVER_UID);
+        const feeSnap = await getDoc(feeRef);
+        const feeBal = feeSnap.data()?.coinBalance || 0;
+        await updateDoc(feeRef, { coinBalance: feeBal + item.cost });
+
+        // Kirim WA admin
+        const msg = `Halo Admin, saya sudah redeem hadiah.\n\n` +
+                    `- Item: ${item.label}\n` +
+                    `- Biaya: ${item.cost} koin\n` +
+                    `- UID: ${uid}\n` +
+                    `- Email: ${auth.currentUser.email}\n` +
+                    `- Sisa saldo: ${dat.coinBalance - item.cost} koin\n\n` +
+                    `Mohon segera diproses 🙏`;
+        window.open(`https://wa.me/6281234567890?text=${encodeURIComponent(msg)}`, '_blank');
+
+        // Reload untuk update tampilan
         location.reload();
-      };
-      redeemGrid.appendChild(div);
-    });
+      } catch (err) {
+        console.error('Redeem error:', err);
+        alert('Terjadi kesalahan saat redeem.');
+      }
+    };
+  }
+
+  redeemGrid.appendChild(div);
+});
   }
 
   box.onclick=async()=>{
