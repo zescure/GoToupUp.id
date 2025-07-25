@@ -328,6 +328,12 @@ transferBtn.onclick = async()=>{
     transferStatus.textContent = 'Isi UID & jumlah dengan benar.';
     return;
   }
+   // **Tambahkan validasi ini:**
+  if (toUid === currentUser.uid) {
+    transferStatus.textContent = 'Tidak bisa transfer ke UID sendiri.';
+    return;
+  }
+  
   transferStatus.textContent='Cek penerima...';
 
   try{
