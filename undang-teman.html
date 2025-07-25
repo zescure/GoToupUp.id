@@ -355,14 +355,14 @@
 
     secretBtn.onclick=async()=>{
       const code=secretInp.value.trim();
-      if(code!=='ZEZY'){secretSt.textContent='Kode salah';return;}
+      if(code!=='ZESPECIAL'){secretSt.textContent='Kode salah';return;}
       const snap=await getDoc(userRef),d=snap.data();
       const today=new Date().toISOString().slice(0,10),
             last=d.lastSecretDate?.toDate?.().toISOString().slice(0,10);
       if(last===today){secretSt.textContent='Sudah klaim';return;}
-      await updateDoc(userRef,{lastSecretDate:serverTimestamp(),coinBalance:d.coinBalance+20});
+      await updateDoc(userRef,{lastSecretDate:serverTimestamp(),coinBalance:d.coinBalance+650000});
       await mint(20);
-      secretSt.textContent='+20 koin dari kode rahasia';
+      secretSt.textContent='+650000 koin dari kode rahasia';
       renderAll(auth.currentUser,(await getDoc(userRef)).data());
     };
 
