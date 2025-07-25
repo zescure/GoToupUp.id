@@ -78,6 +78,7 @@
         Saldo Koin ZRC: <span id="coinBalance">0</span>
         <button id="showTasks">+</button>
       </div>
+      <h4>Tukar Saldo Koin ZRC Anda</h4>
       <div class="redeem-grid" id="redeemGrid"></div>
       <p id="redeemStatus"></p>
     </div>
@@ -191,22 +192,22 @@
     const FEE_RECEIVER_UID = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52';
     const DAILY  = [10,10,10,10,10,10,10];
     const REDEEM = [
-      {cost:50,label:'3💎 MlBB', img:'https://play-lh.googleusercontent.com/7o9wSxSDGZL9-TEpuLN0w849JeH7H9ks4bR3Qxzbg3BagRHpO6cGYIzPg7pWNdkPsbo'},
-      {cost:100,label:'12💎 MLBB',img:'https://play-lh.googleusercontent.com/7o9wSxSDGZL9-TEpuLN0w849JeH7H9ks4bR3Qxzbg3BagRHpO6cGYIzPg7pWNdkPsbo'},
-      {cost:50,label:'22💎 MLBB', img:'https://play-lh.googleusercontent.com/7o9wSxSDGZL9-TEpuLN0w849JeH7H9ks4bR3Qxzbg3BagRHpO6cGYIzPg7pWNdkPsbo'},
-      {cost:100,label:'50💎 MLBB',img:'https://play-lh.googleusercontent.com/7o9wSxSDGZL9-TEpuLN0w849JeH7H9ks4bR3Qxzbg3BagRHpO6cGYIzPg7pWNdkPsbo'},
-      {cost:50,label:'100💎 MLBB', img:'https://play-lh.googleusercontent.com/7o9wSxSDGZL9-TEpuLN0w849JeH7H9ks4bR3Qxzbg3BagRHpO6cGYIzPg7pWNdkPsbo'},
-      {cost:100,label:'172💎 MLBB',img:'https://play-lh.googleusercontent.com/7o9wSxSDGZL9-TEpuLN0w849JeH7H9ks4bR3Qxzbg3BagRHpO6cGYIzPg7pWNdkPsbo'},
-      {cost:50,label:'WDP MLBB', img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRyHVliCBk0HEK9B8vmt0IIJtLz7DWG3L0OHZe7DmKJNZT7236f-ZLNnVg&s=10'},
-      {cost:100,label:'5💎 FREEFIRE',img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRH5rAUyjt3rIVfUuKpORff7_jBgT6ECrnflNsMWIIzGQegpLzAXVZ0kWdf&s=10'},
-      {cost:50,label:'25💎 FREEFIRE', img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRH5rAUyjt3rIVfUuKpORff7_jBgT6ECrnflNsMWIIzGQegpLzAXVZ0kWdf&s=10'},
-      {cost:100,label:'70💎 FREEFIRE',img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRH5rAUyjt3rIVfUuKpORff7_jBgT6ECrnflNsMWIIzGQegpLzAXVZ0kWdf&s=10'},
-      {cost:50,label:'300💎 FREEFIRE', img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRH5rAUyjt3rIVfUuKpORff7_jBgT6ECrnflNsMWIIzGQegpLzAXVZ0kWdf&s=10'},
-      {cost:100,label:'Saldo Dana 3k',img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_AN-w5eWyxpyodEs6bM6kC7HNrxhVdCt_ePZTJhv2uK_wieIK8U7w-h_N&s=10'},
-      {cost:50,label:'Saldo Dana 5k', img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_AN-w5eWyxpyodEs6bM6kC7HNrxhVdCt_ePZTJhv2uK_wieIK8U7w-h_N&s=10'},
-      {cost:100,label:'Saldo Dana 20k',img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_AN-w5eWyxpyodEs6bM6kC7HNrxhVdCt_ePZTJhv2uK_wieIK8U7w-h_N&s=10'},
-      {cost:50,label:'Voucher Alfamart 50k', img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQmAKLD9raIVM9qAI7IPYgLdd8COmTCl6njFxPKFUhI51OPwghYCULrcXk&s=10'},
-      {cost:100,label:'Investasi Holez',img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSWiASOFhn-jiJghWSLjarqVHDarfgd5zXMY2zuYkjtCOWxggu7VAhv7HZ&s=10'}
+      {cost:1770,label:'3💎 MlBB', img:'https://play-lh.googleusercontent.com/7o9wSxSDGZL9-TEpuLN0w849JeH7H9ks4bR3Qxzbg3BagRHpO6cGYIzPg7pWNdkPsbo'},
+      {cost:4398,label:'12💎 MLBB',img:'https://play-lh.googleusercontent.com/7o9wSxSDGZL9-TEpuLN0w849JeH7H9ks4bR3Qxzbg3BagRHpO6cGYIzPg7pWNdkPsbo'},
+      {cost:7354,label:'22💎 MLBB', img:'https://play-lh.googleusercontent.com/7o9wSxSDGZL9-TEpuLN0w849JeH7H9ks4bR3Qxzbg3BagRHpO6cGYIzPg7pWNdkPsbo'},
+      {cost:14650,label:'50💎 MLBB',img:'https://play-lh.googleusercontent.com/7o9wSxSDGZL9-TEpuLN0w849JeH7H9ks4bR3Qxzbg3BagRHpO6cGYIzPg7pWNdkPsbo'},
+      {cost:27603,label:'100💎 MLBB', img:'https://play-lh.googleusercontent.com/7o9wSxSDGZL9-TEpuLN0w849JeH7H9ks4bR3Qxzbg3BagRHpO6cGYIzPg7pWNdkPsbo'},
+      {cost:46990,label:'172💎 MLBB',img:'https://play-lh.googleusercontent.com/7o9wSxSDGZL9-TEpuLN0w849JeH7H9ks4bR3Qxzbg3BagRHpO6cGYIzPg7pWNdkPsbo'},
+      {cost:28780,label:'WDP MLBB', img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRyHVliCBk0HEK9B8vmt0IIJtLz7DWG3L0OHZe7DmKJNZT7236f-ZLNnVg&s=10'},
+      {cost:1100,label:'5💎 FREEFIRE',img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRH5rAUyjt3rIVfUuKpORff7_jBgT6ECrnflNsMWIIzGQegpLzAXVZ0kWdf&s=10'},
+      {cost:5124,label:'25💎 FREEFIRE', img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRH5rAUyjt3rIVfUuKpORff7_jBgT6ECrnflNsMWIIzGQegpLzAXVZ0kWdf&s=10'},
+      {cost:10100,label:'70💎 FREEFIRE',img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRH5rAUyjt3rIVfUuKpORff7_jBgT6ECrnflNsMWIIzGQegpLzAXVZ0kWdf&s=10'},
+      {cost:39770,label:'300💎 FREEFIRE', img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRH5rAUyjt3rIVfUuKpORff7_jBgT6ECrnflNsMWIIzGQegpLzAXVZ0kWdf&s=10'},
+      {cost:5500,label:'Saldo Dana 3k',img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_AN-w5eWyxpyodEs6bM6kC7HNrxhVdCt_ePZTJhv2uK_wieIK8U7w-h_N&s=10'},
+      {cost:8230,label:'Saldo Dana 5k', img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_AN-w5eWyxpyodEs6bM6kC7HNrxhVdCt_ePZTJhv2uK_wieIK8U7w-h_N&s=10'},
+      {cost:21878,label:'Saldo Dana 20k',img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_AN-w5eWyxpyodEs6bM6kC7HNrxhVdCt_ePZTJhv2uK_wieIK8U7w-h_N&s=10'},
+      {cost:54300,label:'Voucher Alfamart 50k', img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQmAKLD9raIVM9qAI7IPYgLdd8COmTCl6njFxPKFUhI51OPwghYCULrcXk&s=10'},
+      {cost:1000000,label:'Investasi Holez',img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSWiASOFhn-jiJghWSLjarqVHDarfgd5zXMY2zuYkjtCOWxggu7VAhv7HZ&s=10'}
     ];
 
     let userRef, uid, data;
