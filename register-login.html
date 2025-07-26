@@ -6,75 +6,108 @@
   <title>ZESTORE Login/Register</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins&display=swap">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      font-family: 'Poppins', sans-serif;
-      box-sizing: border-box;
-    }
+    /* reset & font */
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
     body {
-      background: #0b0f1a;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
+      background: linear-gradient(135deg, #1f2937 0%, #0f172a 100%);
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; color:#fff;
     }
+
+    /* card */
     .container {
-      background: #121829;
-      padding: 30px 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-      width: 90%;
-      max-width: 400px;
-      text-align: center;
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+      border-radius:16px;
+      padding:40px 30px;
+      width:90%; max-width:380px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      position: relative;
+      overflow: hidden;
     }
+    .container::before {
+      content:'';
+      position:absolute; top:0; left:0; right:0; bottom:0;
+      background: linear-gradient(60deg, rgba(30,136,229,0.4), rgba(156,39,176,0.4));
+      mix-blend-mode: overlay;
+      pointer-events: none;
+    }
+
     h2 {
-      margin-bottom: 20px;
+      text-align: center;
+      margin-bottom:32px;
+      font-size:1.6rem;
+      position: relative;
+      z-index:1;
     }
+
     .input-group {
-      margin-bottom: 15px;
-      text-align: left;
+      margin-bottom:20px;
+      position: relative; z-index:1;
     }
     .input-group label {
-      font-size: 14px;
+      display:block;
+      margin-bottom:6px;
+      font-size:0.9rem;
+      color:#cbd5e1;
     }
     .input-group input {
-      width: 100%;
-      padding: 10px;
-      border-radius: 6px;
-      border: none;
-      margin-top: 5px;
-      background: #1f2a40;
-      color: white.
+      width:100%;
+      padding:12px 14px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.1);
+      color:#f1f5f9;
+      font-size:1rem;
+      outline:none;
+      transition: border-color .2s;
     }
+    .input-group input:focus {
+      border-color: #1e88e5;
+    }
+
     .btn {
-      width: 100%;
-      padding: 10px;
-      background: #1e88e5;
-      border: none;
-      border-radius: 6px;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      margin-top: 10px;
+      width:100%;
+      padding:12px;
+      margin-top:12px;
+      border:none;
+      border-radius:8px;
+      font-size:1rem;
+      cursor:pointer;
+      transition: background .2s, transform .1s;
+      position: relative; z-index:1;
     }
+    .btn:hover { transform: translateY(-1px); }
+    #submitBtn { background:#1e88e5; color:#fff; }
+    #googleLoginBtn { background:#db4437; color:#fff; }
+    #googleLoginBtn:hover { background:#c33c2d; }
+    .btn[disabled] { opacity:.6; cursor:not-allowed; }
+
     .toggle {
-      margin-top: 15px;
-      font-size: 14px;
+      text-align:center;
+      margin-top:18px;
+      font-size:0.9rem;
+      position: relative; z-index:1;
     }
     .toggle a {
-      color: #90caf9;
-      cursor: pointer;
-      text-decoration: underline;
+      color:#90caf9;
+      text-decoration:none;
+      font-weight:500;
+      margin-left:4px;
     }
+    .toggle a:hover { text-decoration:underline; }
+
     .alert {
-      margin-top: 10px;
-      color: #f44336;
-      font-size: 13px;
-      height: 20px;
+      height:20px;
+      margin-top:14px;
+      font-size:0.85rem;
+      color:#f44336;
+      text-align:center;
+      position: relative; z-index:1;
     }
+
+    /* small tweak for phoneGroup hidden by JS */
+    #phoneGroup { transition: max-height .3s, opacity .3s; overflow:hidden; }
   </style>
 </head>
 <body>
@@ -87,7 +120,7 @@
       <input type="email" id="email" placeholder="Masukkan email">
     </div>
 
-    <div class="input-group" id="phoneGroup" style="display: none;">
+    <div class="input-group" id="phoneGroup" style="max-height:0; opacity:0;">
       <label for="phone">Nomor HP</label>
       <input type="tel" id="phone" placeholder="+62...">
     </div>
@@ -98,11 +131,12 @@
     </div>
 
     <button class="btn" id="submitBtn">Login</button>
-    <button class="btn" style="background: #db4437;" id="googleLoginBtn">Login dengan Google</button>
-    <button class="btn" style="background: #000;" disabled>Login dengan Apple (Segera)</button>
+    <button class="btn" id="googleLoginBtn">Login dengan Google</button>
+    <button class="btn" disabled>Login dengan Apple (Segera)</button>
 
     <div class="toggle">
-      <span id="toggleText">Belum punya akun?</span> <a id="toggleLink">Register</a>
+      <span id="toggleText">Belum punya akun?</span>
+      <a id="toggleLink">Register</a>
     </div>
 
     <div class="alert" id="alertText"></div>
