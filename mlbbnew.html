@@ -754,9 +754,11 @@ document.getElementById('btnCheckout').onclick = ()=>{
   const flatAdmin = parseFloat(paySel.dataset.admin);
   const percent   = parseFloat(paySel.dataset.percent||0)/100;
   const adminCalc = Math.ceil(flatAdmin + price*percent);
-  const total     = price + adminCalc;
 
   const { buyer:buyerCB, ref:refCB } = getCashbackByValue(value);
+
+  // total setelah cashback buyer
+  const total     = price + adminCalc - buyerCB;
 
   outId.textContent    = `${idSel} (Srv: ${srvSel})`;
   outDiam.textContent  = value;
