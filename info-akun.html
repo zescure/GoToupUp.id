@@ -102,6 +102,17 @@
     }
     #adminAdjust button.danger{background:#e74c3c;}
     #adminAdjust small{color:#ccc;}
+  
+    .economy-row strong.marquee {
+  display: inline-block;
+  white-space: nowrap;
+  animation: slideText 6s linear infinite;
+}
+
+@keyframes slideText {
+  from { transform: translateX(100%); }
+  to { transform: translateX(-100%); }
+}
   </style>
 </head>
 <body>
@@ -139,6 +150,9 @@
   <div class="card economy-box">
     <h3>Ekonomi Koin ZRC Zestore</h3>
     <div class="economy-row"><span>Kurs Tetap</span><strong>10 koin = Rp 10</strong></div>
+    <!-- NEW: Kurs dinamis -->
+    <div class="economy-row"><span>Kurs Dinamis (real-time)</span><strong id="dynamicRate">10 koin ≈ Rp 10</strong></div>
+
     <div class="economy-row"><span>Total Suplai</span><strong id="totalSupply">0</strong></div>
     <div class="economy-row"><span>Koin Beredar</span><strong id="circulating">0</strong></div>
     <div class="economy-row"><span>Koin Terkunci</span><strong id="locked">0</strong></div>
@@ -207,7 +221,7 @@
   import {
     getFirestore, doc, getDoc, runTransaction,
     collection, query, orderBy, limit, getDocs,
-    serverTimestamp, setDoc
+    serverTimestamp, setDoc, updateDoc
   } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
   // ----------------- FIREBASE INIT -----------------
@@ -233,6 +247,8 @@
   const ADMIN_UID        = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52';
   const FEE_RECEIVER_UID = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52'; // bisa kamu ganti kapan saja, tdk terkait admin
 
+  const DYN_UPDATE_MS = 5000;
+
   // ----------------- DOM ELEM -----------------
   const displayNameEl = document.getElementById('displayName');
   const emailEl       = document.getElementById('email');
@@ -245,6 +261,7 @@
   const totalSupplyEl = document.getElementById('totalSupply');
   const circulatingEl = document.getElementById('circulating');
   const lockedEl      = document.getElementById('locked');
+  const dynamicRateEl = document.getElementById('dynamicRate');
 
   const openTransfer  = document.getElementById('openTransfer');
   const transferPopup = document.getElementById('transferPopup');
@@ -267,6 +284,7 @@
   const admAdjStatus  = document.getElementById('admAdjStatus');
 
   let currentUser;
+  let dynTimer = null;
 
   // ----------------- HELPERS -----------------
   const nf = (n)=> (n||0).toLocaleString('id-ID');
@@ -277,8 +295,19 @@
       await setDoc(ECON_REF,{
         totalSupply: TOTAL_SUPPLY,
         circulatingSupply: 0,
-        rate: { coins: RATE_COINS, idr: RATE_IDR }
+        rate: { coins: RATE_COINS, idr: RATE_IDR },
+        bankLiquidityIDR: 150000,              // default liquidity
+        dynamicRatePer10: 10                   // default awal
       });
+    }else{
+      // Pastikan field-field baru ada
+      const d = snap.data();
+      const needs = {};
+      if(typeof d.bankLiquidityIDR !== 'number') needs.bankLiquidityIDR = 150000;
+      if(typeof d.dynamicRatePer10 !== 'number') needs.dynamicRatePer10 = 10;
+      if(Object.keys(needs).length){
+        await updateDoc(ECON_REF, needs);
+      }
     }
   }
 
@@ -290,6 +319,35 @@
     totalSupplyEl.textContent = nf(total);
     circulatingEl.textContent = nf(circ);
     lockedEl.textContent      = nf(total - circ);
+  }
+
+  async function updateDynamicRate(){
+    const snap = await getDoc(ECON_REF);
+    if(!snap.exists()){
+      dynamicRateEl.textContent = '10 koin ≈ Rp 10';
+      return;
+    }
+    const d = snap.data();
+    const bank = Number(d.bankLiquidityIDR || 0);
+    const circ = Number(d.circulatingSupply || 0);
+
+    let ratePer10 = 10;
+    if(circ > 0){
+      ratePer10 = Math.max(0, Math.round((bank / circ) * 10));
+    }
+
+    // Simpan balik agar semua klien melihat angka yang sama (opsional, bisa dihapus kalau mau read-only)
+    if(d.dynamicRatePer10 !== ratePer10){
+      try{ await updateDoc(ECON_REF, { dynamicRatePer10: ratePer10 }); }catch(e){}
+    }
+
+    dynamicRateEl.textContent = `10 koin ≈ Rp ${nf(ratePer10)}`;
+  }
+
+  function startDynamicTicker(){
+    clearInterval(dynTimer);
+    dynTimer = setInterval(updateDynamicRate, DYN_UPDATE_MS);
+    updateDynamicRate();
   }
 
   async function loadBalance(uid){
@@ -418,7 +476,6 @@
       });
 
       admAdjStatus.textContent = 'Berhasil diupdate.';
-      // refresh leaderboard + histori kalau kebetulan yang dilihat sedang target itu
       await loadAdminDashboard();
       const curWatching = admTargetUid.value.trim();
       if(curWatching){
@@ -446,6 +503,9 @@
       loadBalance(user.uid),
       loadHistory(user.uid)
     ]);
+
+    // mulai ticker kurs dinamis
+    startDynamicTicker();
 
     // tampilkan admin dashboard kalau uid = admin
     if(user.uid === ADMIN_UID){
