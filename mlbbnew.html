@@ -564,7 +564,8 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import {
-  getFirestore, doc, getDoc, setDoc, updateDoc, increment, serverTimestamp, runTransaction
+  getFirestore, doc, getDoc, setDoc, updateDoc, increment, serverTimestamp, runTransaction,
+  collection
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 const firebaseConfig = {
@@ -815,6 +816,18 @@ async function addToCirculating(amount) {
   });
 }
 
+/* =============== UTIL: LOG TRANSACTION =============== */
+async function logTx(uid, payload){
+  try{
+    await setDoc(doc(collection(db,'users',uid,'transactions')), {
+      timestamp: serverTimestamp(),
+      ...payload
+    });
+  }catch(e){
+    console.error('logTx error', e);
+  }
+}
+
 /* =============== BTN DONE (PROSES KOIN SAJA) =============== */
 const btnDone = document.getElementById('btnDone');
 const btnConfirmWA = document.getElementById('btnConfirmWA'); // tombol baru
@@ -827,7 +840,8 @@ btnDone.onclick = async () => {
   }
 
   const {
-    uid, buyerCB, refCB, referralCode, referralOwnerUid
+    uid, buyerCB, refCB, referralCode, referralOwnerUid,
+    value, total, payMethod
   } = lastCalc;
 
   try {
@@ -837,6 +851,16 @@ btnDone.onclick = async () => {
     if (buyerCB > 0) {
       await updateDoc(doc(db,'users', uid), { coinBalance: increment(buyerCB) });
       totalCashback += buyerCB;
+
+      // LOG transaksi buyer
+      await logTx(uid, {
+        amount: buyerCB,
+        type: 'cashback-topup-buyer',
+        value,
+        totalBayar: total,
+        payMethod,
+        referralCode: referralCode || null
+      });
     }
 
     // Jika referral valid → tambah koin referrer
@@ -846,6 +870,17 @@ btnDone.onclick = async () => {
       if (ownerSnap.exists()) {
         await updateDoc(ownerRef, { coinBalance: increment(refCB) });
         totalCashback += refCB;
+
+        // LOG transaksi referrer
+        await logTx(referralOwnerUid, {
+          amount: refCB,
+          type: 'cashback-topup-referrer',
+          from: uid,
+          value,
+          totalBayar: total,
+          payMethod,
+          referralCode
+        });
       }
     }
 
