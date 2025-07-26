@@ -1,146 +1,174 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ZESTORE Login/Register</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins&display=swap">
   <style>
-    /* reset & font */
-    * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
     body {
-      background: linear-gradient(135deg, #1f2937 0%, #0f172a 100%);
-      display: flex; align-items: center; justify-content: center;
-      min-height: 100vh; color:#fff;
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+      background: #0b0f1a;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      flex-direction: column;
     }
-
-    /* card */
-    .container {
-      background: rgba(255,255,255,0.05);
-      backdrop-filter: blur(10px);
-      border-radius:16px;
-      padding:40px 30px;
-      width:90%; max-width:380px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-      position: relative;
-      overflow: hidden;
-    }
-    .container::before {
-      content:'';
-      position:absolute; top:0; left:0; right:0; bottom:0;
-      background: linear-gradient(60deg, rgba(30,136,229,0.4), rgba(156,39,176,0.4));
-      mix-blend-mode: overlay;
-      pointer-events: none;
-    }
-
-    h2 {
+    .promo-banner {
+      background: linear-gradient(135deg, #1e88e5, #1565c0);
+      padding: 30px 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
       text-align: center;
-      margin-bottom:32px;
-      font-size:1.6rem;
-      position: relative;
-      z-index:1;
+      margin-bottom: 20px;
     }
-
+    .promo-banner h2 {
+      font-size: 1.4rem;
+      margin-bottom: 10px;
+    }
+    .promo-banner p {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+    .container {
+      background: #121829;
+      padding: 25px 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    }
+    h2 {
+      margin-bottom: 20px;
+      font-size: 1.4rem;
+    }
     .input-group {
-      margin-bottom:20px;
-      position: relative; z-index:1;
+      position: relative;
+      margin-bottom: 15px;
+      text-align: left;
     }
     .input-group label {
-      display:block;
-      margin-bottom:6px;
-      font-size:0.9rem;
-      color:#cbd5e1;
+      font-size: 14px;
+      margin-bottom: 5px;
+      display: block;
     }
     .input-group input {
-      width:100%;
-      padding:12px 14px;
-      border-radius:8px;
-      border:1px solid rgba(255,255,255,0.2);
-      background: rgba(255,255,255,0.1);
-      color:#f1f5f9;
-      font-size:1rem;
-      outline:none;
-      transition: border-color .2s;
+      width: 100%;
+      padding: 10px 35px 10px 35px;
+      border-radius: 6px;
+      border: none;
+      background: #1f2a40;
+      color: white;
     }
-    .input-group input:focus {
-      border-color: #1e88e5;
+    .input-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      opacity: 0.7;
     }
-
+    .toggle-pass {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 18px;
+      opacity: 0.7;
+    }
     .btn {
-      width:100%;
-      padding:12px;
-      margin-top:12px;
-      border:none;
-      border-radius:8px;
-      font-size:1rem;
-      cursor:pointer;
-      transition: background .2s, transform .1s;
-      position: relative; z-index:1;
+      width: 100%;
+      padding: 10px;
+      background: #1e88e5;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
     }
-    .btn:hover { transform: translateY(-1px); }
-    #submitBtn { background:#1e88e5; color:#fff; }
-    #googleLoginBtn { background:#db4437; color:#fff; }
-    #googleLoginBtn:hover { background:#c33c2d; }
-    .btn[disabled] { opacity:.6; cursor:not-allowed; }
-
+    .social-login {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 15px;
+    }
+    .social-login img {
+      width: 35px;
+      height: 35px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .social-login img:hover {
+      transform: scale(1.1);
+    }
     .toggle {
-      text-align:center;
-      margin-top:18px;
-      font-size:0.9rem;
-      position: relative; z-index:1;
+      margin-top: 15px;
+      font-size: 14px;
     }
     .toggle a {
-      color:#90caf9;
-      text-decoration:none;
-      font-weight:500;
-      margin-left:4px;
+      color: #90caf9;
+      cursor: pointer;
+      text-decoration: underline;
     }
-    .toggle a:hover { text-decoration:underline; }
-
     .alert {
-      height:20px;
-      margin-top:14px;
-      font-size:0.85rem;
-      color:#f44336;
-      text-align:center;
-      position: relative; z-index:1;
+      margin-top: 10px;
+      color: #f44336;
+      font-size: 13px;
+      height: 20px;
     }
-
-    /* small tweak for phoneGroup hidden by JS */
-    #phoneGroup { transition: max-height .3s, opacity .3s; overflow:hidden; }
   </style>
 </head>
 <body>
 
+  <!-- Banner Promosi -->
+  <div class="promo-banner">
+    <h2>Explore ZESTORE</h2>
+    <p>Dapatkan hadiah, promo, dan kemudahan top-up hanya dengan satu akun.</p>
+  </div>
+
+  <!-- Form Login -->
   <div class="container">
     <h2 id="formTitle">Login</h2>
 
     <div class="input-group">
-      <label for="email">Email</label>
-      <input type="email" id="email" placeholder="Masukkan email">
-    </div>
-
-    <div class="input-group" id="phoneGroup" style="max-height:0; opacity:0;">
-      <label for="phone">Nomor HP</label>
-      <input type="tel" id="phone" placeholder="+62...">
+      <span class="input-icon">📧</span>
+      <input type="email" id="email" placeholder="Email">
     </div>
 
     <div class="input-group">
-      <label for="password">Password</label>
-      <input type="password" id="password" placeholder="Masukkan password">
+      <span class="input-icon">🔒</span>
+      <input type="password" id="password" placeholder="Password">
+      <span class="toggle-pass" onclick="togglePassword()">👁</span>
     </div>
 
     <button class="btn" id="submitBtn">Login</button>
-    <button class="btn" id="googleLoginBtn">Login dengan Google</button>
-    <button class="btn" disabled>Login dengan Apple (Segera)</button>
+
+    <div class="social-login">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/IOS_Google_icon.png" id="googleLoginBtn">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" id="appleLoginBtn">
+    </div>
 
     <div class="toggle">
-      <span id="toggleText">Belum punya akun?</span>
-      <a id="toggleLink">Register</a>
+      <span id="toggleText">Belum punya akun?</span> <a id="toggleLink">Register</a>
     </div>
 
     <div class="alert" id="alertText"></div>
   </div>
+
+  <script>
+    function togglePassword() {
+      const pass = document.getElementById('password');
+      pass.type = pass.type === 'password' ? 'text' : 'password';
+    }
+  </script>
 
   <!-- Firebase -->
   <script type="module">
