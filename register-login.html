@@ -20,6 +20,7 @@
     .screen.active { display:block; }
     .card { background:var(--card); border-radius:12px; padding:30px 20px; box-shadow:0 4px 12px rgba(0,0,0,0.5); }
     h1,h2 { text-align:center; margin-bottom:20px; }
+
     /* Banner explore */
     .banner {
       background: var(--accent);
@@ -29,6 +30,7 @@
       margin-bottom:30px;
     }
     .banner h2 { margin-bottom:10px; }
+
     .btn, .btn-primary {
       display:block;
       width:100%;
@@ -41,6 +43,7 @@
       margin-top:15px;
     }
     .btn-primary { background:var(--accent-light); color:var(--bg); }
+
     .btn-circle {
       width:48px; height:48px;
       border-radius:50%;
@@ -51,6 +54,7 @@
       margin:0 10px;
       cursor:pointer;
     }
+
     .input-group {
       position:relative;
       margin-bottom:20px;
@@ -58,7 +62,6 @@
     .input-group input {
       width:100%;
       padding:12px 44px;
-      padding-left:44px;
       border:none; border-radius:6px;
       background:#1f2a40;
       color:var(--text);
@@ -72,13 +75,22 @@
     }
     .input-group .icon-left { left:12px; }
     .input-group .icon-right { right:12px; cursor:pointer; }
+
     .toggle { text-align:center; margin-top:20px; font-size:14px; }
     .toggle a { color:var(--accent-light); text-decoration:underline; cursor:pointer; }
+
+    .alert {
+      margin-top:10px;
+      color:#f44336;
+      font-size:13px;
+      height:20px;
+      text-align:center;
+    }
   </style>
 </head>
 <body>
 
-  <!-- 1) LOGIN SCREEN -->
+  <!-- LOGIN SCREEN -->
   <section id="loginScreen" class="screen active">
     <div class="card">
       <h1>Login</h1>
@@ -105,10 +117,12 @@
       <div class="toggle">
         Belum punya akun? <a id="goRegister">Register</a>
       </div>
+
+      <div class="alert" id="alertText"></div>
     </div>
   </section>
 
-  <!-- 2) EXPLORE (REGISTER INTRO) -->
+  <!-- REGISTER SCREEN + BANNER -->
   <section id="exploreScreen" class="screen">
     <div class="banner">
       <h2>Explore ZESTORE</h2>
@@ -139,10 +153,12 @@
       <div class="toggle">
         Sudah punya akun? <a id="goLogin">Login</a>
       </div>
+
+      <div class="alert" id="alertTextReg"></div>
     </div>
   </section>
 
-  <!-- Firebase -->
+  <!-- Firebase JS -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
@@ -170,26 +186,10 @@
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
-    // DOM
-    const formTitle = document.getElementById('formTitle');
-    const submitBtn = document.getElementById('submitBtn');
-    const toggleLink = document.getElementById('toggleLink');
-    const toggleText = document.getElementById('toggleText');
-    const emailInput = document.getElementById('email');
-    const phoneGroup = document.getElementById('phoneGroup');
-    const phoneInput = document.getElementById('phone');
-    const passwordInput = document.getElementById('password');
-    const alertText = document.getElementById('alertText');
-    const googleLoginBtn = document.getElementById('googleLoginBtn');
-
-    let isLogin = true;
-
-    // === Helper: pastikan user doc & referralCodes ada ===
+    // === Helper: Pastikan dokumen user & referral ===
     async function ensureUserDocuments(user){
       const uid  = user.uid;
-      const code = uid.slice(0,6).toUpperCase(); // standard 6 kode (uppercase)
-
-      // users/{uid}
+      const code = uid.slice(0,6).toUpperCase();
       const uRef  = doc(db, 'users', uid);
       const uSnap = await getDoc(uRef);
       if (!uSnap.exists()) {
@@ -198,14 +198,10 @@
           referralCode: code,
           createdAt: serverTimestamp()
         });
-      } else {
-        // kalau belum punya field referralCode, tambahin
-        if (!uSnap.data().referralCode) {
-          await updateDoc(uRef, { referralCode: code });
-        }
+      } else if (!uSnap.data().referralCode) {
+        await updateDoc(uRef, { referralCode: code });
       }
 
-      // referralCodes/{code}
       const rRef  = doc(db, 'referralCodes', code);
       const rSnap = await getDoc(rRef);
       if (!rSnap.exists()) {
@@ -217,53 +213,61 @@
       }
     }
 
-    // Kalau user sudah login, langsung pastikan dokumen + redirect
+    // Jika user login, redirect
     onAuthStateChanged(auth, async (user)=>{
       if (user) {
-        try {
-          await ensureUserDocuments(user);
-        } catch(e) {
-          console.error('ensureUserDocuments error:', e);
-        }
-        // Redirect ke home
+        try { await ensureUserDocuments(user); } 
+        catch(e) { console.error('ensureUserDocuments error:', e); }
         window.location.href = "https://zestore.netlify.app/home";
       }
     });
 
-    toggleLink.addEventListener('click', () => {
-      isLogin = !isLogin;
-      formTitle.textContent = isLogin ? 'Login' : 'Register';
-      submitBtn.textContent = isLogin ? 'Login' : 'Register';
-      toggleText.textContent = isLogin ? 'Belum punya akun?' : 'Sudah punya akun?';
-      toggleLink.textContent = isLogin ? 'Register' : 'Login';
-      phoneGroup.style.display = isLogin ? 'none' : 'block';
-    });
+    // DOM Elemen
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const regEmailInput = document.getElementById('regEmail');
+    const regPasswordInput = document.getElementById('regPassword');
+    const alertText = document.getElementById('alertText');
+    const alertTextReg = document.getElementById('alertTextReg');
 
-    submitBtn.addEventListener('click', async () => {
+    // Login email
+    document.getElementById('submitLogin').addEventListener('click', async () => {
       const email = emailInput.value.trim();
       const password = passwordInput.value.trim();
       alertText.textContent = "";
-
       if (!email || !password) {
         alertText.textContent = "Isi semua kolom.";
         return;
       }
-
       try {
-        if (isLogin) {
-          const { user } = await signInWithEmailAndPassword(auth, email, password);
-          await ensureUserDocuments(user);
-        } else {
-          const { user } = await createUserWithEmailAndPassword(auth, email, password);
-          await ensureUserDocuments(user);
-        }
+        const { user } = await signInWithEmailAndPassword(auth, email, password);
+        await ensureUserDocuments(user);
         window.location.href = "https://zestore.netlify.app/home";
       } catch (err) {
         alertText.textContent = err.message;
       }
     });
 
-    googleLoginBtn.addEventListener('click', async () => {
+    // Register email
+    document.getElementById('submitRegister').addEventListener('click', async () => {
+      const email = regEmailInput.value.trim();
+      const password = regPasswordInput.value.trim();
+      alertTextReg.textContent = "";
+      if (!email || !password) {
+        alertTextReg.textContent = "Isi semua kolom.";
+        return;
+      }
+      try {
+        const { user } = await createUserWithEmailAndPassword(auth, email, password);
+        await ensureUserDocuments(user);
+        window.location.href = "https://zestore.netlify.app/home";
+      } catch (err) {
+        alertTextReg.textContent = err.message;
+      }
+    });
+
+    // Google login
+    document.getElementById('loginGoogle').addEventListener('click', async () => {
       const provider = new GoogleAuthProvider();
       try {
         const { user } = await signInWithPopup(auth, provider);
@@ -274,30 +278,40 @@
       }
     });
 
+    document.getElementById('regGoogle').addEventListener('click', async () => {
+      const provider = new GoogleAuthProvider();
+      try {
+        const { user } = await signInWithPopup(auth, provider);
+        await ensureUserDocuments(user);
+        window.location.href = "https://zestore.netlify.app/home";
+      } catch (err) {
+        alertTextReg.textContent = err.message;
+      }
+    });
 
-    // hanya untuk switch screen
-    document.getElementById('goRegister').onclick = ()=> {
+    // Toggle screen
+    document.getElementById('goRegister').onclick = () => {
       document.getElementById('loginScreen').classList.remove('active');
       document.getElementById('exploreScreen').classList.add('active');
     };
-    document.getElementById('goLogin').onclick = ()=> {
+    document.getElementById('goLogin').onclick = () => {
       document.getElementById('exploreScreen').classList.remove('active');
       document.getElementById('loginScreen').classList.add('active');
     };
-    // toggle password visibility (login)
-    document.getElementById('togglePwd').onclick = ()=>{
+
+    // Toggle password
+    document.getElementById('togglePwd').onclick = () => {
       const inp = document.getElementById('password');
-      const vis = inp.type==='password';
-      inp.type = vis?'text':'password';
+      const vis = inp.type === 'password';
+      inp.type = vis ? 'text' : 'password';
       document.getElementById('togglePwd').src = vis
         ? 'https://img.icons8.com/ios-glyphs/30/ffffff/hide.png'
         : 'https://img.icons8.com/ios-glyphs/30/ffffff/visible.png';
     };
-    // toggle password visibility (register)
-    document.getElementById('togglePwdReg').onclick = ()=>{
+    document.getElementById('togglePwdReg').onclick = () => {
       const inp = document.getElementById('regPassword');
-      const vis = inp.type==='password';
-      inp.type = vis?'text':'password';
+      const vis = inp.type === 'password';
+      inp.type = vis ? 'text' : 'password';
       document.getElementById('togglePwdReg').src = vis
         ? 'https://img.icons8.com/ios-glyphs/30/ffffff/hide.png'
         : 'https://img.icons8.com/ios-glyphs/30/ffffff/visible.png';
