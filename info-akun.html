@@ -285,7 +285,6 @@
 
   let currentUser;
   let dynTimer = null;
-  let currentRate = 1; // default Rp1 per 10 koin
 
   // ----------------- HELPERS -----------------
   const nf = (n)=> (n||0).toLocaleString('id-ID');
@@ -323,24 +322,19 @@
   }
 
   async function updateDynamicRate(){
-  const snap = await getDoc(ECON_REF);
-  if(!snap.exists()){
-    dynamicRateEl.textContent = '10 koin ≈ Rp 10';
-    currentRate = 1; // fallback
-    return;
-  }
-  const d = snap.data();
-  const bank = Number(d.bankLiquidityIDR || 0);
-  const circ = Number(d.circulatingSupply || 0);
+    const snap = await getDoc(ECON_REF);
+    if(!snap.exists()){
+      dynamicRateEl.textContent = '10 koin ≈ Rp 10';
+      return;
+    }
+    const d = snap.data();
+    const bank = Number(d.bankLiquidityIDR || 0);
+    const circ = Number(d.circulatingSupply || 0);
 
-  let ratePer10 = 10;
-  if(circ > 0){
-    ratePer10 = Math.max(0, Math.round((bank / circ) * 10));
-  }
-
-  currentRate = ratePer10 / 10; // simpan kurs real-time (Rp per koin)
-  dynamicRateEl.textContent = `10 koin ≈ Rp ${nf(ratePer10)}`;
-}
+    let ratePer10 = 10;
+    if(circ > 0){
+      ratePer10 = Math.max(0, Math.round((bank / circ) * 10));
+    }
 
     // Simpan balik agar semua klien melihat angka yang sama (opsional, bisa dihapus kalau mau read-only)
     if(d.dynamicRatePer10 !== ratePer10){
@@ -357,11 +351,11 @@
   }
 
   async function loadBalance(uid){
-  const snap = await getDoc(doc(db,'users',uid));
-  const bal  = snap.exists()? (snap.data().coinBalance||0) : 0;
-  coinEl.textContent    = nf(bal);
-  coinIDREl.textContent = nf(Math.floor(bal * currentRate));
-}
+    const snap = await getDoc(doc(db,'users',uid));
+    const bal  = snap.exists()? (snap.data().coinBalance||0) : 0;
+    coinEl.textContent    = nf(bal);
+    coinIDREl.textContent = nf(bal * (RATE_IDR / RATE_COINS));
+  }
 
   async function loadHistory(uid){
     txHistoryUl.innerHTML = '';
