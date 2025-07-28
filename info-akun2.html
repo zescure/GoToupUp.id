@@ -237,15 +237,13 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-/* ====== ECON / GOLD PEG ====== */
+/* ====== ECON / RANDOM KURS ====== */
 const ECON_REF        = doc(db,'economy','meta');
 const TOTAL_SUPPLY    = 210_000_000;
 const ADMIN_UID       = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52';
 const FEE_RECEIVER_UID= 'viCOsJo4wHVFmhtpmMx1Wd4sDF52';
 
-const COINS_PER_GRAM  = 5000000;                 // 1000 coin = 1 gram emas
-const XAU_ENDPOINT    = '/api/xau-idr';       // <- GANTI ke endpoint milikmu sendiri
-const XAU_POLL_MS     = 1_000;               // refresh setiap 15 detik (atur suka-suka)
+const XAU_POLL_MS     = 5_000; // update tiap 5 detik (atur sesuai kebutuhan)
 
 /* ====== DOM ====== */
 const displayNameEl = document.getElementById('displayName');
@@ -284,7 +282,7 @@ const admAdjStatus  = document.getElementById('admAdjStatus');
 
 /* ====== STATE ====== */
 let currentUser = null;
-let xauPricePerGramIDR = 0;  // harga emas per gram terbaru
+let currentRandomRate = 10;  // harga 10 koin (Rp) awal
 let xauTimer = null;
 
 /* ====== HELPERS ====== */
@@ -296,19 +294,10 @@ async function ensureEconomyDoc(){
     await setDoc(ECON_REF,{
       totalSupply: TOTAL_SUPPLY,
       circulatingSupply: 0,
-      // field lama tetap disimpan
       rate: { coins: 10, idr: 10 },
-      // field baru untuk gold-peg
-      xauPriceIDR: 0,
-      coinsPerGram: COINS_PER_GRAM,
+      xauPriceIDR: 10, // default kurs random
       lastXAUAt: serverTimestamp()
     });
-  }else{
-    const d = snap.data();
-    const needs = {};
-    if(typeof d.xauPriceIDR !== 'number')  needs.xauPriceIDR = 0;
-    if(typeof d.coinsPerGram !== 'number') needs.coinsPerGram = COINS_PER_GRAM;
-    if(Object.keys(needs).length) await updateDoc(ECON_REF, needs);
   }
 }
 
@@ -327,10 +316,9 @@ async function loadBalance(uid){
   const bal  = snap.exists()? (snap.data().coinBalance||0) : 0;
   coinEl.textContent = nf(bal);
 
-  // konversi dengan XAU peg (kalau sudah ada harga emas)
-  const idr = xauPricePerGramIDR > 0
-    ? (bal * (xauPricePerGramIDR / COINS_PER_GRAM))
-    : (bal); // fallback (1 coin = Rp1)
+  // konversi ke IDR (10 koin = currentRandomRate)
+  const idrPerCoin = currentRandomRate / 10;
+  const idr = bal * idrPerCoin;
   coinIDREl.textContent = nf(Math.floor(idr));
 }
 
@@ -346,52 +334,26 @@ async function loadHistory(uid){
   });
 }
 
-/* ====== GOLD PEG FUNCTIONS ====== */
+/* ====== RANDOM KURS ====== */
+async function applyRandomRate(){
+  const randomFor10Coins = Math.floor(Math.random() * 20) + 1; // 1–20
+  currentRandomRate = randomFor10Coins;
 
-// Fetch harga emas dari endpoint kamu sendiri
-async function fetchXAUPriceIDR(){
-  try{
-    const res = await fetch(XAU_ENDPOINT, { cache:'no-store' });
-    if(!res.ok) throw new Error('bad status '+res.status);
-    const j = await res.json();
-    // kamu harus pastikan endpoint mengembalikan { pricePerGramIDR: number }
-    return Number(j.pricePerGramIDR || 0);
-  }catch(e){
-    console.warn('Fetch XAU failed, fallback static', e);
-    // Fallback misal Rp1.200.000 / gram
-    return 1_200_000;
-  }
-}
-
-async function applyGoldPeg(){
-  // 1) ambil harga emas per gram IDR
-  const price = await fetchXAUPriceIDR();
-  xauPricePerGramIDR = price;
-
-  // 2) simpan ke Firestore (opsional tapi bagus biar klien sinkron)
-  try{
+  try {
     await updateDoc(ECON_REF, {
-      xauPriceIDR: price,
+      xauPriceIDR: randomFor10Coins,
       lastXAUAt: serverTimestamp()
     });
-  }catch(e){ /* ignore */ }
+  } catch (e) { console.warn(e); }
 
-  // 3) hitung kurs 10 koin ≈ Rp ...
-  //    1 coin = price / COINS_PER_GRAM
-  //    10 coin = 10*(price/COINS_PER_GRAM)
-  const ratePer10 = Math.floor(10 * (price / COINS_PER_GRAM));
-  dynamicRateEl.textContent = `10 koin ≈ Rp ${nf(ratePer10)}`;
-
-  // 4) refresh saldo user (konversi ke IDR)
-  if(currentUser){
-    await loadBalance(currentUser.uid);
-  }
+  dynamicRateEl.textContent = `10 koin ≈ Rp ${nf(randomFor10Coins)}`;
+  if (currentUser) await loadBalance(currentUser.uid);
 }
 
-function startXAUTicker(){
+function startRandomTicker(){
   clearInterval(xauTimer);
-  xauTimer = setInterval(applyGoldPeg, XAU_POLL_MS);
-  applyGoldPeg();
+  xauTimer = setInterval(applyRandomRate, XAU_POLL_MS);
+  applyRandomRate();
 }
 
 /* ====== ADMIN ====== */
