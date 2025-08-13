@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fake Market DMP/ZRC</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #111;
+        color: #fff;
+        text-align: center;
+        padding: 20px;
+    }
+    h1 { color: gold; }
+    .market {
+        background: #222;
+        padding: 20px;
+        border-radius: 10px;
+        display: inline-block;
+        box-shadow: 0 0 15px rgba(255,215,0,0.5);
+    }
+    .price { font-size: 2em; margin: 10px 0; }
+    .volume, .liquidity { font-size: 1.2em; }
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<h1>Fake Market DMP/ZRC</h1>
+<div class="market">
+    <div class="price">Price: <span id="price">Loading...</span></div>
+    <div class="volume">Volume: <span id="volume">Loading...</span></div>
+    <div class="liquidity">Liquidity: <span id="liquidity">Loading...</span></div>
+</div>
+
+<script>
+// Konfigurasi Firebase
+const firebaseConfig = {
+    apiKey: "API_KEY_LU",
+    authDomain: "PROJECT_ID.firebaseapp.com",
+    databaseURL: "https://PROJECT_ID.firebaseio.com",
+    projectId: "PROJECT_ID",
+    storageBucket: "PROJECT_ID.appspot.com",
+    messagingSenderId: "SENDER_ID",
+    appId: "APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// Fungsi untuk update harga bot
+function botUpdatePrice() {
+    const priceRef = db.ref("market/dmpzrc");
+
+    priceRef.once("value", snapshot => {
+        let marketData = snapshot.val();
+        if (!marketData) {
+            marketData = { price: 100.123, volume: 5000, liquidity: 20000 };
+        }
+        // Random naik turun harga
+        let change = (Math.random() - 0.5) * 0.2; 
+        marketData.price = Math.max(1, parseFloat((marketData.price + change).toFixed(3)));
+        marketData.volume = Math.floor(Math.random() * 10000 + 1000);
+        marketData.liquidity = Math.floor(Math.random() * 50000 + 5000);
+
+        priceRef.set(marketData);
+    });
+}
+
+// Tiap 5 detik bot update harga
+setInterval(botUpdatePrice, 5000);
+
+// Update realtime ke semua user
+db.ref("market/dmpzrc").on("value", snapshot => {
+    const data = snapshot.val();
+    if (data) {
+        document.getElementById("price").innerText = data.price;
+        document.getElementById("volume").innerText = data.volume + " DMP";
+        document.getElementById("liquidity").innerText = data.liquidity + " ZRC";
+    }
+});
+</script>
+
+</body>
+</html>
