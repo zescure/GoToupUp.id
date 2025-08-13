@@ -1,86 +1,87 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-<meta charset="UTF-8">
-<title>Fake Market DMP/ZRC</title>
-<style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Realtime Harga</title>
+  <style>
     body {
-        font-family: Arial, sans-serif;
-        background: #111;
-        color: #fff;
-        text-align: center;
-        padding: 20px;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #0e0e0e;
+      color: white;
+      padding: 50px;
     }
-    h1 { color: gold; }
-    .market {
-        background: #222;
-        padding: 20px;
-        border-radius: 10px;
-        display: inline-block;
-        box-shadow: 0 0 15px rgba(255,215,0,0.5);
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
     }
-    .price { font-size: 2em; margin: 10px 0; }
-    .volume, .liquidity { font-size: 1.2em; }
-</style>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    #harga {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #00ff88;
+    }
+    .loading {
+      color: gray;
+    }
+    footer {
+      margin-top: 50px;
+      font-size: 0.8rem;
+      color: #888;
+    }
+  </style>
 </head>
 <body>
+  <h1>Harga Produk</h1>
+  <div id="harga" class="loading">Loading...</div>
 
-<h1>Market DMZ/ZRC</h1>
-<div class="market">
-    <div class="price">Price: <span id="price">Loading...</span></div>
-    <div class="volume">Volume: <span id="volume">Loading...</span></div>
-    <div class="liquidity">Liquidity: <span id="liquidity">Loading...</span></div>
-</div>
+  <footer>
+    &copy; 2025 ZezyPay - Realtime Data by Firebase
+  </footer>
 
-<script>
-// Konfigurasi Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
-  authDomain: "zeepaylater-93a94.firebaseapp.com",
-  databaseURL: "https://zeepaylater-93a94-default-rtdb.firebaseio.com",
-  projectId: "zeepaylater-93a94",
-  storageBucket: "zeepaylater-93a94.appspot.com",
-  messagingSenderId: "358065954807",
-  appId: "1:358065954807:web:66619211fea82a4b2518f2"
-};
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+    // Konfigurasi Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
+      authDomain: "zeepaylater-93a94.firebaseapp.com",
+      projectId: "zeepaylater-93a94",
+      storageBucket: "zeepaylater-93a94.appspot.com",
+      messagingSenderId: "358065954807",
+      appId: "1:358065954807:web:66619211fea82a4b2518f2"
+    };
 
-// Fungsi untuk update harga bot
-function botUpdatePrice() {
-    const priceRef = db.ref("market/dmpzrc");
+    // Inisialisasi Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    priceRef.once("value").then(snapshot => {
-        let marketData = snapshot.val();
-        if (!marketData) {
-            marketData = { price: 100.123, volume: 5000, liquidity: 20000 };
-        }
-        // Random naik turun harga
-        let change = (Math.random() - 0.5) * 0.2; 
-        marketData.price = Math.max(1, parseFloat((marketData.price + change).toFixed(3)));
-        marketData.volume = Math.floor(Math.random() * 10000 + 1000);
-        marketData.liquidity = Math.floor(Math.random() * 50000 + 5000);
+    // Referensi dokumen harga
+    const hargaRef = doc(db, "harga", "produk1");
 
-        priceRef.set(marketData);
+    // Cek dan buat data default jika belum ada
+    const cekDanBuatData = async () => {
+      const snap = await getDoc(hargaRef);
+      if (!snap.exists()) {
+        await setDoc(hargaRef, { nilai: 10000 });
+        console.log("Dokumen harga dibuat otomatis.");
+      }
+    };
+
+    // Panggil fungsi setup data
+    cekDanBuatData();
+
+    // Listener realtime
+    onSnapshot(hargaRef, (docSnap) => {
+      const hargaEl = document.getElementById("harga");
+      if (docSnap.exists()) {
+        hargaEl.textContent = "Rp " + docSnap.data().nilai.toLocaleString("id-ID");
+        hargaEl.classList.remove("loading");
+      } else {
+        hargaEl.textContent = "Tidak ada data";
+      }
     });
-}
-
-// Jalankan bot tiap 5 detik
-setInterval(botUpdatePrice, 5000);
-
-// Update realtime di semua user
-db.ref("market/dmpzrc").on("value", snapshot => {
-    const data = snapshot.val();
-    if (data) {
-        document.getElementById("price").innerText = data.price;
-        document.getElementById("volume").innerText = data.volume + " DMP";
-        document.getElementById("liquidity").innerText = data.liquidity + " ZRC";
-    }
-});
-</script>
-
+  </script>
 </body>
 </html>
