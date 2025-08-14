@@ -1,87 +1,1141 @@
 <!DOCTYPE html>
+
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Realtime Harga</title>
-  <style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoSim Exchange</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+```
     body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: #0e0e0e;
-      color: white;
-      padding: 50px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+        color: white;
+        min-height: 100vh;
     }
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 10px;
+
+    .navbar {
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(10px);
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #333;
     }
-    #harga {
-      font-size: 3rem;
-      font-weight: bold;
-      color: #00ff88;
+
+    .logo {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #00d4aa;
     }
-    .loading {
-      color: gray;
+
+    .nav-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
     }
-    footer {
-      margin-top: 50px;
-      font-size: 0.8rem;
-      color: #888;
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
     }
-  </style>
+
+    .btn-primary {
+        background: linear-gradient(45deg, #00d4aa, #007acc);
+        color: white;
+    }
+
+    .btn-secondary {
+        background: transparent;
+        border: 1px solid #00d4aa;
+        color: #00d4aa;
+    }
+
+    .btn-danger {
+        background: linear-gradient(45deg, #ff4757, #ff3742);
+        color: white;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 212, 170, 0.3);
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .auth-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        width: 90%;
+        max-width: 400px;
+        border: 1px solid #333;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #00d4aa;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #333;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        font-size: 1rem;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: #00d4aa;
+        box-shadow: 0 0 10px rgba(0, 212, 170, 0.3);
+    }
+
+    .dashboard {
+        display: none;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1.5rem;
+        border-radius: 10px;
+        border: 1px solid #333;
+        backdrop-filter: blur(10px);
+    }
+
+    .stat-title {
+        color: #888;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .coins-section {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid #333;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        color: #00d4aa;
+    }
+
+    .coin-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        margin-bottom: 0.5rem;
+        border-radius: 8px;
+        border-left: 3px solid #00d4aa;
+    }
+
+    .coin-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .coin-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(45deg, #00d4aa, #007acc);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+
+    .coin-details h3 {
+        margin-bottom: 0.25rem;
+    }
+
+    .coin-supply {
+        font-size: 0.8rem;
+        color: #888;
+    }
+
+    .coin-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .price-display {
+        text-align: right;
+        margin-right: 1rem;
+    }
+
+    .price {
+        font-size: 1.1rem;
+        font-weight: bold;
+    }
+
+    .price-change {
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+    }
+
+    .positive {
+        color: #26de81;
+    }
+
+    .negative {
+        color: #fc5c65;
+    }
+
+    .admin-panel {
+        display: none;
+    }
+
+    .admin-form {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        border: 1px solid #333;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .btn-small {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .trading-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .trading-content {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        width: 90%;
+        max-width: 500px;
+        border: 1px solid #333;
+    }
+
+    .balance-info {
+        background: rgba(0, 212, 170, 0.1);
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        border: 1px solid #00d4aa;
+    }
+
+    .error {
+        color: #fc5c65;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    .success {
+        color: #26de81;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    .live-price {
+        animation: pulse 2s infinite;
+    }
+
+    .user-info {
+        color: #00d4aa;
+        font-size: 0.9rem;
+    }
+</style>
+```
+
 </head>
 <body>
-  <h1>Harga Produk</h1>
-  <div id="harga" class="loading">Loading...</div>
+    <!-- Firebase SDK -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-auth.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore.js"></script>
 
-  <footer>
-    &copy; 2025 ZezyPay - Realtime Data by Firebase
-  </footer>
+```
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="logo">🚀 CryptoSim Exchange</div>
+    <div class="nav-actions">
+        <div id="userInfo" class="user-info" style="display: none;"></div>
+        <button id="loginBtn" class="btn btn-primary">Login</button>
+        <button id="registerBtn" class="btn btn-secondary">Daftar</button>
+        <button id="logoutBtn" class="btn btn-danger" style="display: none;">Logout</button>
+    </div>
+</nav>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+<!-- Auth Modal -->
+<div id="authModal" class="auth-modal">
+    <div class="modal-content">
+        <h2 id="authTitle">Login</h2>
+        <form id="authForm">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" required>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+            </div>
+            <div class="form-group">
+                <button type="button" id="closeModal" class="btn btn-secondary" style="width: 100%;">Tutup</button>
+            </div>
+            <div id="authError" class="error"></div>
+            <div id="authSuccess" class="success"></div>
+        </form>
+    </div>
+</div>
 
-    // Konfigurasi Firebase
+<!-- Trading Modal -->
+<div id="tradingModal" class="trading-modal">
+    <div class="trading-content">
+        <h2 id="tradingTitle">Trading</h2>
+        <div class="balance-info">
+            <div>Balance: $<span id="userBalance">0</span></div>
+            <div>Coin: <span id="selectedCoinName">-</span></div>
+            <div>Price: $<span id="selectedCoinPrice" class="live-price">0</span></div>
+        </div>
+        <form id="tradingForm">
+            <div class="form-group">
+                <label for="tradeAmount">Jumlah ($):</label>
+                <input type="number" id="tradeAmount" min="1" step="0.01" required>
+            </div>
+            <div class="form-row">
+                <button type="button" id="buyBtn" class="btn btn-primary">BUY 📈</button>
+                <button type="button" id="sellBtn" class="btn btn-danger">SELL 📉</button>
+            </div>
+            <div class="form-group">
+                <button type="button" id="closeTradingModal" class="btn btn-secondary" style="width: 100%; margin-top: 1rem;">Tutup</button>
+            </div>
+            <div id="tradingError" class="error"></div>
+            <div id="tradingSuccess" class="success"></div>
+        </form>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="container">
+    <!-- Dashboard -->
+    <div id="dashboard" class="dashboard">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">Total Balance</div>
+                <div class="stat-value positive">$<span id="totalBalance">1000</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Total Coins</div>
+                <div class="stat-value" id="totalCoins">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Today's P&L</div>
+                <div class="stat-value" id="todayPnL">$0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Win Rate</div>
+                <div class="stat-value" id="winRate">0%</div>
+            </div>
+        </div>
+
+        <!-- Admin Panel -->
+        <div id="adminPanel" class="admin-panel">
+            <div class="coins-section">
+                <h2 class="section-title">🔧 Admin Panel</h2>
+                <div class="admin-form">
+                    <h3>Buat Koin Baru</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nama Koin:</label>
+                            <input type="text" id="coinName" placeholder="Bitcoin">
+                        </div>
+                        <div class="form-group">
+                            <label>Symbol:</label>
+                            <input type="text" id="coinSymbol" placeholder="BTC">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Harga Awal ($):</label>
+                            <input type="number" id="coinPrice" step="0.01" placeholder="50000">
+                        </div>
+                        <div class="form-group">
+                            <label>Total Supply:</label>
+                            <input type="number" id="coinSupply" placeholder="1000000">
+                        </div>
+                    </div>
+                    <button id="createCoinBtn" class="btn btn-primary">Buat Koin</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coins List -->
+        <div class="coins-section">
+            <h2 class="section-title">📊 Available Coins</h2>
+            <div id="coinsList"></div>
+        </div>
+    </div>
+
+    <!-- Welcome Screen -->
+    <div id="welcomeScreen">
+        <div style="text-align: center; padding: 4rem 0;">
+            <h1 style="font-size: 3rem; margin-bottom: 1rem;">🚀 Selamat Datang di CryptoSim</h1>
+            <p style="font-size: 1.2rem; color: #888; margin-bottom: 2rem;">
+                Platform trading crypto simulator dimana admin mengontrol market dan user bertarung dengan bot!
+            </p>
+            <div>
+                <button class="btn btn-primary" style="margin-right: 1rem;" onclick="showAuthModal('login')">Login Sekarang</button>
+                <button class="btn btn-secondary" onclick="showAuthModal('register')">Daftar Gratis</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Firebase Configuration (Ganti dengan config Firebase kamu)
     const firebaseConfig = {
-      apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
-      authDomain: "zeepaylater-93a94.firebaseapp.com",
-      projectId: "zeepaylater-93a94",
-      storageBucket: "zeepaylater-93a94.appspot.com",
-      messagingSenderId: "358065954807",
-      appId: "1:358065954807:web:66619211fea82a4b2518f2"
+        apiKey: "your-api-key",
+        authDomain: "your-project.firebaseapp.com",
+        projectId: "your-project-id",
+        storageBucket: "your-project.appspot.com",
+        messagingSenderId: "123456789",
+        appId: "your-app-id"
     };
 
-    // Inisialisasi Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    // Initialize Firebase (Note: Sesuaikan dengan cara import yang benar untuk Firebase v9+)
+    // firebase.initializeApp(firebaseConfig);
+    // const auth = firebase.auth();
+    // const db = firebase.firestore();
 
-    // Referensi dokumen harga
-    const hargaRef = doc(db, "harga", "produk1");
-
-    // Cek dan buat data default jika belum ada
-    const cekDanBuatData = async () => {
-      const snap = await getDoc(hargaRef);
-      if (!snap.exists()) {
-        await setDoc(hargaRef, { nilai: 10000 });
-        console.log("Dokumen harga dibuat otomatis.");
-      }
+    // Simulasi Firebase untuk demo
+    const mockAuth = {
+        currentUser: null,
+        signInWithEmailAndPassword: (email, password) => {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    if (email && password) {
+                        this.currentUser = { 
+                            uid: 'user_' + Date.now(), 
+                            email: email,
+                            isAdmin: email === 'admin@cryptosim.com'
+                        };
+                        resolve({ user: this.currentUser });
+                    } else {
+                        reject(new Error('Invalid credentials'));
+                    }
+                }, 1000);
+            });
+        },
+        createUserWithEmailAndPassword: (email, password) => {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    this.currentUser = { 
+                        uid: 'user_' + Date.now(), 
+                        email: email,
+                        isAdmin: false
+                    };
+                    resolve({ user: this.currentUser });
+                }, 1000);
+            });
+        },
+        signOut: () => {
+            this.currentUser = null;
+            return Promise.resolve();
+        }
     };
 
-    // Panggil fungsi setup data
-    cekDanBuatData();
+    // Data Storage (In production, gunakan Firestore)
+    let userData = {
+        balance: 1000,
+        coins: {},
+        trades: []
+    };
 
-    // Listener realtime
-    onSnapshot(hargaRef, (docSnap) => {
-      const hargaEl = document.getElementById("harga");
-      if (docSnap.exists()) {
-        hargaEl.textContent = "Rp " + docSnap.data().nilai.toLocaleString("id-ID");
-        hargaEl.classList.remove("loading");
-      } else {
-        hargaEl.textContent = "Tidak ada data";
-      }
+    let marketData = {
+        coins: [
+            {
+                id: 'btc',
+                name: 'Bitcoin',
+                symbol: 'BTC',
+                price: 65000,
+                change: 2.5,
+                supply: 21000000,
+                createdBy: 'admin'
+            },
+            {
+                id: 'eth',
+                name: 'Ethereum',
+                symbol: 'ETH',
+                price: 3200,
+                change: -1.2,
+                supply: 120000000,
+                createdBy: 'admin'
+            }
+        ]
+    };
+
+    let currentUser = null;
+    let isAuthMode = 'login';
+    let selectedCoin = null;
+
+    // DOM Elements
+    const authModal = document.getElementById('authModal');
+    const tradingModal = document.getElementById('tradingModal');
+    const dashboard = document.getElementById('dashboard');
+    const welcomeScreen = document.getElementById('welcomeScreen');
+    const authForm = document.getElementById('authForm');
+    const coinsList = document.getElementById('coinsList');
+
+    // Event Listeners
+    document.getElementById('loginBtn').addEventListener('click', () => showAuthModal('login'));
+    document.getElementById('registerBtn').addEventListener('click', () => showAuthModal('register'));
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+    document.getElementById('closeModal').addEventListener('click', closeAuthModal);
+    document.getElementById('closeTradingModal').addEventListener('click', closeTradingModal);
+    document.getElementById('createCoinBtn').addEventListener('click', createCoin);
+    document.getElementById('buyBtn').addEventListener('click', () => executeTrade('buy'));
+    document.getElementById('sellBtn').addEventListener('click', () => executeTrade('sell'));
+
+    authForm.addEventListener('submit', handleAuth);
+
+    // Functions
+    function showAuthModal(mode) {
+        isAuthMode = mode;
+        document.getElementById('authTitle').textContent = mode === 'login' ? 'Login' : 'Daftar';
+        document.querySelector('#authForm button[type="submit"]').textContent = 
+            mode === 'login' ? 'Login' : 'Daftar';
+        authModal.style.display = 'flex';
+    }
+
+    function closeAuthModal() {
+        authModal.style.display = 'none';
+        clearAuthMessages();
+    }
+
+    function closeTradingModal() {
+        tradingModal.style.display = 'none';
+        clearTradingMessages();
+    }
+
+    async function handleAuth(e) {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            let result;
+            if (isAuthMode === 'login') {
+                result = await mockAuth.signInWithEmailAndPassword(email, password);
+            } else {
+                result = await mockAuth.createUserWithEmailAndPassword(email, password);
+                // Initialize user data in Firestore
+                await initializeUserData(result.user.uid);
+            }
+
+            currentUser = result.user;
+            showSuccess('authSuccess', `${isAuthMode === 'login' ? 'Login' : 'Registrasi'} berhasil!`);
+            
+            setTimeout(() => {
+                closeAuthModal();
+                showDashboard();
+            }, 1500);
+
+        } catch (error) {
+            showError('authError', error.message);
+        }
+    }
+
+    async function initializeUserData(uid) {
+        // In production, save to Firestore
+        userData = {
+            balance: 1000,
+            coins: {},
+            trades: [],
+            createdAt: new Date()
+        };
+    }
+
+    async function logout() {
+        await mockAuth.signOut();
+        currentUser = null;
+        showWelcomeScreen();
+    }
+
+    function showDashboard() {
+        welcomeScreen.style.display = 'none';
+        dashboard.style.display = 'block';
+        
+        // Update navbar
+        document.getElementById('loginBtn').style.display = 'none';
+        document.getElementById('registerBtn').style.display = 'none';
+        document.getElementById('logoutBtn').style.display = 'inline-block';
+        document.getElementById('userInfo').style.display = 'block';
+        document.getElementById('userInfo').textContent = `👤 ${currentUser.email}`;
+
+        // Show admin panel if admin
+        if (currentUser.isAdmin) {
+            document.getElementById('adminPanel').style.display = 'block';
+        }
+
+        updateDashboard();
+        renderCoins();
+        startPriceUpdates();
+    }
+
+    function showWelcomeScreen() {
+        welcomeScreen.style.display = 'block';
+        dashboard.style.display = 'none';
+        
+        // Update navbar
+        document.getElementById('loginBtn').style.display = 'inline-block';
+        document.getElementById('registerBtn').style.display = 'inline-block';
+        document.getElementById('logoutBtn').style.display = 'none';
+        document.getElementById('userInfo').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'none';
+    }
+
+    function updateDashboard() {
+        document.getElementById('totalBalance').textContent = userData.balance.toFixed(2);
+        document.getElementById('totalCoins').textContent = Object.keys(userData.coins).length;
+        
+        // Calculate today's P&L (simplified)
+        const todayPnL = calculatePnL();
+        const pnlElement = document.getElementById('todayPnL');
+        pnlElement.textContent = `$${todayPnL.toFixed(2)}`;
+        pnlElement.className = `stat-value ${todayPnL >= 0 ? 'positive' : 'negative'}`;
+        
+        // Calculate win rate (simplified)
+        const winRate = calculateWinRate();
+        document.getElementById('winRate').textContent = `${winRate}%`;
+    }
+
+    function calculatePnL() {
+        // Simplified P&L calculation
+        return Math.random() * 200 - 100;
+    }
+
+    function calculateWinRate() {
+        // Simplified win rate calculation
+        return Math.floor(Math.random() * 100);
+    }
+
+    function renderCoins() {
+        coinsList.innerHTML = '';
+        
+        marketData.coins.forEach(coin => {
+            const coinElement = document.createElement('div');
+            coinElement.className = 'coin-item';
+            coinElement.innerHTML = `
+                <div class="coin-info">
+                    <div class="coin-icon">${coin.symbol.substring(0, 2)}</div>
+                    <div class="coin-details">
+                        <h3>${coin.name} (${coin.symbol})</h3>
+                        <div class="coin-supply">Supply: ${coin.supply.toLocaleString()}</div>
+                    </div>
+                </div>
+                <div class="price-display">
+                    <div class="price">$${coin.price.toFixed(2)}</div>
+                    <div class="price-change ${coin.change >= 0 ? 'positive' : 'negative'}">
+                        ${coin.change >= 0 ? '+' : ''}${coin.change.toFixed(2)}%
+                    </div>
+                </div>
+                <div class="coin-actions">
+                    <button class="btn btn-primary btn-small" onclick="openTrading('${coin.id}')">Trade</button>
+                    ${currentUser?.isAdmin ? `<button class="btn btn-danger btn-small" onclick="updatePrice('${coin.id}')">Update</button>` : ''}
+                </div>
+            `;
+            coinsList.appendChild(coinElement);
+        });
+    }
+
+    function openTrading(coinId) {
+        selectedCoin = marketData.coins.find(c => c.id === coinId);
+        if (!selectedCoin) return;
+
+        document.getElementById('selectedCoinName').textContent = `${selectedCoin.name} (${selectedCoin.symbol})`;
+        document.getElementById('selectedCoinPrice').textContent = selectedCoin.price.toFixed(2);
+        document.getElementById('userBalance').textContent = userData.balance.toFixed(2);
+        
+        tradingModal.style.display = 'flex';
+    }
+
+    async function executeTrade(type) {
+        const amount = parseFloat(document.getElementById('tradeAmount').value);
+        if (!amount || amount <= 0) {
+            showError('tradingError', 'Masukkan jumlah yang valid!');
+            return;
+        }
+
+        if (amount > userData.balance) {
+            showError('tradingError', 'Balance tidak mencukupi!');
+            return;
+        }
+
+        try {
+            // Simulate bot trading logic
+            const botDecision = Math.random() > 0.5; // 50% chance bot wins
+            const priceChange = (Math.random() - 0.5) * 0.1; // Max 10% price change
+            
+            let result;
+            if (type === 'buy') {
+                if (botDecision && priceChange > 0) {
+                    // User wins
+                    const profit = amount * Math.abs(priceChange);
+                    userData.balance += profit;
+                    result = `Profit +$${profit.toFixed(2)}! 📈`;
+                } else {
+                    // User loses
+                    const loss = amount * 0.05; // 5% loss
+                    userData.balance -= loss;
+                    result = `Loss -$${loss.toFixed(2)} 📉`;
+                }
+            } else {
+                if (botDecision && priceChange < 0) {
+                    // User wins
+                    const profit = amount * Math.abs(priceChange);
+                    userData.balance += profit;
+                    result = `Profit +$${profit.toFixed(2)}! 📈`;
+                } else {
+                    // User loses
+                    const loss = amount * 0.05; // 5% loss
+                    userData.balance -= loss;
+                    result = `Loss -$${loss.toFixed(2)} 📉`;
+                }
+            }
+
+            // Update coin price
+            selectedCoin.price += selectedCoin.price * priceChange;
+            selectedCoin.change = priceChange * 100;
+
+            // Save trade
+            userData.trades.push({
+                coinId: selectedCoin.id,
+                type: type,
+                amount: amount,
+                price: selectedCoin.price,
+                timestamp: new Date(),
+                result: result
+            });
+
+            showSuccess('tradingSuccess', result);
+            updateDashboard();
+            renderCoins();
+            
+            // Update trading modal
+            document.getElementById('userBalance').textContent = userData.balance.toFixed(2);
+            document.getElementById('selectedCoinPrice').textContent = selectedCoin.price.toFixed(2);
+
+        } catch (error) {
+            showError('tradingError', 'Terjadi kesalahan saat trading!');
+        }
+    }
+
+    function createCoin() {
+        if (!currentUser?.isAdmin) return;
+
+        const name = document.getElementById('coinName').value;
+        const symbol = document.getElementById('coinSymbol').value.toUpperCase();
+        const price = parseFloat(document.getElementById('coinPrice').value);
+        const supply = parseInt(document.getElementById('coinSupply').value);
+
+        if (!name || !symbol || !price || !supply) {
+            alert('Lengkapi semua field!');
+            return;
+        }
+
+        const newCoin = {
+            id: symbol.toLowerCase(),
+            name: name,
+            symbol: symbol,
+            price: price,
+            change: 0,
+            supply: supply,
+            createdBy: currentUser.uid
+        };
+
+        marketData.coins.push(newCoin);
+        renderCoins();
+
+        // Clear form
+        document.getElementById('coinName').value = '';
+        document.getElementById('coinSymbol').value = '';
+        document.getElementById('coinPrice').value = '';
+        document.getElementById('coinSupply').value = '';
+
+        alert(`Koin ${name} (${symbol}) berhasil dibuat!`);
+    }
+
+    function updatePrice(coinId) {
+        if (!currentUser?.isAdmin) return;
+
+        const coin = marketData.coins.find(c => c.id === coinId);
+        if (!coin) return;
+
+        const newChange = (Math.random() - 0.5) * 20; // Max 20% change
+        coin.price += coin.price * (newChange / 100);
+        coin.change = newChange;
+
+        renderCoins();
+    }
+
+    function startPriceUpdates() {
+        setInterval(() => {
+            marketData.coins.forEach(coin => {
+                // Random price fluctuation
+                const change = (Math.random() - 0.5) * 0.02; // Max 2% change per update
+                coin.price += coin.price * change;
+                coin.change += change * 100;
+                
+                // Keep price above 0
+                if (coin.price < 0.01) coin.price = 0.01;
+            });
+            
+            // Update display if trading modal is open
+            if (selectedCoin && tradingModal.style.display === 'flex') {
+                const updatedCoin = marketData.coins.find(c => c.id === selectedCoin.id);
+                if (updatedCoin) {
+                    selectedCoin = updatedCoin;
+                    document.getElementById('selectedCoinPrice').textContent = selectedCoin.price.toFixed(2);
+                }
+            }
+            
+            renderCoins();
+        }, 3000); // Update every 3 seconds
+    }
+
+    function showError(elementId, message) {
+        const element = document.getElementById(elementId);
+        element.textContent = message;
+        element.style.display = 'block';
+        setTimeout(() => {
+            element.style.display = 'none';
+        }, 5000);
+    }
+
+    function showSuccess(elementId, message) {
+        const element = document.getElementById(elementId);
+        element.textContent = message;
+        element.style.display = 'block';
+        setTimeout(() => {
+            element.style.display = 'none';
+        }, 5000);
+    }
+
+    function clearAuthMessages() {
+        document.getElementById('authError').style.display = 'none';
+        document.getElementById('authSuccess').style.display = 'none';
+    }
+
+    function clearTradingMessages() {
+        document.getElementById('tradingError').style.display = 'none';
+        document.getElementById('tradingSuccess').style.display = 'none';
+    }
+
+    // Initialize app
+    function initApp() {
+        // Check if user is already logged in (in production, check Firebase auth state)
+        showWelcomeScreen();
+    }
+
+    // Start the app
+    initApp();
+
+    // Add some demo functionality for better UX
+    function addDemoData() {
+        // Add more demo coins
+        const demoCoins = [
+            {
+                id: 'ada',
+                name: 'Cardano',
+                symbol: 'ADA',
+                price: 0.45,
+                change: 5.2,
+                supply: 45000000000,
+                createdBy: 'admin'
+            },
+            {
+                id: 'sol',
+                name: 'Solana',
+                symbol: 'SOL',
+                price: 98.50,
+                change: -3.8,
+                supply: 500000000,
+                createdBy: 'admin'
+            },
+            {
+                id: 'matic',
+                name: 'Polygon',
+                symbol: 'MATIC',
+                price: 0.85,
+                change: 12.5,
+                supply: 10000000000,
+                createdBy: 'admin'
+            }
+        ];
+
+        marketData.coins.push(...demoCoins);
+    }
+
+    // Add demo data after a short delay
+    setTimeout(addDemoData, 1000);
+
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Escape key closes modals
+        if (e.key === 'Escape') {
+            if (authModal.style.display === 'flex') {
+                closeAuthModal();
+            }
+            if (tradingModal.style.display === 'flex') {
+                closeTradingModal();
+            }
+        }
     });
-  </script>
+
+    // Add click outside modal to close
+    authModal.addEventListener('click', function(e) {
+        if (e.target === authModal) {
+            closeAuthModal();
+        }
+    });
+
+    tradingModal.addEventListener('click', function(e) {
+        if (e.target === tradingModal) {
+            closeTradingModal();
+        }
+    });
+
+    // Add some advanced trading features
+    function simulateMarketVolatility() {
+        // Simulate sudden market movements every 30 seconds
+        setInterval(() => {
+            if (Math.random() < 0.3) { // 30% chance of major market movement
+                const volatilityFactor = (Math.random() - 0.5) * 0.2; // Max 20% change
+                
+                marketData.coins.forEach(coin => {
+                    coin.price += coin.price * volatilityFactor;
+                    coin.change = volatilityFactor * 100;
+                    
+                    // Keep price above 0
+                    if (coin.price < 0.01) coin.price = 0.01;
+                });
+                
+                // Show market alert if user is logged in
+                if (currentUser && dashboard.style.display === 'block') {
+                    const alertMessage = volatilityFactor > 0 ? 
+                        '📈 Market Rally! Prices are surging!' : 
+                        '📉 Market Crash! Prices are falling!';
+                    
+                    // Create a temporary alert
+                    const alert = document.createElement('div');
+                    alert.style.cssText = `
+                        position: fixed;
+                        top: 70px;
+                        right: 20px;
+                        background: ${volatilityFactor > 0 ? 'linear-gradient(45deg, #26de81, #20bf6b)' : 'linear-gradient(45deg, #fc5c65, #eb3349)'};
+                        color: white;
+                        padding: 1rem 2rem;
+                        border-radius: 10px;
+                        z-index: 999;
+                        animation: slideIn 0.5s ease-out;
+                        box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+                    `;
+                    alert.textContent = alertMessage;
+                    
+                    // Add CSS animation
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        @keyframes slideIn {
+                            from { transform: translateX(100%); opacity: 0; }
+                            to { transform: translateX(0); opacity: 1; }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                    
+                    document.body.appendChild(alert);
+                    
+                    setTimeout(() => {
+                        alert.style.animation = 'slideIn 0.5s ease-out reverse';
+                        setTimeout(() => alert.remove(), 500);
+                    }, 3000);
+                }
+            }
+        }, 30000);
+    }
+
+    // Start market volatility simulation
+    setTimeout(simulateMarketVolatility, 5000);
+
+    // Add portfolio tracking
+    function updatePortfolioStats() {
+        if (!currentUser) return;
+
+        let totalPortfolioValue = userData.balance;
+        let totalInvested = 0;
+
+        // Calculate portfolio value from held coins
+        for (let coinId in userData.coins) {
+            const coin = marketData.coins.find(c => c.id === coinId);
+            if (coin) {
+                totalPortfolioValue += userData.coins[coinId].amount * coin.price;
+                totalInvested += userData.coins[coinId].invested || 0;
+            }
+        }
+
+        // Update stats display
+        const portfolioValue = totalPortfolioValue - 1000; // Subtract initial balance
+        const portfolioElement = document.getElementById('todayPnL');
+        if (portfolioElement) {
+            portfolioElement.textContent = `$${portfolioValue.toFixed(2)}`;
+            portfolioElement.className = `stat-value ${portfolioValue >= 0 ? 'positive' : 'negative'}`;
+        }
+    }
+
+    // Enhanced trade execution with portfolio tracking
+    function enhancedExecuteTrade(type, amount) {
+        if (!selectedCoin) return;
+
+        // Initialize coin holding if not exists
+        if (!userData.coins[selectedCoin.id]) {
+            userData.coins[selectedCoin.id] = {
+                amount: 0,
+                invested: 0,
+                avgPrice: 0
+            };
+        }
+
+        const coinHolding = userData.coins[selectedCoin.id];
+        const botWinChance = currentUser.isAdmin ? 0.3 : 0.6; // Admin has better odds
+        const botDecision = Math.random() > botWinChance;
+
+        if (type === 'buy') {
+            if (botDecision) {
+                // User wins - price goes up
+                const priceIncrease = Math.random() * 0.1 + 0.02; // 2-12% increase
+                selectedCoin.price *= (1 + priceIncrease);
+                
+                const coinAmount = amount / selectedCoin.price;
+                coinHolding.amount += coinAmount;
+                coinHolding.invested += amount;
+                coinHolding.avgPrice = coinHolding.invested / coinHolding.amount;
+                
+                userData.balance -= amount;
+                return `Buy successful! Price up ${(priceIncrease * 100).toFixed(1)}% 📈`;
+            } else {
+                // User loses - price goes down
+                const priceDecrease = Math.random() * 0.08 + 0.02; // 2-10% decrease
+                selectedCoin.price *= (1 - priceDecrease);
+                userData.balance -= amount * 0.1; // 10% loss
+                return `Buy failed! Price down ${(priceDecrease * 100).toFixed(1)}% 📉`;
+            }
+        } else {
+            // Sell logic
+            if (coinHolding.amount === 0) {
+                return 'Error: No coins to sell!';
+            }
+
+            if (botDecision) {
+                // User wins - price goes down after sell
+                const priceDecrease = Math.random() * 0.1 + 0.02; // 2-12% decrease
+                const sellAmount = Math.min(amount / selectedCoin.price, coinHolding.amount);
+                
+                userData.balance += sellAmount * selectedCoin.price;
+                coinHolding.amount -= sellAmount;
+                coinHolding.invested -= sellAmount * coinHolding.avgPrice;
+                
+                selectedCoin.price *= (1 - priceDecrease);
+                return `Sell successful! Price down ${(priceDecrease * 100).toFixed(1)}% 📈`;
+            } else {
+                // User loses - price goes up after sell
+                const priceIncrease = Math.random() * 0.08 + 0.02; // 2-10% increase
+                userData.balance -= amount * 0.1; // 10% loss
+                selectedCoin.price *= (1 + priceIncrease);
+                return `Sell failed! Price up ${(priceIncrease * 100).toFixed(1)}% 📉`;
+            }
+        }
+    }
+
+    console.log('🚀 CryptoSim Exchange initialized!');
+    console.log('Demo credentials:');
+    console.log('Admin: admin@cryptosim.com / password');
+    console.log('User: user@test.com / password');
+</script>
+```
+
 </body>
 </html>
