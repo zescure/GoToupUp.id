@@ -639,7 +639,7 @@
 </div>
 
 <script>
-   // Firebase Configuration - Your Real Config
+ // Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
     authDomain: "zeepaylater-93a94.firebaseapp.com",
@@ -649,94 +649,31 @@ const firebaseConfig = {
     appId: "1:358065954807:web:66619211fea82a4b2518f2"
 };
 
-// Admin UIDs - Add your real admin UIDs here
+// Inisialisasi Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Admin UIDs
 const ADMIN_UIDS = [
     'demo-admin-uid-123',  // Demo admin UID
-    // 'real-admin-uid-from-firebase',  // Add real UIDs here
-    // 'another-admin-uid',
+    // Tambah UID admin real di sini
 ];
 
-// Initialize Firebase (Uncomment for production)
-// firebase.initializeApp(firebaseConfig);
-// const auth = firebase.auth();
-// const db = firebase.firestore();
-
-// Function to check if user is admin
+// Fungsi cek admin
 function isUserAdmin(uid) {
     return ADMIN_UIDS.includes(uid);
 }
 
-// Mock Firebase Auth for Demo (Remove in production)
-const mockAuth = {
-    currentUser: null,
-    signInWithEmailAndPassword: (email, password) => {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                if (email && password) {
-                    const demoUID = email === 'admin@test.com' ? 'demo-admin-uid-123' : 'user_' + Date.now();
-                    this.currentUser = { 
-                        uid: demoUID, 
-                        email: email,
-                        isAdmin: isUserAdmin(demoUID)
-                    };
-                    resolve({ user: this.currentUser });
-                } else {
-                    reject(new Error('Invalid credentials'));
-                }
-            }, 1000);
-        });
-    },
-    createUserWithEmailAndPassword: (email, password) => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const newUID = 'user_' + Date.now() + Math.random().toString(36).substr(2, 9);
-                this.currentUser = { 
-                    uid: newUID, 
-                    email: email,
-                    isAdmin: isUserAdmin(newUID)
-                };
-                resolve({ user: this.currentUser });
-            }, 1000);
-        });
-    },
-    signOut: () => {
-        this.currentUser = null;
-        return Promise.resolve();
-    }
-};
-
-// Data Storage (Replace with Firestore in production)
+// Data Storage (gunakan Firestore)
 let userData = {
-    balance: 1000,
-    coins: {}, // { coinId: { amount: 0, avgPrice: 0, totalInvested: 0 } }
+    balance: 1000, // Dalam ZRC
+    coins: {},
     trades: []
 };
 
 let marketData = {
-    coins: [
-        {
-            id: 'btc',
-            name: 'Bitcoin',
-            symbol: 'BTC',
-            price: 65000,
-            change: 2.5,
-            supply: 21000000,
-            createdBy: 'system',
-            botActive: true,
-            volume24h: 0
-        },
-        {
-            id: 'eth',
-            name: 'Ethereum',
-            symbol: 'ETH',
-            price: 3200,
-            change: -1.2,
-            supply: 120000000,
-            createdBy: 'system',
-            botActive: true,
-            volume24h: 0
-        }
-    ]
+    coins: []
 };
 
 // Bot Trading System
@@ -747,7 +684,6 @@ class TradingBot {
     }
 
     startTrading() {
-        // Bot makes trades every 5-15 seconds
         setInterval(() => {
             if (!this.isActive) return;
             marketData.coins.forEach(coin => {
@@ -755,37 +691,27 @@ class TradingBot {
                     this.simulateTrade(coin);
                 }
             });
-        }, Math.random() * 10000 + 5000); // 5-15 seconds
+        }, Math.random() * 10000 + 5000); // 5-15 detik
     }
 
     simulateTrade(coin) {
-        // Bot trading logic - affects supply and demand
         const tradeTypes = ['buy', 'sell'];
         const tradeType = tradeTypes[Math.floor(Math.random() * tradeTypes.length)];
-        const tradeSize = Math.random() * 1000 + 100; // $100-1000 trade
+        const tradeSize = Math.random() * 1000 + 100; // Dalam ZRC
         
-        // Price impact based on supply and demand
         let priceImpact = 0;
         if (tradeType === 'buy') {
-            // Bot buying increases price (demand up)
-            priceImpact = (tradeSize / (coin.supply * 0.001)) * (Math.random() * 0.05 + 0.01); // 1-6% max
+            priceImpact = (tradeSize / (coin.supply * 0.001)) * (Math.random() * 0.05 + 0.01);
             coin.price += coin.price * priceImpact;
         } else {
-            // Bot selling decreases price (supply up)
-            priceImpact = -(tradeSize / (coin.supply * 0.001)) * (Math.random() * 0.05 + 0.01); // 1-6% max
+            priceImpact = -(tradeSize / (coin.supply * 0.001)) * (Math.random() * 0.05 + 0.01);
             coin.price += coin.price * priceImpact;
         }
 
-        // Update 24h change
         coin.change += priceImpact * 100;
-        
-        // Keep price above $0.01
         if (coin.price < 0.01) coin.price = 0.01;
-
-        // Update volume
         coin.volume24h += tradeSize;
 
-        // Log activity
         const activity = {
             type: tradeType,
             coin: coin.symbol,
@@ -797,10 +723,11 @@ class TradingBot {
 
         this.activityLog.push(activity);
         if (this.activityLog.length > 50) {
-            this.activityLog.shift(); // Keep only last 50 activities
+            this.activityLog.shift();
         }
 
         this.updateActivityDisplay(activity);
+        saveMarketData(); // Simpan update harga ke Firestore
     }
 
     updateActivityDisplay(activity) {
@@ -813,14 +740,12 @@ class TradingBot {
             <span style="color: ${activity.type === 'buy' ? '#26de81' : '#fc5c65'}">
                 ${activity.type === 'buy' ? '🟢' : '🔴'} BOT ${activity.type.toUpperCase()} 
             </span>
-            ${activity.coin} $${activity.size.toFixed(0)} 
+            ${activity.coin}/ZRC ${activity.size.toFixed(0)} ZRC 
             (${activity.priceImpact >= 0 ? '+' : ''}${activity.priceImpact.toFixed(2)}%) 
-            → $${activity.newPrice.toFixed(2)}
+            → ${activity.newPrice.toFixed(2)} ZRC
         `;
         
         activityContainer.insertBefore(activityElement, activityContainer.firstChild);
-        
-        // Keep only last 20 items visible
         const items = activityContainer.children;
         if (items.length > 20) {
             activityContainer.removeChild(items[items.length - 1]);
@@ -831,21 +756,22 @@ class TradingBot {
         const coin = marketData.coins.find(c => c.id === coinId);
         if (coin) {
             coin.botActive = true;
-            console.log(`🤖 Bot activated for ${coin.symbol}`);
+            console.log(`🤖 Bot diaktifkan untuk ${coin.symbol}`);
+            saveMarketData();
         }
     }
 }
 
-// Initialize bot
+// Inisialisasi bot
 const tradingBot = new TradingBot();
 
-// Global variables
+// Variabel global
 let currentUser = null;
 let isAuthMode = 'login';
 let selectedCoin = null;
 let priceUpdateInterval = null;
 
-// DOM Elements
+// Elemen DOM
 const authModal = document.getElementById('authModal');
 const tradingModal = document.getElementById('tradingModal');
 const dashboard = document.getElementById('dashboard');
@@ -865,7 +791,20 @@ document.getElementById('sellBtn').addEventListener('click', () => executeSpotTr
 
 authForm.addEventListener('submit', handleAuth);
 
-// Authentication Functions
+// Listener untuk persist login
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        currentUser = user;
+        currentUser.isAdmin = isUserAdmin(user.uid);
+        await loadUserData(user.uid);
+        await loadMarketData();
+        showDashboard();
+    } else {
+        showWelcomeScreen();
+    }
+});
+
+// Fungsi Autentikasi
 function showAuthModal(mode) {
     isAuthMode = mode;
     document.getElementById('authTitle').textContent = mode === 'login' ? 'Login' : 'Daftar Akun Baru';
@@ -892,16 +831,15 @@ async function handleAuth(e) {
     try {
         let result;
         if (isAuthMode === 'login') {
-            result = await mockAuth.signInWithEmailAndPassword(email, password);
+            result = await auth.signInWithEmailAndPassword(email, password);
         } else {
-            result = await mockAuth.createUserWithEmailAndPassword(email, password);
+            result = await auth.createUserWithEmailAndPassword(email, password);
             await initializeUserData(result.user.uid);
         }
 
         currentUser = result.user;
-        await loadUserData(currentUser.uid);
         currentUser.isAdmin = isUserAdmin(currentUser.uid);
-        
+        await loadUserData(currentUser.uid);
         showSuccess('authSuccess', `${isAuthMode === 'login' ? 'Login' : 'Registrasi'} berhasil!`);
         
         setTimeout(() => {
@@ -915,7 +853,7 @@ async function handleAuth(e) {
 }
 
 async function logout() {
-    await mockAuth.signOut();
+    await auth.signOut();
     currentUser = null;
     if (priceUpdateInterval) {
         clearInterval(priceUpdateInterval);
@@ -924,36 +862,22 @@ async function logout() {
     showWelcomeScreen();
 }
 
-// Data Management Functions
+// Fungsi Manajemen Data
 async function initializeUserData(uid) {
-    userData = {
-        uid: uid,
-        balance: 1000,
-        coins: {},
-        trades: [],
-        isAdmin: isUserAdmin(uid),
-        createdAt: new Date()
-    };
-
-    // Save to Firestore (uncomment when using real Firebase)
-    /*
     try {
         await db.collection('users').doc(uid).set({
-            balance: 1000,
+            balance: 1000, // Dalam ZRC
             coins: {},
             trades: [],
             isAdmin: isUserAdmin(uid),
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
     } catch (error) {
-        console.error('Error saving user data:', error);
+        console.error('Error inisialisasi data user:', error);
     }
-    */
 }
 
 async function loadUserData(uid) {
-    // Load user data from Firestore (uncomment when using real Firebase)
-    /*
     try {
         const doc = await db.collection('users').doc(uid).get();
         if (doc.exists) {
@@ -961,27 +885,15 @@ async function loadUserData(uid) {
             userData.isAdmin = isUserAdmin(uid);
         } else {
             await initializeUserData(uid);
+            await loadUserData(uid); // Load ulang setelah init
         }
     } catch (error) {
-        console.error('Error loading user data:', error);
+        console.error('Error load data user:', error);
         await initializeUserData(uid);
     }
-    */
-    
-    // Demo data for now
-    userData = {
-        uid: uid,
-        balance: 1000,
-        coins: {},
-        trades: [],
-        isAdmin: isUserAdmin(uid),
-        createdAt: new Date()
-    };
 }
 
 async function saveUserData() {
-    // Save to Firestore (uncomment when using real Firebase)
-    /*
     try {
         await db.collection('users').doc(userData.uid).update({
             balance: userData.balance,
@@ -990,31 +902,74 @@ async function saveUserData() {
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
         });
     } catch (error) {
-        console.error('Error saving user data:', error);
+        console.error('Error simpan data user:', error);
     }
-    */
+}
+
+async function loadMarketData() {
+    try {
+        const doc = await db.collection('market').doc('coins').get();
+        if (doc.exists) {
+            marketData.coins = doc.data().coins || [];
+        } else {
+            // Init market data awal jika belum ada
+            marketData.coins = [
+                {
+                    id: 'dmp',
+                    name: 'DampCoin',
+                    symbol: 'DMP',
+                    price: 10,
+                    change: 2.5,
+                    supply: 50000000,
+                    createdBy: 'system',
+                    botActive: true,
+                    volume24h: 0
+                },
+                {
+                    id: 'atm',
+                    name: 'AtomCoin',
+                    symbol: 'ATM',
+                    price: 5,
+                    change: -1.2,
+                    supply: 200000000,
+                    createdBy: 'system',
+                    botActive: true,
+                    volume24h: 0
+                }
+            ];
+            await saveMarketData();
+        }
+    } catch (error) {
+        console.error('Error load data market:', error);
+    }
+
+    // Real-time listener untuk update harga
+    db.collection('market').doc('coins').onSnapshot((doc) => {
+        if (doc.exists) {
+            marketData.coins = doc.data().coins || [];
+            updateCoinsList();
+            updatePortfolio();
+            updateDashboard();
+        }
+    });
 }
 
 async function saveMarketData() {
-    // Save market data to Firestore (uncomment when using real Firebase)
-    /*
     try {
         await db.collection('market').doc('coins').set({
             coins: marketData.coins,
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
         });
     } catch (error) {
-        console.error('Error saving market data:', error);
+        console.error('Error simpan data market:', error);
     }
-    */
 }
 
-// Dashboard Functions
+// Fungsi Dashboard
 function showDashboard() {
     welcomeScreen.style.display = 'none';
     dashboard.style.display = 'block';
     
-    // Update navbar
     document.getElementById('loginBtn').style.display = 'none';
     document.getElementById('registerBtn').style.display = 'none';
     document.getElementById('logoutBtn').style.display = 'inline-block';
@@ -1024,21 +979,17 @@ function showDashboard() {
         ${currentUser.isAdmin ? '<span style="color: #ff4757;">[ADMIN]</span>' : ''}
     `;
 
-    // Show admin panel if user is admin
     document.getElementById('adminPanel').style.display = currentUser.isAdmin ? 'block' : 'none';
-
-    // Show portfolio section
     document.getElementById('userPortfolioSection').style.display = 'block';
 
-    // Update dashboard data
     updateDashboard();
     updateCoinsList();
     updatePortfolio();
 
-    // Start bot trading if not already running
-    if (!priceUpdateInterval) {
+    // Jalankan bot hanya jika admin
+    if (currentUser.isAdmin && !priceUpdateInterval) {
         tradingBot.startTrading();
-        priceUpdateInterval = setInterval(updateCoinsList, 5000); // Update prices every 5 seconds
+        priceUpdateInterval = setInterval(() => {}, 5000); // Placeholder, karena update via listener
     }
 }
 
@@ -1054,10 +1005,8 @@ function showWelcomeScreen() {
 }
 
 function updateDashboard() {
-    // Update total balance
-    document.getElementById('totalBalance').textContent = userData.balance.toFixed(2);
+    document.getElementById('totalBalance').textContent = userData.balance.toFixed(2) + ' ZRC';
 
-    // Calculate portfolio value
     let portfolioValue = 0;
     for (const coinId in userData.coins) {
         const coin = marketData.coins.find(c => c.id === coinId);
@@ -1065,19 +1014,17 @@ function updateDashboard() {
             portfolioValue += userData.coins[coinId].amount * coin.price;
         }
     }
-    document.getElementById('portfolioValue').textContent = `$${portfolioValue.toFixed(2)}`;
+    document.getElementById('portfolioValue').textContent = `${portfolioValue.toFixed(2)} ZRC`;
 
-    // Calculate today's P&L (simplified for demo)
     let todayPnL = 0;
     userData.trades.forEach(trade => {
         if (new Date(trade.timestamp).toDateString() === new Date().toDateString()) {
             todayPnL += trade.type === 'buy' ? -trade.total : trade.total;
         }
     });
-    document.getElementById('todayPnL').textContent = `${todayPnL >= 0 ? '+' : ''}$${todayPnL.toFixed(2)}`;
+    document.getElementById('todayPnL').textContent = `${todayPnL >= 0 ? '+' : ''}${todayPnL.toFixed(2)} ZRC`;
     document.getElementById('todayPnL').className = `stat-value ${todayPnL >= 0 ? 'positive' : 'negative'}`;
 
-    // Calculate win rate
     const totalTrades = userData.trades.length;
     const winningTrades = userData.trades.filter(trade => trade.profit > 0).length;
     const winRate = totalTrades > 0 ? (winningTrades / totalTrades * 100).toFixed(1) : 0;
@@ -1093,12 +1040,12 @@ function updateCoinsList() {
             <div class="coin-info">
                 <div class="coin-icon">${coin.symbol}</div>
                 <div class="coin-details">
-                    <h3>${coin.name} (${coin.symbol})</h3>
+                    <h3>${coin.name} (${coin.symbol}/ZRC)</h3>
                     <div class="coin-supply">Total Supply: ${coin.supply.toLocaleString()}</div>
                 </div>
             </div>
             <div class="price-display">
-                <div class="price live-price">$${coin.price.toFixed(2)}</div>
+                <div class="price live-price">${coin.price.toFixed(2)} ZRC</div>
                 <div class="price-change ${coin.change >= 0 ? 'positive' : 'negative'}">
                     ${coin.change >= 0 ? '+' : ''}${coin.change.toFixed(2)}%
                 </div>
@@ -1125,13 +1072,13 @@ function updatePortfolio() {
             portfolioItem.innerHTML = `
                 <div>
                     <strong>${coin.name} (${coin.symbol})</strong><br>
-                    Amount: ${userData.coins[coinId].amount.toFixed(6)}<br>
-                    Avg. Buy Price: $${userData.coins[coinId].avgPrice.toFixed(2)}
+                    Jumlah: ${userData.coins[coinId].amount.toFixed(6)}<br>
+                    Harga Beli Rata-rata: ${userData.coins[coinId].avgPrice.toFixed(2)} ZRC
                 </div>
                 <div style="text-align: right;">
-                    Value: $${currentValue.toFixed(2)}<br>
+                    Nilai: ${currentValue.toFixed(2)} ZRC<br>
                     <span class="${profit >= 0 ? 'positive' : 'negative'}">
-                        P&L: ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}
+                        P&L: ${profit >= 0 ? '+' : ''}${profit.toFixed(2)} ZRC
                     </span>
                 </div>
             `;
@@ -1139,7 +1086,6 @@ function updatePortfolio() {
         }
     }
 
-    // Update portfolio preview in trading modal
     const portfolioPreview = document.getElementById('portfolioList');
     portfolioPreview.innerHTML = portfolioList.innerHTML;
 }
@@ -1150,16 +1096,16 @@ function openTradingModal(coinId) {
 
     tradingModal.style.display = 'flex';
     document.getElementById('tradingTitle').textContent = `💰 Spot Trading - ${selectedCoin.name}`;
-    document.getElementById('selectedCoinName').textContent = `${selectedCoin.name} (${selectedCoin.symbol})`;
-    document.getElementById('selectedCoinPrice').textContent = selectedCoin.price.toFixed(2);
-    document.getElementById('userBalance').textContent = userData.balance.toFixed(2);
+    document.getElementById('selectedCoinName').textContent = `${selectedCoin.name} (${selectedCoin.symbol}/ZRC)`;
+    document.getElementById('selectedCoinPrice').textContent = selectedCoin.price.toFixed(2) + ' ZRC';
+    document.getElementById('userBalance').textContent = userData.balance.toFixed(2) + ' ZRC';
     document.getElementById('ownedAmount').textContent = userData.coins[coinId]?.amount?.toFixed(6) || '0';
 }
 
 async function executeSpotTrade(type) {
     const amount = parseFloat(document.getElementById('tradeAmount').value);
     if (!selectedCoin || isNaN(amount) || amount <= 0) {
-        showError('tradingError', 'Please enter a valid trade amount');
+        showError('tradingError', 'Masukkan jumlah trade yang valid');
         return;
     }
 
@@ -1168,7 +1114,7 @@ async function executeSpotTrade(type) {
 
     if (type === 'buy') {
         if (totalCost > userData.balance) {
-            showError('tradingError', 'Insufficient balance');
+            showError('tradingError', 'Saldo ZRC tidak cukup');
             return;
         }
 
@@ -1181,8 +1127,6 @@ async function executeSpotTrade(type) {
             };
         }
 
-        const currentAmount = userData.coins[selectedCoin.id].amount;
-        const currentInvested = userData.coins[selectedCoin.id].totalInvested;
         userData.coins[selectedCoin.id].amount += coinAmount;
         userData.coins[selectedCoin.id].totalInvested += totalCost;
         userData.coins[selectedCoin.id].avgPrice = 
@@ -1199,11 +1143,11 @@ async function executeSpotTrade(type) {
             profit: 0
         });
 
-        showSuccess('tradingSuccess', `Successfully bought ${coinAmount.toFixed(6)} ${selectedCoin.symbol}`);
+        showSuccess('tradingSuccess', `Berhasil beli ${coinAmount.toFixed(6)} ${selectedCoin.symbol}`);
     } else {
         const ownedAmount = userData.coins[selectedCoin.id]?.amount || 0;
         if (coinAmount > ownedAmount) {
-            showError('tradingError', 'Insufficient coin balance');
+            showError('tradingError', 'Jumlah koin tidak cukup');
             return;
         }
 
@@ -1230,13 +1174,13 @@ async function executeSpotTrade(type) {
                 userData.coins[selectedCoin.id].totalInvested / userData.coins[selectedCoin.id].amount;
         }
 
-        showSuccess('tradingSuccess', `Successfully sold ${coinAmount.toFixed(6)} ${selectedCoin.symbol}`);
+        showSuccess('tradingSuccess', `Berhasil jual ${coinAmount.toFixed(6)} ${selectedCoin.symbol}`);
     }
 
     await saveUserData();
     updateDashboard();
     updatePortfolio();
-    document.getElementById('userBalance').textContent = userData.balance.toFixed(2);
+    document.getElementById('userBalance').textContent = userData.balance.toFixed(2) + ' ZRC';
     document.getElementById('ownedAmount').textContent = userData.coins[selectedCoin.id]?.amount?.toFixed(6) || '0';
     document.getElementById('tradeAmount').value = '';
     
@@ -1245,7 +1189,7 @@ async function executeSpotTrade(type) {
 
 async function createCoin() {
     if (!currentUser.isAdmin) {
-        showError('authError', 'Only admins can create coins');
+        showError('authError', 'Hanya admin yang bisa membuat koin');
         return;
     }
 
@@ -1255,7 +1199,7 @@ async function createCoin() {
     const supply = parseInt(document.getElementById('coinSupply').value);
 
     if (!name || !symbol || isNaN(price) || isNaN(supply) || price <= 0 || supply <= 0) {
-        showError('authError', 'Please fill all fields with valid values');
+        showError('authError', 'Isi semua kolom dengan nilai valid');
         return;
     }
 
@@ -1277,13 +1221,12 @@ async function createCoin() {
     await saveMarketData();
     updateCoinsList();
 
-    // Clear form
     document.getElementById('coinName').value = '';
     document.getElementById('coinSymbol').value = '';
     document.getElementById('coinPrice').value = '';
     document.getElementById('coinSupply').value = '';
 
-    showSuccess('authSuccess', `Coin ${name} (${symbol}) created successfully!`);
+    showSuccess('authSuccess', `Koin ${name} (${symbol}) berhasil dibuat!`);
     setTimeout(clearAuthMessages, 3000);
 }
 
@@ -1309,9 +1252,8 @@ function clearTradingMessages() {
     document.getElementById('tradingSuccess').style.display = 'none';
 }
 
-// Initialize
-showWelcomeScreen();
-updateCoinsList();
+// Inisialisasi awal
+loadMarketData();
 
 
 </script>
