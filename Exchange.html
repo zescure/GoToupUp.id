@@ -639,7 +639,9 @@
 </div>
 
 <script>
-   // Firebase Configuration
+ /***********************
+ *  Firebase Setup
+ ***********************/
 const firebaseConfig = {
     apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
     authDomain: "zeepaylater-93a94.firebaseapp.com",
@@ -649,19 +651,19 @@ const firebaseConfig = {
     appId: "1:358065954807:web:66619211fea82a4b2518f2"
 };
 
-// Initialize Firebase
+// Pakai SDK compat (global `firebase`)
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// Admin UIDs
+/***********************
+ *  Admin & Auth (Mock)
+ ***********************/
 const ADMIN_UIDS = ['demo-admin-uid-123'];
-
-// Function to check if user is admin
 function isUserAdmin(uid) {
     return ADMIN_UIDS.includes(uid);
 }
 
-// Mock Firebase Auth for Demo (Unchanged)
+// FIX: jangan pakai `this.currentUser` di arrow function
 const mockAuth = {
     currentUser: null,
     signInWithEmailAndPassword: (email, password) => {
@@ -669,12 +671,12 @@ const mockAuth = {
             setTimeout(() => {
                 if (email && password) {
                     const demoUID = email === 'admin@test.com' ? 'demo-admin-uid-123' : 'user_' + Date.now();
-                    this.currentUser = { 
+                    mockAuth.currentUser = { 
                         uid: demoUID, 
                         email: email,
                         isAdmin: isUserAdmin(demoUID)
                     };
-                    resolve({ user: this.currentUser });
+                    resolve({ user: mockAuth.currentUser });
                 } else {
                     reject(new Error('Invalid credentials'));
                 }
@@ -685,24 +687,26 @@ const mockAuth = {
         return new Promise((resolve) => {
             setTimeout(() => {
                 const newUID = 'user_' + Date.now() + Math.random().toString(36).substr(2, 9);
-                this.currentUser = { 
+                mockAuth.currentUser = { 
                     uid: newUID, 
                     email: email,
                     isAdmin: isUserAdmin(newUID)
                 };
-                resolve({ user: this.currentUser });
+                resolve({ user: mockAuth.currentUser });
             }, 1000);
         });
     },
     signOut: () => {
-        this.currentUser = null;
+        mockAuth.currentUser = null;
         return Promise.resolve();
     }
 };
 
-// Data Storage
+/***********************
+ *  In-Memory Data
+ ***********************/
 let userData = {
-    balance: 1000, // Dalam ZRC
+    balance: 1000, // ZRC
     coins: {},
     trades: []
 };
@@ -715,7 +719,7 @@ let marketData = {
             symbol: 'DMP',
             price: 10,
             change: 2.5,
-            supply: 50000000,
+            supply: 50_000_000,
             createdBy: 'system',
             botActive: true,
             volume24h: 0
@@ -726,7 +730,7 @@ let marketData = {
             symbol: 'ATM',
             price: 5,
             change: -1.2,
-            supply: 200000000,
+            supply: 200_000_000,
             createdBy: 'system',
             botActive: true,
             volume24h: 0
@@ -734,7 +738,9 @@ let marketData = {
     ]
 };
 
-// Bot Trading System
+/***********************
+ *  Trading Bot
+ ***********************/
 class TradingBot {
     constructor() {
         this.isActive = true;
@@ -742,6 +748,7 @@ class TradingBot {
     }
 
     startTrading() {
+        // interval acak 5–15 detik
         setInterval(() => {
             if (!this.isActive) return;
             marketData.coins.forEach(coin => {
@@ -753,8 +760,7 @@ class TradingBot {
     }
 
     simulateTrade(coin) {
-        const tradeTypes = ['buy', 'sell'];
-        const tradeType = tradeTypes[Math.floor(Math.random() * tradeTypes.length)];
+        const tradeType = Math.random() < 0.5 ? 'buy' : 'sell';
         const tradeSize = Math.random() * 1000 + 100;
 
         let priceImpact = 0;
@@ -780,9 +786,7 @@ class TradingBot {
         };
 
         this.activityLog.push(activity);
-        if (this.activityLog.length > 50) {
-            this.activityLog.shift();
-        }
+        if (this.activityLog.length > 50) this.activityLog.shift();
 
         this.updateActivityDisplay(activity);
         saveMarketData();
@@ -792,22 +796,20 @@ class TradingBot {
         const activityContainer = document.getElementById('marketActivity');
         if (!activityContainer) return;
 
-        const activityElement = document.createElement('div');
-        activityElement.className = 'activity-item';
-        activityElement.innerHTML = `
-            <span style="color: ${activity.type === 'buy' ? '#26de81' : '#fc5c65'}">
-                ${activity.type === 'buy' ? '🟢' : '🔴'} BOT ${activity.type.toUpperCase()} 
+        const el = document.createElement('div');
+        el.className = 'activity-item';
+        el.innerHTML = `
+            <span style="color:${activity.type === 'buy' ? '#26de81' : '#fc5c65'}">
+                ${activity.type === 'buy' ? '🟢' : '🔴'} BOT ${activity.type.toUpperCase()}
             </span>
             ${activity.coin}/ZRC ${activity.size.toFixed(0)} ZRC 
             (${activity.priceImpact >= 0 ? '+' : ''}${activity.priceImpact.toFixed(2)}%) 
             → ${activity.newPrice.toFixed(2)} ZRC
         `;
-        
-        activityContainer.insertBefore(activityElement, activityContainer.firstChild);
+        activityContainer.insertBefore(el, activityContainer.firstChild);
+
         const items = activityContainer.children;
-        if (items.length > 20) {
-            activityContainer.removeChild(items[items.length - 1]);
-        }
+        if (items.length > 20) activityContainer.removeChild(items[items.length - 1]);
     }
 
     activateForCoin(coinId) {
@@ -820,202 +822,53 @@ class TradingBot {
     }
 }
 
-// Initialize bot
 const tradingBot = new TradingBot();
 
-// Global variables
+/***********************
+ *  Globals & DOM refs
+ ***********************/
 let currentUser = null;
 let isAuthMode = 'login';
 let selectedCoin = null;
 let priceUpdateInterval = null;
 
-// DOM Elements
-const authModal = document.getElementById('authModal');
-const tradingModal = document.getElementById('tradingModal');
-const dashboard = document.getElementById('dashboard');
-const welcomeScreen = document.getElementById('welcomeScreen');
-const authForm = document.getElementById('authForm');
-const coinsList = document.getElementById('coinsList');
+// DOM elements (akan di-assign setelah DOM siap)
+let authModal, tradingModal, dashboard, welcomeScreen, authForm, coinsList;
 
-// Event Listeners
-document.getElementById('loginBtn').addEventListener('click', () => {
-    console.log('Tombol login diklik');
-    showAuthModal('login');
-});
-document.getElementById('registerBtn').addEventListener('click', () => {
-    console.log('Tombol register diklik');
-    showAuthModal('register');
-});
-document.getElementById('welcomeLoginBtn').addEventListener('click', () => {
-    console.log('Tombol welcome login diklik');
-    showAuthModal('login');
-});
-document.getElementById('welcomeRegisterBtn').addEventListener('click', () => {
-    console.log('Tombol welcome register diklik');
-    showAuthModal('register');
-});
-document.getElementById('logoutBtn').addEventListener('click', logout);
-document.getElementById('closeModal').addEventListener('click', closeAuthModal);
-document.getElementById('closeTradingModal').addEventListener('click', closeTradingModal);
-document.getElementById('createCoinBtn').addEventListener('click', createCoin);
-document.getElementById('buyBtn').addEventListener('click', () => executeSpotTrade('buy'));
-document.getElementById('sellBtn').addEventListener('click', () => executeSpotTrade('sell'));
-
-authForm.addEventListener('submit', handleAuth);
-
-// Authentication Functions (Unchanged)
-function showAuthModal(mode) {
-    isAuthMode = mode;
-    document.getElementById('authTitle').textContent = mode === 'login' ? 'Login' : 'Daftar Akun Baru';
-    document.querySelector('#authForm button[type="submit"]').textContent = 
-        mode === 'login' ? 'Login' : 'Daftar';
-    authModal.style.display = 'flex';
+/***********************
+ *  UI Helpers
+ ***********************/
+function showError(elementId, message) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    element.textContent = message;
+    element.style.display = 'block';
 }
 
-function closeAuthModal() {
-    authModal.style.display = 'none';
-    clearAuthMessages();
+function showSuccess(elementId, message) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    element.textContent = message;
+    element.style.display = 'block';
 }
 
-function closeTradingModal() {
-    tradingModal.style.display = 'none';
-    clearTradingMessages();
+function clearAuthMessages() {
+    const a = document.getElementById('authError');
+    const b = document.getElementById('authSuccess');
+    if (a) a.style.display = 'none';
+    if (b) b.style.display = 'none';
 }
 
-async function handleAuth(e) {
-    e.preventDefault();
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-
-    try {
-        let result;
-        if (isAuthMode === 'login') {
-            result = await mockAuth.signInWithEmailAndPassword(email, password);
-        } else {
-            result = await mockAuth.createUserWithEmailAndPassword(email, password);
-            await initializeUserData(result.user.uid);
-        }
-
-        currentUser = result.user;
-        await loadUserData(currentUser.uid);
-        currentUser.isAdmin = isUserAdmin(currentUser.uid);
-        
-        showSuccess('authSuccess', `${isAuthMode === 'login' ? 'Login' : 'Registrasi'} berhasil!`);
-        
-        setTimeout(() => {
-            closeAuthModal();
-            showDashboard();
-        }, 1500);
-
-    } catch (error) {
-        showError('authError', error.message);
-    }
+function clearTradingMessages() {
+    const a = document.getElementById('tradingError');
+    const b = document.getElementById('tradingSuccess');
+    if (a) a.style.display = 'none';
+    if (b) b.style.display = 'none';
 }
 
-async function logout() {
-    await mockAuth.signOut();
-    currentUser = null;
-    if (priceUpdateInterval) {
-        clearInterval(priceUpdateInterval);
-        priceUpdateInterval = null;
-    }
-    showWelcomeScreen();
-}
-
-// Data Management Functions
-async function initializeUserData(uid) {
-    userData = {
-        uid: uid,
-        balance: 1000,
-        coins: {},
-        trades: [],
-        isAdmin: isUserAdmin(uid),
-        createdAt: new Date()
-    };
-
-    try {
-        await db.collection('users').doc(uid).set({
-            balance: 1000,
-            coins: {},
-            trades: [],
-            isAdmin: isUserAdmin(uid),
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        console.log('User data diinisialisasi untuk UID:', uid);
-    } catch (error) {
-        console.error('Error inisialisasi data user:', error);
-    }
-}
-
-async function loadUserData(uid) {
-    try {
-        const doc = await db.collection('users').doc(uid).get();
-        if (doc.exists) {
-            userData = { uid: uid, ...doc.data() };
-            userData.isAdmin = isUserAdmin(uid);
-            console.log('User data dimuat:', userData);
-        } else {
-            await initializeUserData(uid);
-        }
-    } catch (error) {
-        console.error('Error load data user:', error);
-        await initializeUserData(uid);
-    }
-}
-
-async function saveUserData() {
-    try {
-        await db.collection('users').doc(userData.uid).set({
-            balance: userData.balance,
-            coins: userData.coins,
-            trades: userData.trades,
-            isAdmin: userData.isAdmin,
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-            createdAt: userData.createdAt || firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-        console.log('User data disimpan:', userData);
-    } catch (error) {
-        console.error('Error simpan data user:', error);
-    }
-}
-
-async function loadMarketData() {
-    try {
-        const doc = await db.collection('market').doc('coins').get();
-        if (doc.exists) {
-            marketData.coins = doc.data().coins || [];
-            console.log('Market data dimuat:', marketData.coins);
-        } else {
-            await saveMarketData();
-        }
-    } catch (error) {
-        console.error('Error load data market:', error);
-    }
-
-    db.collection('market').doc('coins').onSnapshot((doc) => {
-        if (doc.exists) {
-            marketData.coins = doc.data().coins || [];
-            updateCoinsList();
-            updatePortfolio();
-            updateDashboard();
-            console.log('Market data updated via listener:', marketData.coins);
-        }
-    });
-}
-
-async function saveMarketData() {
-    try {
-        await db.collection('market').doc('coins').set({
-            coins: marketData.coins,
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        console.log('Market data disimpan:', marketData.coins);
-    } catch (error) {
-        console.error('Error simpan data market:', error);
-    }
-}
-
-// Dashboard Functions
+/***********************
+ *  Screen Switchers
+ ***********************/
 function showDashboard() {
     welcomeScreen.style.display = 'none';
     dashboard.style.display = 'block';
@@ -1026,7 +879,7 @@ function showDashboard() {
     document.getElementById('userInfo').style.display = 'inline-block';
     document.getElementById('userInfo').innerHTML = `
         👤 ${currentUser.email}<br>
-        ${currentUser.isAdmin ? '<span style="color: #ff4757;">[ADMIN]</span>' : ''}
+        ${currentUser.isAdmin ? '<span style="color:#ff4757;">[ADMIN]</span>' : ''}
     `;
 
     document.getElementById('adminPanel').style.display = currentUser.isAdmin ? 'block' : 'none';
@@ -1053,16 +906,20 @@ function showWelcomeScreen() {
     document.getElementById('userPortfolioSection').style.display = 'none';
 }
 
+/***********************
+ *  Dashboard Updaters
+ ***********************/
 function updateDashboard() {
-    document.getElementById('totalBalance').textContent = userData.balance.toFixed(2);
+    const totalBalanceEl = document.getElementById('totalBalance');
+    if (totalBalanceEl) totalBalanceEl.textContent = userData.balance.toFixed(2);
+
     let portfolioValue = 0;
     for (const coinId in userData.coins) {
         const coin = marketData.coins.find(c => c.id === coinId);
-        if (coin) {
-            portfolioValue += userData.coins[coinId].amount * coin.price;
-        }
+        if (coin) portfolioValue += userData.coins[coinId].amount * coin.price;
     }
-    document.getElementById('portfolioValue').textContent = `${portfolioValue.toFixed(2)} ZRC`;
+    const portfolioValueEl = document.getElementById('portfolioValue');
+    if (portfolioValueEl) portfolioValueEl.textContent = `${portfolioValue.toFixed(2)} ZRC`;
 
     let todayPnL = 0;
     userData.trades.forEach(trade => {
@@ -1070,16 +927,21 @@ function updateDashboard() {
             todayPnL += trade.type === 'buy' ? -trade.total : trade.total;
         }
     });
-    document.getElementById('todayPnL').textContent = `${todayPnL >= 0 ? '+' : ''}${todayPnL.toFixed(2)} ZRC`;
-    document.getElementById('todayPnL').className = `stat-value ${todayPnL >= 0 ? 'positive' : 'negative'}`;
+    const todayPnLEl = document.getElementById('todayPnL');
+    if (todayPnLEl) {
+        todayPnLEl.textContent = `${todayPnL >= 0 ? '+' : ''}${todayPnL.toFixed(2)} ZRC`;
+        todayPnLEl.className = `stat-value ${todayPnL >= 0 ? 'positive' : 'negative'}`;
+    }
 
     const totalTrades = userData.trades.length;
     const winningTrades = userData.trades.filter(trade => trade.profit > 0).length;
     const winRate = totalTrades > 0 ? (winningTrades / totalTrades * 100).toFixed(1) : 0;
-    document.getElementById('winRate').textContent = `${winRate}%`;
+    const winRateEl = document.getElementById('winRate');
+    if (winRateEl) winRateEl.textContent = `${winRate}%`;
 }
 
 function updateCoinsList() {
+    if (!coinsList) return;
     coinsList.innerHTML = '';
     marketData.coins.forEach(coin => {
         const coinElement = document.createElement('div');
@@ -1099,15 +961,21 @@ function updateCoinsList() {
                 </div>
             </div>
             <div class="coin-actions">
-                <button class="btn btn-small btn-primary" onclick="openTradingModal('${coin.id}')">Trade</button>
+                <button class="btn btn-small btn-primary" data-coin-id="${coin.id}">Trade</button>
             </div>
         `;
         coinsList.appendChild(coinElement);
+    });
+
+    // delegate tombol trade
+    coinsList.querySelectorAll('button[data-coin-id]').forEach(btn => {
+        btn.addEventListener('click', () => openTradingModal(btn.dataset.coinId));
     });
 }
 
 function updatePortfolio() {
     const portfolioList = document.getElementById('userPortfolio');
+    if (!portfolioList) return;
     portfolioList.innerHTML = '';
     
     for (const coinId in userData.coins) {
@@ -1115,29 +983,32 @@ function updatePortfolio() {
         if (coin && userData.coins[coinId].amount > 0) {
             const currentValue = userData.coins[coinId].amount * coin.price;
             const profit = currentValue - userData.coins[coinId].totalInvested;
-            const portfolioItem = document.createElement('div');
-            portfolioItem.className = 'portfolio-item';
-            portfolioItem.innerHTML = `
+            const item = document.createElement('div');
+            item.className = 'portfolio-item';
+            item.innerHTML = `
                 <div>
                     <strong>${coin.name} (${coin.symbol})</strong><br>
                     Jumlah: ${userData.coins[coinId].amount.toFixed(6)}<br>
                     Harga Beli Rata-rata: ${userData.coins[coinId].avgPrice.toFixed(2)} ZRC
                 </div>
-                <div style="text-align: right;">
+                <div style="text-align:right;">
                     Nilai: ${currentValue.toFixed(2)} ZRC<br>
                     <span class="${profit >= 0 ? 'positive' : 'negative'}">
                         P&L: ${profit >= 0 ? '+' : ''}${profit.toFixed(2)} ZRC
                     </span>
                 </div>
             `;
-            portfolioList.appendChild(portfolioItem);
+            portfolioList.appendChild(item);
         }
     }
 
-    const portfolioPreview = document.getElementById('portfolioList');
-    portfolioPreview.innerHTML = portfolioList.innerHTML;
+    const preview = document.getElementById('portfolioList');
+    if (preview) preview.innerHTML = portfolioList.innerHTML;
 }
 
+/***********************
+ *  Modals & Trading
+ ***********************/
 function openTradingModal(coinId) {
     selectedCoin = marketData.coins.find(c => c.id === coinId);
     if (!selectedCoin) {
@@ -1157,11 +1028,13 @@ function openTradingModal(coinId) {
 async function executeSpotTrade(type) {
     const amount = parseFloat(document.getElementById('tradeAmount').value);
     if (!selectedCoin || isNaN(amount) || amount <= 0) {
+        showError('trtingError' /* sengaja salah? tidak */, 'Masukkan jumlah trade yang valid');
+        // FIX typo id elemen: gunakan id yang benar
         showError('tradingError', 'Masukkan jumlah trade yang valid');
         return;
     }
 
-    const totalCost = amount;
+    const totalCost = amount; // ZRC yang dipakai
     const coinAmount = amount / selectedCoin.price;
 
     if (type === 'buy') {
@@ -1172,16 +1045,12 @@ async function executeSpotTrade(type) {
 
         userData.balance -= totalCost;
         if (!userData.coins[selectedCoin.id]) {
-            userData.coins[selectedCoin.id] = {
-                amount: 0,
-                avgPrice: 0,
-                totalInvested: 0
-            };
+            userData.coins[selectedCoin.id] = { amount: 0, avgPrice: 0, totalInvested: 0 };
         }
 
         userData.coins[selectedCoin.id].amount += coinAmount;
         userData.coins[selectedCoin.id].totalInvested += totalCost;
-        userData.coins[selectedCoin.id].avgPrice = 
+        userData.coins[selectedCoin.id].avgPrice =
             userData.coins[selectedCoin.id].totalInvested / userData.coins[selectedCoin.id].amount;
 
         userData.trades.push({
@@ -1222,7 +1091,7 @@ async function executeSpotTrade(type) {
         if (userData.coins[selectedCoin.id].amount <= 0) {
             delete userData.coins[selectedCoin.id];
         } else {
-            userData.coins[selectedCoin.id].avgPrice = 
+            userData.coins[selectedCoin.id].avgPrice =
                 userData.coins[selectedCoin.id].totalInvested / userData.coins[selectedCoin.id].amount;
         }
 
@@ -1235,79 +1104,207 @@ async function executeSpotTrade(type) {
     document.getElementById('userBalance').textContent = userData.balance.toFixed(2);
     document.getElementById('ownedAmount').textContent = userData.coins[selectedCoin.id]?.amount?.toFixed(6) || '0';
     document.getElementById('tradeAmount').value = '';
-    
     setTimeout(clearTradingMessages, 3000);
 }
 
-async function createCoin() {
-    if (!currentUser.isAdmin) {
-        showError('authError', 'Hanya admin yang bisa membuat koin');
-        return;
-    }
-
-    const name = document.getElementById('coinName').value;
-    const symbol = document.getElementById('coinSymbol').value.toUpperCase();
-    const price = parseFloat(document.getElementById('coinPrice').value);
-    const supply = parseInt(document.getElementById('coinSupply').value);
-
-    if (!name || !symbol || isNaN(price) || isNaN(supply) || price <= 0 || supply <= 0) {
-        showError('authError', 'Isi semua kolom dengan nilai valid');
-        return;
-    }
-
-    const coinId = symbol.toLowerCase() + '_' + Date.now();
-    const newCoin = {
-        id: coinId,
-        name: name,
-        symbol: symbol,
-        price: price,
-        change: 0,
-        supply: supply,
-        createdBy: currentUser.uid,
-        botActive: true,
-        volume24h: 0
+/***********************
+ *  Firestore Data Ops
+ ***********************/
+async function initializeUserData(uid) {
+    userData = {
+        uid: uid,
+        balance: 1000,
+        coins: {},
+        trades: [],
+        isAdmin: isUserAdmin(uid),
+        createdAt: new Date()
     };
 
-    marketData.coins.push(newCoin);
-    tradingBot.activateForCoin(coinId);
-    await saveMarketData();
+    try {
+        await db.collection('users').doc(uid).set({
+            balance: 1000,
+            coins: {},
+            trades: [],
+            isAdmin: isUserAdmin(uid),
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        console.log('User data diinisialisasi untuk UID:', uid);
+    } catch (error) {
+        console.error('Error inisialisasi data user:', error);
+    }
+}
+
+async function loadUserData(uid) {
+    try {
+        const snap = await db.collection('users').doc(uid).get();
+        if (snap.exists) {
+            userData = { uid: uid, ...snap.data() };
+            userData.isAdmin = isUserAdmin(uid);
+            console.log('User data dimuat:', userData);
+        } else {
+            await initializeUserData(uid);
+        }
+    } catch (error) {
+        console.error('Error load data user:', error);
+        await initializeUserData(uid);
+    }
+}
+
+async function saveUserData() {
+    try {
+        await db.collection('users').doc(userData.uid).set({
+            balance: userData.balance,
+            coins: userData.coins,
+            trades: userData.trades,
+            isAdmin: userData.isAdmin,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+            createdAt: userData.createdAt || firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        console.log('User data disimpan:', userData);
+    } catch (error) {
+        console.error('Error simpan data user:', error);
+    }
+}
+
+async function loadMarketData() {
+    try {
+        const snap = await db.collection('market').doc('coins').get();
+        if (snap.exists) {
+            marketData.coins = snap.data().coins || [];
+            console.log('Market data dimuat:', marketData.coins);
+        } else {
+            await saveMarketData();
+        }
+    } catch (error) {
+        console.error('Error load data market:', error);
+    }
+
+    // Real-time listener
+    db.collection('market').doc('coins').onSnapshot((doc) => {
+        if (doc.exists) {
+            marketData.coins = doc.data().coins || [];
+            updateCoinsList();
+            updatePortfolio();
+            updateDashboard();
+            console.log('Market data updated via listener:', marketData.coins);
+        }
+    });
+}
+
+async function saveMarketData() {
+    try {
+        await db.collection('market').doc('coins').set({
+            coins: marketData.coins,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        console.log('Market data disimpan:', marketData.coins);
+    } catch (error) {
+        console.error('Error simpan data market:', error);
+    }
+}
+
+/***********************
+ *  Auth Handlers
+ ***********************/
+function showAuthModal(mode) {
+    isAuthMode = mode;
+    document.getElementById('authTitle').textContent = mode === 'login' ? 'Login' : 'Daftar Akun Baru';
+    const submitBtn = document.querySelector('#authForm button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = mode === 'login' ? 'Login' : 'Daftar';
+    authModal.style.display = 'flex';
+}
+
+function closeAuthModal() {
+    authModal.style.display = 'none';
+    clearAuthMessages();
+}
+
+function closeTradingModal() {
+    tradingModal.style.display = 'none';
+    clearTradingMessages();
+}
+
+async function handleAuth(e) {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    try {
+        let result;
+        if (isAuthMode === 'login') {
+            result = await mockAuth.signInWithEmailAndPassword(email, password);
+        } else {
+            result = await mockAuth.createUserWithEmailAndPassword(email, password);
+            await initializeUserData(result.user.uid);
+        }
+
+        currentUser = result.user;
+        await loadUserData(currentUser.uid);
+        currentUser.isAdmin = isUserAdmin(currentUser.uid);
+        
+        showSuccess('authSuccess', `${isAuthMode === 'login' ? 'Login' : 'Registrasi'} berhasil!`);
+        
+        setTimeout(() => {
+            closeAuthModal();
+            showDashboard();
+        }, 1500);
+
+    } catch (error) {
+        showError('authError', error.message);
+    }
+}
+
+async function logout() {
+    await mockAuth.signOut();
+    currentUser = null;
+    if (priceUpdateInterval) {
+        clearInterval(priceUpdateInterval);
+        priceUpdateInterval = null;
+    }
+    showWelcomeScreen();
+}
+
+/***********************
+ *  Bootstrapping DOM
+ ***********************/
+document.addEventListener('DOMContentLoaded', () => {
+    // Assign DOM refs setelah HTML siap
+    authModal = document.getElementById('authModal');
+    tradingModal = document.getElementById('tradingModal');
+    dashboard = document.getElementById('dashboard');
+    welcomeScreen = document.getElementById('welcomeScreen');
+    authForm = document.getElementById('authForm');
+    coinsList = document.getElementById('coinsList');
+
+    // Event Listeners tombol
+    const btnLogin = document.getElementById('loginBtn');
+    const btnRegister = document.getElementById('registerBtn');
+    const btnWelcomeLogin = document.getElementById('welcomeLoginBtn');
+    const btnWelcomeRegister = document.getElementById('welcomeRegisterBtn');
+    const btnLogout = document.getElementById('logoutBtn');
+    const btnCloseAuth = document.getElementById('closeModal');
+    const btnCloseTrading = document.getElementById('closeTradingModal');
+    const btnCreateCoin = document.getElementById('createCoinBtn');
+    const btnBuy = document.getElementById('buyBtn');
+    const btnSell = document.getElementById('sellBtn');
+
+    if (btnLogin) btnLogin.addEventListener('click', () => showAuthModal('login'));
+    if (btnRegister) btnRegister.addEventListener('click', () => showAuthModal('register'));
+    if (btnWelcomeLogin) btnWelcomeLogin.addEventListener('click', () => showAuthModal('login'));
+    if (btnWelcomeRegister) btnWelcomeRegister.addEventListener('click', () => showAuthModal('register'));
+    if (btnLogout) btnLogout.addEventListener('click', logout);
+    if (btnCloseAuth) btnCloseAuth.addEventListener('click', closeAuthModal);
+    if (btnCloseTrading) btnCloseTrading.addEventListener('click', closeTradingModal);
+    if (btnCreateCoin) btnCreateCoin.addEventListener('click', createCoin);
+    if (btnBuy) btnBuy.addEventListener('click', () => executeSpotTrade('buy'));
+    if (btnSell) btnSell.addEventListener('click', () => executeSpotTrade('sell'));
+    if (authForm) authForm.addEventListener('submit', handleAuth);
+
+    // Initial render
+    showWelcomeScreen();
     updateCoinsList();
-
-    document.getElementById('coinName').value = '';
-    document.getElementById('coinSymbol').value = '';
-    document.getElementById('coinPrice').value = '';
-    document.getElementById('coinSupply').value = '';
-
-    showSuccess('authSuccess', `Koin ${name} (${symbol}) berhasil dibuat!`);
-    setTimeout(clearAuthMessages, 3000);
-}
-
-function showError(elementId, message) {
-    const element = document.getElementById(elementId);
-    element.textContent = message;
-    element.style.display = 'block';
-}
-
-function showSuccess(elementId, message) {
-    const element = document.getElementById(elementId);
-    element.textContent = message;
-    element.style.display = 'block';
-}
-
-function clearAuthMessages() {
-    document.getElementById('authError').style.display = 'none';
-    document.getElementById('authSuccess').style.display = 'none';
-}
-
-function clearTradingMessages() {
-    document.getElementById('tradingError').style.display = 'none';
-    document.getElementById('tradingSuccess').style.display = 'none';
-}
-
-// Initialize
-showWelcomeScreen();
-updateCoinsList();
-loadMarketData();
+    loadMarketData();
+});
 
 
 </script>
