@@ -639,8 +639,7 @@
 </div>
 
 <script>
-   // Firebase Configuration - Your Real Config
-// Firebase Configuration
+   // Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
     authDomain: "zeepaylater-93a94.firebaseapp.com",
@@ -652,12 +651,7 @@ const firebaseConfig = {
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
 const db = firebase.firestore();
-
-// Set persistensi login
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-    .catch(error => console.error('Error set persistensi:', error));
 
 // Admin UIDs
 const ADMIN_UIDS = ['demo-admin-uid-123'];
@@ -666,6 +660,45 @@ const ADMIN_UIDS = ['demo-admin-uid-123'];
 function isUserAdmin(uid) {
     return ADMIN_UIDS.includes(uid);
 }
+
+// Mock Firebase Auth for Demo (Unchanged)
+const mockAuth = {
+    currentUser: null,
+    signInWithEmailAndPassword: (email, password) => {
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                if (email && password) {
+                    const demoUID = email === 'admin@test.com' ? 'demo-admin-uid-123' : 'user_' + Date.now();
+                    this.currentUser = { 
+                        uid: demoUID, 
+                        email: email,
+                        isAdmin: isUserAdmin(demoUID)
+                    };
+                    resolve({ user: this.currentUser });
+                } else {
+                    reject(new Error('Invalid credentials'));
+                }
+            }, 1000);
+        });
+    },
+    createUserWithEmailAndPassword: (email, password) => {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                const newUID = 'user_' + Date.now() + Math.random().toString(36).substr(2, 9);
+                this.currentUser = { 
+                    uid: newUID, 
+                    email: email,
+                    isAdmin: isUserAdmin(newUID)
+                };
+                resolve({ user: this.currentUser });
+            }, 1000);
+        });
+    },
+    signOut: () => {
+        this.currentUser = null;
+        return Promise.resolve();
+    }
+};
 
 // Data Storage
 let userData = {
@@ -712,7 +745,7 @@ class TradingBot {
         setInterval(() => {
             if (!this.isActive) return;
             marketData.coins.forEach(coin => {
-                if (coin.botActive) {
+                if (coin.botActive && currentUser?.isAdmin) {
                     this.simulateTrade(coin);
                 }
             });
@@ -830,27 +863,23 @@ document.getElementById('sellBtn').addEventListener('click', () => executeSpotTr
 
 authForm.addEventListener('submit', handleAuth);
 
-// Authentication Functions
+// Authentication Functions (Unchanged)
 function showAuthModal(mode) {
     isAuthMode = mode;
     document.getElementById('authTitle').textContent = mode === 'login' ? 'Login' : 'Daftar Akun Baru';
     document.querySelector('#authForm button[type="submit"]').textContent = 
         mode === 'login' ? 'Login' : 'Daftar';
     authModal.style.display = 'flex';
-    clearAuthMessages();
-    console.log('Modal auth ditampilkan untuk:', mode);
 }
 
 function closeAuthModal() {
     authModal.style.display = 'none';
     clearAuthMessages();
-    console.log('Modal auth ditutup');
 }
 
 function closeTradingModal() {
     tradingModal.style.display = 'none';
     clearTradingMessages();
-    console.log('Modal trading ditutup');
 }
 
 async function handleAuth(e) {
@@ -861,17 +890,16 @@ async function handleAuth(e) {
     try {
         let result;
         if (isAuthMode === 'login') {
-            console.log('Mencoba login:', email);
-            result = await auth.signInWithEmailAndPassword(email, password);
+            result = await mockAuth.signInWithEmailAndPassword(email, password);
         } else {
-            console.log('Mencoba register:', email);
-            result = await auth.createUserWithEmailAndPassword(email, password);
+            result = await mockAuth.createUserWithEmailAndPassword(email, password);
             await initializeUserData(result.user.uid);
         }
 
         currentUser = result.user;
-        currentUser.isAdmin = isUserAdmin(currentUser.uid);
         await loadUserData(currentUser.uid);
+        currentUser.isAdmin = isUserAdmin(currentUser.uid);
+        
         showSuccess('authSuccess', `${isAuthMode === 'login' ? 'Login' : 'Registrasi'} berhasil!`);
         
         setTimeout(() => {
@@ -880,39 +908,31 @@ async function handleAuth(e) {
         }, 1500);
 
     } catch (error) {
-        console.error('Error autentikasi:', error);
-        let errorMessage = 'Terjadi kesalahan. Coba lagi.';
-        if (error.code === 'auth/wrong-password') {
-            errorMessage = 'Password salah.';
-        } else if (error.code === 'auth/user-not-found') {
-            errorMessage = 'Email tidak ditemukan.';
-        } else if (error.code === 'auth/email-already-in-use') {
-            errorMessage = 'Email sudah digunakan.';
-        } else if (error.code === 'auth/invalid-email') {
-            errorMessage = 'Email tidak valid.';
-        }
-        showError('authError', errorMessage);
+        showError('authError', error.message);
     }
 }
 
 async function logout() {
-    try {
-        await auth.signOut();
-        currentUser = null;
-        if (priceUpdateInterval) {
-            clearInterval(priceUpdateInterval);
-            priceUpdateInterval = null;
-        }
-        showWelcomeScreen();
-        console.log('Logout berhasil');
-    } catch (error) {
-        console.error('Error logout:', error);
-        showError('authError', 'Gagal logout. Coba lagi.');
+    await mockAuth.signOut();
+    currentUser = null;
+    if (priceUpdateInterval) {
+        clearInterval(priceUpdateInterval);
+        priceUpdateInterval = null;
     }
+    showWelcomeScreen();
 }
 
 // Data Management Functions
 async function initializeUserData(uid) {
+    userData = {
+        uid: uid,
+        balance: 1000,
+        coins: {},
+        trades: [],
+        isAdmin: isUserAdmin(uid),
+        createdAt: new Date()
+    };
+
     try {
         await db.collection('users').doc(uid).set({
             balance: 1000,
@@ -936,7 +956,6 @@ async function loadUserData(uid) {
             console.log('User data dimuat:', userData);
         } else {
             await initializeUserData(uid);
-            await loadUserData(uid);
         }
     } catch (error) {
         console.error('Error load data user:', error);
@@ -1221,7 +1240,7 @@ async function executeSpotTrade(type) {
 }
 
 async function createCoin() {
-    if (!currentUser?.isAdmin) {
+    if (!currentUser.isAdmin) {
         showError('authError', 'Hanya admin yang bisa membuat koin');
         return;
     }
@@ -1286,24 +1305,8 @@ function clearTradingMessages() {
 }
 
 // Initialize
-auth.onAuthStateChanged(async (user) => {
-    console.log('Auth state changed:', user ? 'User logged in' : 'No user');
-    if (user) {
-        currentUser = user;
-        currentUser.isAdmin = isUserAdmin(user.uid);
-        console.log('Current user:', currentUser.email, 'Is admin:', currentUser.isAdmin);
-        try {
-            await loadUserData(user.uid);
-            await loadMarketData();
-            showDashboard();
-        } catch (error) {
-            console.error('Error saat load data user/market:', error);
-            showError('authError', 'Gagal memuat data. Coba lagi.');
-        }
-    } else {
-        showWelcomeScreen();
-    }
-});
+showWelcomeScreen();
+updateCoinsList();
 loadMarketData();
 
 
