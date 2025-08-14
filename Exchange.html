@@ -1,250 +1,439 @@
 <!DOCTYPE html>
+
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CryptoSim Exchange</title>
+    <title>CryptoSim Exchange - Spot Trading Platform</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f0f2f5;
+        * {
             margin: 0;
             padding: 0;
-            color: #333;
+            box-sizing: border-box;
         }
-        .navbar {
-            background: #1a1a1a;
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: white;
-        }
-        .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-        .nav-actions {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        .btn {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .btn-primary {
-            background: #007bff;
-            color: white;
-        }
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-        .user-info {
-            font-size: 0.9rem;
-        }
-        .bot-status {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: #28a745;
-            color: white;
-            padding: 0.5rem;
-            border-radius: 5px;
-            font-size: 0.8rem;
-        }
-        .auth-modal, .trading-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-content {
-            background: white;
-            padding: 2rem;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 400px;
-        }
-        .trading-content {
-            max-width: 600px;
-        }
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        .error {
-            color: #dc3545;
-            margin-top: 0.5rem;
-        }
-        .success {
-            color: #28a745;
-            margin-top: 0.5rem;
-        }
+
+```
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+        color: white;
+        min-height: 100vh;
+    }
+
+    .navbar {
+        background: rgba(0, 0, 0, 0.9);
+        backdrop-filter: blur(15px);
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #333;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .logo {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #00d4aa;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .nav-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 0.9rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(45deg, #00d4aa, #007acc);
+        color: white;
+    }
+
+    .btn-secondary {
+        background: transparent;
+        border: 1px solid #00d4aa;
+        color: #00d4aa;
+    }
+
+    .btn-danger {
+        background: linear-gradient(45deg, #ff4757, #ff3742);
+        color: white;
+    }
+
+    .btn-success {
+        background: linear-gradient(45deg, #26de81, #20bf6b);
+        color: white;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 212, 170, 0.4);
+    }
+
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .auth-modal, .trading-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        width: 90%;
+        max-width: 400px;
+        border: 1px solid #333;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .trading-content {
+        max-width: 600px;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #00d4aa;
+        font-weight: 500;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #333;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        font-size: 1rem;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: #00d4aa;
+        box-shadow: 0 0 10px rgba(0, 212, 170, 0.3);
+    }
+
+    .dashboard {
+        display: none;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2rem;
+        border-radius: 15px;
+        border: 1px solid #333;
+        backdrop-filter: blur(15px);
+        transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-title {
+        color: #888;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-subtitle {
+        font-size: 0.8rem;
+        color: #666;
+    }
+
+    .coins-section {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid #333;
+        backdrop-filter: blur(15px);
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        color: #00d4aa;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .coin-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        margin-bottom: 0.75rem;
+        border-radius: 12px;
+        border-left: 3px solid #00d4aa;
+        transition: all 0.3s ease;
+    }
+
+    .coin-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateX(5px);
+    }
+
+    .coin-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .coin-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(45deg, #00d4aa, #007acc);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+
+    .coin-details h3 {
+        margin-bottom: 0.25rem;
+        font-size: 1.1rem;
+    }
+
+    .coin-supply {
+        font-size: 0.8rem;
+        color: #888;
+    }
+
+    .coin-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .price-display {
+        text-align: right;
+        margin-right: 1rem;
+    }
+
+    .price {
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+    }
+
+    .price-change {
+        font-size: 0.9rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-weight: 500;
+    }
+
+    .positive {
+        color: #26de81;
+        background: rgba(38, 222, 129, 0.1);
+    }
+
+    .negative {
+        color: #fc5c65;
+        background: rgba(252, 92, 101, 0.1);
+    }
+
+    .admin-panel {
+        display: none;
+    }
+
+    .admin-form {
+        background: rgba(0, 212, 170, 0.1);
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 1rem;
+        border: 1px solid #00d4aa;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .btn-small {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+
+    .balance-info {
+        background: rgba(0, 212, 170, 0.1);
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        border: 1px solid #00d4aa;
+    }
+
+    .balance-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+
+    .portfolio-section {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-top: 1rem;
+    }
+
+    .portfolio-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        margin-bottom: 0.5rem;
+        border-radius: 8px;
+    }
+
+    .error {
+        color: #fc5c65;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background: rgba(252, 92, 101, 0.1);
+        border-radius: 6px;
+    }
+
+    .success {
+        color: #26de81;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background: rgba(38, 222, 129, 0.1);
+        border-radius: 6px;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    .live-price {
+        animation: pulse 2s infinite;
+    }
+
+    .user-info {
+        color: #00d4aa;
+        font-size: 0.9rem;
+        line-height: 1.2;
+    }
+
+    .bot-status {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(0, 212, 170, 0.9);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        z-index: 100;
+        animation: pulse 3s infinite;
+    }
+
+    .market-activity {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .activity-item {
+        padding: 0.5rem;
+        border-left: 2px solid #00d4aa;
+        margin-bottom: 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .trade-controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    @media (max-width: 768px) {
         .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
+            padding: 1rem;
         }
+        
         .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
+            grid-template-columns: 1fr;
         }
-        .stat-card {
-            background: white;
-            padding: 1rem;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .stat-title {
-            font-size: 1rem;
-            color: #666;
-        }
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin: 0.5rem 0;
-        }
-        .stat-value.positive {
-            color: #28a745;
-        }
-        .stat-value.negative {
-            color: #dc3545;
-        }
-        .stat-subtitle {
-            font-size: 0.8rem;
-            color: #888;
-        }
-        .coins-section {
-            background: white;
-            padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .section-title {
-            margin-bottom: 1rem;
-        }
-        .coin-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem;
-            border-bottom: 1px solid #eee;
-        }
-        .coin-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        .coin-icon {
-            width: 40px;
-            height: 40px;
-            background: #007bff;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 50%;
-            font-weight: bold;
-        }
-        .price-display {
-            text-align: right;
-        }
-        .live-price {
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-        .price-change {
-            font-size: 0.9rem;
-        }
-        .price-change.positive {
-            color: #28a745;
-        }
-        .price-change.negative {
-            color: #dc3545;
-        }
-        .coin-actions {
-            text-align: right;
-        }
-        .btn-small {
-            padding: 0.3rem 0.8rem;
-            font-size: 0.9rem;
-        }
-        .portfolio-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 1rem;
-            border-bottom: 1px solid #eee;
-        }
-        .balance-info {
-            margin-bottom: 1rem;
-        }
-        .balance-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
-        }
-        .trade-controls {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-        .admin-panel {
-            margin-bottom: 2rem;
-        }
-        .admin-form {
-            margin-bottom: 2rem;
-        }
+        
         .form-row {
-            display: flex;
-            gap: 1rem;
+            grid-template-columns: 1fr;
         }
-        .form-row .form-group {
-            flex: 1;
+        
+        .trade-controls {
+            grid-template-columns: 1fr;
         }
-        .market-activity {
-            max-height: 300px;
-            overflow-y: auto;
-            padding: 1rem;
-            background: #f8f9fa;
-            border-radius: 5px;
-        }
-        .activity-item {
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-        }
-    </style>
+    }
+</style>
+```
+
 </head>
 <body>
     <!-- Firebase SDK -->
@@ -252,875 +441,823 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-auth.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore.js"></script>
 
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="logo">
-            🚀 CryptoSim Exchange
-            <span style="font-size: 0.7rem; color: #888;">(SPOT)</span>
-        </div>
-        <div class="nav-actions">
-            <div id="userInfo" class="user-info" style="display: none;"></div>
-            <button id="loginBtn" class="btn btn-primary">Login</button>
-            <button id="registerBtn" class="btn btn-secondary">Daftar</button>
-            <button id="logoutBtn" class="btn btn-danger" style="display: none;">Logout</button>
-        </div>
-    </nav>
+```
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="logo">
+        🚀 CryptoSim Exchange
+        <span style="font-size: 0.7rem; color: #888;">(SPOT)</span>
+    </div>
+    <div class="nav-actions">
+        <div id="userInfo" class="user-info" style="display: none;"></div>
+        <button id="loginBtn" class="btn btn-primary">Login</button>
+        <button id="registerBtn" class="btn btn-secondary">Daftar</button>
+        <button id="logoutBtn" class="btn btn-danger" style="display: none;">Logout</button>
+    </div>
+</nav>
 
-    <!-- Bot Status Indicator -->
-    <div class="bot-status">🤖 BOT AKTIF</div>
+<!-- Bot Status Indicator -->
+<div class="bot-status">🤖 BOT AKTIF</div>
 
-    <!-- Auth Modal -->
-    <div id="authModal" class="auth-modal">
-        <div class="modal-content">
-            <h2 id="authTitle">Login</h2>
-            <form id="authForm">
-                <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" required placeholder="your@email.com">
-                </div>
-                <div class="form-group">
-                    <label for="password">Password:</label>
-                    <input type="password" id="password" required placeholder="Password">
-                </div>
-                <div class="form-group">
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
-                </div>
-                <div class="form-group">
-                    <button type="button" id="closeModal" class="btn btn-secondary" style="width: 100%;">Tutup</button>
-                </div>
-                <div id="authError" class="error" style="display: none;"></div>
-                <div id="authSuccess" class="success" style="display: none;"></div>
-            </form>
+<!-- Auth Modal -->
+<div id="authModal" class="auth-modal">
+    <div class="modal-content">
+        <h2 id="authTitle">Login</h2>
+        <form id="authForm">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" required placeholder="your@email.com">
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" required placeholder="Password">
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+            </div>
+            <div class="form-group">
+                <button type="button" id="closeModal" class="btn btn-secondary" style="width: 100%;">Tutup</button>
+            </div>
+            <div id="authError" class="error" style="display: none;"></div>
+            <div id="authSuccess" class="success" style="display: none;"></div>
+        </form>
+    </div>
+</div>
+
+<!-- Trading Modal -->
+<div id="tradingModal" class="trading-modal">
+    <div class="modal-content trading-content">
+        <h2 id="tradingTitle">💰 Spot Trading</h2>
+        <div class="balance-info">
+            <div class="balance-row">
+                <span>💳 Available Balance:</span>
+                <span><strong>$<span id="userBalance">0</span></strong></span>
+            </div>
+            <div class="balance-row">
+                <span>🪙 Selected Coin:</span>
+                <span><strong><span id="selectedCoinName">-</span></strong></span>
+            </div>
+            <div class="balance-row">
+                <span>💰 Current Price:</span>
+                <span><strong>$<span id="selectedCoinPrice" class="live-price">0</span></strong></span>
+            </div>
+            <div class="balance-row">
+                <span>📊 Owned Amount:</span>
+                <span><strong><span id="ownedAmount">0</span> coins</strong></span>
+            </div>
+        </div>
+
+        <form id="tradingForm">
+            <div class="form-group">
+                <label for="tradeAmount">💵 Amount to Trade ($):</label>
+                <input type="number" id="tradeAmount" min="1" step="0.01" required placeholder="100.00">
+                <small style="color: #888;">Minimum: $1.00</small>
+            </div>
+            
+            <div class="trade-controls">
+                <button type="button" id="buyBtn" class="btn btn-success">
+                    🟢 BUY SPOT
+                    <div style="font-size: 0.7rem;">Own Real Coins</div>
+                </button>
+                <button type="button" id="sellBtn" class="btn btn-danger">
+                    🔴 SELL SPOT
+                    <div style="font-size: 0.7rem;">Sell Owned Coins</div>
+                </button>
+            </div>
+            
+            <div class="form-group">
+                <button type="button" id="closeTradingModal" class="btn btn-secondary" style="width: 100%; margin-top: 1rem;">Tutup</button>
+            </div>
+            <div id="tradingError" class="error" style="display: none;"></div>
+            <div id="tradingSuccess" class="success" style="display: none;"></div>
+        </form>
+
+        <!-- Portfolio Section in Trading Modal -->
+        <div class="portfolio-section" id="portfolioPreview">
+            <h4>📈 Your Portfolio</h4>
+            <div id="portfolioList"></div>
         </div>
     </div>
+</div>
 
-    <!-- Trading Modal -->
-    <div id="tradingModal" class="trading-modal">
-        <div class="modal-content trading-content">
-            <h2 id="tradingTitle">💰 Spot Trading</h2>
-            <div class="balance-info">
-                <div class="balance-row">
-                    <span>💳 Saldo ZRC:</span>
-                    <span><strong><span id="userBalance">0</span> ZRC</strong></span>
-                </div>
-                <div class="balance-row">
-                    <span>🪙 Koin Terpilih:</span>
-                    <span><strong><span id="selectedCoinName">-</span></strong></span>
-                </div>
-                <div class="balance-row">
-                    <span>💰 Harga Saat Ini:</span>
-                    <span><strong><span id="selectedCoinPrice" class="live-price">0</span> ZRC</strong></span>
-                </div>
-                <div class="balance-row">
-                    <span>📊 Jumlah Dimiliki:</span>
-                    <span><strong><span id="ownedAmount">0</span> koin</strong></span>
-                </div>
+<!-- Main Content -->
+<div class="container">
+    <!-- Dashboard -->
+    <div id="dashboard" class="dashboard">
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">💰 Total Balance</div>
+                <div class="stat-value positive">$<span id="totalBalance">1000</span></div>
+                <div class="stat-subtitle">USD Available</div>
             </div>
-
-            <form id="tradingForm">
-                <div class="form-group">
-                    <label for="tradeAmount">💵 Jumlah untuk Trade (ZRC):</label>
-                    <input type="number" id="tradeAmount" min="1" step="0.01" required placeholder="100.00">
-                    <small style="color: #888;">Minimum: 1 ZRC</small>
-                </div>
-                
-                <div class="trade-controls">
-                    <button type="button" id="buyBtn" class="btn btn-success">
-                        🟢 BELI SPOT
-                        <div style="font-size: 0.7rem;">Miliki Koin Asli</div>
-                    </button>
-                    <button type="button" id="sellBtn" class="btn btn-danger">
-                        🔴 JUAL SPOT
-                        <div style="font-size: 0.7rem;">Jual Koin Dimiliki</div>
-                    </button>
-                </div>
-                
-                <div class="form-group">
-                    <button type="button" id="closeTradingModal" class="btn btn-secondary" style="width: 100%; margin-top: 1rem;">Tutup</button>
-                </div>
-                <div id="tradingError" class="error" style="display: none;"></div>
-                <div id="tradingSuccess" class="success" style="display: none;"></div>
-            </form>
-
-            <!-- Portfolio Section in Trading Modal -->
-            <div class="portfolio-section" id="portfolioPreview">
-                <h4>📈 Portofolio Anda</h4>
-                <div id="portfolioList"></div>
+            <div class="stat-card">
+                <div class="stat-title">📊 Portfolio Value</div>
+                <div class="stat-value" id="portfolioValue">$0</div>
+                <div class="stat-subtitle">Total Holdings</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">📈 Today's P&L</div>
+                <div class="stat-value" id="todayPnL">$0</div>
+                <div class="stat-subtitle">Profit & Loss</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">🎯 Win Rate</div>
+                <div class="stat-value" id="winRate">0%</div>
+                <div class="stat-subtitle">Success Rate</div>
             </div>
         </div>
-    </div>
 
-    <!-- Main Content -->
-    <div class="container">
-        <!-- Dashboard -->
-        <div id="dashboard" class="dashboard" style="display: none;">
-            <!-- Stats Grid -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-title">💰 Total Saldo</div>
-                    <div class="stat-value positive"><span id="totalBalance">1000</span> ZRC</div>
-                    <div class="stat-subtitle">ZRC Tersedia</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-title">📊 Nilai Portofolio</div>
-                    <div class="stat-value" id="portfolioValue">0 ZRC</div>
-                    <div class="stat-subtitle">Total Kepemilikan</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-title">📈 P&L Hari Ini</div>
-                    <div class="stat-value" id="todayPnL">0 ZRC</div>
-                    <div class="stat-subtitle">Keuntungan & Kerugian</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-title">🎯 Tingkat Kemenangan</div>
-                    <div class="stat-value" id="winRate">0%</div>
-                    <div class="stat-subtitle">Tingkat Keberhasilan</div>
-                </div>
-            </div>
-
-            <!-- Admin Panel -->
-            <div id="adminPanel" class="admin-panel" style="display: none;">
-                <div class="coins-section">
-                    <h2 class="section-title">🔧 Panel Kontrol Admin</h2>
-                    <div class="admin-form">
-                        <h3>🪙 Buat Koin Baru</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Nama Koin:</label>
-                                <input type="text" id="coinName" placeholder="DampCoin">
-                            </div>
-                            <div class="form-group">
-                                <label>Simbol:</label>
-                                <input type="text" id="coinSymbol" placeholder="DMP">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Harga Awal (ZRC):</label>
-                                <input type="number" id="coinPrice" step="0.01" placeholder="10">
-                            </div>
-                            <div class="form-group">
-                                <label>Total Supply:</label>
-                                <input type="number" id="coinSupply" placeholder="50000000">
-                            </div>
-                        </div>
-                        <button id="createCoinBtn" class="btn btn-primary">🚀 Luncurkan Koin</button>
-                    </div>
-
-                    <!-- Market Activity Monitor -->
-                    <div class="admin-form">
-                        <h3>🤖 Aktivitas Trading Bot</h3>
-                        <div class="market-activity" id="marketActivity">
-                            <div class="activity-item">Sistem diinisialisasi...</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Coins List -->
+        <!-- Admin Panel -->
+        <div id="adminPanel" class="admin-panel">
             <div class="coins-section">
-                <h2 class="section-title">📊 Koin Tersedia (Spot Trading)</h2>
-                <div id="coinsList"></div>
-            </div>
+                <h2 class="section-title">🔧 Admin Control Panel</h2>
+                <div class="admin-form">
+                    <h3>🪙 Create New Coin</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Coin Name:</label>
+                            <input type="text" id="coinName" placeholder="Bitcoin">
+                        </div>
+                        <div class="form-group">
+                            <label>Symbol:</label>
+                            <input type="text" id="coinSymbol" placeholder="BTC">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Initial Price ($):</label>
+                            <input type="number" id="coinPrice" step="0.01" placeholder="50000">
+                        </div>
+                        <div class="form-group">
+                            <label>Total Supply:</label>
+                            <input type="number" id="coinSupply" placeholder="1000000">
+                        </div>
+                    </div>
+                    <button id="createCoinBtn" class="btn btn-primary">🚀 Launch Coin</button>
+                </div>
 
-            <!-- User Portfolio -->
-            <div class="coins-section" id="userPortfolioSection" style="display: none;">
-                <h2 class="section-title">💼 Portofolio Saya</h2>
-                <div id="userPortfolio"></div>
-            </div>
-        </div>
-
-        <!-- Welcome Screen -->
-        <div id="welcomeScreen">
-            <div style="text-align: center; padding: 4rem 0;">
-                <h1 style="font-size: 3rem; margin-bottom: 1rem;">🚀 Selamat Datang di CryptoSim</h1>
-                <p style="font-size: 1.2rem; color: #888; margin-bottom: 1rem;">
-                    Platform simulator trading crypto dengan sistem SPOT trading
-                </p>
-                <p style="font-size: 1rem; color: #666; margin-bottom: 2rem;">
-                    ✅ Admin mengontrol pasar • ✅ Bot trading otomatis • ✅ Kepemilikan koin asli • ✅ Hanya spot trading
-                </p>
-                <div>
-                    <button class="btn btn-primary" id="welcomeLoginBtn" style="margin-right: 1rem;">Login Sekarang</button>
-                    <button class="btn btn-secondary" id="welcomeRegisterBtn">Daftar Gratis</button>
+                <!-- Market Activity Monitor -->
+                <div class="admin-form">
+                    <h3>🤖 Bot Trading Activity</h3>
+                    <div class="market-activity" id="marketActivity">
+                        <div class="activity-item">System initialized...</div>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <!-- Coins List -->
+        <div class="coins-section">
+            <h2 class="section-title">📊 Available Coins (Spot Trading)</h2>
+            <div id="coinsList"></div>
+        </div>
+
+        <!-- User Portfolio -->
+        <div class="coins-section" id="userPortfolioSection" style="display: none;">
+            <h2 class="section-title">💼 My Portfolio</h2>
+            <div id="userPortfolio"></div>
+        </div>
     </div>
 
-    <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
-            authDomain: "zeepaylater-93a94.firebaseapp.com",
-            projectId: "zeepaylater-93a94",
-            storageBucket: "zeepaylater-93a94.appspot.com",
-            messagingSenderId: "358065954807",
-            appId: "1:358065954807:web:66619211fea82a4b2518f2"
+    <!-- Welcome Screen -->
+    <div id="welcomeScreen">
+        <div style="text-align: center; padding: 4rem 0;">
+            <h1 style="font-size: 3rem; margin-bottom: 1rem;">🚀 Welcome to CryptoSim</h1>
+            <p style="font-size: 1.2rem; color: #888; margin-bottom: 1rem;">
+                Platform crypto trading simulator dengan sistem SPOT trading
+            </p>
+            <p style="font-size: 1rem; color: #666; margin-bottom: 2rem;">
+                ✅ Admin controls market • ✅ Bot auto-trading • ✅ Real coin ownership • ✅ Spot trading only
+            </p>
+            <div>
+                <button class="btn btn-primary" style="margin-right: 1rem;" onclick="showAuthModal('login')">Login Sekarang</button>
+                <button class="btn btn-secondary" onclick="showAuthModal('register')">Daftar Gratis</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+ // Firebase Configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
+    authDomain: "zeepaylater-93a94.firebaseapp.com",
+    projectId: "zeepaylater-93a94",
+    storageBucket: "zeepaylater-93a94.appspot.com",
+    messagingSenderId: "358065954807",
+    appId: "1:358065954807:web:66619211fea82a4b2518f2"
+};
+
+// Inisialisasi Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Admin UIDs
+const ADMIN_UIDS = [
+    'demo-admin-uid-123',  // Demo admin UID
+    // Tambah UID admin real di sini
+];
+
+// Fungsi cek admin
+function isUserAdmin(uid) {
+    return ADMIN_UIDS.includes(uid);
+}
+
+// Data Storage (gunakan Firestore)
+let userData = {
+    balance: 1000, // Dalam ZRC
+    coins: {},
+    trades: []
+};
+
+let marketData = {
+    coins: []
+};
+
+// Bot Trading System
+class TradingBot {
+    constructor() {
+        this.isActive = true;
+        this.activityLog = [];
+    }
+
+    startTrading() {
+        setInterval(() => {
+            if (!this.isActive) return;
+            marketData.coins.forEach(coin => {
+                if (coin.botActive) {
+                    this.simulateTrade(coin);
+                }
+            });
+        }, Math.random() * 10000 + 5000); // 5-15 detik
+    }
+
+    simulateTrade(coin) {
+        const tradeTypes = ['buy', 'sell'];
+        const tradeType = tradeTypes[Math.floor(Math.random() * tradeTypes.length)];
+        const tradeSize = Math.random() * 1000 + 100; // Dalam ZRC
+        
+        let priceImpact = 0;
+        if (tradeType === 'buy') {
+            priceImpact = (tradeSize / (coin.supply * 0.001)) * (Math.random() * 0.05 + 0.01);
+            coin.price += coin.price * priceImpact;
+        } else {
+            priceImpact = -(tradeSize / (coin.supply * 0.001)) * (Math.random() * 0.05 + 0.01);
+            coin.price += coin.price * priceImpact;
+        }
+
+        coin.change += priceImpact * 100;
+        if (coin.price < 0.01) coin.price = 0.01;
+        coin.volume24h += tradeSize;
+
+        const activity = {
+            type: tradeType,
+            coin: coin.symbol,
+            size: tradeSize,
+            priceImpact: priceImpact * 100,
+            newPrice: coin.price,
+            timestamp: new Date()
         };
 
-        // Inisialisasi Firebase
-        try {
-            firebase.initializeApp(firebaseConfig);
-        } catch (error) {
-            console.error('Error inisialisasi Firebase:', error);
-        }
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-
-        // Set persistensi login
-        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-            .catch(error => console.error('Error set persistensi:', error));
-
-        // Admin UIDs
-        const ADMIN_UIDS = ['demo-admin-uid-123'];
-
-        // Fungsi cek admin
-        function isUserAdmin(uid) {
-            return ADMIN_UIDS.includes(uid);
+        this.activityLog.push(activity);
+        if (this.activityLog.length > 50) {
+            this.activityLog.shift();
         }
 
-        // Data Storage
-        let userData = {
+        this.updateActivityDisplay(activity);
+        saveMarketData(); // Simpan update harga ke Firestore
+    }
+
+    updateActivityDisplay(activity) {
+        const activityContainer = document.getElementById('marketActivity');
+        if (!activityContainer) return;
+
+        const activityElement = document.createElement('div');
+        activityElement.className = 'activity-item';
+        activityElement.innerHTML = `
+            <span style="color: ${activity.type === 'buy' ? '#26de81' : '#fc5c65'}">
+                ${activity.type === 'buy' ? '🟢' : '🔴'} BOT ${activity.type.toUpperCase()} 
+            </span>
+            ${activity.coin}/ZRC ${activity.size.toFixed(0)} ZRC 
+            (${activity.priceImpact >= 0 ? '+' : ''}${activity.priceImpact.toFixed(2)}%) 
+            → ${activity.newPrice.toFixed(2)} ZRC
+        `;
+        
+        activityContainer.insertBefore(activityElement, activityContainer.firstChild);
+        const items = activityContainer.children;
+        if (items.length > 20) {
+            activityContainer.removeChild(items[items.length - 1]);
+        }
+    }
+
+    activateForCoin(coinId) {
+        const coin = marketData.coins.find(c => c.id === coinId);
+        if (coin) {
+            coin.botActive = true;
+            console.log(`🤖 Bot diaktifkan untuk ${coin.symbol}`);
+            saveMarketData();
+        }
+    }
+}
+
+// Inisialisasi bot
+const tradingBot = new TradingBot();
+
+// Variabel global
+let currentUser = null;
+let isAuthMode = 'login';
+let selectedCoin = null;
+let priceUpdateInterval = null;
+
+// Elemen DOM
+const authModal = document.getElementById('authModal');
+const tradingModal = document.getElementById('tradingModal');
+const dashboard = document.getElementById('dashboard');
+const welcomeScreen = document.getElementById('welcomeScreen');
+const authForm = document.getElementById('authForm');
+const coinsList = document.getElementById('coinsList');
+
+// Event Listeners
+document.getElementById('loginBtn').addEventListener('click', () => showAuthModal('login'));
+document.getElementById('registerBtn').addEventListener('click', () => showAuthModal('register'));
+document.getElementById('logoutBtn').addEventListener('click', logout);
+document.getElementById('closeModal').addEventListener('click', closeAuthModal);
+document.getElementById('closeTradingModal').addEventListener('click', closeTradingModal);
+document.getElementById('createCoinBtn').addEventListener('click', createCoin);
+document.getElementById('buyBtn').addEventListener('click', () => executeSpotTrade('buy'));
+document.getElementById('sellBtn').addEventListener('click', () => executeSpotTrade('sell'));
+
+authForm.addEventListener('submit', handleAuth);
+
+// Listener untuk persist login
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        currentUser = user;
+        currentUser.isAdmin = isUserAdmin(user.uid);
+        await loadUserData(user.uid);
+        await loadMarketData();
+        showDashboard();
+    } else {
+        showWelcomeScreen();
+    }
+});
+
+// Fungsi Autentikasi
+function showAuthModal(mode) {
+    isAuthMode = mode;
+    document.getElementById('authTitle').textContent = mode === 'login' ? 'Login' : 'Daftar Akun Baru';
+    document.querySelector('#authForm button[type="submit"]').textContent = 
+        mode === 'login' ? 'Login' : 'Daftar';
+    authModal.style.display = 'flex';
+}
+
+function closeAuthModal() {
+    authModal.style.display = 'none';
+    clearAuthMessages();
+}
+
+function closeTradingModal() {
+    tradingModal.style.display = 'none';
+    clearTradingMessages();
+}
+
+async function handleAuth(e) {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    try {
+        let result;
+        if (isAuthMode === 'login') {
+            result = await auth.signInWithEmailAndPassword(email, password);
+        } else {
+            result = await auth.createUserWithEmailAndPassword(email, password);
+            await initializeUserData(result.user.uid);
+        }
+
+        currentUser = result.user;
+        currentUser.isAdmin = isUserAdmin(currentUser.uid);
+        await loadUserData(currentUser.uid);
+        showSuccess('authSuccess', `${isAuthMode === 'login' ? 'Login' : 'Registrasi'} berhasil!`);
+        
+        setTimeout(() => {
+            closeAuthModal();
+            showDashboard();
+        }, 1500);
+
+    } catch (error) {
+        showError('authError', error.message);
+    }
+}
+
+async function logout() {
+    await auth.signOut();
+    currentUser = null;
+    if (priceUpdateInterval) {
+        clearInterval(priceUpdateInterval);
+        priceUpdateInterval = null;
+    }
+    showWelcomeScreen();
+}
+
+// Fungsi Manajemen Data
+async function initializeUserData(uid) {
+    try {
+        await db.collection('users').doc(uid).set({
             balance: 1000, // Dalam ZRC
             coins: {},
-            trades: []
-        };
-
-        let marketData = {
-            coins: []
-        };
-
-        // Bot Trading System
-        class TradingBot {
-            constructor() {
-                this.isActive = true;
-                this.activityLog = [];
-            }
-
-            startTrading() {
-                setInterval(() => {
-                    if (!this.isActive) return;
-                    marketData.coins.forEach(coin => {
-                        if (coin.botActive) {
-                            this.simulateTrade(coin);
-                        }
-                    });
-                }, Math.random() * 10000 + 5000);
-            }
-
-            simulateTrade(coin) {
-                const tradeTypes = ['buy', 'sell'];
-                const tradeType = tradeTypes[Math.floor(Math.random() * tradeTypes.length)];
-                const tradeSize = Math.random() * 1000 + 100;
-
-                let priceImpact = 0;
-                if (tradeType === 'buy') {
-                    priceImpact = (tradeSize / (coin.supply * 0.001)) * (Math.random() * 0.05 + 0.01);
-                    coin.price += coin.price * priceImpact;
-                } else {
-                    priceImpact = -(tradeSize / (coin.supply * 0.001)) * (Math.random() * 0.05 + 0.01);
-                    coin.price += coin.price * priceImpact;
-                }
-
-                coin.change += priceImpact * 100;
-                if (coin.price < 0.01) coin.price = 0.01;
-                coin.volume24h += tradeSize;
-
-                const activity = {
-                    type: tradeType,
-                    coin: coin.symbol,
-                    size: tradeSize,
-                    priceImpact: priceImpact * 100,
-                    newPrice: coin.price,
-                    timestamp: new Date()
-                };
-
-                this.activityLog.push(activity);
-                if (this.activityLog.length > 50) {
-                    this.activityLog.shift();
-                }
-
-                this.updateActivityDisplay(activity);
-                saveMarketData();
-            }
-
-            updateActivityDisplay(activity) {
-                const activityContainer = document.getElementById('marketActivity');
-                if (!activityContainer) return;
-
-                const activityElement = document.createElement('div');
-                activityElement.className = 'activity-item';
-                activityElement.innerHTML = `
-                    <span style="color: ${activity.type === 'buy' ? '#26de81' : '#fc5c65'}">
-                        ${activity.type === 'buy' ? '🟢' : '🔴'} BOT ${activity.type.toUpperCase()} 
-                    </span>
-                    ${activity.coin}/ZRC ${activity.size.toFixed(0)} ZRC 
-                    (${activity.priceImpact >= 0 ? '+' : ''}${activity.priceImpact.toFixed(2)}%) 
-                    → ${activity.newPrice.toFixed(2)} ZRC
-                `;
-                
-                activityContainer.insertBefore(activityElement, activityContainer.firstChild);
-                const items = activityContainer.children;
-                if (items.length > 20) {
-                    activityContainer.removeChild(items[items.length - 1]);
-                }
-            }
-
-            activateForCoin(coinId) {
-                const coin = marketData.coins.find(c => c.id === coinId);
-                if (coin) {
-                    coin.botActive = true;
-                    console.log(`🤖 Bot diaktifkan untuk ${coin.symbol}`);
-                    saveMarketData();
-                }
-            }
-        }
-
-        // Inisialisasi bot
-        const tradingBot = new TradingBot();
-
-        // Variabel global
-        let currentUser = null;
-        let isAuthMode = 'login';
-        let selectedCoin = null;
-        let priceUpdateInterval = null;
-
-        // Elemen DOM
-        const authModal = document.getElementById('authModal');
-        const tradingModal = document.getElementById('tradingModal');
-        const dashboard = document.getElementById('dashboard');
-        const welcomeScreen = document.getElementById('welcomeScreen');
-        const authForm = document.getElementById('authForm');
-        const coinsList = document.getElementById('coinsList');
-
-        // Event Listeners
-        document.getElementById('loginBtn').addEventListener('click', () => {
-            console.log('Tombol login diklik');
-            showAuthModal('login');
+            trades: [],
+            isAdmin: isUserAdmin(uid),
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        document.getElementById('registerBtn').addEventListener('click', () => {
-            console.log('Tombol register diklik');
-            showAuthModal('register');
+    } catch (error) {
+        console.error('Error inisialisasi data user:', error);
+    }
+}
+
+async function loadUserData(uid) {
+    try {
+        const doc = await db.collection('users').doc(uid).get();
+        if (doc.exists) {
+            userData = { uid: uid, ...doc.data() };
+            userData.isAdmin = isUserAdmin(uid);
+        } else {
+            await initializeUserData(uid);
+            await loadUserData(uid); // Load ulang setelah init
+        }
+    } catch (error) {
+        console.error('Error load data user:', error);
+        await initializeUserData(uid);
+    }
+}
+
+async function saveUserData() {
+    try {
+        await db.collection('users').doc(userData.uid).update({
+            balance: userData.balance,
+            coins: userData.coins,
+            trades: userData.trades,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
         });
-        document.getElementById('welcomeLoginBtn').addEventListener('click', () => {
-            console.log('Tombol welcome login diklik');
-            showAuthModal('login');
-        });
-        document.getElementById('welcomeRegisterBtn').addEventListener('click', () => {
-            console.log('Tombol welcome register diklik');
-            showAuthModal('register');
-        });
-        document.getElementById('logoutBtn').addEventListener('click', logout);
-        document.getElementById('closeModal').addEventListener('click', closeAuthModal);
-        document.getElementById('closeTradingModal').addEventListener('click', closeTradingModal);
-        document.getElementById('createCoinBtn').addEventListener('click', createCoin);
-        document.getElementById('buyBtn').addEventListener('click', () => executeSpotTrade('buy'));
-        document.getElementById('sellBtn').addEventListener('click', () => executeSpotTrade('sell'));
+    } catch (error) {
+        console.error('Error simpan data user:', error);
+    }
+}
 
-        authForm.addEventListener('submit', handleAuth);
-
-        // Listener untuk persist login
-        auth.onAuthStateChanged(async (user) => {
-            console.log('Auth state changed:', user ? 'User logged in' : 'No user');
-            if (user) {
-                currentUser = user;
-                currentUser.isAdmin = isUserAdmin(user.uid);
-                console.log('Current user:', currentUser.email, 'Is admin:', currentUser.isAdmin);
-                try {
-                    await loadUserData(user.uid);
-                    await loadMarketData();
-                    showDashboard();
-                } catch (error) {
-                    console.error('Error saat load data user/market:', error);
-                    showError('authError', 'Gagal memuat data. Coba lagi.');
+async function loadMarketData() {
+    try {
+        const doc = await db.collection('market').doc('coins').get();
+        if (doc.exists) {
+            marketData.coins = doc.data().coins || [];
+        } else {
+            // Init market data awal jika belum ada
+            marketData.coins = [
+                {
+                    id: 'dmp',
+                    name: 'DampCoin',
+                    symbol: 'DMP',
+                    price: 10,
+                    change: 2.5,
+                    supply: 50000000,
+                    createdBy: 'system',
+                    botActive: true,
+                    volume24h: 0
+                },
+                {
+                    id: 'atm',
+                    name: 'AtomCoin',
+                    symbol: 'ATM',
+                    price: 5,
+                    change: -1.2,
+                    supply: 200000000,
+                    createdBy: 'system',
+                    botActive: true,
+                    volume24h: 0
                 }
-            } else {
-                showWelcomeScreen();
-            }
-        });
-
-        // Fungsi Autentikasi
-        function showAuthModal(mode) {
-            isAuthMode = mode;
-            document.getElementById('authTitle').textContent = mode === 'login' ? 'Login' : 'Daftar Akun Baru';
-            document.querySelector('#authForm button[type="submit"]').textContent = 
-                mode === 'login' ? 'Login' : 'Daftar';
-            authModal.style.display = 'flex';
-            clearAuthMessages();
-            console.log('Modal auth ditampilkan untuk:', mode);
-        }
-
-        function closeAuthModal() {
-            authModal.style.display = 'none';
-            clearAuthMessages();
-            console.log('Modal auth ditutup');
-        }
-
-        function closeTradingModal() {
-            tradingModal.style.display = 'none';
-            clearTradingMessages();
-            console.log('Modal trading ditutup');
-        }
-
-        async function handleAuth(e) {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            try {
-                let result;
-                if (isAuthMode === 'login') {
-                    console.log('Mencoba login:', email);
-                    result = await auth.signInWithEmailAndPassword(email, password);
-                } else {
-                    console.log('Mencoba register:', email);
-                    result = await auth.createUserWithEmailAndPassword(email, password);
-                    await initializeUserData(result.user.uid);
-                }
-
-                currentUser = result.user;
-                currentUser.isAdmin = isUserAdmin(currentUser.uid);
-                await loadUserData(currentUser.uid);
-                showSuccess('authSuccess', `${isAuthMode === 'login' ? 'Login' : 'Registrasi'} berhasil!`);
-                
-                setTimeout(() => {
-                    closeAuthModal();
-                    showDashboard();
-                }, 1500);
-
-            } catch (error) {
-                console.error('Error autentikasi:', error);
-                let errorMessage = 'Terjadi kesalahan. Coba lagi.';
-                if (error.code === 'auth/wrong-password') {
-                    errorMessage = 'Password salah.';
-                } else if (error.code === 'auth/user-not-found') {
-                    errorMessage = 'Email tidak ditemukan.';
-                } else if (error.code === 'auth/email-already-in-use') {
-                    errorMessage = 'Email sudah digunakan.';
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMessage = 'Email tidak valid.';
-                }
-                showError('authError', errorMessage);
-            }
-        }
-
-        async function logout() {
-            try {
-                await auth.signOut();
-                currentUser = null;
-                if (priceUpdateInterval) {
-                    clearInterval(priceUpdateInterval);
-                    priceUpdateInterval = null;
-                }
-                showWelcomeScreen();
-                console.log('Logout berhasil');
-            } catch (error) {
-                console.error('Error logout:', error);
-                showError('authError', 'Gagal logout. Coba lagi.');
-            }
-        }
-
-        // Fungsi Manajemen Data
-        async function initializeUserData(uid) {
-            try {
-                await db.collection('users').doc(uid).set({
-                    balance: 1000,
-                    coins: {},
-                    trades: [],
-                    isAdmin: isUserAdmin(uid),
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                console.log('User data diinisialisasi untuk UID:', uid);
-            } catch (error) {
-                console.error('Error inisialisasi data user:', error);
-            }
-        }
-
-        async function loadUserData(uid) {
-            try {
-                const doc = await db.collection('users').doc(uid).get();
-                if (doc.exists) {
-                    userData = { uid: uid, ...doc.data() };
-                    userData.isAdmin = isUserAdmin(uid);
-                    console.log('User data dimuat:', userData);
-                } else {
-                    await initializeUserData(uid);
-                    await loadUserData(uid);
-                }
-            } catch (error) {
-                console.error('Error load data user:', error);
-                await initializeUserData(uid);
-            }
-        }
-
-        async function saveUserData() {
-            try {
-                await db.collection('users').doc(userData.uid).set({
-                    balance: userData.balance,
-                    coins: userData.coins,
-                    trades: userData.trades,
-                    isAdmin: userData.isAdmin,
-                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-                    createdAt: userData.createdAt || firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-                console.log('User data disimpan:', userData);
-            } catch (error) {
-                console.error('Error simpan data user:', error);
-            }
-        }
-
-        async function loadMarketData() {
-            try {
-                const doc = await db.collection('market').doc('coins').get();
-                if (doc.exists) {
-                    marketData.coins = doc.data().coins || [];
-                    console.log('Market data dimuat:', marketData.coins);
-                } else {
-                    marketData.coins = [
-                        {
-                            id: 'dmp',
-                            name: 'DampCoin',
-                            symbol: 'DMP',
-                            price: 10,
-                            change: 2.5,
-                            supply: 50000000,
-                            createdBy: 'system',
-                            botActive: true,
-                            volume24h: 0
-                        },
-                        {
-                            id: 'atm',
-                            name: 'AtomCoin',
-                            symbol: 'ATM',
-                            price: 5,
-                            change: -1.2,
-                            supply: 200000000,
-                            createdBy: 'system',
-                            botActive: true,
-                            volume24h: 0
-                        }
-                    ];
-                    await saveMarketData();
-                }
-            } catch (error) {
-                console.error('Error load data market:', error);
-            }
-
-            db.collection('market').doc('coins').onSnapshot((doc) => {
-                if (doc.exists) {
-                    marketData.coins = doc.data().coins || [];
-                    updateCoinsList();
-                    updatePortfolio();
-                    updateDashboard();
-                    console.log('Market data updated via listener:', marketData.coins);
-                }
-            });
-        }
-
-        async function saveMarketData() {
-            try {
-                await db.collection('market').doc('coins').set({
-                    coins: marketData.coins,
-                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                console.log('Market data disimpan:', marketData.coins);
-            } catch (error) {
-                console.error('Error simpan data market:', error);
-            }
-        }
-
-        // Fungsi Dashboard
-        function showDashboard() {
-            welcomeScreen.style.display = 'none';
-            dashboard.style.display = 'block';
-            
-            document.getElementById('loginBtn').style.display = 'none';
-            document.getElementById('registerBtn').style.display = 'none';
-            document.getElementById('logoutBtn').style.display = 'inline-block';
-            document.getElementById('userInfo').style.display = 'inline-block';
-            document.getElementById('userInfo').innerHTML = `
-                👤 ${currentUser.email}<br>
-                ${currentUser.isAdmin ? '<span style="color: #ff4757;">[ADMIN]</span>' : ''}
-            `;
-
-            document.getElementById('adminPanel').style.display = currentUser.isAdmin ? 'block' : 'none';
-            document.getElementById('userPortfolioSection').style.display = 'block';
-
-            updateDashboard();
-            updateCoinsList();
-            updatePortfolio();
-
-            if (currentUser.isAdmin && !priceUpdateInterval) {
-                tradingBot.startTrading();
-                priceUpdateInterval = setInterval(() => {}, 5000);
-            }
-        }
-
-        function showWelcomeScreen() {
-            welcomeScreen.style.display = 'block';
-            dashboard.style.display = 'none';
-            document.getElementById('loginBtn').style.display = 'inline-block';
-            document.getElementById('registerBtn').style.display = 'inline-block';
-            document.getElementById('logoutBtn').style.display = 'none';
-            document.getElementById('userInfo').style.display = 'none';
-            document.getElementById('adminPanel').style.display = 'none';
-            document.getElementById('userPortfolioSection').style.display = 'none';
-        }
-
-        function updateDashboard() {
-            document.getElementById('totalBalance').textContent = userData.balance.toFixed(2);
-            let portfolioValue = 0;
-            for (const coinId in userData.coins) {
-                const coin = marketData.coins.find(c => c.id === coinId);
-                if (coin) {
-                    portfolioValue += userData.coins[coinId].amount * coin.price;
-                }
-            }
-            document.getElementById('portfolioValue').textContent = `${portfolioValue.toFixed(2)} ZRC`;
-
-            let todayPnL = 0;
-            userData.trades.forEach(trade => {
-                if (new Date(trade.timestamp).toDateString() === new Date().toDateString()) {
-                    todayPnL += trade.type === 'buy' ? -trade.total : trade.total;
-                }
-            });
-            document.getElementById('todayPnL').textContent = `${todayPnL >= 0 ? '+' : ''}${todayPnL.toFixed(2)} ZRC`;
-            document.getElementById('todayPnL').className = `stat-value ${todayPnL >= 0 ? 'positive' : 'negative'}`;
-
-            const totalTrades = userData.trades.length;
-            const winningTrades = userData.trades.filter(trade => trade.profit > 0).length;
-            const winRate = totalTrades > 0 ? (winningTrades / totalTrades * 100).toFixed(1) : 0;
-            document.getElementById('winRate').textContent = `${winRate}%`;
-        }
-
-        function updateCoinsList() {
-            coinsList.innerHTML = '';
-            marketData.coins.forEach(coin => {
-                const coinElement = document.createElement('div');
-                coinElement.className = 'coin-item';
-                coinElement.innerHTML = `
-                    <div class="coin-info">
-                        <div class="coin-icon">${coin.symbol}</div>
-                        <div class="coin-details">
-                            <h3>${coin.name} (${coin.symbol}/ZRC)</h3>
-                            <div class="coin-supply">Total Supply: ${coin.supply.toLocaleString()}</div>
-                        </div>
-                    </div>
-                    <div class="price-display">
-                        <div class="price live-price">${coin.price.toFixed(2)} ZRC</div>
-                        <div class="price-change ${coin.change >= 0 ? 'positive' : 'negative'}">
-                            ${coin.change >= 0 ? '+' : ''}${coin.change.toFixed(2)}%
-                        </div>
-                    </div>
-                    <div class="coin-actions">
-                        <button class="btn btn-small btn-primary" onclick="openTradingModal('${coin.id}')">Trade</button>
-                    </div>
-                `;
-                coinsList.appendChild(coinElement);
-            });
-        }
-
-        function updatePortfolio() {
-            const portfolioList = document.getElementById('userPortfolio');
-            portfolioList.innerHTML = '';
-            
-            for (const coinId in userData.coins) {
-                const coin = marketData.coins.find(c => c.id === coinId);
-                if (coin && userData.coins[coinId].amount > 0) {
-                    const currentValue = userData.coins[coinId].amount * coin.price;
-                    const profit = currentValue - userData.coins[coinId].totalInvested;
-                    const portfolioItem = document.createElement('div');
-                    portfolioItem.className = 'portfolio-item';
-                    portfolioItem.innerHTML = `
-                        <div>
-                            <strong>${coin.name} (${coin.symbol})</strong><br>
-                            Jumlah: ${userData.coins[coinId].amount.toFixed(6)}<br>
-                            Harga Beli Rata-rata: ${userData.coins[coinId].avgPrice.toFixed(2)} ZRC
-                        </div>
-                        <div style="text-align: right;">
-                            Nilai: ${currentValue.toFixed(2)} ZRC<br>
-                            <span class="${profit >= 0 ? 'positive' : 'negative'}">
-                                P&L: ${profit >= 0 ? '+' : ''}${profit.toFixed(2)} ZRC
-                            </span>
-                        </div>
-                    `;
-                    portfolioList.appendChild(portfolioItem);
-                }
-            }
-
-            const portfolioPreview = document.getElementById('portfolioList');
-            portfolioPreview.innerHTML = portfolioList.innerHTML;
-        }
-
-        function openTradingModal(coinId) {
-            selectedCoin = marketData.coins.find(c => c.id === coinId);
-            if (!selectedCoin) {
-                console.error('Koin tidak ditemukan:', coinId);
-                return;
-            }
-
-            tradingModal.style.display = 'flex';
-            document.getElementById('tradingTitle').textContent = `💰 Spot Trading - ${selectedCoin.name}`;
-            document.getElementById('selectedCoinName').textContent = `${selectedCoin.name} (${selectedCoin.symbol}/ZRC)`;
-            document.getElementById('selectedCoinPrice').textContent = selectedCoin.price.toFixed(2);
-            document.getElementById('userBalance').textContent = userData.balance.toFixed(2);
-            document.getElementById('ownedAmount').textContent = userData.coins[coinId]?.amount?.toFixed(6) || '0';
-            console.log('Modal trading ditampilkan untuk koin:', selectedCoin.symbol);
-        }
-
-        async function executeSpotTrade(type) {
-            const amount = parseFloat(document.getElementById('tradeAmount').value);
-            if (!selectedCoin || isNaN(amount) || amount <= 0) {
-                showError('tradingError', 'Masukkan jumlah trade yang valid');
-                return;
-            }
-
-            const totalCost = amount;
-            const coinAmount = amount / selectedCoin.price;
-
-            if (type === 'buy') {
-                if (totalCost > userData.balance) {
-                    showError('tradingError', 'Saldo ZRC tidak cukup');
-                    return;
-                }
-
-                userData.balance -= totalCost;
-                if (!userData.coins[selectedCoin.id]) {
-                    userData.coins[selectedCoin.id] = {
-                        amount: 0,
-                        avgPrice: 0,
-                        totalInvested: 0
-                    };
-                }
-
-                userData.coins[selectedCoin.id].amount += coinAmount;
-                userData.coins[selectedCoin.id].totalInvested += totalCost;
-                userData.coins[selectedCoin.id].avgPrice = 
-                    userData.coins[selectedCoin.id].totalInvested / userData.coins[selectedCoin.id].amount;
-
-                userData.trades.push({
-                    type: 'buy',
-                    coinId: selectedCoin.id,
-                    coinName: selectedCoin.name,
-                    amount: coinAmount,
-                    price: selectedCoin.price,
-                    total: totalCost,
-                    timestamp: new Date(),
-                    profit: 0
-                });
-
-                showSuccess('tradingSuccess', `Berhasil beli ${coinAmount.toFixed(6)} ${selectedCoin.symbol}`);
-            } else {
-                const ownedAmount = userData.coins[selectedCoin.id]?.amount || 0;
-                if (coinAmount > ownedAmount) {
-                    showError('tradingError', 'Jumlah koin tidak cukup');
-                    return;
-                }
-
-                userData.balance += totalCost;
-                userData.coins[selectedCoin.id].amount -= coinAmount;
-                userData.coins[selectedCoin.id].totalInvested -= (coinAmount * userData.coins[selectedCoin.id].avgPrice);
-
-                const profit = (selectedCoin.price - userData.coins[selectedCoin.id].avgPrice) * coinAmount;
-                userData.trades.push({
-                    type: 'sell',
-                    coinId: selectedCoin.id,
-                    coinName: selectedCoin.name,
-                    amount: coinAmount,
-                    price: selectedCoin.price,
-                    total: totalCost,
-                    timestamp: new Date(),
-                    profit: profit
-                });
-
-                if (userData.coins[selectedCoin.id].amount <= 0) {
-                    delete userData.coins[selectedCoin.id];
-                } else {
-                    userData.coins[selectedCoin.id].avgPrice = 
-                        userData.coins[selectedCoin.id].totalInvested / userData.coins[selectedCoin.id].amount;
-                }
-
-                showSuccess('tradingSuccess', `Berhasil jual ${coinAmount.toFixed(6)} ${selectedCoin.symbol}`);
-            }
-
-            await saveUserData();
-            updateDashboard();
-            updatePortfolio();
-            document.getElementById('userBalance').textContent = userData.balance.toFixed(2);
-            document.getElementById('ownedAmount').textContent = userData.coins[selectedCoin.id]?.amount?.toFixed(6) || '0';
-            document.getElementById('tradeAmount').value = '';
-            
-            setTimeout(clearTradingMessages, 3000);
-        }
-
-        async function createCoin() {
-            if (!currentUser?.isAdmin) {
-                showError('authError', 'Hanya admin yang bisa membuat koin');
-                return;
-            }
-
-            const name = document.getElementById('coinName').value;
-            const symbol = document.getElementById('coinSymbol').value.toUpperCase();
-            const price = parseFloat(document.getElementById('coinPrice').value);
-            const supply = parseInt(document.getElementById('coinSupply').value);
-
-            if (!name || !symbol || isNaN(price) || isNaN(supply) || price <= 0 || supply <= 0) {
-                showError('authError', 'Isi semua kolom dengan nilai valid');
-                return;
-            }
-
-            const coinId = symbol.toLowerCase() + '_' + Date.now();
-            const newCoin = {
-                id: coinId,
-                name: name,
-                symbol: symbol,
-                price: price,
-                change: 0,
-                supply: supply,
-                createdBy: currentUser.uid,
-                botActive: true,
-                volume24h: 0
-            };
-
-            marketData.coins.push(newCoin);
-            tradingBot.activateForCoin(coinId);
+            ];
             await saveMarketData();
+        }
+    } catch (error) {
+        console.error('Error load data market:', error);
+    }
+
+    // Real-time listener untuk update harga
+    db.collection('market').doc('coins').onSnapshot((doc) => {
+        if (doc.exists) {
+            marketData.coins = doc.data().coins || [];
             updateCoinsList();
+            updatePortfolio();
+            updateDashboard();
+        }
+    });
+}
 
-            document.getElementById('coinName').value = '';
-            document.getElementById('coinSymbol').value = '';
-            document.getElementById('coinPrice').value = '';
-            document.getElementById('coinSupply').value = '';
+async function saveMarketData() {
+    try {
+        await db.collection('market').doc('coins').set({
+            coins: marketData.coins,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    } catch (error) {
+        console.error('Error simpan data market:', error);
+    }
+}
 
-            showSuccess('authSuccess', `Koin ${name} (${symbol}) berhasil dibuat!`);
-            setTimeout(clearAuthMessages, 3000);
+// Fungsi Dashboard
+function showDashboard() {
+    welcomeScreen.style.display = 'none';
+    dashboard.style.display = 'block';
+    
+    document.getElementById('loginBtn').style.display = 'none';
+    document.getElementById('registerBtn').style.display = 'none';
+    document.getElementById('logoutBtn').style.display = 'inline-block';
+    document.getElementById('userInfo').style.display = 'inline-block';
+    document.getElementById('userInfo').innerHTML = `
+        👤 ${currentUser.email}<br>
+        ${currentUser.isAdmin ? '<span style="color: #ff4757;">[ADMIN]</span>' : ''}
+    `;
+
+    document.getElementById('adminPanel').style.display = currentUser.isAdmin ? 'block' : 'none';
+    document.getElementById('userPortfolioSection').style.display = 'block';
+
+    updateDashboard();
+    updateCoinsList();
+    updatePortfolio();
+
+    // Jalankan bot hanya jika admin
+    if (currentUser.isAdmin && !priceUpdateInterval) {
+        tradingBot.startTrading();
+        priceUpdateInterval = setInterval(() => {}, 5000); // Placeholder, karena update via listener
+    }
+}
+
+function showWelcomeScreen() {
+    welcomeScreen.style.display = 'block';
+    dashboard.style.display = 'none';
+    document.getElementById('loginBtn').style.display = 'inline-block';
+    document.getElementById('registerBtn').style.display = 'inline-block';
+    document.getElementById('logoutBtn').style.display = 'none';
+    document.getElementById('userInfo').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('userPortfolioSection').style.display = 'none';
+}
+
+function updateDashboard() {
+    document.getElementById('totalBalance').textContent = userData.balance.toFixed(2) + ' ZRC';
+
+    let portfolioValue = 0;
+    for (const coinId in userData.coins) {
+        const coin = marketData.coins.find(c => c.id === coinId);
+        if (coin) {
+            portfolioValue += userData.coins[coinId].amount * coin.price;
+        }
+    }
+    document.getElementById('portfolioValue').textContent = `${portfolioValue.toFixed(2)} ZRC`;
+
+    let todayPnL = 0;
+    userData.trades.forEach(trade => {
+        if (new Date(trade.timestamp).toDateString() === new Date().toDateString()) {
+            todayPnL += trade.type === 'buy' ? -trade.total : trade.total;
+        }
+    });
+    document.getElementById('todayPnL').textContent = `${todayPnL >= 0 ? '+' : ''}${todayPnL.toFixed(2)} ZRC`;
+    document.getElementById('todayPnL').className = `stat-value ${todayPnL >= 0 ? 'positive' : 'negative'}`;
+
+    const totalTrades = userData.trades.length;
+    const winningTrades = userData.trades.filter(trade => trade.profit > 0).length;
+    const winRate = totalTrades > 0 ? (winningTrades / totalTrades * 100).toFixed(1) : 0;
+    document.getElementById('winRate').textContent = `${winRate}%`;
+}
+
+function updateCoinsList() {
+    coinsList.innerHTML = '';
+    marketData.coins.forEach(coin => {
+        const coinElement = document.createElement('div');
+        coinElement.className = 'coin-item';
+        coinElement.innerHTML = `
+            <div class="coin-info">
+                <div class="coin-icon">${coin.symbol}</div>
+                <div class="coin-details">
+                    <h3>${coin.name} (${coin.symbol}/ZRC)</h3>
+                    <div class="coin-supply">Total Supply: ${coin.supply.toLocaleString()}</div>
+                </div>
+            </div>
+            <div class="price-display">
+                <div class="price live-price">${coin.price.toFixed(2)} ZRC</div>
+                <div class="price-change ${coin.change >= 0 ? 'positive' : 'negative'}">
+                    ${coin.change >= 0 ? '+' : ''}${coin.change.toFixed(2)}%
+                </div>
+            </div>
+            <div class="coin-actions">
+                <button class="btn btn-small btn-primary" onclick="openTradingModal('${coin.id}')">Trade</button>
+            </div>
+        `;
+        coinsList.appendChild(coinElement);
+    });
+}
+
+function updatePortfolio() {
+    const portfolioList = document.getElementById('userPortfolio');
+    portfolioList.innerHTML = '';
+    
+    for (const coinId in userData.coins) {
+        const coin = marketData.coins.find(c => c.id === coinId);
+        if (coin && userData.coins[coinId].amount > 0) {
+            const currentValue = userData.coins[coinId].amount * coin.price;
+            const profit = currentValue - userData.coins[coinId].totalInvested;
+            const portfolioItem = document.createElement('div');
+            portfolioItem.className = 'portfolio-item';
+            portfolioItem.innerHTML = `
+                <div>
+                    <strong>${coin.name} (${coin.symbol})</strong><br>
+                    Jumlah: ${userData.coins[coinId].amount.toFixed(6)}<br>
+                    Harga Beli Rata-rata: ${userData.coins[coinId].avgPrice.toFixed(2)} ZRC
+                </div>
+                <div style="text-align: right;">
+                    Nilai: ${currentValue.toFixed(2)} ZRC<br>
+                    <span class="${profit >= 0 ? 'positive' : 'negative'}">
+                        P&L: ${profit >= 0 ? '+' : ''}${profit.toFixed(2)} ZRC
+                    </span>
+                </div>
+            `;
+            portfolioList.appendChild(portfolioItem);
+        }
+    }
+
+    const portfolioPreview = document.getElementById('portfolioList');
+    portfolioPreview.innerHTML = portfolioList.innerHTML;
+}
+
+function openTradingModal(coinId) {
+    selectedCoin = marketData.coins.find(c => c.id === coinId);
+    if (!selectedCoin) return;
+
+    tradingModal.style.display = 'flex';
+    document.getElementById('tradingTitle').textContent = `💰 Spot Trading - ${selectedCoin.name}`;
+    document.getElementById('selectedCoinName').textContent = `${selectedCoin.name} (${selectedCoin.symbol}/ZRC)`;
+    document.getElementById('selectedCoinPrice').textContent = selectedCoin.price.toFixed(2) + ' ZRC';
+    document.getElementById('userBalance').textContent = userData.balance.toFixed(2) + ' ZRC';
+    document.getElementById('ownedAmount').textContent = userData.coins[coinId]?.amount?.toFixed(6) || '0';
+}
+
+async function executeSpotTrade(type) {
+    const amount = parseFloat(document.getElementById('tradeAmount').value);
+    if (!selectedCoin || isNaN(amount) || amount <= 0) {
+        showError('tradingError', 'Masukkan jumlah trade yang valid');
+        return;
+    }
+
+    const totalCost = amount;
+    const coinAmount = amount / selectedCoin.price;
+
+    if (type === 'buy') {
+        if (totalCost > userData.balance) {
+            showError('tradingError', 'Saldo ZRC tidak cukup');
+            return;
         }
 
-        function showError(elementId, message) {
-            const element = document.getElementById(elementId);
-            element.textContent = message;
-            element.style.display = 'block';
+        userData.balance -= totalCost;
+        if (!userData.coins[selectedCoin.id]) {
+            userData.coins[selectedCoin.id] = {
+                amount: 0,
+                avgPrice: 0,
+                totalInvested: 0
+            };
         }
 
-        function showSuccess(elementId, message) {
-            const element = document.getElementById(elementId);
-            element.textContent = message;
-            element.style.display = 'block';
+        userData.coins[selectedCoin.id].amount += coinAmount;
+        userData.coins[selectedCoin.id].totalInvested += totalCost;
+        userData.coins[selectedCoin.id].avgPrice = 
+            userData.coins[selectedCoin.id].totalInvested / userData.coins[selectedCoin.id].amount;
+
+        userData.trades.push({
+            type: 'buy',
+            coinId: selectedCoin.id,
+            coinName: selectedCoin.name,
+            amount: coinAmount,
+            price: selectedCoin.price,
+            total: totalCost,
+            timestamp: new Date(),
+            profit: 0
+        });
+
+        showSuccess('tradingSuccess', `Berhasil beli ${coinAmount.toFixed(6)} ${selectedCoin.symbol}`);
+    } else {
+        const ownedAmount = userData.coins[selectedCoin.id]?.amount || 0;
+        if (coinAmount > ownedAmount) {
+            showError('tradingError', 'Jumlah koin tidak cukup');
+            return;
         }
 
-        function clearAuthMessages() {
-            document.getElementById('authError').style.display = 'none';
-            document.getElementById('authSuccess').style.display = 'none';
+        userData.balance += totalCost;
+        userData.coins[selectedCoin.id].amount -= coinAmount;
+        userData.coins[selectedCoin.id].totalInvested -= (coinAmount * userData.coins[selectedCoin.id].avgPrice);
+
+        const profit = (selectedCoin.price - userData.coins[selectedCoin.id].avgPrice) * coinAmount;
+        userData.trades.push({
+            type: 'sell',
+            coinId: selectedCoin.id,
+            coinName: selectedCoin.name,
+            amount: coinAmount,
+            price: selectedCoin.price,
+            total: totalCost,
+            timestamp: new Date(),
+            profit: profit
+        });
+
+        if (userData.coins[selectedCoin.id].amount <= 0) {
+            delete userData.coins[selectedCoin.id];
+        } else {
+            userData.coins[selectedCoin.id].avgPrice = 
+                userData.coins[selectedCoin.id].totalInvested / userData.coins[selectedCoin.id].amount;
         }
 
-        function clearTradingMessages() {
-            document.getElementById('tradingError').style.display = 'none';
-            document.getElementById('tradingSuccess').style.display = 'none';
-        }
+        showSuccess('tradingSuccess', `Berhasil jual ${coinAmount.toFixed(6)} ${selectedCoin.symbol}`);
+    }
 
-        // Inisialisasi awal
-        loadMarketData();
-    </script>
+    await saveUserData();
+    updateDashboard();
+    updatePortfolio();
+    document.getElementById('userBalance').textContent = userData.balance.toFixed(2) + ' ZRC';
+    document.getElementById('ownedAmount').textContent = userData.coins[selectedCoin.id]?.amount?.toFixed(6) || '0';
+    document.getElementById('tradeAmount').value = '';
+    
+    setTimeout(clearTradingMessages, 3000);
+}
+
+async function createCoin() {
+    if (!currentUser.isAdmin) {
+        showError('authError', 'Hanya admin yang bisa membuat koin');
+        return;
+    }
+
+    const name = document.getElementById('coinName').value;
+    const symbol = document.getElementById('coinSymbol').value.toUpperCase();
+    const price = parseFloat(document.getElementById('coinPrice').value);
+    const supply = parseInt(document.getElementById('coinSupply').value);
+
+    if (!name || !symbol || isNaN(price) || isNaN(supply) || price <= 0 || supply <= 0) {
+        showError('authError', 'Isi semua kolom dengan nilai valid');
+        return;
+    }
+
+    const coinId = symbol.toLowerCase() + '_' + Date.now();
+    const newCoin = {
+        id: coinId,
+        name: name,
+        symbol: symbol,
+        price: price,
+        change: 0,
+        supply: supply,
+        createdBy: currentUser.uid,
+        botActive: true,
+        volume24h: 0
+    };
+
+    marketData.coins.push(newCoin);
+    tradingBot.activateForCoin(coinId);
+    await saveMarketData();
+    updateCoinsList();
+
+    document.getElementById('coinName').value = '';
+    document.getElementById('coinSymbol').value = '';
+    document.getElementById('coinPrice').value = '';
+    document.getElementById('coinSupply').value = '';
+
+    showSuccess('authSuccess', `Koin ${name} (${symbol}) berhasil dibuat!`);
+    setTimeout(clearAuthMessages, 3000);
+}
+
+function showError(elementId, message) {
+    const element = document.getElementById(elementId);
+    element.textContent = message;
+    element.style.display = 'block';
+}
+
+function showSuccess(elementId, message) {
+    const element = document.getElementById(elementId);
+    element.textContent = message;
+    element.style.display = 'block';
+}
+
+function clearAuthMessages() {
+    document.getElementById('authError').style.display = 'none';
+    document.getElementById('authSuccess').style.display = 'none';
+}
+
+function clearTradingMessages() {
+    document.getElementById('tradingError').style.display = 'none';
+    document.getElementById('tradingSuccess').style.display = 'none';
+}
+
+// Inisialisasi awal
+loadMarketData();
+
+
+</script>
+```
+
 </body>
 </html>
