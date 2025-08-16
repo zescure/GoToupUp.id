@@ -75,48 +75,49 @@
 
     <!-- STEP 2: Cek ID Game -->
     <div class="step" id="step2">
-      <label for="gameId">Masukan ID Game</label>
-      <input type="text" id="gameId" placeholder="Contoh: 123456789">
-      
-      <label for="serverId">Server ID</label>
-      <input type="text" id="serverId" placeholder="Contoh: 1001">
+  <label for="gameId">Masukan ID Game</label>
+  <input type="text" id="gameId" placeholder="Contoh: 123456789">
 
-      <button class="btn" id="cekIdBtn">Cek ID Game</button>
-      <p id="result" style="margin-top:10px;color:#00ff9d;"></p>
-    </div>
-  </div>
+  <label for="serverId">Server ID</label>
+  <input type="text" id="serverId" placeholder="Contoh: 1001">
 
-  <script>
- document.getElementById("cekForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
+  <button class="btn" id="cekIdBtn">Cek ID Game</button>
+  <p id="result" style="margin-top:10px;color:#00ff9d;"></p>
+</div>
 
-  const userId = document.getElementById("userId").value;
-  const zoneId = document.getElementById("zoneId").value;
+<script>
+document.getElementById("cekIdBtn").addEventListener("click", async () => {
+  const gameId = document.getElementById("gameId").value.trim();
+  const serverId = document.getElementById("serverId").value.trim();
+  const result = document.getElementById("result");
 
-  document.getElementById("result").innerHTML = "Memproses...";
+  if (!gameId) {
+    result.innerText = "⚠️ ID Game harus diisi!";
+    return;
+  }
+
+  result.innerText = "⏳ Sedang mengecek...";
 
   try {
     const res = await fetch("/.netlify/functions/cekid", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, zoneId })
+      body: JSON.stringify({ gameId, serverId })
     });
 
     const data = await res.json();
 
     if (data.success) {
-      document.getElementById("result").innerHTML = 
-        `✅ Nama: ${data.data.game_nickname}`;
+      result.innerText = `✅ ID valid: ${data.username}`;
     } else {
-      document.getElementById("result").innerHTML = 
-        `❌ Error: ${data.message}`;
+      result.innerText = `❌ Gagal: ${data.message}`;
     }
   } catch (err) {
-    document.getElementById("result").innerHTML = "Terjadi kesalahan!";
+    result.innerText = "❌ Terjadi kesalahan koneksi.";
     console.error(err);
   }
 });
-  </script>
+</script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"></script>
 </body>
 </html>
