@@ -87,58 +87,35 @@
   </div>
 
   <script>
-    // === CONFIG (langsung nempel dari screenshot lu) ===
-    const USERNAME   = "secacaWX7vrD";
-    const API_KEY    = "dev-e17b56e0-3bbd-11ec-8453-bf33d0e"; // Development key
-    const DIGIFLAZZ_URL = "https://api.digiflazz.com/v1/cek-pelanggan";
+ document.getElementById("cekForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    // Stepper logic
-    document.getElementById("toStep2").addEventListener("click", () => {
-      document.getElementById("step1").classList.remove("active");
-      document.getElementById("step2").classList.add("active");
+  const userId = document.getElementById("userId").value;
+  const zoneId = document.getElementById("zoneId").value;
+
+  document.getElementById("result").innerHTML = "Memproses...";
+
+  try {
+    const res = await fetch("/.netlify/functions/cekid", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, zoneId })
     });
 
-    // Fungsi cek pelanggan
-    document.getElementById("cekIdBtn").addEventListener("click", async () => {
-      const gameId = document.getElementById("gameId").value;
-      const serverId = document.getElementById("serverId").value;
-      const resultBox = document.getElementById("result");
+    const data = await res.json();
 
-      if (!gameId || !serverId) {
-        resultBox.textContent = "Mohon isi ID Game dan Server.";
-        return;
-      }
-
-      // Signature = md5(username+apikey+gameId)
-      const signature = md5(USERNAME + API_KEY + gameId);
-
-      try {
-        const response = await fetch(DIGIFLAZZ_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username: USERNAME,
-            buyer_sku_code: "MOBILELEGENDS", // contoh produk
-            customer_no: gameId + serverId,
-            sign: signature
-          })
-        });
-
-        const data = await response.json();
-        if (data.data && data.data.customer_name) {
-          resultBox.textContent = "✔️ Nickname: " + data.data.customer_name;
-        } else {
-          resultBox.textContent = "❌ Gagal cek ID: " + JSON.stringify(data);
-        }
-      } catch (err) {
-        resultBox.textContent = "❌ Error: " + err.message;
-      }
-    });
-
-    // Simple MD5 (pake lib kecil)
-    function md5cycle(x, k) {
-      // ... (isinya panjang, bisa include lib md5.js dari CDN)
+    if (data.success) {
+      document.getElementById("result").innerHTML = 
+        `✅ Nama: ${data.data.game_nickname}`;
+    } else {
+      document.getElementById("result").innerHTML = 
+        `❌ Error: ${data.message}`;
     }
+  } catch (err) {
+    document.getElementById("result").innerHTML = "Terjadi kesalahan!";
+    console.error(err);
+  }
+});
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"></script>
 </body>
