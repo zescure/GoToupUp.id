@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Zestore – Tukar PayLater</title>
+  <style>
+    /* RESET & BASE */
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family:'Segoe UI',sans-serif;
+      background: radial-gradient(ellipse at top, #001f3f, #000);
+      color:#fff;
+      min-height:100vh;
+      overflow-x:hidden;
+    }
+    .container {
+      max-width:480px;
+      margin:2rem auto;
+      padding:1rem;
+    }
+    h1 { text-align:center; color:#00bfff; margin-bottom:1.5rem; }
+
+    /* STEP BOX */
+    .step {
+      display:none;
+      background:#022c43;
+      border-radius:6px;
+      margin-bottom:1rem;
+      padding:1rem;
+    }
+    .step.active { display:block; }
+    .step label { display:block; margin:.5rem 0 .2rem; font-weight:600; }
+    .step input[type=number],
+    .step input[type=text],
+    .step select {
+      width:100%; padding:.6rem;
+      border:none; border-radius:4px;
+      font-size:1rem;
+      background:rgba(255,255,255,0.1);
+      color:#fff;
+    }
+    .step select option { background:#022c43; color:#fff; }
+    .net-display {
+      margin-top:0.5rem;
+      color: #00ff9d;
+      font-size: 0.95rem;
+    }
+
+    /* BUTTON */
+    .btn {
+      display:block; width:100%; margin:1rem 0;
+      padding:.8rem; background:#00bfff;
+      color:#011627; border:none;
+      border-radius:4px; font-size:1rem;
+      cursor:pointer; text-align:center;
+      transition:background .2s;
+    }
+    .btn:hover { background:#0094d6; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Tukar PayLater → Saldo</h1>
+
+    <!-- STEP 1: Nominal -->
+    <div class="step active" id="step1">
+      <label for="nominal">Masukan Nominal (PayLater)</label>
+      <p>Rp.</p>
+      <input type="number" id="nominal" placeholder="misal 100000" min="1000">
+      <p class="net-display" id="netDisplay">Saldo yang akan diterima: Rp 0</p>
+      <button class="btn" id="toStep2">Selanjutnya</button>
+    </div>
+
+    <!-- STEP 2: Cek ID Game -->
+    <div class="step" id="step2">
+      <label for="gameId">Masukan ID Game</label>
+      <input type="text" id="gameId" placeholder="Contoh: 123456789">
+      
+      <label for="serverId">Server ID</label>
+      <input type="text" id="serverId" placeholder="Contoh: 1001">
+
+      <button class="btn" id="cekIdBtn">Cek ID Game</button>
+      <p id="result" style="margin-top:10px;color:#00ff9d;"></p>
+    </div>
+  </div>
+
+  <script>
+    // === CONFIG (langsung nempel dari screenshot lu) ===
+    const USERNAME   = "secacaWX7vrD";
+    const API_KEY    = "dev-e17b56e0-3bbd-11ec-8453-bf33d0e"; // Development key
+    const DIGIFLAZZ_URL = "https://api.digiflazz.com/v1/cek-pelanggan";
+
+    // Stepper logic
+    document.getElementById("toStep2").addEventListener("click", () => {
+      document.getElementById("step1").classList.remove("active");
+      document.getElementById("step2").classList.add("active");
+    });
+
+    // Fungsi cek pelanggan
+    document.getElementById("cekIdBtn").addEventListener("click", async () => {
+      const gameId = document.getElementById("gameId").value;
+      const serverId = document.getElementById("serverId").value;
+      const resultBox = document.getElementById("result");
+
+      if (!gameId || !serverId) {
+        resultBox.textContent = "Mohon isi ID Game dan Server.";
+        return;
+      }
+
+      // Signature = md5(username+apikey+gameId)
+      const signature = md5(USERNAME + API_KEY + gameId);
+
+      try {
+        const response = await fetch(DIGIFLAZZ_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: USERNAME,
+            buyer_sku_code: "MOBILELEGENDS", // contoh produk
+            customer_no: gameId + serverId,
+            sign: signature
+          })
+        });
+
+        const data = await response.json();
+        if (data.data && data.data.customer_name) {
+          resultBox.textContent = "✔️ Nickname: " + data.data.customer_name;
+        } else {
+          resultBox.textContent = "❌ Gagal cek ID: " + JSON.stringify(data);
+        }
+      } catch (err) {
+        resultBox.textContent = "❌ Error: " + err.message;
+      }
+    });
+
+    // Simple MD5 (pake lib kecil)
+    function md5cycle(x, k) {
+      // ... (isinya panjang, bisa include lib md5.js dari CDN)
+    }
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"></script>
+</body>
+</html>
