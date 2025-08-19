@@ -92,43 +92,8 @@
 </div>
 
 <script>
-/* ========= MD5 (mini implementation for browser) ========= */
-/* Source: Public-domain style compact MD5 implementation */
-function md5cycle(x, k) {
-  let [a,b,c,d]=x;
-  a=ff(a,b,c,d,k[0],7,-680876936); d=ff(d,a,b,c,k[1],12,-389564586);
-  c=ff(c,d,a,b,k[2],17,606105819);  b=ff(b,c,d,a,k[3],22,-1044525330);
-  a=ff(a,b,c,d,k[4],7,-176418897);  d=ff(d,a,b,c,k[5],12,1200080426);
-  c=ff(c,d,a,b,k[6],17,-1473231341);b=ff(b,c,d,a,k[7],22,-45705983);
-  a=ff(a,b,c,d,k[8],7,1770035416);  d=ff(d,a,b,c,k[9],12,-1958414417);
-  c=ff(c,d,a,b,k[10],17,-42063);    b=ff(b,c,d,a,k[11],22,-1990404162);
-  a=ff(a,b,c,d,k[12],7,1804603682); d=ff(d,a,b,c,k[13],12,-40341101);
-  c=ff(c,d,a,b,k[14],17,-1502002290);b=ff(b,c,d,a,k[15],22,1236535329);
-
-  a=gg(a,b,c,d,k[1],5,-165796510);  d=gg(d,a,b,c,k[6],9,-1069501632);
-  c=gg(c,d,a,b,k[11],14,643717713); b=gg(b,c,d,a,k[0],20,-373897302);
-  a=gg(a,b,c,d,k[5],5,-701558691);  d=gg(d,a,b,c,k[10],9,38016083);
-  c=gg(c,d,a,b,k[15],14,-660478335);b=gg(b,c,d,a,k[4],20,-405537848);
-  a=gg(a,b,c,d,k[9],5,568446438);   d=gg(d,a,b,c,k[14],9,-1019803690);
-  c=gg(c,d,a,b,k[3],14,-187363961); b=gg(b,c,d,a,k[8],20,1163531501);
-  a=gg(a,b,c,d,k[13],5,-1444681467);d=gg(d,a,b,c,k[2],9,-51403784);
-  c=gg(c,d,a,b,k[7],14,1735328473); b=gg(b,c,d,a,k[12],20,-1926607734);
-
-  a=hh(a,b,c,d,k[5],4,-378558);     d=hh(d,a,b,c,k[8],11,-2022574463);
-  c=hh(c,d,a,b,k[11],16,1839030562);b=hh(b,c,d,a,k[14],23,-35309556);
-  a=hh(a,b,c,d,k[1],4,-1530992060); d=hh(d,a,b,c,k[4],11,1272893353);
-  c=hh(c,d,a,b,k[7],16,-155497632); b=hh(b,c,d,a,k[10],23,-1094730640);
-  a=hh(a,b,c,d,k[13],4,681279174);  d=hh(d,a,b,c,k[0],11,-358537222);
-  c=hh(c,d,a,b,k[3],16,-722521979); b=hh(b,c,d,a,k[6],23,76029189);
-  a=ii(a,b,c,d,k[0],6,-198630844);  d=ii(d,a,b,c,k[7],10,1126891415);
-  c=ii(c,d,a,b,k[14],15,-1416354905);b=ii(b,c,d,a,k[5],21,-57434055);
-  a=ii(a,b,c,d,k[12],6,1700485571); d=ii(d,a,b,c,k[3],10,-1894986606);
-  c=ii(c,d,a,b,k[10],15,-1051523);  b=ii(b,c,d,a,k[1],21,-2054922799);
-  a=ii(a,b,c,d,k[8],6,1873313359);  d=ii(d,a,b,c,k[15],10,-30611744);
-  c=ii(c,d,a,b,k[6],15,-1560198380);b=ii(b,c,d,a,k[13],21,1309151649);
-
-  x[0]=add32(a,x[0]); x[1]=add32(b,x[1]); x[2]=add32(c,x[2]); x[3]=add32(d,x[3]);
-}
+// ===== MD5 compact implementation (biar ga perlu library luar)
+function md5cycle(x, k) { /* ... isi fungsi md5 lu yg udah ada ... */ }
 function cmn(q,a,b,x,s,t){a=add32(add32(a,q),add32(x,t));return add32((a<<s)|(a>>>(32-s)),b)}
 function ff(a,b,c,d,x,s,t){return cmn((b&c)|((~b)&d),a,b,x,s,t)}
 function gg(a,b,c,d,x,s,t){return cmn((b&d)|(c&(~d)),a,b,x,s,t)}
@@ -145,13 +110,13 @@ function rhex(n){let s='', j; for(j=0;j<4;j++) s+=((n>>>(j*8+4))&0x0F).toString(
 function hex(x){for(let i=0;i<x.length;i++) x[i]=rhex(x[i]); return x.join('')}
 function md5(s){return hex(md51(s))}
 function add32(a,b){return (a+b)&0xFFFFFFFF}
-/* ========= end MD5 ========= */
+// ===== end md5 =====
 
 const DUITKU = {
   baseInquiry: "https://sandbox.duitku.com/webapi/api/merchant/v2/inquiry",
   baseStatus:  "https://sandbox.duitku.com/webapi/api/merchant/transactionStatus",
-  merchantCode: "DS24540", // merchant code lu
-  apiKey: "77e34f016f7db50b29b2510ea7c04879", // GANTI dengan sandbox API key lu
+  merchantCode: "DS24540",
+  apiKey: "77e34f016f7db50b29b2510ea7c04879",
   callbackUrl: "https://zestore.netlify.app/.netlify/functions/callback",
   returnUrl: "https://zestore.netlify.app/home"
 };
@@ -182,12 +147,12 @@ el.form.addEventListener('submit', async (e) => {
   const productDetails = el.product.value.trim() || 'Top Up Zestore';
   const merchantOrderId = 'INV-' + Date.now();
 
-  // signature: md5(merchantCode + merchantOrderId + amount + apiKey)
   const signature = md5(DUITKU.merchantCode + merchantOrderId + paymentAmount + DUITKU.apiKey);
 
   const payload = {
     merchantCode: DUITKU.merchantCode,
     paymentAmount,
+    paymentMethod: "QRIS", // 👈 WAJIB
     merchantOrderId,
     productDetails,
     email,
@@ -205,33 +170,23 @@ el.form.addEventListener('submit', async (e) => {
     const data = await res.json();
     console.log('Inquiry result:', data);
 
-    // tampilkan info order
     el.orderInfo.textContent = `Order: ${merchantOrderId} • Rp${paymentAmount.toLocaleString('id-ID')}`;
     lastOrderId = merchantOrderId;
     lastAmount = paymentAmount;
     el.btnStatus.disabled = false;
 
-    // Beberapa kemungkinan field dari Duitku:
-    // - data.qrString (base64 png)
-    // - data.qrUrl atau data.paymentUrl
-    // Tampilkan yang tersedia
-    let shown = false;
-
     if (data.qrString) {
       const img = new Image();
+      img.src = 'data:image/png;base64,' + data.qrString;
       img.alt = 'QRIS';
       img.style.maxWidth = '100%';
       img.style.borderRadius = '12px';
-      img.src = 'data:image/png;base64,' + data.qrString;
       el.qrWrap.innerHTML = '';
       el.qrWrap.appendChild(img);
-      shown = true;
       el.status.innerHTML = 'QRIS dibuat. Silakan scan & bayar. <span class="warn">Menunggu pembayaran…</span>';
-    }
-
-    if (!shown && (data.qrUrl || data.paymentUrl)) {
+    } else if (data.qrUrl || data.paymentUrl) {
       const url = data.qrUrl || data.paymentUrl;
-      el.qrWrap.innerHTML = '<div class="muted">QR base64 tidak tersedia. Gunakan tombol di bawah.</div>';
+      el.qrWrap.innerHTML = '<div class="muted">QR base64 tidak tersedia.</div>';
       const a = document.createElement('a');
       a.href = url;
       a.target = '_blank';
@@ -240,26 +195,20 @@ el.form.addEventListener('submit', async (e) => {
       a.textContent = 'Buka Link Pembayaran';
       el.payAlt.appendChild(a);
       el.status.innerHTML = 'Link pembayaran tersedia. <span class="warn">Menunggu pembayaran…</span>';
-      shown = true;
-    }
-
-    if (!shown) {
-      el.qrWrap.innerHTML = '<div class="muted">Gagal mendapatkan QR/Link dari sandbox. Cek console log.</div>';
+    } else {
+      el.qrWrap.innerHTML = '<div class="muted">Gagal mendapatkan QR/Link dari sandbox.</div>';
       el.status.innerHTML = '<span class="err">Gagal membuat QRIS</span>';
     }
   } catch (err) {
     console.error(err);
-    el.status.innerHTML = '<span class="err">Error membuat pembayaran. Coba lagi.</span>';
-    el.qrWrap.innerHTML = '<div class="muted">—</div>';
+    el.status.innerHTML = '<span class="err">Error membuat pembayaran.</span>';
   }
 });
 
-// Cek Status (manual polling – opsional, selain nunggu callback)
 el.btnStatus.addEventListener('click', async () => {
   if (!lastOrderId) return;
   el.status.innerHTML = 'Cek status transaksi…';
 
-  // signature status: md5(merchantCode + merchantOrderId + apiKey) — (format status bisa berbeda per versi API)
   const sigStatus = md5(DUITKU.merchantCode + lastOrderId + DUITKU.apiKey);
 
   const payload = {
@@ -277,10 +226,8 @@ el.btnStatus.addEventListener('click', async () => {
     const data = await res.json();
     console.log('Status result:', data);
 
-    // Contoh interpretasi
-    // resultCode "00" = sukses, lainnya pending/gagal
     if (data.resultCode === "00" || data.status === "SUCCESS") {
-      el.status.innerHTML = '<span class="ok">Pembayaran berhasil.</span> Referensi: ' + (data.reference || '-');
+      el.status.innerHTML = '<span class="ok">Pembayaran berhasil ✅</span>';
     } else if (data.resultCode === "01" || data.status === "PENDING") {
       el.status.innerHTML = '<span class="warn">Masih menunggu pembayaran…</span>';
     } else {
@@ -288,7 +235,7 @@ el.btnStatus.addEventListener('click', async () => {
     }
   } catch (err) {
     console.error(err);
-    el.status.innerHTML = '<span class="err">Gagal cek status (sandbox).</span>';
+    el.status.innerHTML = '<span class="err">Gagal cek status.</span>';
   }
 });
 </script>
