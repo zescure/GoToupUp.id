@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Zestore – Top Up Saldo (Duitku Sandbox)</title>
+<title>Zestore – Top Up Saldo (Duitku Sandbox2)</title>
 <style>
   :root { --bg:#0f1115; --card:#161a22; --muted:#9aa3b2; --text:#e8edf3; --acc:#4da3ff; --ok:#20c997; --warn:#ffb020; --err:#ff6b6b; }
   * { box-sizing:border-box; }
@@ -38,7 +38,7 @@
 <body>
 <div class="wrap">
   <div class="card">
-    <h1>Top Up Saldo Zestore (QRIS – Duitku Sandbox)</h1>
+    <h1>Top Up Saldo Zestore (QRIS – Duitku Sandbox2)</h1>
     <p class="lead">Nominal dan order akan otomatis dibuat jadi <b>QRIS dinamis</b>. Setelah bayar, <span class="pill">Duitku → Callback</span> ke <code>/.netlify/functions/callback</code> buat update status.</p>
 
     <form id="payForm">
@@ -151,7 +151,7 @@ const DUITKU = {
   baseInquiry: "https://sandbox.duitku.com/webapi/api/merchant/v2/inquiry",
   baseStatus:  "https://sandbox.duitku.com/webapi/api/merchant/transactionStatus",
   merchantCode: "DS24540", // merchant code lu
-  apiKey: "YOUR_API_KEY_DUITKU", // GANTI dengan sandbox API key lu
+  apiKey: "77e34f016f7db50b29b2510ea7c04879", // GANTI dengan sandbox API key lu
   callbackUrl: "https://zestore.netlify.app/.netlify/functions/callback",
   returnUrl: "https://zestore.netlify.app/home"
 };
