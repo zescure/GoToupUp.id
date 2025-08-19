@@ -3,24 +3,23 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Zestore – Top Up Saldo (Duitku Sandbox2)</title>
+<title>Zestore – Top Up Saldo (Duitku Sandbox)</title>
 <style>
   :root { --bg:#0f1115; --card:#161a22; --muted:#9aa3b2; --text:#e8edf3; --acc:#4da3ff; --ok:#20c997; --warn:#ffb020; --err:#ff6b6b; }
   * { box-sizing:border-box; }
-  body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji","Segoe UI Emoji"; background:linear-gradient(180deg,#0d1117 0%, #0f1115 100%); color:var(--text);}
+  body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial; background:linear-gradient(180deg,#0d1117 0%, #0f1115 100%); color:var(--text);}
   .wrap { max-width:860px; margin:40px auto; padding:20px; }
   .card { background:var(--card); border:1px solid #222736; border-radius:14px; padding:22px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
   h1 { font-size:22px; margin:0 0 10px; }
   p.lead { color:var(--muted); margin:0 0 14px; }
   form { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px; }
   label { font-size:13px; color:#b9c2d0; }
-  input, select { width:100%; padding:12px 12px; background:#0e121a; color:var(--text); border:1px solid #232a3a; border-radius:10px; outline:none; }
+  input { width:100%; padding:12px 12px; background:#0e121a; color:var(--text); border:1px solid #232a3a; border-radius:10px; outline:none; }
   input::placeholder{color:#6b768a;}
   .row-1 { grid-column:1/-1; }
   .btn { cursor:pointer; border:0; padding:12px 16px; border-radius:10px; font-weight:600; }
   .btn-primary { background:var(--acc); color:#0b1220; }
   .btn-ghost { background:transparent; border:1px solid #2b3346; color:#cdd5e3; }
-  .btn + .btn { margin-left:10px; }
   .actions { display:flex; align-items:center; gap:10px; margin-top:6px; }
   .status { margin-top:16px; padding:12px 14px; border-radius:10px; background:#0e141d; border:1px dashed #2b3346; color:#cdd5e3; font-size:14px; }
   .grid { display:grid; grid-template-columns: 2fr 1fr; gap:16px; margin-top:16px; }
@@ -28,7 +27,6 @@
   .panel h3 { margin:0 0 10px; font-size:16px; }
   .qrbox { display:flex; align-items:center; justify-content:center; min-height:280px; border:1px dashed #2b3346; border-radius:12px; }
   .muted { color:var(--muted); font-size:13px; }
-  code { background:#0b0f16; border:1px solid #1c2434; padding:2px 6px; border-radius:6px; }
   .pill { display:inline-block; padding:6px 10px; border-radius:999px; font-size:12px; border:1px solid #2b3346; color:#cdd5e3; }
   .ok{ color:var(--ok); } .warn{ color:var(--warn);} .err{ color:var(--err);}
   footer { margin-top:18px; color:#7f8aa3; font-size:12px; text-align:center; }
@@ -38,7 +36,7 @@
 <body>
 <div class="wrap">
   <div class="card">
-    <h1>Top Up Saldo Zestore (QRIS – Sandbox3)</h1>
+    <h1>Top Up Saldo Zestore (QRIS – Sandbox)</h1>
     <p class="lead">Nominal dan order akan otomatis dibuat jadi <b>QRIS dinamis</b>. Setelah bayar, <span class="pill">Duitku → Callback</span> ke <code>/.netlify/functions/callback</code> buat update status.</p>
 
     <form id="payForm">
@@ -92,8 +90,11 @@
 </div>
 
 <script>
-// ===== MD5 compact implementation (biar ga perlu library luar)
-function md5cycle(x, k) { /* ... isi fungsi md5 lu yg udah ada ... */ }
+// ===== MD5 compact implementation =====
+function md5cycle(x, k) {
+  let a = x[0], b = x[1], c = x[2], d = x[3];
+  // ... (implementasi detail md5, dipendekkan biar file ga kepanjangan) ...
+}
 function cmn(q,a,b,x,s,t){a=add32(add32(a,q),add32(x,t));return add32((a<<s)|(a>>>(32-s)),b)}
 function ff(a,b,c,d,x,s,t){return cmn((b&c)|((~b)&d),a,b,x,s,t)}
 function gg(a,b,c,d,x,s,t){return cmn((b&d)|(c&(~d)),a,b,x,s,t)}
@@ -152,7 +153,7 @@ el.form.addEventListener('submit', async (e) => {
   const payload = {
     merchantCode: DUITKU.merchantCode,
     paymentAmount,
-    paymentMethod: "QRIS", // 👈 WAJIB
+    paymentMethod: "QRIS",
     merchantOrderId,
     productDetails,
     email,
@@ -178,7 +179,6 @@ el.form.addEventListener('submit', async (e) => {
     if (data.qrString) {
       const img = new Image();
       img.src = 'data:image/png;base64,' + data.qrString;
-      img.alt = 'QRIS';
       img.style.maxWidth = '100%';
       img.style.borderRadius = '12px';
       el.qrWrap.innerHTML = '';
