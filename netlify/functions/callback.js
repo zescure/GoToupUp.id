@@ -1,8 +1,8 @@
 // netlify/functions/callback.js
+const crypto = require("crypto");
 
 exports.handler = async (event, context) => {
   try {
-    // Pastikan request method POST
     if (event.httpMethod !== "POST") {
       return {
         statusCode: 405,
@@ -10,34 +10,55 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Parse body dari Duitku (JSON)
     const body = JSON.parse(event.body);
 
-    // Contoh ambil data penting
-    const merchantOrderId = body.merchantOrderId; // ID order lu
-    const resultCode = body.resultCode; // Status transaksi
-    const paymentAmount = body.paymentAmount;
-    const paymentMethod = body.paymentMethod;
+    // Data dari callback Duitku
+    const {
+      merchantOrderId,
+      resultCode,
+      paymentAmount,
+      paymentMethod,
+      signature,
+      reference,
+    } = body;
 
     console.log("Callback Duitku:", body);
 
-    // Logic update order (contoh sederhana)
-    let status = "PENDING";
-    if (resultCode === "00") {
-      status = "SUCCESS"; // Pembayaran berhasil
-    } else {
-      status = "FAILED"; // Pembayaran gagal / dibatalkan
+    // ====== Hardcode Merchant ======
+    const merchantCode = "DS24540"; // Merchant code lu
+    const apiKey = "77e34f016f7db50b29b2510ea7c04879"; // API Key Duitku (buat test ga masalah)
+
+    // ====== Verifikasi Signature ======
+    // Rumus: md5(merchantCode + merchantOrderId + paymentAmount + apiKey)
+    const expectedSignature = crypto
+      .createHash("md5")
+      .update(merchantCode + merchantOrderId + paymentAmount + apiKey)
+      .digest("hex");
+
+    if (expectedSignature !== signature) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: "Invalid signature" }),
+      };
     }
 
-    // TODO: Disini lu bisa update ke database atau API lu sendiri
-    // misalnya pake fetch() ke sistem order
+    // ====== Update Status ======
+    let status = "PENDING";
+    if (resultCode === "00") {
+      status = "SUCCESS";
+    } else {
+      status = "FAILED";
+    }
+
+    // TODO: update order lu ke DB / API sendiri
 
     return {
       statusCode: 200,
       body: JSON.stringify({
         message: "Callback received",
         orderId: merchantOrderId,
-        status: status,
+        reference,
+        status,
         amount: paymentAmount,
         method: paymentMethod,
       }),
