@@ -3,246 +3,177 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Harga Cabe Nasional - Step 4</title>
+  <title>Harga Cabe per Pulau & Provinsi</title>
   <style>
     body {
-      margin: 0;
       font-family: Arial, sans-serif;
-      background: #f8f9fa;
-      color: #333;
+      margin: 20px;
+      background-color: #f4f4f4;
     }
-
-    header {
-      background: #ff4d4d;
-      color: white;
-      padding: 15px;
-      text-align: center;
-      font-size: 20px;
-      font-weight: bold;
-    }
-
-    .container {
-      padding: 20px;
-    }
-
-    h2 {
+    h1 {
       text-align: center;
       margin-bottom: 20px;
-      color: #d63031;
     }
-
-    .pulau-card {
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 15px;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
+    .selector {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
     }
-
-    .pulau-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    select {
+      padding: 10px;
+      font-size: 16px;
     }
-
-    .pulau-title {
-      font-size: 18px;
-      font-weight: bold;
-      color: #2d3436;
-    }
-
-    .pulau-price {
-      margin-top: 5px;
-      color: #636e72;
-      font-size: 14px;
-    }
-
-    /* Modal Style */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 999;
-      padding-top: 60px;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow-y: auto;
-      background-color: rgba(0,0,0,0.5);
-    }
-
-    .modal-content {
-      background: #fff;
-      margin: auto;
-      padding: 20px;
-      border-radius: 8px;
-      width: 90%;
-      max-width: 600px;
-    }
-
-    .close {
-      float: right;
-      font-size: 20px;
-      cursor: pointer;
-      color: #ff4d4d;
-    }
-
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 10px;
+      background: white;
+      margin-top: 20px;
     }
-
     th, td {
-      padding: 8px;
       border: 1px solid #ddd;
+      padding: 10px;
       text-align: center;
     }
-
     th {
-      background: #ffcccc;
+      background: #4CAF50;
+      color: white;
     }
-
-    /* Floating Button */
-    .floating-btn {
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+    .back-btn {
       position: fixed;
       bottom: 20px;
-      right: 20px;
-      background: #ff4d4d;
+      left: 20px;
+      background: #4CAF50;
       color: white;
-      padding: 12px 20px;
-      border-radius: 30px;
-      font-size: 14px;
+      padding: 10px 20px;
       text-decoration: none;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-      transition: background 0.3s;
-    }
-
-    .floating-btn:hover {
-      background: #e84141;
+      border-radius: 5px;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <header>📊 Harga Cabe Nasional</header>
-  <div class="container">
-    <h2>Harga Rata-Rata Cabe per Pulau</h2>
-
-    <!-- Pulau List -->
-    <div class="pulau-card" onclick="showDetail('Jawa')">
-      <div class="pulau-title">Pulau Jawa</div>
-      <div class="pulau-price">Rata-rata: Rp 60.000/kg</div>
-    </div>
-
-    <div class="pulau-card" onclick="showDetail('Sumatra')">
-      <div class="pulau-title">Pulau Sumatra</div>
-      <div class="pulau-price">Rata-rata: Rp 58.000/kg</div>
-    </div>
-
-    <div class="pulau-card" onclick="showDetail('Kalimantan')">
-      <div class="pulau-title">Pulau Kalimantan</div>
-      <div class="pulau-price">Rata-rata: Rp 62.000/kg</div>
-    </div>
-
-    <div class="pulau-card" onclick="showDetail('Sulawesi')">
-      <div class="pulau-title">Pulau Sulawesi</div>
-      <div class="pulau-price">Rata-rata: Rp 59.000/kg</div>
-    </div>
-
-    <div class="pulau-card" onclick="showDetail('Bali')">
-      <div class="pulau-title">Pulau Bali & Nusa Tenggara</div>
-      <div class="pulau-price">Rata-rata: Rp 61.000/kg</div>
-    </div>
-
-    <div class="pulau-card" onclick="showDetail('Papua')">
-      <div class="pulau-title">Pulau Papua & Maluku</div>
-      <div class="pulau-price">Rata-rata: Rp 65.000/kg</div>
-    </div>
+  <h1>📊 Harga Cabe Per Pulau & Provinsi</h1>
+  
+  <div class="selector">
+    <select id="pulau">
+      <option value="">Pilih Pulau</option>
+    </select>
+    <select id="provinsi">
+      <option value="">Pilih Provinsi</option>
+    </select>
   </div>
 
-  <!-- Modal -->
-  <div id="modalPulau" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal()">&times;</span>
-      <h3 id="modalTitle">Detail Harga</h3>
-      <table id="tableDetail">
-        <thead>
-          <tr>
-            <th>Kota/Provinsi</th>
-            <th>Harga Rendah</th>
-            <th>Harga Rata-rata</th>
-            <th>Harga Tinggi</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
+  <table id="hargaTable">
+    <thead>
+      <tr>
+        <th>Kota/Kabupaten</th>
+        <th>Harga Terendah (Rp/Kg)</th>
+        <th>Harga Rata-rata (Rp/Kg)</th>
+        <th>Harga Tertinggi (Rp/Kg)</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-  <!-- Floating button -->
-  <a href="step3.html" class="floating-btn">⬅ Kembali ke Info Lengkap</a>
+  <a href="step3.html" class="back-btn">⬅ Kembali</a>
 
   <script>
-    const dataPulau = {
-      "Jawa": [
-        { kota: "Jakarta", rendah: "55.000", rata: "60.000", tinggi: "65.000" },
-        { kota: "Bandung", rendah: "54.000", rata: "59.000", tinggi: "64.000" },
-        { kota: "Surabaya", rendah: "56.000", rata: "61.000", tinggi: "66.000" }
-      ],
-      "Sumatra": [
-        { kota: "Medan", rendah: "53.000", rata: "58.000", tinggi: "62.000" },
-        { kota: "Padang", rendah: "52.000", rata: "57.000", tinggi: "61.000" }
-      ],
-      "Kalimantan": [
-        { kota: "Pontianak", rendah: "60.000", rata: "62.000", tinggi: "65.000" },
-        { kota: "Balikpapan", rendah: "59.000", rata: "61.000", tinggi: "64.000" }
-      ],
-      "Sulawesi": [
-        { kota: "Makassar", rendah: "55.000", rata: "59.000", tinggi: "63.000" },
-        { kota: "Manado", rendah: "56.000", rata: "60.000", tinggi: "64.000" }
-      ],
-      "Bali": [
-        { kota: "Denpasar", rendah: "58.000", rata: "61.000", tinggi: "65.000" },
-        { kota: "Mataram", rendah: "57.000", rata: "60.000", tinggi: "64.000" }
-      ],
-      "Papua": [
-        { kota: "Jayapura", rendah: "62.000", rata: "65.000", tinggi: "70.000" },
-        { kota: "Ambon", rendah: "63.000", rata: "66.000", tinggi: "71.000" }
-      ]
+    // Data Pulau, Provinsi, dan Kota
+    const dataIndonesia = {
+      "Sumatera": {
+        "Aceh": ["Banda Aceh", "Lhokseumawe", "Langsa"],
+        "Sumatera Utara": ["Medan", "Binjai", "Pematangsiantar"],
+        "Riau": ["Pekanbaru", "Dumai"],
+        "Kepulauan Riau": ["Batam", "Tanjung Pinang"],
+        "Sumatera Barat": ["Padang", "Bukittinggi"],
+        "Sumatera Selatan": ["Palembang", "Lubuklinggau"],
+        "Bangka Belitung": ["Pangkal Pinang", "Toboali"],
+        "Jambi": ["Jambi City", "Sungai Penuh"],
+        "Bengkulu": ["Bengkulu City", "Curup"],
+        "Lampung": ["Bandar Lampung", "Metro"]
+      },
+      "Jawa": {
+        "DKI Jakarta": ["Jakarta Pusat", "Jakarta Selatan", "Jakarta Barat"],
+        "Banten": ["Serang", "Cilegon", "Tangerang"],
+        "Jawa Barat": ["Bandung", "Bogor", "Depok", "Bekasi"],
+        "Jawa Tengah": ["Semarang", "Solo", "Magelang"],
+        "DI Yogyakarta": ["Yogyakarta", "Sleman"],
+        "Jawa Timur": ["Surabaya", "Malang", "Kediri"]
+      },
+      "Bali dan Nusa Tenggara": {
+        "Bali": ["Denpasar", "Singaraja"],
+        "Nusa Tenggara Barat": ["Mataram", "Bima"],
+        "Nusa Tenggara Timur": ["Kupang", "Maumere"]
+      },
+      "Kalimantan": {
+        "Kalimantan Barat": ["Pontianak", "Singkawang"],
+        "Kalimantan Tengah": ["Palangka Raya", "Sampit"],
+        "Kalimantan Selatan": ["Banjarmasin", "Banjarbaru"],
+        "Kalimantan Timur": ["Samarinda", "Balikpapan"],
+        "Kalimantan Utara": ["Tarakan", "Tanjung Selor"]
+      },
+      "Sulawesi": {
+        "Sulawesi Utara": ["Manado", "Bitung"],
+        "Sulawesi Tengah": ["Palu", "Poso"],
+        "Sulawesi Selatan": ["Makassar", "Parepare"],
+        "Sulawesi Tenggara": ["Kendari", "Bau-Bau"],
+        "Gorontalo": ["Gorontalo City"],
+        "Sulawesi Barat": ["Mamuju", "Polewali"]
+      },
+      "Maluku dan Papua": {
+        "Maluku": ["Ambon", "Tual"],
+        "Maluku Utara": ["Ternate", "Tidore"],
+        "Papua": ["Jayapura", "Merauke"],
+        "Papua Barat": ["Manokwari", "Sorong"]
+      }
     };
 
-    const modal = document.getElementById('modalPulau');
-    const modalTitle = document.getElementById('modalTitle');
-    const tableBody = document.querySelector('#tableDetail tbody');
+    // Isi dropdown Pulau
+    const pulauSelect = document.getElementById('pulau');
+    const provinsiSelect = document.getElementById('provinsi');
+    const hargaTableBody = document.querySelector('#hargaTable tbody');
 
-    function showDetail(pulau) {
-      modal.style.display = 'block';
-      modalTitle.textContent = `Detail Harga - ${pulau}`;
-      tableBody.innerHTML = '';
+    Object.keys(dataIndonesia).forEach(pulau => {
+      let option = document.createElement('option');
+      option.value = pulau;
+      option.textContent = pulau;
+      pulauSelect.appendChild(option);
+    });
 
-      dataPulau[pulau].forEach(item => {
-        const row = `
-          <tr>
-            <td>${item.kota}</td>
-            <td>Rp ${item.rendah}</td>
-            <td>Rp ${item.rata}</td>
-            <td>Rp ${item.tinggi}</td>
-          </tr>
-        `;
-        tableBody.innerHTML += row;
-      });
-    }
-
-    function closeModal() {
-      modal.style.display = 'none';
-    }
-
-    window.onclick = function(event) {
-      if (event.target == modal) {
-        closeModal();
+    pulauSelect.addEventListener('change', () => {
+      provinsiSelect.innerHTML = '<option value="">Pilih Provinsi</option>';
+      const provinsiList = dataIndonesia[pulauSelect.value];
+      if (provinsiList) {
+        Object.keys(provinsiList).forEach(prov => {
+          let option = document.createElement('option');
+          option.value = prov;
+          option.textContent = prov;
+          provinsiSelect.appendChild(option);
+        });
       }
-    }
+      hargaTableBody.innerHTML = '';
+    });
+
+    provinsiSelect.addEventListener('change', () => {
+      hargaTableBody.innerHTML = '';
+      const kotaList = dataIndonesia[pulauSelect.value][provinsiSelect.value];
+      kotaList.forEach(kota => {
+        const hargaMin = (60000 + Math.floor(Math.random() * 10000)).toLocaleString('id-ID');
+        const hargaAvg = (70000 + Math.floor(Math.random() * 10000)).toLocaleString('id-ID');
+        const hargaMax = (80000 + Math.floor(Math.random() * 10000)).toLocaleString('id-ID');
+        const row = `<tr>
+          <td>${kota}</td>
+          <td>${hargaMin}</td>
+          <td>${hargaAvg}</td>
+          <td>${hargaMax}</td>
+        </tr>`;
+        hargaTableBody.innerHTML += row;
+      });
+    });
   </script>
 </body>
 </html>
