@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deteksi Harga Cabe</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js" />
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+      color: #333;
+      padding: 20px;
+    }
+    header {
+      text-align: center;
+      padding: 10px;
+      background: #e63946;
+      color: #fff;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    .scan-result {
+      text-align: center;
+      margin: 20px auto;
+    }
+    .scan-result img {
+      max-width: 250px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    .price-summary {
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+      margin-top: 20px;
+    }
+    .price-summary h3 {
+      margin: 0;
+      font-size: 20px;
+      color: #e63946;
+    }
+    .chart-container {
+      background: #fff;
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+    }
+    canvas {
+      max-width: 100%;
+      height: auto;
+    }
+    /* Tombol mengambang */
+    .floating-buttons {
+      position: fixed;
+      bottom: 20px;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+    }
+    .floating-buttons button {
+      padding: 10px 15px;
+      background: #e63946;
+      color: #fff;
+      border: none;
+      border-radius: 30px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .floating-buttons button:hover {
+      background: #c92436;
+    }
+  </style>
+</head>
+<body>
+  <header>Deteksi Harga Cabe</header>
+
+  <div class="scan-result">
+    <p>Hasil Scan:</p>
+    <img id="scannedImage" src="" alt="Hasil Scan Cabe">
+  </div>
+
+  <div class="price-summary">
+    <h3>Cabe Merah Keriting</h3>
+    <p>Harga rata-rata hari ini: <strong>Rp 50,000/kg</strong></p>
+    <p>Kisaran harga: Rp 45,000 - Rp 55,000</p>
+    <p>Trend: <span id="trendText" style="font-weight:bold;">Naik</span></p>
+  </div>
+
+  <div class="chart-container">
+    <h4>Pergerakan Harga 7 Hari Terakhir</h4>
+    <canvas id="priceChart"></canvas>
+  </div>
+
+  <div class="floating-buttons">
+    <button onclick="window.location.href='infoLengkap.html'">Info Lengkap</button>
+    <button onclick="window.location.href='hargaLengkap.html'">Harga Lengkap</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Ambil data gambar dari Step-1
+    const imageData = sessionStorage.getItem('scanImageDataURL');
+    const scannedImage = document.getElementById('scannedImage');
+    if (imageData) {
+      scannedImage.src = imageData;
+    } else {
+      scannedImage.alt = "Gambar tidak ditemukan";
+    }
+
+    // Fake data harga untuk 7 hari
+    const labels = ['14 Aug', '15 Aug', '16 Aug', '17 Aug', '18 Aug', '19 Aug', '20 Aug'];
+    const prices = [49000, 49500, 50000, 50500, 51000, 50000, 52000];
+    const trend = prices[prices.length - 1] > prices[prices.length - 2] ? 'Naik' : 'Turun';
+
+    document.getElementById('trendText').innerText = trend;
+
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Harga Cabe Merah Keriting',
+          data: prices,
+          borderColor: trend === 'Naik' ? 'green' : 'red',
+          backgroundColor: 'rgba(0,0,0,0)',
+          borderWidth: 2,
+          tension: 0.3,
+          pointBackgroundColor: trend === 'Naik' ? 'green' : 'red',
+          pointRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: false,
+            ticks: {
+              callback: function(value) {
+                return 'Rp ' + value.toLocaleString();
+              }
+            }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
