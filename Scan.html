@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Protokol Harga • Scan Komoditas</title>
+  <meta name="theme-color" content="#111" />
+  <style>
+    :root {
+      --bg:#0e0f12; --card:#171a20; --text:#e9edf3; --muted:#9aa3ad; --accent:#39d98a; --accent-2:#3c82f6; --danger:#ff6b6b;
+      --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+      background: radial-gradient(1200px 800px at 70% -10%, #1d2230 0%, #0e0f12 55%, #0b0c0f 100%);
+      color: var(--text); display: grid; place-items: center; padding: 24px;
+    }
+    .wrap {
+      width: 100%; max-width: 460px; background: linear-gradient(180deg, #181c25, #13161d);
+      border-radius: var(--radius); box-shadow: var(--shadow); padding: 28px; border: 1px solid #232735;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .logo {
+      width: 40px; height: 40px; border-radius: 10px; background:
+        conic-gradient(from 160deg, #39d98a, #3c82f6, #7c3aed, #39d98a);
+      filter: saturate(1.1) contrast(1.05);
+    }
+    h1 { font-size: 22px; margin: 0; }
+    p.sub { margin: 6px 0 18px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+
+    .scan-card {
+      background: var(--card); border: 1px solid #262a36; border-radius: 14px; padding: 18px; margin-top: 6px;
+    }
+    .scan-btn {
+      appearance: none; border: 0; width: 100%;
+      background: linear-gradient(180deg, #3ee39c, #27b97a);
+      color: #0b1210; font-weight: 700; font-size: 16px; padding: 16px 18px;
+      border-radius: 12px; cursor: pointer; transition: transform .08s ease, filter .15s ease;
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .scan-btn:active { transform: translateY(1px) scale(0.995); }
+    .scan-btn.secondary {
+      background: linear-gradient(180deg, #5d8dfc, #2f6bf5); color: white;
+    }
+    .btns { display: grid; gap: 10px; margin-top: 10px; }
+    .hint { color: var(--muted); font-size: 12px; margin-top: 10px; text-align: center; }
+
+    .hidden-input { display: none; }
+    .preview {
+      margin-top: 14px; display: none;
+      border: 1px dashed #2a3142; border-radius: 12px; padding: 10px;
+      background: #11151c;
+    }
+    .preview img { width: 100%; border-radius: 10px; display: block; }
+    .preview label { display: block; font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+    .footer {
+      margin-top: 18px; display:flex; justify-content: space-between; align-items:center; color: var(--muted); font-size: 12px;
+    }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #95f2c7; box-shadow: 0 0 8px #39d98a;
+      margin-right: 8px; display:inline-block;
+    }
+    @media (min-width: 480px) {
+      h1 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap" role="main">
+    <div class="brand" aria-label="Aplikasi Protokol Harga">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>Protokol Harga • Scan</h1>
+        <p class="sub">Mulai dengan memindai foto **cabe** (atau pilih dari galeri). Kamera akan terbuka jika tersedia.</p>
+      </div>
+    </div>
+
+    <section class="scan-card" aria-labelledby="scan-title">
+      <h2 id="scan-title" style="font-size:16px;margin:0 0 12px;">Pilih sumber gambar</h2>
+
+      <!-- tombol scan kamera -->
+      <div class="btns">
+        <button id="btnCamera" class="scan-btn" type="button" aria-label="Scan via Kamera">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M9.5 3h5l1.4 2H20a2 2 0 0 1 2 2v10.5A2.5 2.5 0 0 1 19.5 20h-15A2.5 2.5 0 0 1 2 17.5V7a2 2 0 0 1 2-2h4.1L9.5 3Zm2.5 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/>
+          </svg>
+          Buka Kamera
+        </button>
+
+        <!-- tombol pilih dari galeri -->
+        <button id="btnGallery" class="scan-btn secondary" type="button" aria-label="Pilih dari Galeri">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M19 3H5a2 2 0 0 0-2 2v14l4-4h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm-3.5 5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z"/>
+          </svg>
+          Pilih dari Galeri
+        </button>
+      </div>
+
+      <!-- input file tersembunyi -->
+      <input id="inputCamera" class="hidden-input" type="file" accept="image/*" capture="environment" />
+      <input id="inputGallery" class="hidden-input" type="file" accept="image/*" />
+
+      <p class="hint">Privasi aman: gambar hanya dipakai di perangkat ini untuk pratinjau sebelum lanjut.</p>
+
+      <!-- preview -->
+      <div id="preview" class="preview" aria-live="polite" aria-atomic="true">
+        <img id="previewImg" alt="Pratinjau gambar yang dipilih" />
+        <label id="fileInfo"></label>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <button id="btnReset" type="button" class="scan-btn secondary" style="flex:1; background: linear-gradient(180deg,#394152,#273041);">
+            Ganti Gambar
+          </button>
+          <!-- tombol “Lanjut” ini akan dipakai untuk Step-2 nantinya -->
+          <button id="btnNext" type="button" class="scan-btn" style="flex:1;">
+            Lanjut (Deteksi)
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">
+      <div><span class="status-dot"></span><span id="permStatus">Kamera siap</span></div>
+      <div>v0.1 • Step-1</div>
+    </div>
+  </main>
+
+  <script>
+    // elemen
+    const btnCamera = document.getElementById('btnCamera');
+    const btnGallery = document.getElementById('btnGallery');
+    const inputCamera = document.getElementById('inputCamera');
+    const inputGallery = document.getElementById('inputGallery');
+    const preview = document.getElementById('preview');
+    const previewImg = document.getElementById('previewImg');
+    const fileInfo = document.getElementById('fileInfo');
+    const permStatus = document.getElementById('permStatus');
+    const btnReset = document.getElementById('btnReset');
+    const btnNext  = document.getElementById('btnNext');
+
+    // util: tampilkan pratinjau + simpan sementara
+    function handleFile(file) {
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      previewImg.src = url;
+      fileInfo.textContent = `${file.name} • ${(file.size/1024/1024).toFixed(2)} MB`;
+      preview.style.display = 'block';
+
+      // simpan ke sessionStorage sebagai dataURL untuk dipakai Step-2
+      const reader = new FileReader();
+      reader.onload = () => {
+        try { sessionStorage.setItem('scanImageDataURL', reader.result); }
+        catch(e){ /* storage bisa penuh; ignore */ }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // event: klik tombol kamera → trigger input dengan capture
+    btnCamera.addEventListener('click', async () => {
+      try {
+        // cek permission (opsional modern browsers)
+        if (navigator.permissions && navigator.permissions.query) {
+          try {
+            const status = await navigator.permissions.query({ name: 'camera' });
+            if (status.state === 'denied') {
+              permStatus.textContent = 'Izin kamera ditolak — pilih dari galeri';
+            }
+          } catch (_) {}
+        }
+      } catch (_) {}
+
+      inputCamera.click();
+    });
+
+    // event: klik tombol galeri → trigger input galeri
+    btnGallery.addEventListener('click', () => inputGallery.click());
+
+    // event: file dipilih (kamera/galeri)
+    inputCamera.addEventListener('change', () => handleFile(inputCamera.files?.[0]));
+    inputGallery.addEventListener('change', () => handleFile(inputGallery.files?.[0]));
+
+    // reset pratinjau
+    btnReset.addEventListener('click', () => {
+      previewImg.removeAttribute('src');
+      preview.style.display = 'none';
+      inputCamera.value = ''; inputGallery.value = '';
+      sessionStorage.removeItem('scanImageDataURL');
+    });
+
+    // lanjut ke step-2 (nanti kita bikin halaman atau section berikutnya)
+    btnNext.addEventListener('click', () => {
+      // untuk sekarang, kita simulasi pindah halaman:
+      // di Step-2, ambil sessionStorage.getItem('scanImageDataURL') untuk proses deteksi
+      alert('Gambar tersimpan. Next: kita bikin laman ringkasan harga & deteksi cabe (Step-2).');
+      // contoh redirect:
+      // window.location.href = 'step2.html';
+    });
+
+    // deteksi dukungan kamera dasar
+    (function init() {
+      const hasMediaDevices = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+      if (!hasMediaDevices) {
+        permStatus.textContent = 'Kamera tidak tersedia — gunakan Galeri';
+      } else {
+        permStatus.textContent = 'Kamera siap';
+      }
+    })();
+  </script>
+</body>
+</html>
