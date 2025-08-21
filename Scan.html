@@ -66,6 +66,42 @@
     @media (min-width: 480px) {
       h1 { font-size: 24px; }
     }
+
+    /* --- Animasi Scanning --- */
+    .scanner-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(14, 15, 18, 0.95);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 1000;
+    }
+    .scanner-bar {
+      width: 250px;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 4px;
+      animation: scanMove 2s infinite;
+      box-shadow: 0 0 15px var(--accent);
+    }
+    .scanner-text {
+      margin-top: 20px;
+      font-size: 16px;
+      color: var(--accent);
+      animation: blink 1.2s infinite;
+    }
+    @keyframes scanMove {
+      0% { transform: translateY(-50px); opacity: 0; }
+      25% { transform: translateY(0); opacity: 1; }
+      75% { transform: translateY(50px); opacity: 1; }
+      100% { transform: translateY(-50px); opacity: 0; }
+    }
+    @keyframes blink {
+      0%, 50%, 100% { opacity: 1; }
+      25%, 75% { opacity: 0.3; }
+    }
   </style>
 </head>
 <body>
@@ -81,31 +117,20 @@
     <section class="scan-card" aria-labelledby="scan-title">
       <h2 id="scan-title" style="font-size:16px;margin:0 0 12px;">Pilih sumber gambar</h2>
 
-      <!-- tombol scan kamera -->
       <div class="btns">
         <button id="btnCamera" class="scan-btn" type="button" aria-label="Scan via Kamera">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M9.5 3h5l1.4 2H20a2 2 0 0 1 2 2v10.5A2.5 2.5 0 0 1 19.5 20h-15A2.5 2.5 0 0 1 2 17.5V7a2 2 0 0 1 2-2h4.1L9.5 3Zm2.5 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/>
-          </svg>
-          Buka Kamera
+          📷 Buka Kamera
         </button>
-
-        <!-- tombol pilih dari galeri -->
         <button id="btnGallery" class="scan-btn secondary" type="button" aria-label="Pilih dari Galeri">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M19 3H5a2 2 0 0 0-2 2v14l4-4h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm-3.5 5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z"/>
-          </svg>
-          Pilih dari Galeri
+          🖼️ Pilih dari Galeri
         </button>
       </div>
 
-      <!-- input file tersembunyi -->
       <input id="inputCamera" class="hidden-input" type="file" accept="image/*" capture="environment" />
       <input id="inputGallery" class="hidden-input" type="file" accept="image/*" />
 
       <p class="hint">Privasi aman: gambar hanya dipakai di perangkat ini untuk pratinjau sebelum lanjut.</p>
 
-      <!-- preview -->
       <div id="preview" class="preview" aria-live="polite" aria-atomic="true">
         <img id="previewImg" alt="Pratinjau gambar yang dipilih" />
         <label id="fileInfo"></label>
@@ -113,7 +138,6 @@
           <button id="btnReset" type="button" class="scan-btn secondary" style="flex:1; background: linear-gradient(180deg,#394152,#273041);">
             Ganti Gambar
           </button>
-          <!-- tombol “Lanjut” ini akan dipakai untuk Step-2 nantinya -->
           <button id="btnNext" type="button" class="scan-btn" style="flex:1;">
             Lanjut (Deteksi)
           </button>
@@ -127,8 +151,13 @@
     </div>
   </main>
 
+  <!-- Overlay Animasi Scanning -->
+  <div class="scanner-overlay" id="scannerOverlay">
+    <div class="scanner-bar"></div>
+    <div class="scanner-text">Memindai gambar...</div>
+  </div>
+
   <script>
-    // elemen
     const btnCamera = document.getElementById('btnCamera');
     const btnGallery = document.getElementById('btnGallery');
     const inputCamera = document.getElementById('inputCamera');
@@ -139,49 +168,40 @@
     const permStatus = document.getElementById('permStatus');
     const btnReset = document.getElementById('btnReset');
     const btnNext  = document.getElementById('btnNext');
+    const scannerOverlay = document.getElementById('scannerOverlay');
 
-    // util: tampilkan pratinjau + simpan sementara
+    function showScanner() {
+      scannerOverlay.style.display = 'flex';
+      setTimeout(() => {
+        scannerOverlay.style.display = 'none';
+      }, 2000);
+    }
+
     function handleFile(file) {
       if (!file) return;
+      showScanner();
       const url = URL.createObjectURL(file);
       previewImg.src = url;
       fileInfo.textContent = `${file.name} • ${(file.size/1024/1024).toFixed(2)} MB`;
       preview.style.display = 'block';
 
-      // simpan ke sessionStorage sebagai dataURL untuk dipakai Step-2
       const reader = new FileReader();
       reader.onload = () => {
         try { sessionStorage.setItem('scanImageDataURL', reader.result); }
-        catch(e){ /* storage bisa penuh; ignore */ }
+        catch(e){ /* storage full */ }
       };
       reader.readAsDataURL(file);
     }
 
-    // event: klik tombol kamera → trigger input dengan capture
     btnCamera.addEventListener('click', async () => {
-      try {
-        // cek permission (opsional modern browsers)
-        if (navigator.permissions && navigator.permissions.query) {
-          try {
-            const status = await navigator.permissions.query({ name: 'camera' });
-            if (status.state === 'denied') {
-              permStatus.textContent = 'Izin kamera ditolak — pilih dari galeri';
-            }
-          } catch (_) {}
-        }
-      } catch (_) {}
-
       inputCamera.click();
     });
 
-    // event: klik tombol galeri → trigger input galeri
     btnGallery.addEventListener('click', () => inputGallery.click());
 
-    // event: file dipilih (kamera/galeri)
     inputCamera.addEventListener('change', () => handleFile(inputCamera.files?.[0]));
     inputGallery.addEventListener('change', () => handleFile(inputGallery.files?.[0]));
 
-    // reset pratinjau
     btnReset.addEventListener('click', () => {
       previewImg.removeAttribute('src');
       preview.style.display = 'none';
@@ -189,23 +209,13 @@
       sessionStorage.removeItem('scanImageDataURL');
     });
 
-    // lanjut ke step-2
-btnNext.addEventListener('click', () => {
-  // Simpan data gambar ke sessionStorage
-  sessionStorage.setItem('scanImageDataURL', scanImageDataURL);
-  
-  // Redirect ke step2.html
-  window.location.href = 'step2.html';
-});
+    btnNext.addEventListener('click', () => {
+      window.location.href = 'step2.html';
+    });
 
-    // deteksi dukungan kamera dasar
     (function init() {
       const hasMediaDevices = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-      if (!hasMediaDevices) {
-        permStatus.textContent = 'Kamera tidak tersedia — gunakan Galeri';
-      } else {
-        permStatus.textContent = 'Kamera siap';
-      }
+      permStatus.textContent = hasMediaDevices ? 'Kamera siap' : 'Kamera tidak tersedia — gunakan Galeri';
     })();
   </script>
 </body>
