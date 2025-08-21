@@ -189,14 +189,14 @@
       sessionStorage.removeItem('scanImageDataURL');
     });
 
-    // lanjut ke step-2 (nanti kita bikin halaman atau section berikutnya)
-    btnNext.addEventListener('click', () => {
-      // untuk sekarang, kita simulasi pindah halaman:
-      // di Step-2, ambil sessionStorage.getItem('scanImageDataURL') untuk proses deteksi
-      alert('Gambar tersimpan. Next: kita bikin laman ringkasan harga & deteksi cabe (Step-2).');
-      // contoh redirect:
-      // window.location.href = 'step2.html';
-    });
+    // lanjut ke step-2
+btnNext.addEventListener('click', () => {
+  // Simpan data gambar ke sessionStorage
+  sessionStorage.setItem('scanImageDataURL', scanImageDataURL);
+  
+  // Redirect ke step2.html
+  window.location.href = 'step2.html';
+});
 
     // deteksi dukungan kamera dasar
     (function init() {
