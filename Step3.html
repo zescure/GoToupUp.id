@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Info Lengkap Cabe Merah Keriting</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f6f8;
+      color: #333;
+    }
+
+    header {
+      background: #d32f2f;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 15px;
+    }
+
+    .image-preview {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .image-preview img {
+      max-width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .section {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+    }
+
+    .section h2 {
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: #d32f2f;
+    }
+
+    .section ul {
+      padding-left: 20px;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 300px;
+      margin: 20px 0;
+    }
+
+    .footer-btns {
+      position: fixed;
+      bottom: 15px;
+      right: 15px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .footer-btns button {
+      padding: 10px 15px;
+      background: #d32f2f;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      transition: background 0.2s;
+    }
+
+    .footer-btns button:hover {
+      background: #b71c1c;
+    }
+  </style>
+</head>
+<body>
+  <header>Informasi Lengkap - Cabe Merah Keriting</header>
+
+  <div class="container">
+    <!-- Gambar Hasil Scan -->
+    <div class="image-preview">
+      <img id="scannedImage" alt="Foto Cabe Merah Keriting">
+    </div>
+
+    <!-- Info Gizi -->
+    <div class="section">
+      <h2>Informasi Gizi (per 100g)</h2>
+      <ul>
+        <li>Kalori: 40 kcal</li>
+        <li>Protein: 2 g</li>
+        <li>Karbohidrat: 9 g</li>
+        <li>Serat: 1.5 g</li>
+        <li>Vitamin C: 143.7 mg</li>
+        <li>Vitamin A: 48 µg</li>
+        <li>Kalsium: 14 mg</li>
+        <li>Capsaicin: 0.21%</li>
+      </ul>
+    </div>
+
+    <!-- Asal Usul -->
+    <div class="section">
+      <h2>Asal Usul</h2>
+      <p>Cabe merah keriting pertama kali dibudidayakan di Amerika Selatan, lalu menyebar ke Asia pada abad ke-16 melalui jalur perdagangan Portugis. Kini, varietas lokal Indonesia dikenal punya tingkat kepedasan tinggi dan aroma khas.</p>
+    </div>
+
+    <!-- Fun Fact -->
+    <div class="section">
+      <h2>Fun Fact</h2>
+      <ul>
+        <li>Capsaicin pada cabe dapat meningkatkan metabolisme hingga 20% sementara.</li>
+        <li>Cabe merah keriting paling banyak digunakan untuk sambal dan tumisan khas Nusantara.</li>
+        <li>Pada 2020, harga cabe sempat melonjak 300% karena gagal panen di beberapa daerah.</li>
+      </ul>
+    </div>
+
+    <!-- Tren Harga -->
+    <div class="section">
+      <h2>Tren Harga (7 Hari Terakhir)</h2>
+      <div class="chart-container">
+        <canvas id="priceChart"></canvas>
+      </div>
+      <p>Data terakhir update: <strong id="updateDate"></strong></p>
+    </div>
+
+    <!-- Saran Penggunaan -->
+    <div class="section">
+      <h2>Saran Penggunaan</h2>
+      <ul>
+        <li>Sambal terasi, sambal bawang, sambal balado.</li>
+        <li>Tumis sayuran, mie goreng, dan nasi goreng pedas.</li>
+        <li>Campuran marinasi ayam atau ikan bakar.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Tombol Navigasi -->
+  <div class="footer-btns">
+    <button onclick="window.location.href='step2.html'">Kembali</button>
+    <button onclick="window.location.href='step4.html'">Lihat Harga Regional</button>
+  </div>
+
+  <script>
+    // Load Gambar dari Step 1
+    const imgData = sessionStorage.getItem('scanImageDataURL');
+    if (imgData) {
+      document.getElementById('scannedImage').src = imgData;
+    } else {
+      document.getElementById('scannedImage').alt = "Tidak ada gambar terdeteksi";
+    }
+
+    // Set tanggal update
+    document.getElementById('updateDate').innerText = new Date().toLocaleDateString('id-ID', {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    // Data Fake Harga Cabe
+    const priceData = [45000, 46000, 47000, 45500, 48000, 47500, 49000];
+    const labels = ['14 Agu', '15 Agu', '16 Agu', '17 Agu', '18 Agu', '19 Agu', '20 Agu'];
+
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    const lastPrice = priceData[priceData.length - 1];
+    const prevPrice = priceData[priceData.length - 2];
+    const lineColor = lastPrice >= prevPrice ? 'green' : 'red';
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Harga per Kg (Rp)',
+          data: priceData,
+          borderColor: lineColor,
+          backgroundColor: 'rgba(0,0,0,0)',
+          borderWidth: 2,
+          pointBackgroundColor: lineColor,
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 5
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: false
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
