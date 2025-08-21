@@ -3,86 +3,138 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Harga Cabe per Pulau & Provinsi</title>
+  <title>Protokol Harga • Data Harga</title>
   <style>
+    :root {
+      --bg:#0e0f12; --card:#171a20; --text:#e9edf3; --muted:#9aa3ad;
+      --accent:#39d98a; --accent-2:#3c82f6; --danger:#ff6b6b;
+      --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    * { box-sizing:border-box; }
+    html, body { height:100%; margin:0; }
     body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background-color: #f4f4f4;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(1200px 800px at 70% -10%, #1d2230 0%, #0e0f12 55%, #0b0c0f 100%);
+      color: var(--text);
+      padding:24px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
     }
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
+    .wrap {
+      width:100%; max-width:800px;
+      background:linear-gradient(180deg, #181c25, #13161d);
+      border-radius:var(--radius);
+      padding:28px;
+      box-shadow:var(--shadow);
+      border:1px solid #232735;
     }
-    .selector {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 20px;
+    .brand { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+    .logo {
+      width:40px; height:40px; border-radius:10px;
+      background:conic-gradient(from 160deg, #39d98a, #3c82f6, #7c3aed, #39d98a);
+      filter:saturate(1.1) contrast(1.05);
     }
+    h1 { margin:0; font-size:22px; }
+    p.sub { margin:4px 0 20px; color:var(--muted); font-size:14px; line-height:1.5; }
+
+    .selector { display:flex; gap:10px; margin-bottom:20px; }
     select {
-      padding: 10px;
-      font-size: 16px;
+      flex:1;
+      padding:12px; border-radius:10px;
+      border:1px solid #232735;
+      background:var(--card); color:var(--text);
+      font-size:14px;
+      outline:none;
     }
+
     table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      margin-top: 20px;
+      width:100%;
+      border-collapse:collapse;
+      margin-top:10px;
+      background:var(--card);
+      border-radius:12px;
+      overflow:hidden;
     }
     th, td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      text-align: center;
+      padding:12px; text-align:center;
+      border-bottom:1px solid #232735;
+      font-size:14px;
     }
     th {
-      background: #4CAF50;
-      color: white;
+      background:linear-gradient(180deg, #3ee39c, #27b97a);
+      color:#0b1210; font-weight:700;
     }
-    tr:nth-child(even) {
-      background-color: #f2f2f2;
-    }
+    tr:last-child td { border-bottom:none; }
+    tr:nth-child(even) { background:rgba(255,255,255,0.03); }
+
     .back-btn {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      background: #4CAF50;
-      color: white;
-      padding: 10px 20px;
-      text-decoration: none;
-      border-radius: 5px;
-      font-weight: bold;
+      display:inline-block;
+      margin-top:20px;
+      padding:14px 20px;
+      background:linear-gradient(180deg, #3ee39c, #27b97a);
+      color:#0b1210;
+      font-weight:700;
+      text-decoration:none;
+      border-radius:12px;
+      transition:transform .08s ease;
+      text-align:center;
+    }
+    .back-btn:active { transform:scale(.98); }
+
+    .footer {
+      margin-top:20px;
+      display:flex; justify-content:space-between;
+      font-size:12px; color:var(--muted);
+      width:100%; max-width:800px;
+    }
+    .status-dot {
+      width:8px; height:8px; border-radius:50%;
+      background:#95f2c7; box-shadow:0 0 8px #39d98a;
+      margin-right:8px; display:inline-block;
     }
   </style>
 </head>
 <body>
-  <h1>📊 Harga Cabe Per Pulau & Provinsi</h1>
-  
-  <div class="selector">
-    <select id="pulau">
-      <option value="">Pilih Pulau</option>
-    </select>
-    <select id="provinsi">
-      <option value="">Pilih Provinsi</option>
-    </select>
+  <main class="wrap">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1>Protokol Harga • Data</h1>
+        <p class="sub">Lihat harga cabe berdasarkan <strong>pulau</strong> dan <strong>provinsi</strong> secara interaktif.</p>
+      </div>
+    </div>
+
+    <div class="selector">
+      <select id="pulau">
+        <option value="">Pilih Pulau</option>
+      </select>
+      <select id="provinsi">
+        <option value="">Pilih Provinsi</option>
+      </select>
+    </div>
+
+    <table id="hargaTable">
+      <thead>
+        <tr>
+          <th>Kota/Kabupaten</th>
+          <th>Harga Terendah (Rp/Kg)</th>
+          <th>Harga Rata-rata (Rp/Kg)</th>
+          <th>Harga Tertinggi (Rp/Kg)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <a href="step3.html" class="back-btn">⬅ Kembali ke Step-3</a>
+  </main>
+
+  <div class="footer">
+    <div><span class="status-dot"></span>Data terkini • Step-4</div>
+    <div>v0.1</div>
   </div>
 
-  <table id="hargaTable">
-    <thead>
-      <tr>
-        <th>Kota/Kabupaten</th>
-        <th>Harga Terendah (Rp/Kg)</th>
-        <th>Harga Rata-rata (Rp/Kg)</th>
-        <th>Harga Tertinggi (Rp/Kg)</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <a href="step3.html" class="back-btn">⬅ Kembali</a>
-
   <script>
-    // Data Pulau, Provinsi, dan Kota
     const dataIndonesia = {
       "Sumatera": {
         "Aceh": ["Banda Aceh", "Lhokseumawe", "Langsa"],
@@ -132,13 +184,12 @@
       }
     };
 
-    // Isi dropdown Pulau
     const pulauSelect = document.getElementById('pulau');
     const provinsiSelect = document.getElementById('provinsi');
     const hargaTableBody = document.querySelector('#hargaTable tbody');
 
     Object.keys(dataIndonesia).forEach(pulau => {
-      let option = document.createElement('option');
+      const option = document.createElement('option');
       option.value = pulau;
       option.textContent = pulau;
       pulauSelect.appendChild(option);
@@ -146,16 +197,16 @@
 
     pulauSelect.addEventListener('change', () => {
       provinsiSelect.innerHTML = '<option value="">Pilih Provinsi</option>';
+      hargaTableBody.innerHTML = '';
       const provinsiList = dataIndonesia[pulauSelect.value];
       if (provinsiList) {
         Object.keys(provinsiList).forEach(prov => {
-          let option = document.createElement('option');
+          const option = document.createElement('option');
           option.value = prov;
           option.textContent = prov;
           provinsiSelect.appendChild(option);
         });
       }
-      hargaTableBody.innerHTML = '';
     });
 
     provinsiSelect.addEventListener('change', () => {
