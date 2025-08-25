@@ -474,684 +474,683 @@
 
 <div class="notification" id="notification"></div>
 
-<script>
-    // Global variables
-    let currentMarket = 'BTC/USD';
-    let currentTradeType = 'buy';
-    let markets = {};
-    let chartCanvas, chartCtx;
-    let chartData = [];
-    let animationId;
-    let userBalances = {
-        USD: 10000,
-        IDR: 150000000,
-        BTC: 0,
-        ETH: 0,
-        ADA: 0,
-        DOT: 0
-    };
-    let userCoinHoldings = {};
+<script type="module">
+/*
+  Full combined JS for CryptoSim Exchange
+  - UI, chart, order book, trading functions
+  - Create coin + bot trading
+  - Firebase v9 modular integration (auth anon + Firestore realtime)
+*/
 
-    // Exchange rates
-    const USDIDR = 15000;
+/* ---------------- FIREBASE IMPORTS (v9 modular) ---------------- */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import {
+  getFirestore, collection, doc, onSnapshot, setDoc, getDoc, updateDoc,
+  runTransaction, addDoc, query, orderBy, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    // Initialize markets with realistic data
-    function initializeMarkets() {
-        markets = {
-            'BTC/USD': {
-                name: 'Bitcoin',
-                symbol: 'BTC',
-                price: 45230.50,
-                change24h: 2.34,
-                volume: 28540000000,
-                high24h: 46500,
-                low24h: 44100,
-                baseAsset: 'BTC',
-                quoteAsset: 'USD'
-            },
-            'ETH/USD': {
-                name: 'Ethereum',
-                symbol: 'ETH',
-                price: 3125.80,
-                change24h: -1.45,
-                volume: 15240000000,
-                high24h: 3200,
-                low24h: 3050,
-                baseAsset: 'ETH',
-                quoteAsset: 'USD'
-            },
-            'ADA/USD': {
-                name: 'Cardano',
-                symbol: 'ADA',
-                price: 1.25,
-                change24h: 5.67,
-                volume: 2540000000,
-                high24h: 1.32,
-                low24h: 1.18,
-                baseAsset: 'ADA',
-                quoteAsset: 'USD'
-            },
-            'DOT/USD': {
-                name: 'Polkadot',
-                symbol: 'DOT',
-                price: 28.45,
-                change24h: -0.89,
-                volume: 1240000000,
-                high24h: 29.50,
-                low24h: 27.80,
-                baseAsset: 'DOT',
-                quoteAsset: 'USD'
-            }
-        };
+/* ---------------- YOUR FIREBASE CONFIG ---------------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
+  authDomain: "zeepaylater-93a94.firebaseapp.com",
+  projectId: "zeepaylater-93a94",
+  storageBucket: "zeepaylater-93a94.appspot.com",
+  messagingSenderId: "358065954807",
+  appId: "1:358065954807:web:66619211fea82a4b2518f2"
+};
+
+/* ---------------- Init Firebase (safe try/catch) ---------------- */
+let firebaseAvailable = true;
+let app, auth, db;
+try {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+  console.log('Firebase initialized');
+} catch (e) {
+  console.warn('Firebase init failed — running in local-only mode', e);
+  firebaseAvailable = false;
+}
+
+/* ---------------- GLOBAL UI STATE ---------------- */
+let currentMarket = 'BTC/USD';
+let currentTradeType = 'buy';
+let markets = {};           // will be populated locally OR by Firestore realtime
+let chartCanvas, chartCtx;
+let chartData = [];
+let animationId = null;
+let userBalances = {
+  USD: 10000,
+  IDR: 150000000,
+  BTC: 0,
+  ETH: 0,
+  ADA: 0,
+  DOT: 0
+};
+let userCoinHoldings = {};
+const USDIDR = 15000; // fallback; will be used in conversions
+
+/* Firebase-related state */
+let currentUser = null;
+let isAdmin = false;
+let marketsUnsub = null;
+let tradesUnsub = null;
+
+/* ---------------- LOCAL DEFAULT MARKETS (fallback) ---------------- */
+function initializeMarketsLocal() {
+  markets = {
+    'BTC/USD': { name: 'Bitcoin', symbol: 'BTC', price: 45230.50, change24h: 2.34, volume: 28540000000, high24h: 46500, low24h: 44100, baseAsset: 'BTC', quoteAsset: 'USD' },
+    'ETH/USD': { name: 'Ethereum', symbol: 'ETH', price: 3125.80, change24h: -1.45, volume: 15240000000, high24h: 3200, low24h: 3050, baseAsset: 'ETH', quoteAsset: 'USD' },
+    'ADA/USD': { name: 'Cardano', symbol: 'ADA', price: 1.25, change24h: 5.67, volume: 2540000000, high24h: 1.32, low24h: 1.18, baseAsset: 'ADA', quoteAsset: 'USD' },
+    'DOT/USD': { name: 'Polkadot', symbol: 'DOT', price: 28.45, change24h: -0.89, volume: 1240000000, high24h: 29.50, low24h: 27.80, baseAsset: 'DOT', quoteAsset: 'USD' }
+  };
+  window.markets = markets;
+}
+
+/* ---------------- CHART & RENDERING ---------------- */
+function initializeChart() {
+  chartCanvas = document.getElementById('tradingChart');
+  if (!chartCanvas) return;
+  chartCtx = chartCanvas.getContext('2d');
+
+  function resizeCanvas() {
+    const rect = chartCanvas.getBoundingClientRect();
+    chartCanvas.width = rect.width;
+    chartCanvas.height = rect.height;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  generateInitialChartData();
+  startChartAnimation();
+}
+
+function generateInitialChartData() {
+  chartData = [];
+  const currentPrice = markets[currentMarket]?.price || 100;
+  const now = Date.now();
+  for (let i = 100; i >= 0; i--) {
+    const variation = (Math.random() - 0.5) * (currentPrice * 0.02);
+    const price = currentPrice + variation;
+    chartData.push({ timestamp: now - (i * 60000), price: Math.max(price, currentPrice * 0.5) });
+  }
+}
+
+function drawChart() {
+  if (!chartCtx || chartData.length === 0) return;
+  const width = chartCanvas.width, height = chartCanvas.height;
+  chartCtx.fillStyle = '#1a1f2e';
+  chartCtx.fillRect(0, 0, width, height);
+
+  const prices = chartData.map(d => d.price);
+  const minPrice = Math.min(...prices), maxPrice = Math.max(...prices);
+  const priceRange = maxPrice - minPrice;
+  if (priceRange === 0) return;
+
+  // grid
+  chartCtx.strokeStyle = '#2d3748'; chartCtx.lineWidth = 1;
+  for (let i = 0; i <= 5; i++) {
+    const y = (height / 5) * i;
+    chartCtx.beginPath(); chartCtx.moveTo(0, y); chartCtx.lineTo(width, y); chartCtx.stroke();
+  }
+  for (let i = 0; i <= 10; i++) {
+    const x = (width / 10) * i;
+    chartCtx.beginPath(); chartCtx.moveTo(x, 0); chartCtx.lineTo(x, height); chartCtx.stroke();
+  }
+
+  // price line
+  chartCtx.strokeStyle = '#4299e1'; chartCtx.lineWidth = 2; chartCtx.beginPath();
+  for (let i = 0; i < chartData.length; i++) {
+    const x = (i / (chartData.length - 1)) * width;
+    const normalized = (chartData[i].price - minPrice) / priceRange;
+    const y = height - (normalized * height);
+    if (i === 0) chartCtx.moveTo(x, y); else chartCtx.lineTo(x, y);
+  }
+  chartCtx.stroke();
+
+  // price labels
+  chartCtx.fillStyle = '#a0aec0'; chartCtx.font = '12px Arial';
+  for (let i = 0; i <= 5; i++) {
+    const price = minPrice + (priceRange * (5 - i) / 5);
+    const y = (height / 5) * i + 15;
+    chartCtx.fillText('$' + price.toFixed(2), 10, y);
+  }
+}
+
+function startChartAnimation() {
+  if (animationId) cancelAnimationFrame(animationId);
+  function animate() {
+    if (Math.random() < 0.3) {
+      const lastPrice = chartData[chartData.length - 1].price;
+      const variation = (Math.random() - 0.5) * (lastPrice * 0.005);
+      const newPrice = Math.max(lastPrice + variation, lastPrice * 0.99);
+      chartData.shift();
+      chartData.push({ timestamp: Date.now(), price: newPrice });
+      if (markets[currentMarket]) {
+        markets[currentMarket].price = newPrice;
+        updateCurrentPrice();
+      }
     }
+    drawChart();
+    animationId = requestAnimationFrame(animate);
+  }
+  animate();
+}
 
-    // Initialize chart
-    function initializeChart() {
-        chartCanvas = document.getElementById('tradingChart');
-        chartCtx = chartCanvas.getContext('2d');
-        
-        // Set canvas size
-        function resizeCanvas() {
-            const rect = chartCanvas.getBoundingClientRect();
-            chartCanvas.width = rect.width;
-            chartCanvas.height = rect.height;
-        }
-        
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+/* ---------------- MARKET LIST + ORDERBOOK UI ---------------- */
+function renderMarketList() {
+  const marketList = document.getElementById('marketList');
+  if (!marketList) return;
+  marketList.innerHTML = '';
+  Object.entries(markets).forEach(([pair, data]) => {
+    const item = document.createElement('div');
+    item.className = `market-item ${pair === currentMarket ? 'active' : ''}`;
+    item.onclick = () => selectMarket(pair);
+    const changeClass = (data.change24h || 0) >= 0 ? 'positive' : 'negative';
+    const changeSign = (data.change24h || 0) >= 0 ? '+' : '';
+    item.innerHTML = `<div class="pair-name">${pair}</div>
+      <div class="pair-price">$${(data.price||0).toFixed(2)}</div>
+      <div class="pair-change ${changeClass}">${changeSign}${(data.change24h||0).toFixed(2)}%</div>`;
+    marketList.appendChild(item);
+  });
+}
 
-        // Generate initial chart data
-        generateInitialChartData();
-        startChartAnimation();
+function selectMarket(pair) {
+  if (!markets[pair]) return;
+  currentMarket = pair;
+  document.getElementById('currentPair').textContent = pair;
+  updateCurrentPrice();
+  generateInitialChartData();
+  renderMarketList();
+  generateOrderBook();
+  updateTradeForm();
+}
+
+function updateCurrentPrice() {
+  const priceEl = document.getElementById('currentPrice');
+  if (!priceEl) return;
+  const price = markets[currentMarket]?.price || 0;
+  priceEl.textContent = `$${price.toFixed(2)}`;
+  priceEl.classList.add('price-flash');
+  setTimeout(() => priceEl.classList.remove('price-flash'), 300);
+}
+
+function generateOrderBook() {
+  const currentPrice = markets[currentMarket]?.price || 0;
+  const sells = document.getElementById('orderBookSells');
+  const buys = document.getElementById('orderBookBuys');
+  if (!sells || !buys) return;
+  sells.innerHTML = ''; buys.innerHTML = '';
+
+  for (let i = 5; i >= 1; i--) {
+    const price = currentPrice * (1 + (i * 0.001));
+    const amount = (Math.random() * 10).toFixed(4);
+    const total = (price * amount).toFixed(2);
+    const row = document.createElement('tr');
+    row.innerHTML = `<td class="sell-order">$${price.toFixed(2)}</td><td>${amount}</td><td>$${total}</td>`;
+    sells.appendChild(row);
+  }
+  for (let i = 1; i <= 5; i++) {
+    const price = currentPrice * (1 - (i * 0.001));
+    const amount = (Math.random() * 10).toFixed(4);
+    const total = (price * amount).toFixed(2);
+    const row = document.createElement('tr');
+    row.innerHTML = `<td class="buy-order">$${price.toFixed(2)}</td><td>${amount}</td><td>$${total}</td>`;
+    buys.appendChild(row);
+  }
+}
+
+/* ---------------- TRADING FORM + EXECUTION ---------------- */
+function switchTab(type) {
+  currentTradeType = type;
+  document.querySelectorAll('.trade-tab').forEach(tab => tab.classList.remove('active'));
+  document.querySelector(`.trade-tab:nth-child(${type === 'buy' ? 1 : 2})`).classList.add('active');
+  const btn = document.getElementById('tradeButton');
+  btn.textContent = type === 'buy' ? 'Buy' : 'Sell';
+  btn.className = `trade-button ${type === 'sell' ? 'sell' : ''}`;
+  updateTradeForm();
+}
+
+function updateTradeForm() {
+  const price = markets[currentMarket]?.price || 0;
+  const priceInput = document.getElementById('tradePrice');
+  if (priceInput) priceInput.value = price.toFixed(2);
+  calculateTotal();
+}
+
+function calculateTotal() {
+  const price = parseFloat(document.getElementById('tradePrice').value) || 0;
+  const amount = parseFloat(document.getElementById('tradeAmount').value) || 0;
+  const total = price * amount;
+  const totalInput = document.getElementById('tradeTotal');
+  if (totalInput) totalInput.value = total.toFixed(2);
+}
+
+function executeTrade() {
+  const price = parseFloat(document.getElementById('tradePrice').value);
+  const amount = parseFloat(document.getElementById('tradeAmount').value);
+  const total = price * amount;
+  if (!price || !amount || amount <= 0) { showNotification('Please enter valid price and amount', 'error'); return; }
+  const market = markets[currentMarket];
+  if (!market) { showNotification('Market not available', 'error'); return; }
+  const base = market.baseAsset, quote = market.quoteAsset;
+
+  if (currentTradeType === 'buy') {
+    if ((userBalances[quote] || 0) < total) { showNotification(`Insufficient ${quote} balance`, 'error'); return; }
+    userBalances[quote] -= total;
+    userBalances[base] = (userBalances[base] || 0) + amount;
+    showNotification(`Successfully bought ${amount} ${base}`, 'success');
+  } else {
+    if ((userBalances[base] || 0) < amount) { showNotification(`Insufficient ${base} balance`, 'error'); return; }
+    userBalances[base] -= amount;
+    userBalances[quote] += total;
+    showNotification(`Successfully sold ${amount} ${base}`, 'success');
+  }
+
+  updateBalanceDisplay();
+  addRecentTrade(price, amount, currentTradeType);
+
+  document.getElementById('tradeAmount').value = '';
+  document.getElementById('tradeTotal').value = '';
+}
+
+/* ---------------- RECENT TRADES UI ---------------- */
+function addRecentTrade(price, amount, type) {
+  const recent = document.getElementById('recentTrades');
+  if (!recent) return;
+  const item = document.createElement('div');
+  item.className = 'trade-item';
+  const time = new Date().toLocaleTimeString();
+  const cls = type === 'buy' ? 'positive' : 'negative';
+  item.innerHTML = `<span class="${cls}">${price.toFixed(2)}</span><span>${amount.toFixed(4)}</span><span>${time}</span>`;
+  recent.insertBefore(item, recent.firstChild);
+  while (recent.children.length > 20) recent.removeChild(recent.lastChild);
+}
+
+/* ---------------- BALANCE DISPLAY ---------------- */
+function updateBalanceDisplay() {
+  const usdEl = document.getElementById('usdBalance');
+  const idrEl = document.getElementById('idrBalance');
+  const totalEl = document.getElementById('totalPortfolio');
+  if (usdEl) usdEl.textContent = (userBalances.USD || 0).toFixed(2);
+  if (idrEl) idrEl.textContent = (userBalances.IDR || 0).toLocaleString();
+
+  let totalValue = (userBalances.USD || 0) + ((userBalances.IDR || 0) / USDIDR);
+  Object.entries(userBalances).forEach(([asset, amt]) => {
+    if (asset !== 'USD' && asset !== 'IDR' && amt > 0) {
+      const market = Object.values(markets).find(m => m.baseAsset === asset);
+      if (market) totalValue += amt * market.price;
     }
+  });
+  Object.entries(userCoinHoldings).forEach(([sym, amt]) => {
+    const market = Object.values(markets).find(m => m.symbol === sym);
+    if (market && amt > 0) totalValue += amt * market.price;
+  });
+  if (totalEl) totalEl.textContent = totalValue.toFixed(2);
+}
 
-    function generateInitialChartData() {
-        chartData = [];
-        const currentPrice = markets[currentMarket].price;
-        const now = Date.now();
-        
-        for (let i = 100; i >= 0; i--) {
-            const timestamp = now - (i * 60000); // 1 minute intervals
-            const variation = (Math.random() - 0.5) * (currentPrice * 0.02); // 2% variation
-            const price = currentPrice + variation;
-            chartData.push({
-                timestamp: timestamp,
-                price: Math.max(price, currentPrice * 0.9) // Prevent negative prices
-            });
-        }
+/* ---------------- CREATE NEW COIN (UI wrapper) ---------------- */
+async function createNewCoinWrapper() {
+  const name = document.getElementById('coinName').value.trim();
+  const symbol = document.getElementById('coinSymbol').value.trim().toUpperCase();
+  const supply = parseFloat(document.getElementById('coinSupply').value);
+  const price = parseFloat(document.getElementById('coinPrice').value);
+  const description = document.getElementById('coinDescription').value.trim();
+
+  if (!name || !symbol || !supply || !price || supply <= 0 || price <= 0) {
+    showNotification('Please fill all fields with valid values', 'error');
+    return;
+  }
+  if (symbol.length > 5) { showNotification('Symbol must be 5 characters or less', 'error'); return; }
+
+  // If firebase available and user is admin, use firebase creation
+  if (firebaseAvailable && currentUser && isAdmin) {
+    try {
+      await createNewCoinFirebase({ name, symbol, supply, price, description });
+      // clear fields and close panel handled in createNewCoinFirebase or here:
+      document.getElementById('coinName').value = '';
+      document.getElementById('coinSymbol').value = '';
+      document.getElementById('coinSupply').value = '';
+      document.getElementById('coinPrice').value = '';
+      document.getElementById('coinDescription').value = '';
+      toggleCreateCoin();
+      return;
+    } catch (e) {
+      showNotification('Create coin failed: ' + e.message, 'error');
+      return;
     }
+  }
 
-    function drawChart() {
-        if (!chartCtx || chartData.length === 0) return;
+  // Fallback: create locally (non-persistent)
+  const pairName = `${symbol}/USD`;
+  if (markets[pairName]) { showNotification('A coin with this symbol already exists', 'error'); return; }
+  markets[pairName] = {
+    name, symbol, price, change24h: 0, volume: 0, high24h: price, low24h: price,
+    baseAsset: symbol, quoteAsset: 'USD', isUserCreated: true, supply, description
+  };
+  const idrPair = `${symbol}/IDR`;
+  markets[idrPair] = { ...markets[pairName], price: price * USDIDR, quoteAsset: 'IDR' };
+  userBalances[symbol] = supply;
+  userCoinHoldings[symbol] = supply;
+  renderMarketList();
+  updateBalanceDisplay();
+  toggleCreateCoin();
+  showNotification(`${name} (${symbol}) created successfully (local)`, 'success');
+  startBotTrading(pairName);
+}
 
-        const width = chartCanvas.width;
-        const height = chartCanvas.height;
-        
-        // Clear canvas
-        chartCtx.fillStyle = '#1a1f2e';
-        chartCtx.fillRect(0, 0, width, height);
-        
-        // Calculate price range
-        const prices = chartData.map(d => d.price);
-        const minPrice = Math.min(...prices);
-        const maxPrice = Math.max(...prices);
-        const priceRange = maxPrice - minPrice;
-        
-        if (priceRange === 0) return;
-        
-        // Draw grid
-        chartCtx.strokeStyle = '#2d3748';
-        chartCtx.lineWidth = 1;
-        
-        // Horizontal grid lines
-        for (let i = 0; i <= 5; i++) {
-            const y = (height / 5) * i;
-            chartCtx.beginPath();
-            chartCtx.moveTo(0, y);
-            chartCtx.lineTo(width, y);
-            chartCtx.stroke();
-        }
-        
-        // Vertical grid lines
-        for (let i = 0; i <= 10; i++) {
-            const x = (width / 10) * i;
-            chartCtx.beginPath();
-            chartCtx.moveTo(x, 0);
-            chartCtx.lineTo(x, height);
-            chartCtx.stroke();
-        }
-        
-        // Draw price line
-        chartCtx.strokeStyle = '#4299e1';
-        chartCtx.lineWidth = 2;
-        chartCtx.beginPath();
-        
-        for (let i = 0; i < chartData.length; i++) {
-            const x = (i / (chartData.length - 1)) * width;
-            const normalizedPrice = (chartData[i].price - minPrice) / priceRange;
-            const y = height - (normalizedPrice * height);
-            
-            if (i === 0) {
-                chartCtx.moveTo(x, y);
-            } else {
-                chartCtx.lineTo(x, y);
-            }
-        }
-        chartCtx.stroke();
-        
-        // Draw price labels
-        chartCtx.fillStyle = '#a0aec0';
-        chartCtx.font = '12px Arial';
-        
-        for (let i = 0; i <= 5; i++) {
-            const price = minPrice + (priceRange * (5 - i) / 5);
-            const y = (height / 5) * i + 15;
-            chartCtx.fillText('$' + price.toFixed(2), 10, y);
-        }
-    }
-
-    function startChartAnimation() {
-        function animate() {
-            // Update chart data
-            if (Math.random() < 0.3) { // 30% chance to update
-                const lastPrice = chartData[chartData.length - 1].price;
-                const variation = (Math.random() - 0.5) * (lastPrice * 0.005); // 0.5% variation
-                const newPrice = Math.max(lastPrice + variation, lastPrice * 0.99);
-                
-                chartData.shift(); // Remove first element
-                chartData.push({
-                    timestamp: Date.now(),
-                    price: newPrice
-                });
-                
-                // Update market price
-                markets[currentMarket].price = newPrice;
-                updateCurrentPrice();
-            }
-            
-            drawChart();
-            animationId = requestAnimationFrame(animate);
-        }
-        animate();
-    }
-
-    // Market list functions
-    function renderMarketList() {
-        const marketList = document.getElementById('marketList');
-        marketList.innerHTML = '';
-        
-        Object.entries(markets).forEach(([pair, data]) => {
-            const marketItem = document.createElement('div');
-            marketItem.className = `market-item ${pair === currentMarket ? 'active' : ''}`;
-            marketItem.onclick = () => selectMarket(pair);
-            
-            const changeClass = data.change24h >= 0 ? 'positive' : 'negative';
-            const changeSign = data.change24h >= 0 ? '+' : '';
-            
-            marketItem.innerHTML = `
-                <div class="pair-name">${pair}</div>
-                <div class="pair-price">$${data.price.toFixed(2)}</div>
-                <div class="pair-change ${changeClass}">${changeSign}${data.change24h.toFixed(2)}%</div>
-            `;
-            
-            marketList.appendChild(marketItem);
-        });
-    }
-
-    function selectMarket(pair) {
-        if (markets[pair]) {
-            currentMarket = pair;
-            document.getElementById('currentPair').textContent = pair;
-            updateCurrentPrice();
-            generateInitialChartData();
-            renderMarketList();
-            generateOrderBook();
-            updateTradeForm();
-        }
-    }
-
-    function updateCurrentPrice() {
-        const price = markets[currentMarket].price;
-        const priceElement = document.getElementById('currentPrice');
-        priceElement.textContent = `$${price.toFixed(2)}`;
-        priceElement.classList.add('price-flash');
-        setTimeout(() => priceElement.classList.remove('price-flash'), 300);
-    }
-
-    // Order book functions
-    function generateOrderBook() {
-        const currentPrice = markets[currentMarket].price;
-        const sellsElement = document.getElementById('orderBookSells');
-        const buysElement = document.getElementById('orderBookBuys');
-        
-        sellsElement.innerHTML = '';
-        buysElement.innerHTML = '';
-        
-        // Generate sell orders (asks)
-        for (let i = 5; i >= 1; i--) {
-            const price = currentPrice * (1 + (i * 0.001)); // Slightly above current price
-            const amount = (Math.random() * 10).toFixed(4);
-            const total = (price * amount).toFixed(2);
-            
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td class="sell-order">$${price.toFixed(2)}</td>
-                <td>${amount}</td>
-                <td>$${total}</td>
-            `;
-            sellsElement.appendChild(row);
-        }
-        
-        // Generate buy orders (bids)
-        for (let i = 1; i <= 5; i++) {
-            const price = currentPrice * (1 - (i * 0.001)); // Slightly below current price
-            const amount = (Math.random() * 10).toFixed(4);
-            const total = (price * amount).toFixed(2);
-            
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td class="buy-order">$${price.toFixed(2)}</td>
-                <td>${amount}</td>
-                <td>$${total}</td>
-            `;
-            buysElement.appendChild(row);
-        }
-    }
-
-    // Trading functions
-    function switchTab(type) {
-        currentTradeType = type;
-        document.querySelectorAll('.trade-tab').forEach(tab => tab.classList.remove('active'));
-        document.querySelector(`.trade-tab:nth-child(${type === 'buy' ? 1 : 2})`).classList.add('active');
-        
-        const button = document.getElementById('tradeButton');
-        button.textContent = type === 'buy' ? 'Buy' : 'Sell';
-        button.className = `trade-button ${type === 'sell' ? 'sell' : ''}`;
-        
-        updateTradeForm();
-    }
-
-    function updateTradeForm() {
-        const currentPrice = markets[currentMarket].price;
-        document.getElementById('tradePrice').value = currentPrice.toFixed(2);
-        calculateTotal();
-    }
-
-    function calculateTotal() {
-        const price = parseFloat(document.getElementById('tradePrice').value) || 0;
-        const amount = parseFloat(document.getElementById('tradeAmount').value) || 0;
-        const total = price * amount;
-        document.getElementById('tradeTotal').value = total.toFixed(2);
-    }
-
-    function executeTrade() {
-        const price = parseFloat(document.getElementById('tradePrice').value);
-        const amount = parseFloat(document.getElementById('tradeAmount').value);
-        const total = price * amount;
-        
-        if (!price || !amount || amount <= 0) {
-            showNotification('Please enter valid price and amount', 'error');
-            return;
-        }
-        
-        const market = markets[currentMarket];
-        const baseAsset = market.baseAsset;
-        const quoteAsset = market.quoteAsset;
-        
-        if (currentTradeType === 'buy') {
-            if (userBalances[quoteAsset] < total) {
-                showNotification(`Insufficient ${quoteAsset} balance`, 'error');
-                return;
-            }
-            
-            userBalances[quoteAsset] -= total;
-            userBalances[baseAsset] = (userBalances[baseAsset] || 0) + amount;
-            showNotification(`Successfully bought ${amount} ${baseAsset}`, 'success');
-        } else {
-            if ((userBalances[baseAsset] || 0) < amount) {
-                showNotification(`Insufficient ${baseAsset} balance`, 'error');
-                return;
-            }
-            
-            userBalances[baseAsset] -= amount;
-            userBalances[quoteAsset] += total;
-            showNotification(`Successfully sold ${amount} ${baseAsset}`, 'success');
-        }
-        
-        updateBalanceDisplay();
-        addRecentTrade(price, amount, currentTradeType);
-        
-        // Clear form
-        document.getElementById('tradeAmount').value = '';
-        document.getElementById('tradeTotal').value = '';
-    }
-
-    function addRecentTrade(price, amount, type) {
-        const recentTrades = document.getElementById('recentTrades');
-        const tradeItem = document.createElement('div');
-        tradeItem.className = 'trade-item';
-        
-        const time = new Date().toLocaleTimeString();
-        const typeClass = type === 'buy' ? 'positive' : 'negative';
-        
-        tradeItem.innerHTML = `
-            <span class="${typeClass}">${price.toFixed(2)}</span>
-            <span>${amount.toFixed(4)}</span>
-            <span>${time}</span>
-        `;
-        
-        recentTrades.insertBefore(tradeItem, recentTrades.firstChild);
-        
-        // Keep only last 20 trades
-        while (recentTrades.children.length > 20) {
-            recentTrades.removeChild(recentTrades.lastChild);
-        }
-    }
-
-    function updateBalanceDisplay() {
-        document.getElementById('usdBalance').textContent = userBalances.USD.toFixed(2);
-        document.getElementById('idrBalance').textContent = (userBalances.IDR).toLocaleString();
-        
-        // Calculate total portfolio value
-        let totalValue = userBalances.USD + (userBalances.IDR / USDIDR);
-        
-        Object.entries(userBalances).forEach(([asset, amount]) => {
-            if (asset !== 'USD' && asset !== 'IDR' && amount > 0) {
-                const market = Object.values(markets).find(m => m.baseAsset === asset);
-                if (market) {
-                    totalValue += amount * market.price;
-                }
-            }
-        });
-        
-        // Add user created coins value
-        Object.entries(userCoinHoldings).forEach(([symbol, amount]) => {
-            const market = Object.values(markets).find(m => m.symbol === symbol);
-            if (market && amount > 0) {
-                totalValue += amount * market.price;
-            }
-        });
-        
-        document.getElementById('totalPortfolio').textContent = totalValue.toFixed(2);
-    }
-
-    // Create coin functions
-    function toggleCreateCoin() {
-        const panel = document.getElementById('createCoinPanel');
-        panel.classList.toggle('open');
-    }
-
-    function createNewCoin() {
-        const name = document.getElementById('coinName').value.trim();
-        const symbol = document.getElementById('coinSymbol').value.trim().toUpperCase();
-        const supply = parseFloat(document.getElementById('coinSupply').value);
-        const price = parseFloat(document.getElementById('coinPrice').value);
-        const description = document.getElementById('coinDescription').value.trim();
-        
-        if (!name || !symbol || !supply || !price || supply <= 0 || price <= 0) {
-            showNotification('Please fill all fields with valid values', 'error');
-            return;
-        }
-        
-        if (symbol.length > 5) {
-            showNotification('Symbol must be 5 characters or less', 'error');
-            return;
-        }
-        
-        // Check if symbol already exists
-        const pairName = `${symbol}/USD`;
-        if (markets[pairName]) {
-            showNotification('A coin with this symbol already exists', 'error');
-            return;
-        }
-        
-        // Create new market
-        markets[pairName] = {
-            name: name,
-            symbol: symbol,
-            price: price,
-            change24h: 0,
-            volume: 0,
-            high24h: price,
-            low24h: price,
-            baseAsset: symbol,
-            quoteAsset: 'USD',
-            isUserCreated: true,
-            supply: supply,
-            description: description,
-            creator: 'You',
-            createdAt: new Date().toISOString()
-        };
-        
-        // Initialize user balance for this coin (as creator, you get initial supply)
-        userBalances[symbol] = supply;
-        userCoinHoldings[symbol] = supply;
-        
-        // Create IDR pair as well
-        const idrPairName = `${symbol}/IDR`;
-        markets[idrPairName] = {
-            ...markets[pairName],
-            price: price * USDIDR,
-            quoteAsset: 'IDR'
-        };
-        
-        renderMarketList();
-        updateBalanceDisplay();
-        toggleCreateCoin();
-        
-        // Clear form
-        document.getElementById('coinName').value = '';
-        document.getElementById('coinSymbol').value = '';
-        document.getElementById('coinSupply').value = '';
-        document.getElementById('coinPrice').value = '';
-        document.getElementById('coinDescription').value = '';
-        
-        showNotification(`Successfully created ${name} (${symbol})!`, 'success');
-        
-        // Start bot trading for this coin
-        startBotTrading(pairName);
-    }
-
-    // Bot trading system
-    function startBotTrading(pairName) {
-        setInterval(() => {
-            if (!markets[pairName]) return;
-            
-            const market = markets[pairName];
-            const currentPrice = market.price;
-            
-            // Simulate bot trading activity
-            if (Math.random() < 0.7) { // 70% chance of bot activity
-                const isVolatile = Math.random() < 0.3; // 30% chance of high volatility
-                const maxChange = isVolatile ? 0.05 : 0.02; // 5% or 2% max change
-                
-                const priceChange = (Math.random() - 0.5) * 2 * maxChange;
-                const newPrice = currentPrice * (1 + priceChange);
-                
-                // Ensure price doesn't go negative or too extreme
-                market.price = Math.max(newPrice, currentPrice * 0.5);
-                market.price = Math.min(market.price, currentPrice * 2);
-                
-                // Update 24h stats
-                market.high24h = Math.max(market.high24h, market.price);
-                market.low24h = Math.min(market.low24h, market.price);
-                
-                // Calculate 24h change (simplified)
-                market.change24h = ((market.price - market.low24h) / market.low24h) * 100;
-                if (Math.random() < 0.5) market.change24h *= -1;
-                
-                // Update volume
-                market.volume += Math.random() * 1000000;
-                
-                // Update IDR pair if exists
-                const idrPairName = `${market.symbol}/IDR`;
-                if (markets[idrPairName]) {
-                    markets[idrPairName].price = market.price * USDIDR;
-                    markets[idrPairName].change24h = market.change24h;
-                    markets[idrPairName].volume = market.volume * USDIDR;
-                    markets[idrPairName].high24h = market.high24h * USDIDR;
-                    markets[idrPairName].low24h = market.low24h * USDIDR;
-                }
-                
-                // Add fake recent trades
-                if (Math.random() < 0.4) {
-                    const tradeAmount = Math.random() * 10;
-                    const tradeType = Math.random() < 0.5 ? 'buy' : 'sell';
-                    if (currentMarket === pairName) {
-                        addRecentTrade(market.price, tradeAmount, tradeType);
-                    }
-                }
-                
-                // Update UI if this is the current market
-                if (currentMarket === pairName) {
-                    updateCurrentPrice();
-                    generateOrderBook();
-                }
-                
-                renderMarketList();
-            }
-        }, 2000 + Math.random() * 3000); // Random interval between 2-5 seconds
-    }
-
-    // Notification system
-    function showNotification(message, type = 'success') {
-        const notification = document.getElementById('notification');
-        notification.textContent = message;
-        notification.style.background = type === 'success' ? '#48bb78' : '#f56565';
-        notification.classList.add('show');
-        
-        setTimeout(() => {
-            notification.classList.remove('show');
-        }, 3000);
-    }
-
-    // Price manipulation functions (as market maker/bandar)
-    function manipulatePrice(symbol, targetPrice) {
-        const pairName = `${symbol}/USD`;
-        if (markets[pairName]) {
-            markets[pairName].price = targetPrice;
-            
-            // Update IDR pair
-            const idrPairName = `${symbol}/IDR`;
-            if (markets[idrPairName]) {
-                markets[idrPairName].price = targetPrice * USDIDR;
-            }
-            
-            if (currentMarket === pairName || currentMarket === idrPairName) {
-                updateCurrentPrice();
-                generateOrderBook();
-            }
-            renderMarketList();
-            
-            showNotification(`Price of ${symbol} manipulated to $${targetPrice}`, 'success');
-        }
-    }
-
-    // Market maker functions
-    function createFakeVolume(symbol, amount) {
-        const pairName = `${symbol}/USD`;
-        if (markets[pairName]) {
-            markets[pairName].volume += amount;
-            
-            const idrPairName = `${symbol}/IDR`;
-            if (markets[idrPairName]) {
-                markets[idrPairName].volume += amount * USDIDR;
-            }
-            
-            showNotification(`Added ${amount.toLocaleString()} fake volume to ${symbol}`, 'success');
-        }
-    }
-
-    // Advanced trading features
-    function addLiquidity(symbol, buyOrders, sellOrders) {
-        // This would add fake liquidity to make trading appear more active
-        console.log(`Adding liquidity for ${symbol}: ${buyOrders} buy orders, ${sellOrders} sell orders`);
-    }
-
-    // Event listeners
-    document.getElementById('tradePrice').addEventListener('input', calculateTotal);
-    document.getElementById('tradeAmount').addEventListener('input', calculateTotal);
-
-    // Keyboard shortcuts for market makers
-    document.addEventListener('keydown', function(e) {
-        if (e.ctrlKey && e.shiftKey) {
-            switch(e.key) {
-                case 'P': // Price manipulation
-                    const newPrice = prompt(`Enter new price for ${currentMarket}:`);
-                    if (newPrice && !isNaN(newPrice)) {
-                        const symbol = markets[currentMarket].symbol;
-                        manipulatePrice(symbol, parseFloat(newPrice));
-                    }
-                    break;
-                case 'V': // Volume manipulation
-                    const volume = prompt(`Enter fake volume to add:`);
-                    if (volume && !isNaN(volume)) {
-                        const symbol = markets[currentMarket].symbol;
-                        createFakeVolume(symbol, parseFloat(volume));
-                    }
-                    break;
-            }
-        }
-    });
-
-    // Auto-generate fake activity for existing markets
-    function startMarketSimulation() {
-        Object.keys(markets).forEach(pairName => {
-            if (!markets[pairName].isUserCreated) {
-                startBotTrading(pairName);
-            }
-        });
-    }
-
-    // Initialize everything
-    function init() {
-        initializeMarkets();
-        renderMarketList();
-        initializeChart();
+/* ---------------- BOT TRADING (simulate market activity) ---------------- */
+function startBotTrading(pairName) {
+  setInterval(() => {
+    if (!markets[pairName]) return;
+    const market = markets[pairName];
+    if (Math.random() < 0.7) {
+      const isVolatile = Math.random() < 0.3;
+      const maxChange = isVolatile ? 0.05 : 0.02;
+      const priceChange = (Math.random() - 0.5) * 2 * maxChange;
+      const newPrice = market.price * (1 + priceChange);
+      market.price = Math.max(Math.min(newPrice, market.price * 2), market.price * 0.5);
+      market.high24h = Math.max(market.high24h || market.price, market.price);
+      market.low24h = Math.min(market.low24h || market.price, market.price);
+      market.change24h = ((market.price - market.low24h) / (market.low24h || market.price)) * 100;
+      market.volume += Math.random() * 1000000;
+      if (currentMarket === pairName) {
+        updateCurrentPrice();
         generateOrderBook();
-        updateTradeForm();
-        updateBalanceDisplay();
-        startMarketSimulation();
-        
-        // Generate some initial fake trades
-        setTimeout(() => {
-            for (let i = 0; i < 10; i++) {
-                const price = markets[currentMarket].price * (0.95 + Math.random() * 0.1);
-                const amount = Math.random() * 5;
-                const type = Math.random() < 0.5 ? 'buy' : 'sell';
-                addRecentTrade(price, amount, type);
-            }
-        }, 1000);
+      }
+      renderMarketList();
+      if (Math.random() < 0.4 && currentMarket === pairName) {
+        addRecentTrade(market.price, Math.random() * 10, Math.random() < 0.5 ? 'buy' : 'sell');
+      }
     }
+  }, 2000 + Math.random() * 3000);
+}
 
-    // Market maker dashboard (hidden features)
-    function showMarketMakerControls() {
-        const controls = document.createElement('div');
-        controls.innerHTML = `
-            <div style="position: fixed; top: 100px; right: 20px; background: #1a1f2e; border: 1px solid #2d3748; padding: 1rem; border-radius: 8px; z-index: 1000;">
-                <h4>Market Maker Controls</h4>
-                <button onclick="manipulatePrice('${markets[currentMarket].symbol}', markets['${currentMarket}'].price * 1.1)" style="margin: 5px; padding: 5px 10px; background: #48bb78; color: white; border: none; border-radius: 4px;">Pump +10%</button>
-                <button onclick="manipulatePrice('${markets[currentMarket].symbol}', markets['${currentMarket}'].price * 0.9)" style="margin: 5px; padding: 5px 10px; background: #f56565; color: white; border: none; border-radius: 4px;">Dump -10%</button>
-                <button onclick="createFakeVolume('${markets[currentMarket].symbol}', 1000000)" style="margin: 5px; padding: 5px 10px; background: #4299e1; color: white; border: none; border-radius: 4px;">Add Volume</button>
-                <button onclick="this.parentElement.remove()" style="margin: 5px; padding: 5px 10px; background: #a0aec0; color: white; border: none; border-radius: 4px;">Close</button>
-            </div>
-        `;
-        document.body.appendChild(controls);
-    }
+/* ---------------- NOTIFICATIONS ---------------- */
+function showNotification(message, type = 'success') {
+  const n = document.getElementById('notification');
+  if (!n) return alert(message);
+  n.textContent = message;
+  n.style.background = type === 'success' ? '#48bb78' : '#f56565';
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), 3000);
+}
 
-    // Secret command to show market maker controls
-    let konami = [];
-    document.addEventListener('keydown', function(e) {
-        konami.push(e.key);
-        if (konami.length > 10) konami.shift();
-        if (konami.join('') === 'ArrowUpArrowUpArrowDownArrowDownArrowLeftArrowRightArrowLeftArrowRightba') {
-            showMarketMakerControls();
-            showNotification('Market Maker Mode Activated!', 'success');
+/* ---------------- PRICE MANIPULATION & FAKE VOLUME (UI-local) ---------------- */
+function manipulatePriceLocal(symbol, targetPrice) {
+  const pair = `${symbol}/USD`;
+  if (markets[pair]) {
+    markets[pair].price = Number(targetPrice);
+    const idrPair = `${symbol}/IDR`; if (markets[idrPair]) markets[idrPair].price = Number(targetPrice) * USDIDR;
+    if (currentMarket === pair || currentMarket === idrPair) { updateCurrentPrice(); generateOrderBook(); }
+    renderMarketList();
+    showNotification(`Price of ${symbol} manipulated to $${targetPrice}`, 'success');
+  } else showNotification('Pair not found', 'error');
+}
+function createFakeVolumeLocal(symbol, amount) {
+  const pair = `${symbol}/USD`;
+  if (markets[pair]) {
+    markets[pair].volume += Number(amount);
+    const idrPair = `${symbol}/IDR`; if (markets[idrPair]) markets[idrPair].volume += Number(amount) * USDIDR;
+    showNotification(`Added ${amount} fake volume to ${symbol}`, 'success');
+  } else showNotification('Pair not found', 'error');
+}
+
+/* ---------------- KEYBOARD SHORTCUTS (market maker) ---------------- */
+document.addEventListener('keydown', function (e) {
+  if (e.ctrlKey && e.shiftKey) {
+    switch (e.key) {
+      case 'P':
+        const newPrice = prompt(`Enter new price for ${currentMarket}:`);
+        if (newPrice && !isNaN(newPrice)) {
+          const symbol = markets[currentMarket]?.symbol;
+          if (firebaseAvailable && currentUser && isAdmin) manipulatePriceFirebase(symbol, Number(newPrice));
+          else manipulatePriceLocal(symbol, Number(newPrice));
         }
-    });
+        break;
+      case 'V':
+        const vol = prompt('Enter fake volume to add:');
+        if (vol && !isNaN(vol)) {
+          const symbol = markets[currentMarket]?.symbol;
+          if (firebaseAvailable && currentUser && isAdmin) createFakeVolumeFirebase(symbol, Number(vol));
+          else createFakeVolumeLocal(symbol, Number(vol));
+        }
+        break;
+    }
+  }
+});
 
-    // Start the application
-    init();
+/* ---------------- FIREBASE: Realtime sync & admin functions ---------------- */
+if (firebaseAvailable) {
+  // AUTH state
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      try { await signInAnonymously(auth); return; } catch (err) { console.error('Auth fail', err); return; }
+    }
+    currentUser = user;
+    // check admin doc (allow specific UID as admin)
+    try {
+      const adminSnap = await getDoc(doc(db, 'admins', user.uid));
+      // whitelist UID tertentu sebagai admin selain memeriksa koleksi admins di Firestore
+      const forcedAdminUids = ['viCOsJo4wHVFmhtpmMx1Wd4sDF52'];
+      isAdmin = adminSnap.exists() || forcedAdminUids.includes(user.uid);
+    } catch (e) {
+      console.warn(e);
+      // fallback: kalau ada error saat cek Firestore, tetap beri akses admin ke UID yang di-whitelist
+      isAdmin = (user.uid === 'viCOsJo4wHVFmhtpmMx1Wd4sDF52');
+    }
+    if (typeof toggleAdminUI === 'function') toggleAdminUI(isAdmin);
+    ensureUserDocFirebase();
+    subscribeMarketsFirestore();
+    subscribeRecentTradesFirestore();
+  });
+
+  async function ensureUserDocFirebase() {
+    if (!currentUser) return;
+    const uref = doc(db, 'users', currentUser.uid);
+    const snap = await getDoc(uref);
+    if (!snap.exists()) {
+      await setDoc(uref, { USD: 10000, IDR: 150000000, createdAt: serverTimestamp() });
+    }
+  }
+
+  function subscribeMarketsFirestore() {
+    if (marketsUnsub) marketsUnsub();
+    const coll = collection(db, 'markets');
+    const q = query(coll, orderBy('__name__'));
+    marketsUnsub = onSnapshot(q, (snapshot) => {
+      const newM = {};
+      snapshot.forEach(s => newM[s.id] = s.data());
+      markets = newM;
+      window.markets = markets;
+      try { renderMarketList(); } catch (e) { console.warn(e); }
+      try { updateCurrentPrice(); } catch (e) { }
+      try { generateOrderBook(); } catch (e) { }
+    }, (err) => console.error('markets snapshot err', err));
+  }
+
+  function subscribeRecentTradesFirestore() {
+    if (tradesUnsub) tradesUnsub();
+    const coll = collection(db, 'recentTrades');
+    const q = query(coll, orderBy('createdAt', 'desc'));
+    tradesUnsub = onSnapshot(q, (snapshot) => {
+      const list = [];
+      snapshot.forEach(s => list.push({ id: s.id, ...s.data() }));
+      if (typeof renderRecentTrades === 'function') {
+        try { renderRecentTrades(list); } catch (e) { console.warn(e); }
+      } else {
+        // fallback UI update for recentTrades container
+        const container = document.getElementById('recentTrades');
+        if (container) {
+          container.innerHTML = '';
+          list.slice(0, 20).forEach(t => {
+            const row = document.createElement('div');
+            row.className = 'trade-item';
+            const time = t.createdAt ? new Date(t.createdAt.toMillis()).toLocaleTimeString() : new Date().toLocaleTimeString();
+            const cls = t.type === 'buy' ? 'positive' : 'negative';
+            row.innerHTML = `<span class="${cls}">${(t.price || 0).toFixed(2)}</span><span>${(t.amount || 0).toFixed(4)}</span><span>${time}</span>`;
+            container.appendChild(row);
+          });
+        }
+      }
+    }, err => console.error('recentTrades snapshot err', err));
+  }
+
+  // Admin functions (Firestore writes)
+  async function createNewCoinFirebase({ name, symbol, supply, price, description }) {
+    if (!currentUser) throw new Error('Not authenticated');
+    if (!isAdmin) throw new Error('Not authorized');
+    const pairName = `${symbol}/USD`, idrPair = `${symbol}/IDR`;
+    const marketRef = doc(db, 'markets', pairName);
+    const idrRef = doc(db, 'markets', idrPair);
+    const base = {
+      name, symbol, price: Number(price), change24h: 0, volume: 0, high24h: Number(price),
+      low24h: Number(price), baseAsset: symbol, quoteAsset: 'USD', isUserCreated: true,
+      supply: Number(supply), description: description || '', creatorUid: currentUser.uid,
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    };
+    await setDoc(marketRef, base);
+    await setDoc(idrRef, { ...base, price: Number(price) * (USDIDR || 15000), quoteAsset: 'IDR' });
+    if (typeof showNotification === 'function') showNotification(`${symbol} created`, 'success');
+  }
+
+  async function manipulatePriceFirebase(symbol, targetPrice) {
+    if (!currentUser || !isAdmin) throw new Error('Not authorized');
+    const ref = doc(db, 'markets', `${symbol}/USD`);
+    await updateDoc(ref, { price: Number(targetPrice), updatedAt: serverTimestamp() });
+    if (typeof showNotification === 'function') showNotification(`Price set for ${symbol}`, 'success');
+  }
+
+  async function createFakeVolumeFirebase(symbol, amount) {
+    if (!currentUser || !isAdmin) throw new Error('Not authorized');
+    const ref = doc(db, 'markets', `${symbol}/USD`);
+    await runTransaction(db, async (t) => {
+      const snap = await t.get(ref);
+      if (!snap.exists()) throw new Error('Market not found');
+      const cur = snap.data().volume || 0;
+      t.update(ref, { volume: cur + Number(amount), updatedAt: serverTimestamp() });
+    });
+    if (typeof showNotification === 'function') showNotification(`Added fake vol ${amount}`, 'success');
+  }
+
+  async function buyCoinFirebase(symbol, usdAmount) {
+    if (!currentUser) throw new Error('Not authenticated');
+    const marketRef = doc(db, 'markets', `${symbol}/USD`);
+    const userRef = doc(db, 'users', currentUser.uid);
+    const tradesRef = collection(db, 'recentTrades');
+    return runTransaction(db, async (t) => {
+      const mSnap = await t.get(marketRef);
+      if (!mSnap.exists()) throw new Error('Market not found');
+      const uSnap = await t.get(userRef);
+      if (!uSnap.exists()) throw new Error('User doc not found');
+      const price = mSnap.data().price; if (!price || price <= 0) throw new Error('Invalid price');
+      const usdBal = uSnap.data().USD || 0; if (usdBal < usdAmount) throw new Error('Insufficient USD');
+      const tokenAmount = Number(usdAmount) / Number(price);
+      const prev = uSnap.data()[symbol] || 0;
+      t.update(userRef, { USD: usdBal - Number(usdAmount), [symbol]: prev + tokenAmount, updatedAt: serverTimestamp() });
+      const curVol = mSnap.data().volume || 0; t.update(marketRef, { volume: curVol + Number(usdAmount), updatedAt: serverTimestamp() });
+      await addDoc(tradesRef, { symbol, price, amount: tokenAmount, usd: Number(usdAmount), type: 'buy', userUid: currentUser.uid, createdAt: serverTimestamp() });
+    }).then(() => {
+      if (typeof showNotification === 'function') showNotification(`Bought ${symbol} $${usdAmount}`, 'success');
+    }).catch(err => { if (typeof showNotification === 'function') showNotification(err.message || 'Buy failed', 'error'); throw err; });
+  }
+
+  // expose firebase helpers to global window for UI calls
+  window.createNewCoinFirebase = createNewCoinFirebase;
+  window.manipulatePriceFirebase = manipulatePriceFirebase;
+  window.createFakeVolumeFirebase = createFakeVolumeFirebase;
+  window.buyCoinFirebase = buyCoinFirebase;
+  window.isCurrentUserAdmin = () => isAdmin;
+}
+
+/* ---------------- MISC: Market Maker Controls & Konami ---------------- */
+function showMarketMakerControls() {
+  const controls = document.createElement('div');
+  controls.innerHTML = `
+    <div style="position: fixed; top: 100px; right: 20px; background: #1a1f2e; border: 1px solid #2d3748; padding: 1rem; border-radius: 8px; z-index: 1000;">
+      <h4>Market Maker Controls</h4>
+      <button id="mmPump" style="margin:5px;padding:5px 10px;background:#48bb78;color:white;border:none;border-radius:4px;">Pump +10%</button>
+      <button id="mmDump" style="margin:5px;padding:5px 10px;background:#f56565;color:white;border:none;border-radius:4px;">Dump -10%</button>
+      <button id="mmVol" style="margin:5px;padding:5px 10px;background:#4299e1;color:white;border:none;border-radius:4px;">Add Volume</button>
+      <button id="mmClose" style="margin:5px;padding:5px 10px;background:#a0aec0;color:black;border:none;border-radius:4px;">Close</button>
+    </div>`;
+  document.body.appendChild(controls);
+  document.getElementById('mmPump').onclick = () => {
+    const symbol = markets[currentMarket]?.symbol;
+    if (!symbol) return showNotification('No symbol', 'error');
+    const target = (markets[`${symbol}/USD`]?.price || markets[currentMarket].price) * 1.1;
+    if (firebaseAvailable && currentUser && isAdmin) window.manipulatePriceFirebase(symbol, target);
+    else manipulatePriceLocal(symbol, target);
+  };
+  document.getElementById('mmDump').onclick = () => {
+    const symbol = markets[currentMarket]?.symbol;
+    if (!symbol) return showNotification('No symbol', 'error');
+    const target = (markets[`${symbol}/USD`]?.price || markets[currentMarket].price) * 0.9;
+    if (firebaseAvailable && currentUser && isAdmin) window.manipulatePriceFirebase(symbol, target);
+    else manipulatePriceLocal(symbol, target);
+  };
+  document.getElementById('mmVol').onclick = () => {
+    const symbol = markets[currentMarket]?.symbol;
+    if (!symbol) return showNotification('No symbol', 'error');
+    const amount = 1000000;
+    if (firebaseAvailable && currentUser && isAdmin) window.createFakeVolumeFirebase(symbol, amount);
+    else createFakeVolumeLocal(symbol, amount);
+  };
+  document.getElementById('mmClose').onclick = () => controls.remove();
+}
+
+let konami = [];
+document.addEventListener('keydown', (e) => {
+  konami.push(e.key);
+  if (konami.length > 30) konami.shift();
+  if (konami.join('').includes('ArrowUpArrowUpArrowDownArrowDownArrowLeftArrowRightArrowLeftArrowRightba')) {
+    showMarketMakerControls();
+    showNotification('Market Maker Mode Activated!', 'success');
+  }
+});
+
+/* ---------------- INIT APP ---------------- */
+function init() {
+  // if firebase not available, start with local markets
+  if (!firebaseAvailable) initializeMarketsLocal();
+  else {
+    // if firebase present but markets not yet loaded, also init local to avoid UI blank
+    initializeMarketsLocal();
+  }
+  renderMarketList();
+  initializeChart();
+  generateOrderBook();
+  updateTradeForm();
+  updateBalanceDisplay();
+  // start local market simulation for all local markets (and Firebase markets once loaded will override)
+  Object.keys(markets).forEach(p => startBotTrading(p));
+  // seed some initial trades
+  setTimeout(() => {
+    for (let i = 0; i < 10; i++) addRecentTrade((markets[currentMarket]?.price || 100) * (0.95 + Math.random() * 0.1), Math.random() * 5, Math.random() < 0.5 ? 'buy' : 'sell');
+  }, 1000);
+}
+
+init();
+
+/* ---------------- Expose some functions globally for inline HTML calls ---------------- */
+window.switchTab = switchTab;
+window.executeTrade = executeTrade;
+window.calculateTotal = calculateTotal;
+window.toggleCreateCoin = function toggleCreateCoin() {
+  const p = document.getElementById('createCoinPanel');
+  if (p) p.classList.toggle('open');
+};
+window.createNewCoinWrapper = createNewCoinWrapper;
+window.showNotification = showNotification;
+window.renderMarketList = renderMarketList;
+window.updateCurrentPrice = updateCurrentPrice;
+window.generateOrderBook = generateOrderBook;
+window.updateBalanceDisplay = updateBalanceDisplay;
+window.addRecentTrade = addRecentTrade;
+window.startBotTrading = startBotTrading;
+window.manipulatePriceLocal = manipulatePriceLocal;
+window.createFakeVolumeLocal = createFakeVolumeLocal;
 </script>
 ```
 
