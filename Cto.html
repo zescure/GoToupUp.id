@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Exchange Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+```
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #0d1421;
+        color: #ffffff;
+        overflow-x: hidden;
+    }
+
+    .header {
+        background: #1a1f2e;
+        padding: 1rem 2rem;
+        border-bottom: 1px solid #2d3748;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .logo {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #4299e1;
+    }
+
+    .user-balance {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+    }
+
+    .balance-item {
+        text-align: center;
+    }
+
+    .balance-item span {
+        display: block;
+        font-size: 0.8rem;
+        color: #a0aec0;
+    }
+
+    .balance-item .amount {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #4299e1;
+    }
+
+    .main-container {
+        display: grid;
+        grid-template-columns: 300px 1fr 300px;
+        grid-template-rows: 60px 1fr;
+        height: calc(100vh - 80px);
+        gap: 1px;
+        background: #2d3748;
+    }
+
+    .market-list {
+        background: #1a1f2e;
+        overflow-y: auto;
+        grid-row: 1 / 3;
+    }
+
+    .market-header {
+        padding: 1rem;
+        border-bottom: 1px solid #2d3748;
+        font-weight: bold;
+    }
+
+    .market-item {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #2d3748;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .market-item:hover {
+        background: #2d3748;
+    }
+
+    .market-item.active {
+        background: #4299e1;
+        color: #ffffff;
+    }
+
+    .pair-name {
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+    }
+
+    .pair-price {
+        font-size: 0.9rem;
+        color: #4299e1;
+    }
+
+    .pair-change {
+        font-size: 0.8rem;
+    }
+
+    .positive { color: #48bb78; }
+    .negative { color: #f56565; }
+
+    .trading-header {
+        background: #1a1f2e;
+        padding: 1rem;
+        border-bottom: 1px solid #2d3748;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+
+    .current-pair {
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    .current-price {
+        font-size: 1.5rem;
+        color: #4299e1;
+        margin-left: auto;
+    }
+
+    .chart-container {
+        background: #1a1f2e;
+        position: relative;
+        overflow: hidden;
+    }
+
+    #tradingChart {
+        width: 100%;
+        height: 100%;
+        background: #1a1f2e;
+    }
+
+    .trading-panel {
+        background: #1a1f2e;
+        display: flex;
+        flex-direction: column;
+        grid-row: 1 / 3;
+    }
+
+    .order-book {
+        flex: 1;
+        padding: 1rem;
+        border-bottom: 1px solid #2d3748;
+    }
+
+    .order-book h3 {
+        margin-bottom: 1rem;
+        color: #a0aec0;
+        font-size: 0.9rem;
+    }
+
+    .order-book-table {
+        font-size: 0.8rem;
+        width: 100%;
+    }
+
+    .order-book-table th {
+        color: #a0aec0;
+        padding: 0.25rem;
+        text-align: right;
+    }
+
+    .order-book-table td {
+        padding: 0.15rem 0.25rem;
+        text-align: right;
+    }
+
+    .sell-order { color: #f56565; }
+    .buy-order { color: #48bb78; }
+
+    .trade-form {
+        padding: 1rem;
+        border-bottom: 1px solid #2d3748;
+    }
+
+    .trade-tabs {
+        display: flex;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #2d3748;
+    }
+
+    .trade-tab {
+        flex: 1;
+        padding: 0.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .trade-tab.active {
+        background: #4299e1;
+        color: white;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        color: #a0aec0;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 0.75rem;
+        background: #2d3748;
+        border: 1px solid #4a5568;
+        color: white;
+        border-radius: 4px;
+    }
+
+    .trade-button {
+        width: 100%;
+        padding: 1rem;
+        background: #4299e1;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background 0.2s;
+    }
+
+    .trade-button:hover {
+        background: #3182ce;
+    }
+
+    .trade-button.sell {
+        background: #f56565;
+    }
+
+    .trade-button.sell:hover {
+        background: #e53e3e;
+    }
+
+    .recent-trades {
+        flex: 1;
+        padding: 1rem;
+        overflow-y: auto;
+    }
+
+    .recent-trades h3 {
+        margin-bottom: 1rem;
+        color: #a0aec0;
+        font-size: 0.9rem;
+    }
+
+    .trade-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.25rem 0;
+        font-size: 0.8rem;
+        border-bottom: 1px solid #2d3748;
+    }
+
+    .create-coin-panel {
+        position: fixed;
+        top: 0;
+        right: -400px;
+        width: 400px;
+        height: 100vh;
+        background: #1a1f2e;
+        border-left: 1px solid #2d3748;
+        transition: right 0.3s ease;
+        z-index: 1000;
+        overflow-y: auto;
+    }
+
+    .create-coin-panel.open {
+        right: 0;
+    }
+
+    .create-coin-header {
+        padding: 1rem;
+        border-bottom: 1px solid #2d3748;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .close-btn {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+    .create-coin-form {
+        padding: 1rem;
+    }
+
+    .create-coin-btn {
+        position: fixed;
+        top: 50%;
+        right: 20px;
+        transform: translateY(-50%);
+        background: #48bb78;
+        color: white;
+        border: none;
+        padding: 1rem;
+        border-radius: 50px;
+        cursor: pointer;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+        transition: all 0.2s;
+        z-index: 999;
+    }
+
+    .create-coin-btn:hover {
+        background: #38a169;
+        transform: translateY(-50%) scale(1.05);
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+
+    .price-flash {
+        animation: pulse 0.3s ease-in-out;
+    }
+
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #48bb78;
+        color: white;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        transform: translateX(400px);
+        transition: transform 0.3s ease;
+        z-index: 1001;
+    }
+
+    .notification.show {
+        transform: translateX(0);
+    }
+</style>
+```
+
+</head>
+<body>
+    <div class="header">
+        <div class="logo">CryptoSim Exchange</div>
+        <div class="user-balance">
+            <div class="balance-item">
+                <span>USD Balance</span>
+                <div class="amount">$<span id="usdBalance">10,000.00</span></div>
+            </div>
+            <div class="balance-item">
+                <span>IDR Balance</span>
+                <div class="amount">Rp <span id="idrBalance">150,000,000</span></div>
+            </div>
+            <div class="balance-item">
+                <span>Total Portfolio</span>
+                <div class="amount">$<span id="totalPortfolio">10,000.00</span></div>
+            </div>
+        </div>
+    </div>
+
+```
+<div class="main-container">
+    <div class="market-list">
+        <div class="market-header">Markets</div>
+        <div id="marketList"></div>
+    </div>
+
+    <div class="trading-header">
+        <div class="current-pair" id="currentPair">BTC/USD</div>
+        <div class="current-price" id="currentPrice">$45,230.50</div>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="tradingChart"></canvas>
+    </div>
+
+    <div class="trading-panel">
+        <div class="order-book">
+            <h3>Order Book</h3>
+            <table class="order-book-table">
+                <thead>
+                    <tr>
+                        <th>Price</th>
+                        <th>Amount</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="orderBookSells"></tbody>
+            </table>
+            <div style="height: 10px; background: #2d3748; margin: 0.5rem 0;"></div>
+            <table class="order-book-table">
+                <tbody id="orderBookBuys"></tbody>
+            </table>
+        </div>
+
+        <div class="trade-form">
+            <div class="trade-tabs">
+                <div class="trade-tab active" onclick="switchTab('buy')">Buy</div>
+                <div class="trade-tab" onclick="switchTab('sell')">Sell</div>
+            </div>
+            <div class="form-group">
+                <label>Price (USD)</label>
+                <input type="number" id="tradePrice" placeholder="Market Price">
+            </div>
+            <div class="form-group">
+                <label>Amount</label>
+                <input type="number" id="tradeAmount" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>Total</label>
+                <input type="number" id="tradeTotal" placeholder="0.00" readonly>
+            </div>
+            <button class="trade-button" id="tradeButton" onclick="executeTrade()">Buy</button>
+        </div>
+
+        <div class="recent-trades">
+            <h3>Recent Trades</h3>
+            <div id="recentTrades"></div>
+        </div>
+    </div>
+</div>
+
+<button class="create-coin-btn" onclick="toggleCreateCoin()">Create Coin</button>
+
+<div class="create-coin-panel" id="createCoinPanel">
+    <div class="create-coin-header">
+        <h3>Create New Cryptocurrency</h3>
+        <button class="close-btn" onclick="toggleCreateCoin()">&times;</button>
+    </div>
+    <div class="create-coin-form">
+        <div class="form-group">
+            <label>Coin Name</label>
+            <input type="text" id="coinName" placeholder="e.g., MyToken">
+        </div>
+        <div class="form-group">
+            <label>Coin Symbol</label>
+            <input type="text" id="coinSymbol" placeholder="e.g., MYT" maxlength="5">
+        </div>
+        <div class="form-group">
+            <label>Initial Supply</label>
+            <input type="number" id="coinSupply" placeholder="1000000">
+        </div>
+        <div class="form-group">
+            <label>Initial Price (USD)</label>
+            <input type="number" id="coinPrice" placeholder="1.00" step="0.01">
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="coinDescription" placeholder="Describe your cryptocurrency..." style="width: 100%; padding: 0.75rem; background: #2d3748; border: 1px solid #4a5568; color: white; border-radius: 4px; resize: vertical; height: 80px;"></textarea>
+        </div>
+        <button class="trade-button" onclick="createNewCoin()" style="background: #48bb78;">Create Coin</button>
+    </div>
+</div>
+
+<div class="notification" id="notification"></div>
+
+<script>
+    // Global variables
+    let currentMarket = 'BTC/USD';
+    let currentTradeType = 'buy';
+    let markets = {};
+    let chartCanvas, chartCtx;
+    let chartData = [];
+    let animationId;
+    let userBalances = {
+        USD: 10000,
+        IDR: 150000000,
+        BTC: 0,
+        ETH: 0,
+        ADA: 0,
+        DOT: 0
+    };
+    let userCoinHoldings = {};
+
+    // Exchange rates
+    const USDIDR = 15000;
+
+    // Initialize markets with realistic data
+    function initializeMarkets() {
+        markets = {
+            'BTC/USD': {
+                name: 'Bitcoin',
+                symbol: 'BTC',
+                price: 45230.50,
+                change24h: 2.34,
+                volume: 28540000000,
+                high24h: 46500,
+                low24h: 44100,
+                baseAsset: 'BTC',
+                quoteAsset: 'USD'
+            },
+            'ETH/USD': {
+                name: 'Ethereum',
+                symbol: 'ETH',
+                price: 3125.80,
+                change24h: -1.45,
+                volume: 15240000000,
+                high24h: 3200,
+                low24h: 3050,
+                baseAsset: 'ETH',
+                quoteAsset: 'USD'
+            },
+            'ADA/USD': {
+                name: 'Cardano',
+                symbol: 'ADA',
+                price: 1.25,
+                change24h: 5.67,
+                volume: 2540000000,
+                high24h: 1.32,
+                low24h: 1.18,
+                baseAsset: 'ADA',
+                quoteAsset: 'USD'
+            },
+            'DOT/USD': {
+                name: 'Polkadot',
+                symbol: 'DOT',
+                price: 28.45,
+                change24h: -0.89,
+                volume: 1240000000,
+                high24h: 29.50,
+                low24h: 27.80,
+                baseAsset: 'DOT',
+                quoteAsset: 'USD'
+            }
+        };
+    }
+
+    // Initialize chart
+    function initializeChart() {
+        chartCanvas = document.getElementById('tradingChart');
+        chartCtx = chartCanvas.getContext('2d');
+        
+        // Set canvas size
+        function resizeCanvas() {
+            const rect = chartCanvas.getBoundingClientRect();
+            chartCanvas.width = rect.width;
+            chartCanvas.height = rect.height;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Generate initial chart data
+        generateInitialChartData();
+        startChartAnimation();
+    }
+
+    function generateInitialChartData() {
+        chartData = [];
+        const currentPrice = markets[currentMarket].price;
+        const now = Date.now();
+        
+        for (let i = 100; i >= 0; i--) {
+            const timestamp = now - (i * 60000); // 1 minute intervals
+            const variation = (Math.random() - 0.5) * (currentPrice * 0.02); // 2% variation
+            const price = currentPrice + variation;
+            chartData.push({
+                timestamp: timestamp,
+                price: Math.max(price, currentPrice * 0.9) // Prevent negative prices
+            });
+        }
+    }
+
+    function drawChart() {
+        if (!chartCtx || chartData.length === 0) return;
+
+        const width = chartCanvas.width;
+        const height = chartCanvas.height;
+        
+        // Clear canvas
+        chartCtx.fillStyle = '#1a1f2e';
+        chartCtx.fillRect(0, 0, width, height);
+        
+        // Calculate price range
+        const prices = chartData.map(d => d.price);
+        const minPrice = Math.min(...prices);
+        const maxPrice = Math.max(...prices);
+        const priceRange = maxPrice - minPrice;
+        
+        if (priceRange === 0) return;
+        
+        // Draw grid
+        chartCtx.strokeStyle = '#2d3748';
+        chartCtx.lineWidth = 1;
+        
+        // Horizontal grid lines
+        for (let i = 0; i <= 5; i++) {
+            const y = (height / 5) * i;
+            chartCtx.beginPath();
+            chartCtx.moveTo(0, y);
+            chartCtx.lineTo(width, y);
+            chartCtx.stroke();
+        }
+        
+        // Vertical grid lines
+        for (let i = 0; i <= 10; i++) {
+            const x = (width / 10) * i;
+            chartCtx.beginPath();
+            chartCtx.moveTo(x, 0);
+            chartCtx.lineTo(x, height);
+            chartCtx.stroke();
+        }
+        
+        // Draw price line
+        chartCtx.strokeStyle = '#4299e1';
+        chartCtx.lineWidth = 2;
+        chartCtx.beginPath();
+        
+        for (let i = 0; i < chartData.length; i++) {
+            const x = (i / (chartData.length - 1)) * width;
+            const normalizedPrice = (chartData[i].price - minPrice) / priceRange;
+            const y = height - (normalizedPrice * height);
+            
+            if (i === 0) {
+                chartCtx.moveTo(x, y);
+            } else {
+                chartCtx.lineTo(x, y);
+            }
+        }
+        chartCtx.stroke();
+        
+        // Draw price labels
+        chartCtx.fillStyle = '#a0aec0';
+        chartCtx.font = '12px Arial';
+        
+        for (let i = 0; i <= 5; i++) {
+            const price = minPrice + (priceRange * (5 - i) / 5);
+            const y = (height / 5) * i + 15;
+            chartCtx.fillText('$' + price.toFixed(2), 10, y);
+        }
+    }
+
+    function startChartAnimation() {
+        function animate() {
+            // Update chart data
+            if (Math.random() < 0.3) { // 30% chance to update
+                const lastPrice = chartData[chartData.length - 1].price;
+                const variation = (Math.random() - 0.5) * (lastPrice * 0.005); // 0.5% variation
+                const newPrice = Math.max(lastPrice + variation, lastPrice * 0.99);
+                
+                chartData.shift(); // Remove first element
+                chartData.push({
+                    timestamp: Date.now(),
+                    price: newPrice
+                });
+                
+                // Update market price
+                markets[currentMarket].price = newPrice;
+                updateCurrentPrice();
+            }
+            
+            drawChart();
+            animationId = requestAnimationFrame(animate);
+        }
+        animate();
+    }
+
+    // Market list functions
+    function renderMarketList() {
+        const marketList = document.getElementById('marketList');
+        marketList.innerHTML = '';
+        
+        Object.entries(markets).forEach(([pair, data]) => {
+            const marketItem = document.createElement('div');
+            marketItem.className = `market-item ${pair === currentMarket ? 'active' : ''}`;
+            marketItem.onclick = () => selectMarket(pair);
+            
+            const changeClass = data.change24h >= 0 ? 'positive' : 'negative';
+            const changeSign = data.change24h >= 0 ? '+' : '';
+            
+            marketItem.innerHTML = `
+                <div class="pair-name">${pair}</div>
+                <div class="pair-price">$${data.price.toFixed(2)}</div>
+                <div class="pair-change ${changeClass}">${changeSign}${data.change24h.toFixed(2)}%</div>
+            `;
+            
+            marketList.appendChild(marketItem);
+        });
+    }
+
+    function selectMarket(pair) {
+        if (markets[pair]) {
+            currentMarket = pair;
+            document.getElementById('currentPair').textContent = pair;
+            updateCurrentPrice();
+            generateInitialChartData();
+            renderMarketList();
+            generateOrderBook();
+            updateTradeForm();
+        }
+    }
+
+    function updateCurrentPrice() {
+        const price = markets[currentMarket].price;
+        const priceElement = document.getElementById('currentPrice');
+        priceElement.textContent = `$${price.toFixed(2)}`;
+        priceElement.classList.add('price-flash');
+        setTimeout(() => priceElement.classList.remove('price-flash'), 300);
+    }
+
+    // Order book functions
+    function generateOrderBook() {
+        const currentPrice = markets[currentMarket].price;
+        const sellsElement = document.getElementById('orderBookSells');
+        const buysElement = document.getElementById('orderBookBuys');
+        
+        sellsElement.innerHTML = '';
+        buysElement.innerHTML = '';
+        
+        // Generate sell orders (asks)
+        for (let i = 5; i >= 1; i--) {
+            const price = currentPrice * (1 + (i * 0.001)); // Slightly above current price
+            const amount = (Math.random() * 10).toFixed(4);
+            const total = (price * amount).toFixed(2);
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="sell-order">$${price.toFixed(2)}</td>
+                <td>${amount}</td>
+                <td>$${total}</td>
+            `;
+            sellsElement.appendChild(row);
+        }
+        
+        // Generate buy orders (bids)
+        for (let i = 1; i <= 5; i++) {
+            const price = currentPrice * (1 - (i * 0.001)); // Slightly below current price
+            const amount = (Math.random() * 10).toFixed(4);
+            const total = (price * amount).toFixed(2);
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="buy-order">$${price.toFixed(2)}</td>
+                <td>${amount}</td>
+                <td>$${total}</td>
+            `;
+            buysElement.appendChild(row);
+        }
+    }
+
+    // Trading functions
+    function switchTab(type) {
+        currentTradeType = type;
+        document.querySelectorAll('.trade-tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelector(`.trade-tab:nth-child(${type === 'buy' ? 1 : 2})`).classList.add('active');
+        
+        const button = document.getElementById('tradeButton');
+        button.textContent = type === 'buy' ? 'Buy' : 'Sell';
+        button.className = `trade-button ${type === 'sell' ? 'sell' : ''}`;
+        
+        updateTradeForm();
+    }
+
+    function updateTradeForm() {
+        const currentPrice = markets[currentMarket].price;
+        document.getElementById('tradePrice').value = currentPrice.toFixed(2);
+        calculateTotal();
+    }
+
+    function calculateTotal() {
+        const price = parseFloat(document.getElementById('tradePrice').value) || 0;
+        const amount = parseFloat(document.getElementById('tradeAmount').value) || 0;
+        const total = price * amount;
+        document.getElementById('tradeTotal').value = total.toFixed(2);
+    }
+
+    function executeTrade() {
+        const price = parseFloat(document.getElementById('tradePrice').value);
+        const amount = parseFloat(document.getElementById('tradeAmount').value);
+        const total = price * amount;
+        
+        if (!price || !amount || amount <= 0) {
+            showNotification('Please enter valid price and amount', 'error');
+            return;
+        }
+        
+        const market = markets[currentMarket];
+        const baseAsset = market.baseAsset;
+        const quoteAsset = market.quoteAsset;
+        
+        if (currentTradeType === 'buy') {
+            if (userBalances[quoteAsset] < total) {
+                showNotification(`Insufficient ${quoteAsset} balance`, 'error');
+                return;
+            }
+            
+            userBalances[quoteAsset] -= total;
+            userBalances[baseAsset] = (userBalances[baseAsset] || 0) + amount;
+            showNotification(`Successfully bought ${amount} ${baseAsset}`, 'success');
+        } else {
+            if ((userBalances[baseAsset] || 0) < amount) {
+                showNotification(`Insufficient ${baseAsset} balance`, 'error');
+                return;
+            }
+            
+            userBalances[baseAsset] -= amount;
+            userBalances[quoteAsset] += total;
+            showNotification(`Successfully sold ${amount} ${baseAsset}`, 'success');
+        }
+        
+        updateBalanceDisplay();
+        addRecentTrade(price, amount, currentTradeType);
+        
+        // Clear form
+        document.getElementById('tradeAmount').value = '';
+        document.getElementById('tradeTotal').value = '';
+    }
+
+    function addRecentTrade(price, amount, type) {
+        const recentTrades = document.getElementById('recentTrades');
+        const tradeItem = document.createElement('div');
+        tradeItem.className = 'trade-item';
+        
+        const time = new Date().toLocaleTimeString();
+        const typeClass = type === 'buy' ? 'positive' : 'negative';
+        
+        tradeItem.innerHTML = `
+            <span class="${typeClass}">${price.toFixed(2)}</span>
+            <span>${amount.toFixed(4)}</span>
+            <span>${time}</span>
+        `;
+        
+        recentTrades.insertBefore(tradeItem, recentTrades.firstChild);
+        
+        // Keep only last 20 trades
+        while (recentTrades.children.length > 20) {
+            recentTrades.removeChild(recentTrades.lastChild);
+        }
+    }
+
+    function updateBalanceDisplay() {
+        document.getElementById('usdBalance').textContent = userBalances.USD.toFixed(2);
+        document.getElementById('idrBalance').textContent = (userBalances.IDR).toLocaleString();
+        
+        // Calculate total portfolio value
+        let totalValue = userBalances.USD + (userBalances.IDR / USDIDR);
+        
+        Object.entries(userBalances).forEach(([asset, amount]) => {
+            if (asset !== 'USD' && asset !== 'IDR' && amount > 0) {
+                const market = Object.values(markets).find(m => m.baseAsset === asset);
+                if (market) {
+                    totalValue += amount * market.price;
+                }
+            }
+        });
+        
+        // Add user created coins value
+        Object.entries(userCoinHoldings).forEach(([symbol, amount]) => {
+            const market = Object.values(markets).find(m => m.symbol === symbol);
+            if (market && amount > 0) {
+                totalValue += amount * market.price;
+            }
+        });
+        
+        document.getElementById('totalPortfolio').textContent = totalValue.toFixed(2);
+    }
+
+    // Create coin functions
+    function toggleCreateCoin() {
+        const panel = document.getElementById('createCoinPanel');
+        panel.classList.toggle('open');
+    }
+
+    function createNewCoin() {
+        const name = document.getElementById('coinName').value.trim();
+        const symbol = document.getElementById('coinSymbol').value.trim().toUpperCase();
+        const supply = parseFloat(document.getElementById('coinSupply').value);
+        const price = parseFloat(document.getElementById('coinPrice').value);
+        const description = document.getElementById('coinDescription').value.trim();
+        
+        if (!name || !symbol || !supply || !price || supply <= 0 || price <= 0) {
+            showNotification('Please fill all fields with valid values', 'error');
+            return;
+        }
+        
+        if (symbol.length > 5) {
+            showNotification('Symbol must be 5 characters or less', 'error');
+            return;
+        }
+        
+        // Check if symbol already exists
+        const pairName = `${symbol}/USD`;
+        if (markets[pairName]) {
+            showNotification('A coin with this symbol already exists', 'error');
+            return;
+        }
+        
+        // Create new market
+        markets[pairName] = {
+            name: name,
+            symbol: symbol,
+            price: price,
+            change24h: 0,
+            volume: 0,
+            high24h: price,
+            low24h: price,
+            baseAsset: symbol,
+            quoteAsset: 'USD',
+            isUserCreated: true,
+            supply: supply,
+            description: description,
+            creator: 'You',
+            createdAt: new Date().toISOString()
+        };
+        
+        // Initialize user balance for this coin (as creator, you get initial supply)
+        userBalances[symbol] = supply;
+        userCoinHoldings[symbol] = supply;
+        
+        // Create IDR pair as well
+        const idrPairName = `${symbol}/IDR`;
+        markets[idrPairName] = {
+            ...markets[pairName],
+            price: price * USDIDR,
+            quoteAsset: 'IDR'
+        };
+        
+        renderMarketList();
+        updateBalanceDisplay();
+        toggleCreateCoin();
+        
+        // Clear form
+        document.getElementById('coinName').value = '';
+        document.getElementById('coinSymbol').value = '';
+        document.getElementById('coinSupply').value = '';
+        document.getElementById('coinPrice').value = '';
+        document.getElementById('coinDescription').value = '';
+        
+        showNotification(`Successfully created ${name} (${symbol})!`, 'success');
+        
+        // Start bot trading for this coin
+        startBotTrading(pairName);
+    }
+
+    // Bot trading system
+    function startBotTrading(pairName) {
+        setInterval(() => {
+            if (!markets[pairName]) return;
+            
+            const market = markets[pairName];
+            const currentPrice = market.price;
+            
+            // Simulate bot trading activity
+            if (Math.random() < 0.7) { // 70% chance of bot activity
+                const isVolatile = Math.random() < 0.3; // 30% chance of high volatility
+                const maxChange = isVolatile ? 0.05 : 0.02; // 5% or 2% max change
+                
+                const priceChange = (Math.random() - 0.5) * 2 * maxChange;
+                const newPrice = currentPrice * (1 + priceChange);
+                
+                // Ensure price doesn't go negative or too extreme
+                market.price = Math.max(newPrice, currentPrice * 0.5);
+                market.price = Math.min(market.price, currentPrice * 2);
+                
+                // Update 24h stats
+                market.high24h = Math.max(market.high24h, market.price);
+                market.low24h = Math.min(market.low24h, market.price);
+                
+                // Calculate 24h change (simplified)
+                market.change24h = ((market.price - market.low24h) / market.low24h) * 100;
+                if (Math.random() < 0.5) market.change24h *= -1;
+                
+                // Update volume
+                market.volume += Math.random() * 1000000;
+                
+                // Update IDR pair if exists
+                const idrPairName = `${market.symbol}/IDR`;
+                if (markets[idrPairName]) {
+                    markets[idrPairName].price = market.price * USDIDR;
+                    markets[idrPairName].change24h = market.change24h;
+                    markets[idrPairName].volume = market.volume * USDIDR;
+                    markets[idrPairName].high24h = market.high24h * USDIDR;
+                    markets[idrPairName].low24h = market.low24h * USDIDR;
+                }
+                
+                // Add fake recent trades
+                if (Math.random() < 0.4) {
+                    const tradeAmount = Math.random() * 10;
+                    const tradeType = Math.random() < 0.5 ? 'buy' : 'sell';
+                    if (currentMarket === pairName) {
+                        addRecentTrade(market.price, tradeAmount, tradeType);
+                    }
+                }
+                
+                // Update UI if this is the current market
+                if (currentMarket === pairName) {
+                    updateCurrentPrice();
+                    generateOrderBook();
+                }
+                
+                renderMarketList();
+            }
+        }, 2000 + Math.random() * 3000); // Random interval between 2-5 seconds
+    }
+
+    // Notification system
+    function showNotification(message, type = 'success') {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.style.background = type === 'success' ? '#48bb78' : '#f56565';
+        notification.classList.add('show');
+        
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 3000);
+    }
+
+    // Price manipulation functions (as market maker/bandar)
+    function manipulatePrice(symbol, targetPrice) {
+        const pairName = `${symbol}/USD`;
+        if (markets[pairName]) {
+            markets[pairName].price = targetPrice;
+            
+            // Update IDR pair
+            const idrPairName = `${symbol}/IDR`;
+            if (markets[idrPairName]) {
+                markets[idrPairName].price = targetPrice * USDIDR;
+            }
+            
+            if (currentMarket === pairName || currentMarket === idrPairName) {
+                updateCurrentPrice();
+                generateOrderBook();
+            }
+            renderMarketList();
+            
+            showNotification(`Price of ${symbol} manipulated to $${targetPrice}`, 'success');
+        }
+    }
+
+    // Market maker functions
+    function createFakeVolume(symbol, amount) {
+        const pairName = `${symbol}/USD`;
+        if (markets[pairName]) {
+            markets[pairName].volume += amount;
+            
+            const idrPairName = `${symbol}/IDR`;
+            if (markets[idrPairName]) {
+                markets[idrPairName].volume += amount * USDIDR;
+            }
+            
+            showNotification(`Added ${amount.toLocaleString()} fake volume to ${symbol}`, 'success');
+        }
+    }
+
+    // Advanced trading features
+    function addLiquidity(symbol, buyOrders, sellOrders) {
+        // This would add fake liquidity to make trading appear more active
+        console.log(`Adding liquidity for ${symbol}: ${buyOrders} buy orders, ${sellOrders} sell orders`);
+    }
+
+    // Event listeners
+    document.getElementById('tradePrice').addEventListener('input', calculateTotal);
+    document.getElementById('tradeAmount').addEventListener('input', calculateTotal);
+
+    // Keyboard shortcuts for market makers
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.shiftKey) {
+            switch(e.key) {
+                case 'P': // Price manipulation
+                    const newPrice = prompt(`Enter new price for ${currentMarket}:`);
+                    if (newPrice && !isNaN(newPrice)) {
+                        const symbol = markets[currentMarket].symbol;
+                        manipulatePrice(symbol, parseFloat(newPrice));
+                    }
+                    break;
+                case 'V': // Volume manipulation
+                    const volume = prompt(`Enter fake volume to add:`);
+                    if (volume && !isNaN(volume)) {
+                        const symbol = markets[currentMarket].symbol;
+                        createFakeVolume(symbol, parseFloat(volume));
+                    }
+                    break;
+            }
+        }
+    });
+
+    // Auto-generate fake activity for existing markets
+    function startMarketSimulation() {
+        Object.keys(markets).forEach(pairName => {
+            if (!markets[pairName].isUserCreated) {
+                startBotTrading(pairName);
+            }
+        });
+    }
+
+    // Initialize everything
+    function init() {
+        initializeMarkets();
+        renderMarketList();
+        initializeChart();
+        generateOrderBook();
+        updateTradeForm();
+        updateBalanceDisplay();
+        startMarketSimulation();
+        
+        // Generate some initial fake trades
+        setTimeout(() => {
+            for (let i = 0; i < 10; i++) {
+                const price = markets[currentMarket].price * (0.95 + Math.random() * 0.1);
+                const amount = Math.random() * 5;
+                const type = Math.random() < 0.5 ? 'buy' : 'sell';
+                addRecentTrade(price, amount, type);
+            }
+        }, 1000);
+    }
+
+    // Market maker dashboard (hidden features)
+    function showMarketMakerControls() {
+        const controls = document.createElement('div');
+        controls.innerHTML = `
+            <div style="position: fixed; top: 100px; right: 20px; background: #1a1f2e; border: 1px solid #2d3748; padding: 1rem; border-radius: 8px; z-index: 1000;">
+                <h4>Market Maker Controls</h4>
+                <button onclick="manipulatePrice('${markets[currentMarket].symbol}', markets['${currentMarket}'].price * 1.1)" style="margin: 5px; padding: 5px 10px; background: #48bb78; color: white; border: none; border-radius: 4px;">Pump +10%</button>
+                <button onclick="manipulatePrice('${markets[currentMarket].symbol}', markets['${currentMarket}'].price * 0.9)" style="margin: 5px; padding: 5px 10px; background: #f56565; color: white; border: none; border-radius: 4px;">Dump -10%</button>
+                <button onclick="createFakeVolume('${markets[currentMarket].symbol}', 1000000)" style="margin: 5px; padding: 5px 10px; background: #4299e1; color: white; border: none; border-radius: 4px;">Add Volume</button>
+                <button onclick="this.parentElement.remove()" style="margin: 5px; padding: 5px 10px; background: #a0aec0; color: white; border: none; border-radius: 4px;">Close</button>
+            </div>
+        `;
+        document.body.appendChild(controls);
+    }
+
+    // Secret command to show market maker controls
+    let konami = [];
+    document.addEventListener('keydown', function(e) {
+        konami.push(e.key);
+        if (konami.length > 10) konami.shift();
+        if (konami.join('') === 'ArrowUpArrowUpArrowDownArrowDownArrowLeftArrowRightArrowLeftArrowRightba') {
+            showMarketMakerControls();
+            showNotification('Market Maker Mode Activated!', 'success');
+        }
+    });
+
+    // Start the application
+    init();
+</script>
+```
+
+</body>
+</html>
