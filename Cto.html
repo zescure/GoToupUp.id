@@ -1,487 +1,527 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Crypto Exchange Simulator</title>
-    <style>
-        * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CryptoSim Exchange v3</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #0d1421;
-    color: #ffffff;
-    overflow: hidden;
-}
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0d1421;
+      color: #ffffff;
+      overflow: hidden;
+    }
 
-/* HEADER */
-.header {
-    background: #1a1f2e;
-    padding: 1rem 2rem;
-    border-bottom: 1px solid #2d3748;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+    /* HEADER */
+    .header {
+      background: #1a1f2e;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid #2d3748;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-.logo {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #4299e1;
-}
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #4299e1;
+    }
 
-.user-balance {
-    display: flex;
-    gap: 2rem;
-    align-items: center;
-}
+    .user-balance {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
 
-.balance-item {
-    text-align: center;
-}
+    .balance-item {
+      text-align: center;
+    }
 
-.balance-item span {
-    display: block;
-    font-size: 0.8rem;
-    color: #a0aec0;
-}
+    .balance-item span {
+      display: block;
+      font-size: 0.8rem;
+      color: #a0aec0;
+    }
 
-.balance-item .amount {
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: #4299e1;
-}
+    .balance-item .amount {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #4299e1;
+    }
 
-/* LAYOUT MAIN CONTAINER */
-.main-container {
-    display: grid;
-    grid-template-columns: 280px 1fr 320px;
-    grid-template-rows: 60px 1fr;
-    height: calc(100vh - 70px);
-    background: #2d3748;
-    gap: 1px;
-    overflow: hidden;
-}
+    /* MAIN LAYOUT */
+    .main-container {
+      display: grid;
+      grid-template-columns: 280px 1fr 320px;
+      grid-template-rows: 60px 1fr;
+      height: calc(100vh - 70px);
+      background: #2d3748;
+      gap: 1px;
+    }
 
-/* MARKET LIST */
-.market-list {
-    background: #1a1f2e;
-    grid-row: 1 / span 2;
-    overflow-y: auto;
-    border-right: 1px solid #2d3748;
-}
+    /* MARKET LIST */
+    .market-list {
+      background: #1a1f2e;
+      grid-row: 1 / span 2;
+      overflow-y: auto;
+      border-right: 1px solid #2d3748;
+    }
 
-.market-header {
-    padding: 1rem;
-    font-weight: bold;
-    border-bottom: 1px solid #2d3748;
-    position: sticky;
-    top: 0;
-    background: #1a1f2e;
-    z-index: 2;
-}
+    .market-header {
+      padding: 1rem;
+      font-weight: bold;
+      border-bottom: 1px solid #2d3748;
+      position: sticky;
+      top: 0;
+      background: #1a1f2e;
+      z-index: 2;
+    }
 
-#marketList {
-    padding-bottom: 60px;
-}
+    #marketList {
+      padding-bottom: 60px;
+    }
 
-.market-item {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #2d3748;
-    cursor: pointer;
-    transition: background 0.2s;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+    .market-item {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #2d3748;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-.market-item:hover {
-    background: #2d3748;
-}
+    .market-item:hover {
+      background: #2d3748;
+    }
 
-.market-item.active {
-    background: #4299e1;
-    color: #ffffff;
-}
+    .market-item.active {
+      background: #4299e1;
+      color: #ffffff;
+    }
 
-.pair-name {
-    font-weight: bold;
-    font-size: 0.95rem;
-}
+    .pair-name {
+      font-weight: bold;
+      font-size: 0.95rem;
+    }
 
-.pair-price {
-    font-size: 0.9rem;
-    color: #4299e1;
-}
+    .pair-price {
+      font-size: 0.9rem;
+      color: #4299e1;
+    }
 
-.positive { color: #48bb78; }
-.negative { color: #f56565; }
+    .positive {
+      color: #48bb78;
+    }
 
-/* TRADING HEADER */
-.trading-header {
-    background: #1a1f2e;
-    padding: 1rem;
-    border-bottom: 1px solid #2d3748;
-    display: flex;
-    align-items: center;
-    grid-column: 2 / 3;
-}
+    .negative {
+      color: #f56565;
+    }
 
-.current-pair {
-    font-size: 1.2rem;
-    font-weight: bold;
-}
+    /* TRADING HEADER */
+    .trading-header {
+      background: #1a1f2e;
+      padding: 1rem;
+      border-bottom: 1px solid #2d3748;
+      display: flex;
+      align-items: center;
+      grid-column: 2 / 3;
+    }
 
-.current-price {
-    font-size: 1.4rem;
-    color: #4299e1;
-    margin-left: auto;
-}
+    .current-pair {
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
 
-/* CHART */
-.chart-container {
-    background: #1a1f2e;
-    grid-column: 2 / 3;
-    overflow: hidden;
-    position: relative;
-}
+    .current-price {
+      font-size: 1.4rem;
+      color: #4299e1;
+      margin-left: auto;
+    }
 
-#tradingChart {
-    width: 100%;
-    height: 100%;
-}
+    /* CHART */
+    .chart-container {
+      background: #1a1f2e;
+      grid-column: 2 / 3;
+      overflow: hidden;
+      position: relative;
+    }
 
-/* TRADING PANEL */
-.trading-panel {
-    background: #1a1f2e;
-    grid-row: 1 / span 2;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
+    #tradingChart {
+      width: 100%;
+      height: 100%;
+    }
 
-.order-book {
-    flex: 1;
-    padding: 1rem;
-    border-bottom: 1px solid #2d3748;
-    overflow-y: auto;
-}
+    /* TRADING PANEL */
+    .trading-panel {
+      background: #1a1f2e;
+      grid-row: 1 / span 2;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
-.order-book h3 {
-    margin-bottom: 0.75rem;
-    font-size: 0.9rem;
-    color: #a0aec0;
-}
+    .order-book {
+      flex: 1;
+      padding: 1rem;
+      border-bottom: 1px solid #2d3748;
+      overflow-y: auto;
+    }
 
-.order-book-table {
-    font-size: 0.8rem;
-    width: 100%;
-}
+    .order-book h3 {
+      margin-bottom: 0.75rem;
+      font-size: 0.9rem;
+      color: #a0aec0;
+    }
 
-.order-book-table th {
-    color: #a0aec0;
-    text-align: right;
-    padding: 0.25rem;
-}
+    .order-book-table {
+      font-size: 0.8rem;
+      width: 100%;
+    }
 
-.order-book-table td {
-    text-align: right;
-    padding: 0.2rem;
-}
+    .order-book-table th {
+      color: #a0aec0;
+      text-align: right;
+      padding: 0.25rem;
+    }
 
-.sell-order { color: #f56565; }
-.buy-order { color: #48bb78; }
+    .order-book-table td {
+      text-align: right;
+      padding: 0.2rem;
+    }
 
-/* TRADE FORM */
-.trade-form {
-    padding: 1rem;
-    border-bottom: 1px solid #2d3748;
-    background: #111827;
-}
+    .sell-order {
+      color: #f56565;
+    }
 
-.trade-tabs {
-    display: flex;
-    margin-bottom: 1rem;
-    border-bottom: 1px solid #2d3748;
-}
+    .buy-order {
+      color: #48bb78;
+    }
 
-.trade-tab {
-    flex: 1;
-    padding: 0.5rem;
-    text-align: center;
-    cursor: pointer;
-    transition: 0.2s;
-    font-weight: bold;
-}
+    /* TRADE FORM */
+    .trade-form {
+      padding: 1rem;
+      border-bottom: 1px solid #2d3748;
+      background: #111827;
+    }
 
-.trade-tab.active {
-    background: #4299e1;
-    color: white;
-}
+    .trade-tabs {
+      display: flex;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #2d3748;
+    }
 
-.form-group {
-    margin-bottom: 0.8rem;
-}
+    .trade-tab {
+      flex: 1;
+      padding: 0.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.2s;
+      font-weight: bold;
+    }
 
-.form-group label {
-    font-size: 0.85rem;
-    margin-bottom: 0.4rem;
-    color: #a0aec0;
-    display: block;
-}
+    .trade-tab.active {
+      background: #4299e1;
+      color: white;
+    }
 
-.form-group input {
-    width: 100%;
-    padding: 0.6rem;
-    background: #2d3748;
-    border: 1px solid #4a5568;
-    color: white;
-    border-radius: 4px;
-}
+    .form-group {
+      margin-bottom: 0.8rem;
+    }
 
-.trade-button {
-    padding: 0.8rem;
-    width: 100%;
-    border: none;
-    border-radius: 4px;
-    background: #4299e1;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.2s;
-}
+    .form-group label {
+      font-size: 0.85rem;
+      margin-bottom: 0.4rem;
+      color: #a0aec0;
+      display: block;
+    }
 
-.trade-button:hover {
-    background: #3182ce;
-}
+    .form-group input {
+      width: 100%;
+      padding: 0.6rem;
+      background: #2d3748;
+      border: 1px solid #4a5568;
+      color: white;
+      border-radius: 4px;
+    }
 
-.trade-button.sell {
-    background: #f56565;
-}
+    .trade-button {
+      padding: 0.8rem;
+      width: 100%;
+      border: none;
+      border-radius: 4px;
+      background: #4299e1;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
 
-.trade-button.sell:hover {
-    background: #e53e3e;
-}
+    .trade-button:hover {
+      background: #3182ce;
+    }
 
-/* RECENT TRADES */
-.recent-trades {
-    flex: 1;
-    padding: 1rem;
-    overflow-y: auto;
-}
+    .trade-button.sell {
+      background: #f56565;
+    }
 
-.recent-trades h3 {
-    font-size: 0.9rem;
-    margin-bottom: 0.75rem;
-    color: #a0aec0;
-}
+    .trade-button.sell:hover {
+      background: #e53e3e;
+    }
 
-.trade-item {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.8rem;
-    border-bottom: 1px solid #2d3748;
-    padding: 0.25rem 0;
-}
+    /* RECENT TRADES */
+    .recent-trades {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+    }
 
-/* CREATE COIN PANEL */
-.create-coin-panel {
-    position: fixed;
-    top: 0;
-    right: -400px;
-    width: 400px;
-    height: 100%;
-    background: #1a1f2e;
-    border-left: 1px solid #2d3748;
-    transition: right 0.3s ease;
-    z-index: 1000;
-    overflow-y: auto;
-}
+    .recent-trades h3 {
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+      color: #a0aec0;
+    }
 
-.create-coin-panel.open {
-    right: 0;
-}
+    .trade-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      border-bottom: 1px solid #2d3748;
+      padding: 0.25rem 0;
+    }
 
-.create-coin-header {
-    padding: 1rem;
-    border-bottom: 1px solid #2d3748;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+    /* CREATE COIN PANEL */
+    .create-coin-panel {
+      position: fixed;
+      top: 0;
+      right: -400px;
+      width: 400px;
+      height: 100%;
+      background: #1a1f2e;
+      border-left: 1px solid #2d3748;
+      transition: right 0.3s ease;
+      z-index: 1000;
+      overflow-y: auto;
+    }
 
-.close-btn {
-    background: none;
-    border: none;
-    font-size: 1.4rem;
-    color: white;
-    cursor: pointer;
-}
+    .create-coin-panel.open {
+      right: 0;
+    }
 
-.create-coin-form {
-    padding: 1rem;
-}
+    .create-coin-header {
+      padding: 1rem;
+      border-bottom: 1px solid #2d3748;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-.create-coin-btn {
-    position: fixed;
-    top: 50%;
-    right: 20px;
-    transform: translateY(-50%);
-    background: #48bb78;
-    color: white;
-    border: none;
-    padding: 1rem;
-    border-radius: 50px;
-    cursor: pointer;
-    font-weight: bold;
-    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
-    z-index: 999;
-    transition: 0.2s;
-}
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      color: white;
+      cursor: pointer;
+    }
 
-.create-coin-btn:hover {
-    background: #38a169;
-    transform: translateY(-50%) scale(1.05);
-}
+    .create-coin-form {
+      padding: 1rem;
+    }
 
-/* NOTIFICATION */
-.notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #48bb78;
-    color: white;
-    padding: 1rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transform: translateX(400px);
-    transition: transform 0.3s ease;
-    z-index: 1001;
-}
+    .create-coin-btn {
+      position: fixed;
+      top: 50%;
+      right: 20px;
+      transform: translateY(-50%);
+      background: #48bb78;
+      color: white;
+      border: none;
+      padding: 1rem;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+      z-index: 999;
+      transition: 0.2s;
+    }
 
-.notification.show {
-    transform: translateX(0);
-}
-    </style>
+    .create-coin-btn:hover {
+      background: #38a169;
+      transform: translateY(-50%) scale(1.05);
+    }
+
+    /* NOTIFICATION */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #48bb78;
+      color: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transform: translateX(400px);
+      transition: transform 0.3s ease;
+      z-index: 1001;
+    }
+
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 1024px) {
+      .main-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        height: auto;
+      }
+
+      .market-list {
+        height: 250px;
+        border-right: none;
+        border-bottom: 1px solid #2d3748;
+      }
+
+      .trading-panel {
+        order: 2;
+        height: auto;
+      }
+
+      .chart-container {
+        order: 1;
+        height: 300px;
+      }
+
+      .create-coin-btn {
+        bottom: 20px;
+        top: auto;
+        transform: none;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="header">
-        <div class="logo">CryptoSim Exchange v4</div>
-        <div class="user-balance">
-            <div class="balance-item">
-                <span>USD Balance</span>
-                <div class="amount">$<span id="usdBalance">10,000.00</span></div>
-            </div>
-            <div class="balance-item">
-                <span>IDR Balance</span>
-                <div class="amount">Rp <span id="idrBalance">150,000,000</span></div>
-            </div>
-            <div class="balance-item">
-                <span>Total Portfolio</span>
-                <div class="amount">$<span id="totalPortfolio">10,000.00</span></div>
-            </div>
-        </div>
+  <div class="header">
+    <div class="logo">CryptoSim Exchange v3</div>
+    <div class="user-balance">
+      <div class="balance-item">
+        <span>USD Balance</span>
+        <div class="amount">$<span id="usdBalance">10,000.00</span></div>
+      </div>
+      <div class="balance-item">
+        <span>IDR Balance</span>
+        <div class="amount">Rp <span id="idrBalance">150,000,000</span></div>
+      </div>
+      <div class="balance-item">
+        <span>Total Portfolio</span>
+        <div class="amount">$<span id="totalPortfolio">10,000.00</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-container">
+    <div class="market-list">
+      <div class="market-header">Markets</div>
+      <div id="marketList"></div>
     </div>
 
-    <div class="main-container">
-        <div class="market-list">
-            <div class="market-header">Markets</div>
-            <div id="marketList"></div>
-        </div>
-
-        <div class="trading-header">
-            <div class="current-pair" id="currentPair">BTC/USD</div>
-            <div class="current-price" id="currentPrice">$45,230.50</div>
-        </div>
-
-        <div class="chart-container">
-            <canvas id="tradingChart"></canvas>
-        </div>
-
-        <div class="trading-panel">
-            <div class="order-book">
-                <h3>Order Book</h3>
-                <table class="order-book-table">
-                    <thead>
-                        <tr>
-                            <th>Price</th>
-                            <th>Amount</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="orderBookSells"></tbody>
-                </table>
-                <div style="height: 10px; background: #2d3748; margin: 0.5rem 0;"></div>
-                <table class="order-book-table">
-                    <tbody id="orderBookBuys"></tbody>
-                </table>
-            </div>
-
-            <div class="trade-form">
-                <div class="trade-tabs">
-                    <div class="trade-tab active" onclick="switchTab('buy')">Buy</div>
-                    <div class="trade-tab" onclick="switchTab('sell')">Sell</div>
-                </div>
-                <div class="form-group">
-                    <label>Price (USD)</label>
-                    <input type="number" id="tradePrice" placeholder="Market Price" oninput="calculateTotal()">
-                </div>
-                <div class="form-group">
-                    <label>Amount</label>
-                    <input type="number" id="tradeAmount" placeholder="0.00" oninput="calculateTotal()">
-                </div>
-                <div class="form-group">
-                    <label>Total</label>
-                    <input type="number" id="tradeTotal" placeholder="0.00" readonly>
-                </div>
-                <button class="trade-button" id="tradeButton" onclick="executeTrade()">Buy</button>
-            </div>
-
-            <div class="recent-trades">
-                <h3>Recent Trades</h3>
-                <div id="recentTrades"></div>
-            </div>
-        </div>
+    <div class="trading-header">
+      <div class="current-pair" id="currentPair">BTC/USD</div>
+      <div class="current-price" id="currentPrice">$45,230.50</div>
     </div>
 
-    <button class="create-coin-btn" onclick="toggleCreateCoin()">Create Coin</button>
-
-    <div class="create-coin-panel" id="createCoinPanel">
-        <div class="create-coin-header">
-            <h3>Create New Cryptocurrency</h3>
-            <button class="close-btn" onclick="toggleCreateCoin()">&times;</button>
-        </div>
-        <div class="create-coin-form">
-            <div class="form-group">
-                <label>Coin Name</label>
-                <input type="text" id="coinName" placeholder="e.g., MyToken">
-            </div>
-            <div class="form-group">
-                <label>Coin Symbol</label>
-                <input type="text" id="coinSymbol" placeholder="e.g., MYT" maxlength="5">
-            </div>
-            <div class="form-group">
-                <label>Initial Supply</label>
-                <input type="number" id="coinSupply" placeholder="1000000">
-            </div>
-            <div class="form-group">
-                <label>Initial Price (USD)</label>
-                <input type="number" id="coinPrice" placeholder="1.00" step="0.01">
-            </div>
-            <div class="form-group">
-                <label>Description</label>
-                <textarea id="coinDescription" placeholder="Describe your cryptocurrency..." style="width: 100%; padding: 0.75rem; background: #2d3748; border: 1px solid #4a5568; color: white; border-radius: 4px; resize: vertical; height: 80px;"></textarea>
-            </div>
-            <!-- use wrapper that exists in JS -->
-            <button class="trade-button" onclick="createNewCoinWrapper()" style="background: #48bb78;">Create Coin</button>
-        </div>
+    <div class="chart-container">
+      <canvas id="tradingChart"></canvas>
     </div>
 
-    <div class="notification" id="notification"></div>
+    <div class="trading-panel">
+      <div class="order-book">
+        <h3>Order Book</h3>
+        <table class="order-book-table">
+          <thead>
+            <tr>
+              <th>Price</th>
+              <th>Amount</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="orderBookSells"></tbody>
+        </table>
+        <div style="height: 10px; background: #2d3748; margin: 0.5rem 0;"></div>
+        <table class="order-book-table">
+          <tbody id="orderBookBuys"></tbody>
+        </table>
+      </div>
+
+      <div class="trade-form">
+        <div class="trade-tabs">
+          <div class="trade-tab active" onclick="switchTab('buy')">Buy</div>
+          <div class="trade-tab" onclick="switchTab('sell')">Sell</div>
+        </div>
+        <div class="form-group">
+          <label>Price (USD)</label>
+          <input type="number" id="tradePrice" placeholder="Market Price" oninput="calculateTotal()">
+        </div>
+        <div class="form-group">
+          <label>Amount</label>
+          <input type="number" id="tradeAmount" placeholder="0.00" oninput="calculateTotal()">
+        </div>
+        <div class="form-group">
+          <label>Total</label>
+          <input type="number" id="tradeTotal" placeholder="0.00" readonly>
+        </div>
+        <button class="trade-button" id="tradeButton" onclick="executeTrade()">Buy</button>
+      </div>
+
+      <div class="recent-trades">
+        <h3>Recent Trades</h3>
+        <div id="recentTrades"></div>
+      </div>
+    </div>
+  </div>
+
+  <button class="create-coin-btn" onclick="toggleCreateCoin()">Create Coin</button>
+
+  <div class="create-coin-panel" id="createCoinPanel">
+    <div class="create-coin-header">
+      <h3>Create New Cryptocurrency</h3>
+      <button class="close-btn" onclick="toggleCreateCoin()">&times;</button>
+    </div>
+    <div class="create-coin-form">
+      <div class="form-group">
+        <label>Coin Name</label>
+        <input type="text" id="coinName" placeholder="e.g., MyToken">
+      </div>
+      <div class="form-group">
+        <label>Coin Symbol</label>
+        <input type="text" id="coinSymbol" placeholder="e.g., MYT" maxlength="5">
+      </div>
+      <div class="form-group">
+        <label>Initial Supply</label>
+        <input type="number" id="coinSupply" placeholder="1000000">
+      </div>
+      <div class="form-group">
+        <label>Initial Price (USD)</label>
+        <input type="number" id="coinPrice" placeholder="1.00" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="coinDescription" placeholder="Describe your cryptocurrency..." style="width: 100%; padding: 0.75rem; background: #2d3748; border: 1px solid #4a5568; color: white; border-radius: 4px; resize: vertical; height: 80px;"></textarea>
+      </div>
+      <button class="trade-button" onclick="createNewCoinWrapper()" style="background: #48bb78;">Create Coin</button>
+    </div>
+  </div>
+
+  <div class="notification" id="notification"></div>
+
 
     <script type="module">
     /*
