@@ -1,526 +1,478 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CryptoSim Exchange v3</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Exchange Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+```
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #0d1421;
-      color: #ffffff;
-      overflow: hidden;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #0d1421;
+        color: #ffffff;
+        overflow-x: hidden;
     }
 
-    /* HEADER */
     .header {
-      background: #1a1f2e;
-      padding: 1rem 2rem;
-      border-bottom: 1px solid #2d3748;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+        background: #1a1f2e;
+        padding: 1rem 2rem;
+        border-bottom: 1px solid #2d3748;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 
     .logo {
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: #4299e1;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #4299e1;
     }
 
     .user-balance {
-      display: flex;
-      gap: 2rem;
-      align-items: center;
+        display: flex;
+        gap: 2rem;
+        align-items: center;
     }
 
     .balance-item {
-      text-align: center;
+        text-align: center;
     }
 
     .balance-item span {
-      display: block;
-      font-size: 0.8rem;
-      color: #a0aec0;
+        display: block;
+        font-size: 0.8rem;
+        color: #a0aec0;
     }
 
     .balance-item .amount {
-      font-size: 1.1rem;
-      font-weight: bold;
-      color: #4299e1;
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #4299e1;
     }
 
-    /* MAIN LAYOUT */
     .main-container {
-      display: grid;
-      grid-template-columns: 280px 1fr 320px;
-      grid-template-rows: 60px 1fr;
-      height: calc(100vh - 70px);
-      background: #2d3748;
-      gap: 1px;
+        display: grid;
+        grid-template-columns: 300px 1fr 300px;
+        grid-template-rows: 60px 1fr;
+        height: calc(100vh - 80px);
+        gap: 1px;
+        background: #2d3748;
     }
 
-    /* MARKET LIST */
     .market-list {
-      background: #1a1f2e;
-      grid-row: 1 / span 2;
-      overflow-y: auto;
-      border-right: 1px solid #2d3748;
+        background: #1a1f2e;
+        overflow-y: auto;
+        grid-row: 1 / 3;
     }
 
     .market-header {
-      padding: 1rem;
-      font-weight: bold;
-      border-bottom: 1px solid #2d3748;
-      position: sticky;
-      top: 0;
-      background: #1a1f2e;
-      z-index: 2;
-    }
-
-    #marketList {
-      padding-bottom: 60px;
+        padding: 1rem;
+        border-bottom: 1px solid #2d3748;
+        font-weight: bold;
     }
 
     .market-item {
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid #2d3748;
-      cursor: pointer;
-      transition: background 0.2s;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #2d3748;
+        cursor: pointer;
+        transition: background 0.2s;
     }
 
     .market-item:hover {
-      background: #2d3748;
+        background: #2d3748;
     }
 
     .market-item.active {
-      background: #4299e1;
-      color: #ffffff;
+        background: #4299e1;
+        color: #ffffff;
     }
 
     .pair-name {
-      font-weight: bold;
-      font-size: 0.95rem;
+        font-weight: bold;
+        margin-bottom: 0.25rem;
     }
 
     .pair-price {
-      font-size: 0.9rem;
-      color: #4299e1;
+        font-size: 0.9rem;
+        color: #4299e1;
     }
 
-    .positive {
-      color: #48bb78;
+    .pair-change {
+        font-size: 0.8rem;
     }
 
-    .negative {
-      color: #f56565;
-    }
+    .positive { color: #48bb78; }
+    .negative { color: #f56565; }
 
-    /* TRADING HEADER */
     .trading-header {
-      background: #1a1f2e;
-      padding: 1rem;
-      border-bottom: 1px solid #2d3748;
-      display: flex;
-      align-items: center;
-      grid-column: 2 / 3;
+        background: #1a1f2e;
+        padding: 1rem;
+        border-bottom: 1px solid #2d3748;
+        display: flex;
+        justify-content: between;
+        align-items: center;
     }
 
     .current-pair {
-      font-size: 1.2rem;
-      font-weight: bold;
+        font-size: 1.2rem;
+        font-weight: bold;
     }
 
     .current-price {
-      font-size: 1.4rem;
-      color: #4299e1;
-      margin-left: auto;
+        font-size: 1.5rem;
+        color: #4299e1;
+        margin-left: auto;
     }
 
-    /* CHART */
     .chart-container {
-      background: #1a1f2e;
-      grid-column: 2 / 3;
-      overflow: hidden;
-      position: relative;
+        background: #1a1f2e;
+        position: relative;
+        overflow: hidden;
     }
 
     #tradingChart {
-      width: 100%;
-      height: 100%;
+        width: 100%;
+        height: 100%;
+        background: #1a1f2e;
     }
 
-    /* TRADING PANEL */
     .trading-panel {
-      background: #1a1f2e;
-      grid-row: 1 / span 2;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+        background: #1a1f2e;
+        display: flex;
+        flex-direction: column;
+        grid-row: 1 / 3;
     }
 
     .order-book {
-      flex: 1;
-      padding: 1rem;
-      border-bottom: 1px solid #2d3748;
-      overflow-y: auto;
+        flex: 1;
+        padding: 1rem;
+        border-bottom: 1px solid #2d3748;
     }
 
     .order-book h3 {
-      margin-bottom: 0.75rem;
-      font-size: 0.9rem;
-      color: #a0aec0;
+        margin-bottom: 1rem;
+        color: #a0aec0;
+        font-size: 0.9rem;
     }
 
     .order-book-table {
-      font-size: 0.8rem;
-      width: 100%;
+        font-size: 0.8rem;
+        width: 100%;
     }
 
     .order-book-table th {
-      color: #a0aec0;
-      text-align: right;
-      padding: 0.25rem;
+        color: #a0aec0;
+        padding: 0.25rem;
+        text-align: right;
     }
 
     .order-book-table td {
-      text-align: right;
-      padding: 0.2rem;
+        padding: 0.15rem 0.25rem;
+        text-align: right;
     }
 
-    .sell-order {
-      color: #f56565;
-    }
+    .sell-order { color: #f56565; }
+    .buy-order { color: #48bb78; }
 
-    .buy-order {
-      color: #48bb78;
-    }
-
-    /* TRADE FORM */
     .trade-form {
-      padding: 1rem;
-      border-bottom: 1px solid #2d3748;
-      background: #111827;
+        padding: 1rem;
+        border-bottom: 1px solid #2d3748;
     }
 
     .trade-tabs {
-      display: flex;
-      margin-bottom: 1rem;
-      border-bottom: 1px solid #2d3748;
+        display: flex;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #2d3748;
     }
 
     .trade-tab {
-      flex: 1;
-      padding: 0.5rem;
-      text-align: center;
-      cursor: pointer;
-      transition: 0.2s;
-      font-weight: bold;
+        flex: 1;
+        padding: 0.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
     }
 
     .trade-tab.active {
-      background: #4299e1;
-      color: white;
+        background: #4299e1;
+        color: white;
     }
 
     .form-group {
-      margin-bottom: 0.8rem;
+        margin-bottom: 1rem;
     }
 
     .form-group label {
-      font-size: 0.85rem;
-      margin-bottom: 0.4rem;
-      color: #a0aec0;
-      display: block;
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        color: #a0aec0;
     }
 
     .form-group input {
-      width: 100%;
-      padding: 0.6rem;
-      background: #2d3748;
-      border: 1px solid #4a5568;
-      color: white;
-      border-radius: 4px;
+        width: 100%;
+        padding: 0.75rem;
+        background: #2d3748;
+        border: 1px solid #4a5568;
+        color: white;
+        border-radius: 4px;
     }
 
     .trade-button {
-      padding: 0.8rem;
-      width: 100%;
-      border: none;
-      border-radius: 4px;
-      background: #4299e1;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.2s;
+        width: 100%;
+        padding: 1rem;
+        background: #4299e1;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background 0.2s;
     }
 
     .trade-button:hover {
-      background: #3182ce;
+        background: #3182ce;
     }
 
     .trade-button.sell {
-      background: #f56565;
+        background: #f56565;
     }
 
     .trade-button.sell:hover {
-      background: #e53e3e;
+        background: #e53e3e;
     }
 
-    /* RECENT TRADES */
     .recent-trades {
-      flex: 1;
-      padding: 1rem;
-      overflow-y: auto;
+        flex: 1;
+        padding: 1rem;
+        overflow-y: auto;
     }
 
     .recent-trades h3 {
-      font-size: 0.9rem;
-      margin-bottom: 0.75rem;
-      color: #a0aec0;
+        margin-bottom: 1rem;
+        color: #a0aec0;
+        font-size: 0.9rem;
     }
 
     .trade-item {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.8rem;
-      border-bottom: 1px solid #2d3748;
-      padding: 0.25rem 0;
+        display: flex;
+        justify-content: space-between;
+        padding: 0.25rem 0;
+        font-size: 0.8rem;
+        border-bottom: 1px solid #2d3748;
     }
 
-    /* CREATE COIN PANEL */
     .create-coin-panel {
-      position: fixed;
-      top: 0;
-      right: -400px;
-      width: 400px;
-      height: 100%;
-      background: #1a1f2e;
-      border-left: 1px solid #2d3748;
-      transition: right 0.3s ease;
-      z-index: 1000;
-      overflow-y: auto;
+        position: fixed;
+        top: 0;
+        right: -400px;
+        width: 400px;
+        height: 100vh;
+        background: #1a1f2e;
+        border-left: 1px solid #2d3748;
+        transition: right 0.3s ease;
+        z-index: 1000;
+        overflow-y: auto;
     }
 
     .create-coin-panel.open {
-      right: 0;
+        right: 0;
     }
 
     .create-coin-header {
-      padding: 1rem;
-      border-bottom: 1px solid #2d3748;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid #2d3748;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 
     .close-btn {
-      background: none;
-      border: none;
-      font-size: 1.4rem;
-      color: white;
-      cursor: pointer;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
     }
 
     .create-coin-form {
-      padding: 1rem;
+        padding: 1rem;
     }
 
     .create-coin-btn {
-      position: fixed;
-      top: 50%;
-      right: 20px;
-      transform: translateY(-50%);
-      background: #48bb78;
-      color: white;
-      border: none;
-      padding: 1rem;
-      border-radius: 50px;
-      cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
-      z-index: 999;
-      transition: 0.2s;
+        position: fixed;
+        top: 50%;
+        right: 20px;
+        transform: translateY(-50%);
+        background: #48bb78;
+        color: white;
+        border: none;
+        padding: 1rem;
+        border-radius: 50px;
+        cursor: pointer;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+        transition: all 0.2s;
+        z-index: 999;
     }
 
     .create-coin-btn:hover {
-      background: #38a169;
-      transform: translateY(-50%) scale(1.05);
+        background: #38a169;
+        transform: translateY(-50%) scale(1.05);
     }
 
-    /* NOTIFICATION */
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+
+    .price-flash {
+        animation: pulse 0.3s ease-in-out;
+    }
+
     .notification {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #48bb78;
-      color: white;
-      padding: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-      transform: translateX(400px);
-      transition: transform 0.3s ease;
-      z-index: 1001;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #48bb78;
+        color: white;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        transform: translateX(400px);
+        transition: transform 0.3s ease;
+        z-index: 1001;
     }
 
     .notification.show {
-      transform: translateX(0);
+        transform: translateX(0);
     }
+</style>
+```
 
-    /* RESPONSIVE */
-    @media (max-width: 1024px) {
-      .main-container {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto;
-        height: auto;
-      }
-
-      .market-list {
-        height: 250px;
-        border-right: none;
-        border-bottom: 1px solid #2d3748;
-      }
-
-      .trading-panel {
-        order: 2;
-        height: auto;
-      }
-
-      .chart-container {
-        order: 1;
-        height: 300px;
-      }
-
-      .create-coin-btn {
-        bottom: 20px;
-        top: auto;
-        transform: none;
-      }
-    }
-  </style>
 </head>
 <body>
-  <div class="header">
-    <div class="logo">CryptoSim Exchange v3</div>
-    <div class="user-balance">
-      <div class="balance-item">
-        <span>USD Balance</span>
-        <div class="amount">$<span id="usdBalance">10,000.00</span></div>
-      </div>
-      <div class="balance-item">
-        <span>IDR Balance</span>
-        <div class="amount">Rp <span id="idrBalance">150,000,000</span></div>
-      </div>
-      <div class="balance-item">
-        <span>Total Portfolio</span>
-        <div class="amount">$<span id="totalPortfolio">10,000.00</span></div>
-      </div>
+    <div class="header">
+        <div class="logo">CryptoSim Exchange</div>
+        <div class="user-balance">
+            <div class="balance-item">
+                <span>USD Balance</span>
+                <div class="amount">$<span id="usdBalance">10,000.00</span></div>
+            </div>
+            <div class="balance-item">
+                <span>IDR Balance</span>
+                <div class="amount">Rp <span id="idrBalance">150,000,000</span></div>
+            </div>
+            <div class="balance-item">
+                <span>Total Portfolio</span>
+                <div class="amount">$<span id="totalPortfolio">10,000.00</span></div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <div class="main-container">
+```
+<div class="main-container">
     <div class="market-list">
-      <div class="market-header">Markets</div>
-      <div id="marketList"></div>
+        <div class="market-header">Markets</div>
+        <div id="marketList"></div>
     </div>
 
     <div class="trading-header">
-      <div class="current-pair" id="currentPair">BTC/USD</div>
-      <div class="current-price" id="currentPrice">$45,230.50</div>
+        <div class="current-pair" id="currentPair">BTC/USD</div>
+        <div class="current-price" id="currentPrice">$45,230.50</div>
     </div>
 
     <div class="chart-container">
-      <canvas id="tradingChart"></canvas>
+        <canvas id="tradingChart"></canvas>
     </div>
 
     <div class="trading-panel">
-      <div class="order-book">
-        <h3>Order Book</h3>
-        <table class="order-book-table">
-          <thead>
-            <tr>
-              <th>Price</th>
-              <th>Amount</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody id="orderBookSells"></tbody>
-        </table>
-        <div style="height: 10px; background: #2d3748; margin: 0.5rem 0;"></div>
-        <table class="order-book-table">
-          <tbody id="orderBookBuys"></tbody>
-        </table>
-      </div>
+        <div class="order-book">
+            <h3>Order Book</h3>
+            <table class="order-book-table">
+                <thead>
+                    <tr>
+                        <th>Price</th>
+                        <th>Amount</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="orderBookSells"></tbody>
+            </table>
+            <div style="height: 10px; background: #2d3748; margin: 0.5rem 0;"></div>
+            <table class="order-book-table">
+                <tbody id="orderBookBuys"></tbody>
+            </table>
+        </div>
 
-      <div class="trade-form">
-        <div class="trade-tabs">
-          <div class="trade-tab active" onclick="switchTab('buy')">Buy</div>
-          <div class="trade-tab" onclick="switchTab('sell')">Sell</div>
+        <div class="trade-form">
+            <div class="trade-tabs">
+                <div class="trade-tab active" onclick="switchTab('buy')">Buy</div>
+                <div class="trade-tab" onclick="switchTab('sell')">Sell</div>
+            </div>
+            <div class="form-group">
+                <label>Price (USD)</label>
+                <input type="number" id="tradePrice" placeholder="Market Price">
+            </div>
+            <div class="form-group">
+                <label>Amount</label>
+                <input type="number" id="tradeAmount" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>Total</label>
+                <input type="number" id="tradeTotal" placeholder="0.00" readonly>
+            </div>
+            <button class="trade-button" id="tradeButton" onclick="executeTrade()">Buy</button>
         </div>
-        <div class="form-group">
-          <label>Price (USD)</label>
-          <input type="number" id="tradePrice" placeholder="Market Price" oninput="calculateTotal()">
-        </div>
-        <div class="form-group">
-          <label>Amount</label>
-          <input type="number" id="tradeAmount" placeholder="0.00" oninput="calculateTotal()">
-        </div>
-        <div class="form-group">
-          <label>Total</label>
-          <input type="number" id="tradeTotal" placeholder="0.00" readonly>
-        </div>
-        <button class="trade-button" id="tradeButton" onclick="executeTrade()">Buy</button>
-      </div>
 
-      <div class="recent-trades">
-        <h3>Recent Trades</h3>
-        <div id="recentTrades"></div>
-      </div>
+        <div class="recent-trades">
+            <h3>Recent Trades</h3>
+            <div id="recentTrades"></div>
+        </div>
     </div>
-  </div>
+</div>
 
-  <button class="create-coin-btn" onclick="toggleCreateCoin()">Create Coin</button>
+<button class="create-coin-btn" onclick="toggleCreateCoin()">Create Coin</button>
 
-  <div class="create-coin-panel" id="createCoinPanel">
+<div class="create-coin-panel" id="createCoinPanel">
     <div class="create-coin-header">
-      <h3>Create New Cryptocurrency</h3>
-      <button class="close-btn" onclick="toggleCreateCoin()">&times;</button>
+        <h3>Create New Cryptocurrency</h3>
+        <button class="close-btn" onclick="toggleCreateCoin()">&times;</button>
     </div>
     <div class="create-coin-form">
-      <div class="form-group">
-        <label>Coin Name</label>
-        <input type="text" id="coinName" placeholder="e.g., MyToken">
-      </div>
-      <div class="form-group">
-        <label>Coin Symbol</label>
-        <input type="text" id="coinSymbol" placeholder="e.g., MYT" maxlength="5">
-      </div>
-      <div class="form-group">
-        <label>Initial Supply</label>
-        <input type="number" id="coinSupply" placeholder="1000000">
-      </div>
-      <div class="form-group">
-        <label>Initial Price (USD)</label>
-        <input type="number" id="coinPrice" placeholder="1.00" step="0.01">
-      </div>
-      <div class="form-group">
-        <label>Description</label>
-        <textarea id="coinDescription" placeholder="Describe your cryptocurrency..." style="width: 100%; padding: 0.75rem; background: #2d3748; border: 1px solid #4a5568; color: white; border-radius: 4px; resize: vertical; height: 80px;"></textarea>
-      </div>
-      <button class="trade-button" onclick="createNewCoinWrapper()" style="background: #48bb78;">Create Coin</button>
+        <div class="form-group">
+            <label>Coin Name</label>
+            <input type="text" id="coinName" placeholder="e.g., MyToken">
+        </div>
+        <div class="form-group">
+            <label>Coin Symbol</label>
+            <input type="text" id="coinSymbol" placeholder="e.g., MYT" maxlength="5">
+        </div>
+        <div class="form-group">
+            <label>Initial Supply</label>
+            <input type="number" id="coinSupply" placeholder="1000000">
+        </div>
+        <div class="form-group">
+            <label>Initial Price (USD)</label>
+            <input type="number" id="coinPrice" placeholder="1.00" step="0.01">
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="coinDescription" placeholder="Describe your cryptocurrency..." style="width: 100%; padding: 0.75rem; background: #2d3748; border: 1px solid #4a5568; color: white; border-radius: 4px; resize: vertical; height: 80px;"></textarea>
+        </div>
+        <button class="trade-button" onclick="createNewCoin()" style="background: #48bb78;">Create Coin</button>
     </div>
-  </div>
+</div>
 
-  <div class="notification" id="notification"></div>
+<div class="notification" id="notification"></div>
 
 
     <script type="module">
