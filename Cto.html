@@ -356,7 +356,7 @@
         transform: translateX(0);
     }
 </style>
-```
+
 
 </head>
 <body>
@@ -378,7 +378,6 @@
         </div>
     </div>
 
-```
 <div class="main-container">
     <div class="market-list">
         <div class="market-header">Markets</div>
@@ -420,11 +419,11 @@
             </div>
             <div class="form-group">
                 <label>Price (USD)</label>
-                <input type="number" id="tradePrice" placeholder="Market Price">
+                <input type="number" id="tradePrice" placeholder="Market Price" oninput="calculateTotal()">
             </div>
             <div class="form-group">
                 <label>Amount</label>
-                <input type="number" id="tradeAmount" placeholder="0.00">
+                <input type="number" id="tradeAmount" placeholder="0.00" oninput="calculateTotal()">
             </div>
             <div class="form-group">
                 <label>Total</label>
@@ -468,12 +467,15 @@
             <label>Description</label>
             <textarea id="coinDescription" placeholder="Describe your cryptocurrency..." style="width: 100%; padding: 0.75rem; background: #2d3748; border: 1px solid #4a5568; color: white; border-radius: 4px; resize: vertical; height: 80px;"></textarea>
         </div>
-        <button class="trade-button" onclick="createNewCoin()" style="background: #48bb78;">Create Coin</button>
+        <!-- changed onclick to match the JS function name (createNewCoinWrapper) -->
+        <button class="trade-button" onclick="createNewCoinWrapper()" style="background: #48bb78;">Create Coin</button>
     </div>
 </div>
 
 <div class="notification" id="notification"></div>
 
+</body>
+</html>
 <script type="module">
 /*
   Full combined JS for CryptoSim Exchange
@@ -1152,7 +1154,7 @@ window.startBotTrading = startBotTrading;
 window.manipulatePriceLocal = manipulatePriceLocal;
 window.createFakeVolumeLocal = createFakeVolumeLocal;
 </script>
-```
+
 
 </body>
 </html>
