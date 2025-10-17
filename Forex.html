@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Trading Panel — Candlestick Simulator</title>
+<style>
+  :root{
+    --bg:#0b1020;
+    --panel:#0f1724;
+    --text:#dbe7ff;
+    --muted:#9fb0d6;
+    --green:#2dd36f;
+    --red:#ff5c5c;
+    --glass: rgba(255,255,255,0.03);
+  }
+  html,body{height:100%; margin:0; font-family:Inter,ui-sans-serif,system-ui,Arial; background:linear-gradient(180deg,#071026 0%, #071827 100%); color:var(--text)}
+  .wrap{display:flex;gap:14px;padding:18px;box-sizing:border-box;height:100%}
+  .left{
+    width:72%;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .chart-card{
+    background:var(--panel);
+    border-radius:10px;
+    padding:12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+    display:flex;
+    flex-direction:column;
+    height:78%;
+  }
+  canvas{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:8px; width:100%; height:100%}
+  .controls{
+    display:flex;
+    gap:12px;
+    align-items:center;
+  }
+  .panel{
+    background:var(--panel);
+    border-radius:10px;
+    padding:12px;
+    min-width:260px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    color:var(--text);
+  }
+  .right{
+    width:28%;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .btn{
+    border:0;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;
+  }
+  .btn-buy{background:linear-gradient(180deg,var(--green),#11b85a); color:#04260f}
+  .btn-sell{background:linear-gradient(180deg,#ff7b7b,var(--red)); color:#2b0606}
+  input[type="number"], input[type="text"]{background:var(--glass); border:1px solid rgba(255,255,255,0.03); padding:8px;border-radius:8px;color:var(--text); width:100%}
+  label{font-size:12px;color:var(--muted)}
+  .row{display:flex;gap:8px}
+  .small{font-size:13px;color:var(--muted)}
+  .status{display:flex;flex-direction:column;gap:6px}
+  .orders-list{max-height:220px;overflow:auto;padding:6px;display:flex;flex-direction:column;gap:8px}
+  .order-card{background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;display:flex;justify-content:space-between;align-items:center}
+  .trade-open{color:var(--green); font-weight:700}
+  .trade-sell{color:var(--red); font-weight:700}
+  .footer-small{font-size:12px;color:var(--muted)}
+  .btn-stop{background:#ffffff10;border:1px solid rgba(255,255,255,0.03);color:var(--text);padding:6px 8px;border-radius:6px}
+  .label-block{display:flex;flex-direction:column;gap:6px}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .title{font-weight:700}
+  .metrics{display:flex;gap:12px;align-items:center}
+  .metric{background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;min-width:120px;text-align:center}
+  .badge{font-size:12px;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,0.02)}
+  .candles-info{display:flex;gap:12px;align-items:center}
+  .legend{display:flex;gap:8px;align-items:center}
+  .legend .box{width:12px;height:12px;border-radius:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="left">
+    <div class="chart-card">
+      <div class="topbar">
+        <div>
+          <div class="title">Simulator Candlestick — EUR/USD (demo)</div>
+          <div class="small">Harga bergerak acak (random walk). TP/SL auto-trigger.</div>
+        </div>
+        <div class="metrics">
+          <div class="metric">
+            <div class="small">Balance</div>
+            <div id="balance">1000.00</div>
+          </div>
+          <div class="metric">
+            <div class="small">Equity</div>
+            <div id="equity">1000.00</div>
+          </div>
+          <div class="metric">
+            <div class="small">Price</div>
+            <div id="price">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px">
+        <div class="legend">
+          <div class="box" style="background:var(--green)"></div><div class="small">Bull</div>
+        </div>
+        <div class="legend">
+          <div class="box" style="background:var(--red)"></div><div class="small">Bear</div>
+        </div>
+        <div style="flex:1"></div>
+        <div class="candles-info small" id="candleInfo"></div>
+      </div>
+
+      <canvas id="chartCanvas"></canvas>
+    </div>
+
+    <div style="display:flex;gap:12px">
+      <div class="panel" style="flex:1">
+        <div style="display:flex;gap:10px;align-items:center">
+          <div style="flex:1">
+            <label>Ukuran (lot)</label>
+            <input id="size" type="number" value="0.1" step="0.1" min="0.01"/>
+          </div>
+          <div style="width:160px">
+            <label>TP (pips)</label>
+            <input id="tp" type="number" value="20" step="1"/>
+          </div>
+          <div style="width:160px">
+            <label>SL (pips)</label>
+            <input id="sl" type="number" value="20" step="1"/>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-buy" id="btnBuy">BUY</button>
+            <button class="btn btn-sell" id="btnSell">SELL</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn-stop" id="btnPause">Pause</button>
+          <button class="btn-stop" id="btnReset">Reset</button>
+          <div style="flex:1"></div>
+          <div class="small">Volatility</div>
+          <input id="vol" type="range" min="0.2" max="3.0" step="0.1" value="1.0" style="width:110px"/>
+        </div>
+        <div style="margin-top:10px">
+          <div class="small">Order Saat Ini</div>
+          <div class="orders-list" id="ordersList">
+            <!-- active orders -->
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="width:320px">
+        <div class="status">
+          <div class="small">Trade History</div>
+          <div id="history" style="max-height:220px;overflow:auto;padding:6px;display:flex;flex-direction:column;gap:6px"></div>
+          <div class="small footer-small">Sim dibuat sederhana untuk demo. Tidak ada koneksi ke broker.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="panel">
+      <div class="small">Pengaturan Chart</div>
+      <div class="label-block">
+        <label class="small">Frame Candle (detik)</label>
+        <input id="candleSeconds" type="number" value="2" min="0.5" step="0.5"/>
+      </div>
+      <div class="label-block">
+        <label class="small">Jumlah candle terlihat</label>
+        <input id="visibleCandles" type="number" value="80" min="30" max="200" step="10"/>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn-stop" id="btnZoomIn">Zoom In</button>
+        <button class="btn-stop" id="btnZoomOut">Zoom Out</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="small">Quick Info</div>
+      <div class="small">1 pip = 0.0001 (standar forex untuk majority pair)</div>
+      <div class="small">PL kalkulasi sederhana: lot * pipValue * pips (pipValue diset asumsi)</div>
+      <div style="margin-top:8px">
+        <div class="small">Legend:</div>
+        <div class="small">Green candle = close &gt; open. Red candle = close &lt; open.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/*
+  Simple candlestick trading simulator
+  - Random walk price generator with volatility control
+  - Candle aggregation per interval (candleSeconds)
+  - Orders: BUY/SELL with TP/SL in pips
+  - TP/SL auto-trigger; history recording
+*/
+
+const canvas = document.getElementById('chartCanvas');
+const ctx = canvas.getContext('2d', {alpha:false});
+let DPR = window.devicePixelRatio || 1;
+
+function resizeCanvas(){
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = Math.floor(rect.width * DPR);
+  canvas.height = Math.floor(rect.height * DPR);
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = rect.height + 'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// Simulation params
+let basePrice = 1.1000; // starting EUR/USD
+let lastPrice = basePrice;
+let volatility = 1.0; // slider
+let candleSeconds = parseFloat(document.getElementById('candleSeconds').value);
+let visibleCandles = parseInt(document.getElementById('visibleCandles').value);
+let candleInterval = candleSeconds * 1000;
+let paused = false;
+let tickTimer = null;
+
+// State
+let candles = []; // {t, o,h,l,c}
+let currentCandle = null;
+let balance = 1000;
+let equity = balance;
+let orders = []; // active orders
+let history = [];
+
+const pipValue = 10; // asumsi $10 per pip per lot, simple
+
+// UI refs
+const priceEl = document.getElementById('price');
+const balanceEl = document.getElementById('balance');
+const equityEl = document.getElementById('equity');
+const ordersListEl = document.getElementById('ordersList');
+const historyEl = document.getElementById('history');
+const candleInfoEl = document.getElementById('candleInfo');
+
+function formatPrice(p){ return p.toFixed(5); }
+function toPips(a,b){ return Math.round((a-b)/0.0001); }
+
+// Candle generator (random-walk with mean reversion component)
+function generateTick(){
+  if(paused) return;
+
+  // update volatility from UI
+  volatility = parseFloat(document.getElementById('vol').value);
+  const rnd = (Math.random() - 0.5) * 2;
+  // use noise scaled by volatility and recent ATR-like factor
+  // create a pseudo-mean-reversion towards basePrice with small pull
+  const mrStrength = 0.001; // mean reversion tiny
+  const atrApprox = estimateATR() || 0.00012;
+  const step = rnd * 0.00008 * volatility + (basePrice - lastPrice) * mrStrength * 0.0001;
+  // add occasional spikes
+  const spike = (Math.random() < 0.01) ? (Math.random() - 0.5) * 0.002 * volatility : 0;
+  const newPrice = Math.max(0.0001, lastPrice + step + spike);
+
+  lastPrice = parseFloat(newPrice.toFixed(5));
+  appendToCandle(lastPrice);
+
+  // update UI and orders
+  priceEl.innerText = formatPrice(lastPrice);
+  updateOrders(lastPrice);
+  draw();
+}
+
+function estimateATR(){
+  if(candles.length < 5) return 0.00012;
+  let sum = 0;
+  for(let i=candles.length-5;i<candles.length;i++){
+    const c = candles[i];
+    sum += Math.abs(c.h - c.l);
+  }
+  return sum / 5;
+}
+
+function appendToCandle(price){
+  const now = Date.now();
+  if(!currentCandle){
+    currentCandle = {t:now, o:price, h:price, l:price, c:price};
+  } else {
+    currentCandle.c = price;
+    if(price > currentCandle.h) currentCandle.h = price;
+    if(price < currentCandle.l) currentCandle.l = price;
+    // if candle interval passed, push and start new
+    if(now - currentCandle.t >= candleInterval){
+      candles.push(currentCandle);
+      currentCandle = {t:now, o:price, h:price, l:price, c:price};
+      // keep length to visibleCandles*2 for buffer
+      if(candles.length > visibleCandles*2) candles.splice(0, candles.length - visibleCandles*2);
+    }
+  }
+  updateCandleInfo();
+}
+
+function updateCandleInfo(){
+  if(!currentCandle) return;
+  candleInfoEl.innerText = `O:${currentCandle.o.toFixed(5)} H:${currentCandle.h.toFixed(5)} L:${currentCandle.l.toFixed(5)} C:${currentCandle.c.toFixed(5)}`;
+}
+
+// Orders & trading
+function placeOrder(type, size, tp_pips, sl_pips){
+  const entry = lastPrice;
+  const id = Date.now() + Math.floor(Math.random()*999);
+  const order = {
+    id, type, size:parseFloat(size), entry, tp_pips:parseFloat(tp_pips), sl_pips:parseFloat(sl_pips),
+    status:'open', openedAt:Date.now()
+  };
+  // compute absolute TP/SL price for clarity
+  if(type === 'BUY'){
+    order.tp = parseFloat((entry + tp_pips*0.0001).toFixed(5));
+    order.sl = parseFloat((entry - sl_pips*0.0001).toFixed(5));
+  } else {
+    order.tp = parseFloat((entry - tp_pips*0.0001).toFixed(5));
+    order.sl = parseFloat((entry + sl_pips*0.0001).toFixed(5));
+  }
+  orders.push(order);
+  renderOrders();
+}
+
+function updateOrders(price){
+  // check TP/SL triggers
+  let closed = [];
+  orders.forEach(o=>{
+    if(o.status !== 'open') return;
+    if(o.type === 'BUY'){
+      if(price >= o.tp){
+        closeOrder(o, 'TP', o.tp);
+        closed.push(o);
+      } else if(price <= o.sl){
+        closeOrder(o, 'SL', o.sl);
+        closed.push(o);
+      }
+    } else {
+      if(price <= o.tp){
+        closeOrder(o, 'TP', o.tp);
+        closed.push(o);
+      } else if(price >= o.sl){
+        closeOrder(o, 'SL', o.sl);
+        closed.push(o);
+      }
+    }
+  });
+  if(closed.length) renderOrders();
+  // update equity
+  equity = balance + unrealizedPL();
+  balanceEl.innerText = balance.toFixed(2);
+  equityEl.innerText = equity.toFixed(2);
+}
+
+function closeOrder(order, reason, closePrice){
+  order.status = 'closed';
+  order.closedAt = Date.now();
+  order.closePrice = closePrice;
+  order.reason = reason;
+  // compute P/L
+  const pips = toPips(order.closePrice, order.entry) * (order.type === 'BUY' ? 1 : -1);
+  const pl = pips * pipValue * order.size;
+  order.pl = pl;
+  balance += pl;
+  history.unshift(order);
+  if(history.length > 200) history.pop();
+  updateHistory();
+}
+
+function unrealizedPL(){
+  let total = 0;
+  orders.forEach(o=>{
+    if(o.status !== 'open') return;
+    const pips = toPips(lastPrice, o.entry) * (o.type === 'BUY' ? 1 : -1);
+    total += pips * pipValue * o.size;
+  });
+  return total;
+}
+
+function renderOrders(){
+  ordersListEl.innerHTML = '';
+  orders.filter(o=>o.status==='open').forEach(o=>{
+    const div = document.createElement('div');
+    div.className = 'order-card';
+    const left = document.createElement('div');
+    left.innerHTML = `<div style="font-weight:700">${o.type} ${o.size} lot</div>
+                      <div class="small">@ ${formatPrice(o.entry)}</div>
+                      <div class="small">TP ${formatPrice(o.tp)} / SL ${formatPrice(o.sl)}</div>`;
+    const right = document.createElement('div');
+    const uiPL = document.createElement('div');
+    const pips = toPips(lastPrice, o.entry) * (o.type === 'BUY' ? 1 : -1);
+    const up = (pips * pipValue * o.size).toFixed(2);
+    uiPL.innerText = (parseFloat(up) >= 0 ? '+' : '') + up;
+    uiPL.style.fontWeight = '700';
+    uiPL.style.color = (parseFloat(up) >= 0 ? 'var(--green)' : 'var(--red)');
+    const btnClose = document.createElement('button');
+    btnClose.className = 'btn-stop';
+    btnClose.innerText = 'Close';
+    btnClose.onclick = ()=>{ manualClose(o.id); };
+    right.appendChild(uiPL); right.appendChild(btnClose);
+    div.appendChild(left); div.appendChild(right);
+    ordersListEl.appendChild(div);
+  });
+}
+
+function manualClose(id){
+  const idx = orders.findIndex(o=>o.id===id && o.status==='open');
+  if(idx === -1) return;
+  const o = orders[idx];
+  o.status = 'closed';
+  o.closedAt = Date.now();
+  o.closePrice = lastPrice;
+  o.reason = 'Manual';
+  const pips = toPips(o.closePrice, o.entry) * (o.type === 'BUY' ? 1 : -1);
+  o.pl = pips * pipValue * o.size;
+  balance += o.pl;
+  history.unshift(o);
+  renderOrders();
+  updateHistory();
+}
+
+// history UI
+function updateHistory(){
+  historyEl.innerHTML = '';
+  history.slice(0,80).forEach(h=>{
+    const el = document.createElement('div');
+    el.style.display='flex'; el.style.justifyContent='space-between';
+    el.style.padding='6px'; el.style.borderRadius='6px'; el.style.background='rgba(255,255,255,0.02)';
+    el.innerHTML = `<div style="max-width:180px">
+      <div style="font-weight:700">${h.type} ${h.size} lot • ${h.reason}</div>
+      <div class="small">Entry ${formatPrice(h.entry)} • Close ${formatPrice(h.closePrice)}</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-weight:700; color:${(h.pl>=0)?'var(--green)':'var(--red)'}">${(h.pl>=0?'+':'')}${h.pl.toFixed(2)}</div>
+      <div class="small">${new Date(h.closedAt).toLocaleTimeString()}</div>
+    </div>`;
+    historyEl.appendChild(el);
+  });
+  balanceEl.innerText = balance.toFixed(2);
+  equityEl.innerText = equity.toFixed(2);
+}
+
+// Drawing chart
+function draw(){
+  // clear
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const W = canvas.width / DPR;
+  const H = canvas.height / DPR;
+  ctx.fillStyle = 'transparent';
+  ctx.fillRect(0,0,W,H);
+
+  // combine candles + currentCandle
+  const arr = candles.slice(-visibleCandles);
+  if(currentCandle) arr.push(currentCandle);
+  if(arr.length === 0) return;
+
+  // price range
+  let maxP = -Infinity, minP = Infinity;
+  arr.forEach(c=>{
+    maxP = Math.max(maxP, c.h);
+    minP = Math.min(minP, c.l);
+  });
+  const pad = (maxP - minP) * 0.15 || 0.0005;
+  maxP += pad; minP -= pad;
+
+  // scales
+  function pxY(price){
+    return ((maxP - price) / (maxP - minP)) * (H - 40) + 20;
+  }
+  const candleWidth = Math.max(4, (W / Math.max(30, visibleCandles)) * 0.65);
+  const gap = candleWidth * 0.25;
+  const startX = 40;
+
+  // grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for(let i=0;i<5;i++){
+    const y = 20 + i*(H-40)/4;
+    ctx.moveTo(startX, y);
+    ctx.lineTo(W-10, y);
+  }
+  ctx.stroke();
+
+  // draw candles
+  let x = startX;
+  for(let i=0;i<arr.length;i++){
+    const c = arr[i];
+    const colorUp = getComputedStyle(document.documentElement).getPropertyValue('--green').trim() || '#2dd36f';
+    const colorDn = getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#ff5c5c';
+    const up = c.c >= c.o;
+    const col = up ? colorUp : colorDn;
+    const yOpen = pxY(c.o);
+    const yClose = pxY(c.c);
+    const yHigh = pxY(c.h);
+    const yLow = pxY(c.l);
+    // wick
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x + candleWidth/2, yHigh);
+    ctx.lineTo(x + candleWidth/2, yLow);
+    ctx.stroke();
+    // body
+    const bodyTop = Math.min(yOpen, yClose);
+    const bodyH = Math.max(1, Math.abs(yClose - yOpen));
+    ctx.fillStyle = col;
+    ctx.fillRect(x, bodyTop, candleWidth, bodyH);
+    x += candleWidth + gap;
+  }
+
+  // Draw price axis on right
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  ctx.fillRect(W-80, 10, 70, H-20);
+  ctx.fillStyle = '#bcd7ff';
+  ctx.font = '12px Arial';
+  ctx.textAlign = 'right';
+  for(let i=0;i<5;i++){
+    const v = minP + ( (5-i-1)/4 ) * (maxP-minP);
+    const y = 20 + i*(H-40)/4;
+    ctx.fillStyle = 'rgba(0,0,0,0.0)';
+    ctx.fillText(v.toFixed(5), W-12, y+4);
+  }
+
+  // Draw orders' TP/SL lines
+  orders.forEach(o=>{
+    if(o.status !== 'open') return;
+    // draw TP (green) and SL (red)
+    const yTP = pxY(o.tp);
+    const ySL = pxY(o.sl);
+    // TP
+    ctx.strokeStyle = 'rgba(45,211,111,0.9)';
+    ctx.setLineDash([6,4]);
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(startX, yTP);
+    ctx.lineTo(W-90, yTP);
+    ctx.stroke();
+    // SL
+    ctx.strokeStyle = 'rgba(255,92,92,0.9)';
+    ctx.beginPath();
+    ctx.moveTo(startX, ySL);
+    ctx.lineTo(W-90, ySL);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // label
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${o.type} ${o.size} • ${formatPrice(o.entry)}`, W-85, Math.max(14, Math.min(H-6, (yTP+ySL)/2)));
+  });
+
+  // Mark last price with a horizontal line
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.beginPath();
+  const yNow = pxY(lastPrice);
+  ctx.moveTo(startX, yNow);
+  ctx.lineTo(W-10, yNow);
+  ctx.stroke();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '12px Arial';
+  ctx.textAlign = 'right';
+  ctx.fillText(formatPrice(lastPrice), W-12, yNow - 6);
+}
+
+// UI events
+document.getElementById('btnBuy').addEventListener('click', ()=>{
+  const size = parseFloat(document.getElementById('size').value) || 0.1;
+  const tp = parseFloat(document.getElementById('tp').value) || 20;
+  const sl = parseFloat(document.getElementById('sl').value) || 20;
+  placeOrder('BUY', size, tp, sl);
+  renderOrders();
+});
+document.getElementById('btnSell').addEventListener('click', ()=>{
+  const size = parseFloat(document.getElementById('size').value) || 0.1;
+  const tp = parseFloat(document.getElementById('tp').value) || 20;
+  const sl = parseFloat(document.getElementById('sl').value) || 20;
+  placeOrder('SELL', size, tp, sl);
+  renderOrders();
+});
+document.getElementById('btnPause').addEventListener('click', (e)=>{
+  paused = !paused;
+  e.target.innerText = paused ? 'Resume' : 'Pause';
+});
+document.getElementById('btnReset').addEventListener('click', ()=>{
+  if(confirm('Reset simulator?')) {
+    candles = []; currentCandle = null;
+    orders = []; history = [];
+    balance = 1000; equity = balance;
+    lastPrice = basePrice;
+    updateHistory();
+    renderOrders();
+  }
+});
+document.getElementById('vol').addEventListener('input', ()=>{ volatility = parseFloat(document.getElementById('vol').value); });
+document.getElementById('candleSeconds').addEventListener('change', ()=>{
+  candleSeconds = parseFloat(document.getElementById('candleSeconds').value);
+  candleInterval = candleSeconds * 1000;
+});
+document.getElementById('visibleCandles').addEventListener('change', ()=>{
+  visibleCandles = parseInt(document.getElementById('visibleCandles').value);
+  draw();
+});
+document.getElementById('btnZoomIn').addEventListener('click', ()=>{
+  visibleCandles = Math.max(20, visibleCandles - 10);
+  document.getElementById('visibleCandles').value = visibleCandles;
+  draw();
+});
+document.getElementById('btnZoomOut').addEventListener('click', ()=>{
+  visibleCandles = Math.min(300, visibleCandles + 10);
+  document.getElementById('visibleCandles').value = visibleCandles;
+  draw();
+});
+
+// Start tick loop
+function startTicks(){
+  if(tickTimer) clearInterval(tickTimer);
+  tickTimer = setInterval(generateTick, 200); // 5 ticks per second base
+}
+startTicks();
+setInterval(()=>{ draw(); }, 500);
+
+// initial seed candles
+(function seed(){
+  for(let i=0;i<120;i++){
+    const noise = (Math.random()-0.5) * 0.0003;
+    lastPrice = parseFloat((lastPrice + noise).toFixed(5));
+    appendToCandle(lastPrice);
+  }
+  balanceEl.innerText = balance.toFixed(2);
+  equityEl.innerText = equity.toFixed(2);
+  priceEl.innerText = formatPrice(lastPrice);
+  draw();
+})();
+
+</script>
+</body>
+</html>
