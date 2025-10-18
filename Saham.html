@@ -318,11 +318,12 @@ document.querySelectorAll('.nav-btn').forEach(b=>{
   });
 });
 function showPage(name){
+  // FIX: correct mapping so 'markets' shows page-market (previous bug: showed home)
   ['page-home','page-market','page-portfolio','page-events'].forEach(id=>document.getElementById(id).style.display='none');
   if(name==='home') document.getElementById('page-home').style.display='block';
-  if(name==='markets') document.getElementById('page-home').style.display='block';
-  if(name==='portfolio') document.getElementById('page-portfolio').style.display='block';
-  if(name==='events') document.getElementById('page-events').style.display='block';
+  else if(name==='markets') document.getElementById('page-market').style.display='block';
+  else if(name==='portfolio') document.getElementById('page-portfolio').style.display='block';
+  else if(name==='events') document.getElementById('page-events').style.display='block';
 }
 
 /* ----------------- market listing + realtime subscription ----------------- */
@@ -391,12 +392,15 @@ async function selectMarket(marketId){
     draw();
     computeAndRenderPnL();
   });
-  // subscribe positions (for current user/device) across this market (not necessary to subscribe all markets here because we have collectionGroup below for global positions)
   // load events for this market
   await loadEventsForMarket(marketId);
   // show market page
   document.getElementById('page-market').style.display='block';
   showPage('markets');
+
+  // FIX: when showing a page that was hidden, resize canvas so chart draws correctly
+  // small timeout to allow layout -> then resize & draw
+  setTimeout(()=>{ try{ DPR = window.devicePixelRatio || 1; resizeCanvas(); draw(); }catch(e){} }, 80);
 }
 
 /* load ticks */
@@ -612,7 +616,7 @@ function startEngineAllMarkets(){
         try{
           const mid = doc.id; const m = doc.data();
           // compute effective volatility considering events
-          let baseVol = (m.volatility !== undefined) ? m.volatility : (parseFloat(document.getElementById('adminGlobalVol').value) || 1.0);
+          let baseVol = (m.volatility !== undefined) ? m.volatility : 1.0;
           // check for active events for this market
           let effMultiplier = 1.0;
           try {
@@ -867,9 +871,6 @@ setInterval(async ()=>{ // refresh events every minute
     for(const id in marketsCache) await loadEventsForMarket(id);
   }catch(e){}
 }, 60000);
-
-/* ----------------- subscribe to marketsCache changes (already handled by subscribeMarketsListRealtime) to compute PnL live --------------- */
-/* subscribeMarketsListRealtime will update marketsCache; computeAndRenderPnL invoked there */
 
 /* ----------------- helpers to show pages from quick buttons ----------------- */
 document.getElementById('btnMarkets').addEventListener('click', ()=> showPage('markets'));
