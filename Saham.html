@@ -47,12 +47,12 @@
   <header>
     <div class="logo">
       <h1>PaperStocks</h1>
-      <div class="small">Simulasi Bursa — Demo</div>
+      <div class="small">Bursa Investasi Zestore</div>
     </div>
     <div class="top-actions">
-      <div id="userInfo" class="small">not signed</div>
-      <button id="btnSignIn" class="btn btn-ghost">Sign in</button>
-      <button id="btnSignOut" class="btn btn-ghost" style="display:none">Sign out</button>
+      <div id="userInfo" class="small">Belum Terdaftar</div>
+      <button id="btnSignIn" class="btn btn-ghost">Login</button>
+      <button id="btnSignOut" class="btn btn-ghost" style="display:none">Keluar</button>
     </div>
   </header>
 
@@ -133,12 +133,12 @@
         </div>
 
         <div style="margin-top:12px">
-          <div class="small">Open Positions</div>
+          <div class="small">Posisi Terbuka</div>
           <div id="positionsList" class="list" style="margin-top:8px;max-height:240px;overflow:auto"></div>
         </div>
 
         <div style="margin-top:12px">
-          <div class="small">Trade History</div>
+          <div class="small">History Jual/Beli</div>
           <div id="tradesList" class="list" style="margin-top:8px;max-height:240px;overflow:auto"></div>
         </div>
       </div>
@@ -147,7 +147,7 @@
       <div id="page-events" class="card" style="display:none">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div><div style="font-weight:800">Kalender & Berita</div><div class="small">Admin dapat tambah/edit event untuk market tertentu</div></div>
-          <div><button id="btnOpenAddEvent" class="btn btn-ghost">Tambah Event</button></div>
+          <div><button id="btnOpenAddEvent" class="btn btn-ghost">Tambah berita</button></div>
         </div>
         <div style="margin-top:10px">
           <div class="small">Upcoming Events</div>
@@ -167,14 +167,14 @@
         <div style="margin-top:10px">
           <div class="small">Actions</div>
           <div style="display:flex;gap:8px;margin-top:8px">
-            <button id="btnGotoMarket" class="btn btn-ghost">View Market</button>
+            <button id="btnGotoMarket" class="btn btn-ghost">Lihat Markets</button>
             <button id="btnGotoPortfolio" class="btn btn-ghost">Portfolio</button>
           </div>
         </div>
       </div>
 
       <div class="card" style="margin-top:12px">
-        <div><div class="small">Admin</div></div>
+        <div><div class="small">whats next</div></div>
         <div style="margin-top:8px">
           <div id="adminControls" style="display:none;flex-direction:column;gap:8px">
             <div style="display:flex;gap:8px">
@@ -188,20 +188,20 @@
 
             <!-- New admin actions -->
             <div style="display:flex;gap:8px;margin-top:8px">
-              <button id="btnManageBalances" class="btn btn-ghost">Manage Balances</button>
-              <button id="btnViewAllTrades" class="btn btn-ghost">View All Trades</button>
+              <button id="btnManageBalances" class="btn btn-ghost">Ubah Saldo User</button>
+              <button id="btnViewAllTrades" class="btn btn-ghost">View Semua Perdagangan</button>
             </div>
 
             <div style="margin-top:8px">
-              <button id="btnEngineAll" class="btn btn-ghost">Start Engine (All)</button>
+              <button id="btnEngineAll" class="btn btn-ghost">Nyalakan perdagangan (All)</button>
             </div>
           </div>
-          <div id="adminHint" class="small" style="margin-top:8px;color:var(--muted)">Login admin untuk akses</div>
+          <div id="adminHint" class="small" style="margin-top:8px;color:var(--muted)">Akses Terbatas Segera</div>
         </div>
       </div>
 
       <div class="card" style="margin-top:12px">
-        <div><div class="small">Recent Trades (device)</div></div>
+        <div><div class="small">data Trades (device)</div></div>
         <div id="rightHistory" style="margin-top:8px;max-height:220px;overflow:auto"></div>
       </div>
     </aside>
@@ -535,7 +535,7 @@ function renderEventsAll(){
   });
 }
 window.deleteEvent = async (mid,id) => {
-  if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only admin');
+  if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only owned');
   if(!confirm('Hapus event?')) return;
   await db.collection('markets').doc(mid).collection('events').doc(id).delete();
   await loadEventsForMarket(mid);
@@ -657,7 +657,7 @@ document.getElementById('btnEditMarket').addEventListener('click', async ()=>{
 document.getElementById('btnEngineAll').addEventListener('click', ()=>{
   if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only admin');
   engineAllRunning = !engineAllRunning;
-  document.getElementById('btnEngineAll').innerText = engineAllRunning ? 'Stop Engine (All)' : 'Start Engine (All)';
+  document.getElementById('btnEngineAll').innerText = engineAllRunning ? 'Stop Perdagangan (All)' : 'Start Engine (All)';
   if(engineAllRunning) startEngineAllMarkets(); else stopEngineAllMarkets();
 });
 
@@ -954,7 +954,7 @@ async function ensureDefaultMarket(){
   const id = 'holez-idr';
   const ref = db.collection('markets').doc(id); const doc = await ref.get();
   if(!doc.exists){
-    await ref.set({ name:'HOLEZ (Demo)', symbol:'HOLEZ/IDR', price:1000.00, volatility:1.0, description:'Perusahaan demo HOLEZ', ownerUID:null, createdAt: firebase.firestore.FieldValue.serverTimestamp(), lastUpdate: firebase.firestore.FieldValue.serverTimestamp() });
+    await ref.set({ name:'HOLEZ (index)', symbol:'HOLEZ/IDR', price:1000.00, volatility:1.0, description:'Perusahaan HOLEZ', ownerUID:null, createdAt: firebase.firestore.FieldValue.serverTimestamp(), lastUpdate: firebase.firestore.FieldValue.serverTimestamp() });
   }
 }
 
@@ -1060,15 +1060,15 @@ btnViewAllTrades.addEventListener('click', async ()=>{
   modal.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:800">Admin - Realtime Trades & Positions</div><button id="at_close" class="btn btn-ghost">Tutup</button></div>
     <div style="margin-top:10px;display:flex;gap:12px">
       <div style="flex:1">
-        <div class="small muted">Recent Trades (collectionGroup)</div>
+        <div class="small muted">History Trades all (collectionGroup)</div>
         <div id="at_trades" style="margin-top:8px;max-height:340px;overflow:auto"></div>
       </div>
       <div style="flex:1">
-        <div class="small muted">Open Positions (collectionGroup)</div>
+        <div class="small muted">Posisi Terbuka all (collectionGroup)</div>
         <div id="at_positions" style="margin-top:8px;max-height:340px;overflow:auto"></div>
       </div>
     </div>
-    <div style="margin-top:12px"><div class="small muted">Locks (market_user)</div><div id="at_locks" style="margin-top:8px;max-height:180px;overflow:auto"></div></div>`;
+    <div style="margin-top:12px"><div class="small muted">Kunci (market_user)</div><div id="at_locks" style="margin-top:8px;max-height:180px;overflow:auto"></div></div>`;
   backdrop.appendChild(modal); root.appendChild(backdrop);
 
   modal.querySelector('#at_close').addEventListener('click', ()=> {
