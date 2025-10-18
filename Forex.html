@@ -767,7 +767,7 @@ boot();
 
 async function ensureDefaultMarket(){
   try {
-    const defaultId = 'eur-usd';
+    const defaultId = 'ZECOIN-IDR';
     const docRef = db.collection('markets').doc(defaultId);
     const doc = await docRef.get();
     if(!doc.exists){
@@ -781,14 +781,14 @@ document.getElementById('homeDeposit').addEventListener('click', async ()=>{
   const amt = parseFloat(prompt('Jumlah deposit (demo)', '100'));
   if(!amt || amt <= 0) return;
   balance += amt; localStorage.setItem(localBalanceKey, balance); document.getElementById('homeBalance').innerText = balance.toFixed(2); document.getElementById('marketBalance').innerText = balance.toFixed(2);
-  alert('Deposit diterima (demo) +'+amt);
+  alert('Deposit diterima () +'+amt);
 });
 document.getElementById('homeWithdraw').addEventListener('click', ()=>{
   const amt = parseFloat(prompt('Jumlah withdraw', '50'));
   if(!amt || amt <= 0) return;
   if(amt > balance) return alert('Saldo tidak cukup');
   balance -= amt; localStorage.setItem(localBalanceKey, balance); document.getElementById('homeBalance').innerText = balance.toFixed(2); document.getElementById('marketBalance').innerText = balance.toFixed(2);
-  alert('Withdraw diproses (demo) -'+amt);
+  alert('Withdraw diproses () -'+amt);
 });
 
 /* ---------- admin create/list market ---------- */
