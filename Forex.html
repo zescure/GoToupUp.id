@@ -1,644 +1,702 @@
 <!doctype html>
 <html lang="id">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Trading Panel — Candlestick Simulator</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Trading Panel — Candlestick (Firebase Sync)</title>
 <style>
   :root{
-    --bg:#0b1020;
-    --panel:#0f1724;
-    --text:#dbe7ff;
-    --muted:#9fb0d6;
-    --green:#2dd36f;
-    --red:#ff5c5c;
-    --glass: rgba(255,255,255,0.03);
+    --bg:#071026; --panel:#0f1724; --muted:#9fb0d6; --text:#dbe7ff;
+    --green:#2dd36f; --red:#ff5c5c; --glass: rgba(255,255,255,0.03);
   }
-  html,body{height:100%; margin:0; font-family:Inter,ui-sans-serif,system-ui,Arial; background:linear-gradient(180deg,#071026 0%, #071827 100%); color:var(--text)}
-  .wrap{display:flex;gap:14px;padding:18px;box-sizing:border-box;height:100%}
-  .left{
-    width:72%;
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-  }
-  .chart-card{
-    background:var(--panel);
-    border-radius:10px;
-    padding:12px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.6);
-    display:flex;
-    flex-direction:column;
-    height:78%;
-  }
-  canvas{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:8px; width:100%; height:100%}
-  .controls{
-    display:flex;
-    gap:12px;
-    align-items:center;
-  }
-  .panel{
-    background:var(--panel);
-    border-radius:10px;
-    padding:12px;
-    min-width:260px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.5);
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    color:var(--text);
-  }
-  .right{
-    width:28%;
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-  }
-  .btn{
-    border:0;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;
-  }
-  .btn-buy{background:linear-gradient(180deg,var(--green),#11b85a); color:#04260f}
-  .btn-sell{background:linear-gradient(180deg,#ff7b7b,var(--red)); color:#2b0606}
-  input[type="number"], input[type="text"]{background:var(--glass); border:1px solid rgba(255,255,255,0.03); padding:8px;border-radius:8px;color:var(--text); width:100%}
-  label{font-size:12px;color:var(--muted)}
-  .row{display:flex;gap:8px}
-  .small{font-size:13px;color:var(--muted)}
-  .status{display:flex;flex-direction:column;gap:6px}
-  .orders-list{max-height:220px;overflow:auto;padding:6px;display:flex;flex-direction:column;gap:8px}
-  .order-card{background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;display:flex;justify-content:space-between;align-items:center}
-  .trade-open{color:var(--green); font-weight:700}
-  .trade-sell{color:var(--red); font-weight:700}
-  .footer-small{font-size:12px;color:var(--muted)}
-  .btn-stop{background:#ffffff10;border:1px solid rgba(255,255,255,0.03);color:var(--text);padding:6px 8px;border-radius:6px}
-  .label-block{display:flex;flex-direction:column;gap:6px}
-  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#071026,#071827);color:var(--text);font-family:Inter, Arial}
+  /* Mobile-first layout: chart top large, controls below */
+  .container{display:flex;flex-direction:column;height:100vh;padding:10px;box-sizing:border-box;gap:10px}
+  .chart-wrap{flex:1;min-height:320px;background:var(--panel);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:8px;box-shadow:0 8px 30px rgba(0,0,0,0.6)}
+  .chart-top{display:flex;justify-content:space-between;align-items:center}
   .title{font-weight:700}
-  .metrics{display:flex;gap:12px;align-items:center}
-  .metric{background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;min-width:120px;text-align:center}
-  .badge{font-size:12px;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,0.02)}
-  .candles-info{display:flex;gap:12px;align-items:center}
-  .legend{display:flex;gap:8px;align-items:center}
-  .legend .box{width:12px;height:12px;border-radius:2px}
+  .metrics{display:flex;gap:8px;align-items:center}
+  .metric{background:rgba(255,255,255,0.02);padding:6px 8px;border-radius:8px;font-size:13px}
+  canvas{border-radius:8px;width:100%;height:100%}
+  .controls{display:flex;flex-direction:column;gap:8px}
+  .row{display:flex;gap:8px;align-items:center}
+  .panel{background:var(--panel);padding:10px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.5)}
+  label{font-size:12px;color:var(--muted)}
+  input,select,button{padding:8px;border-radius:8px;border:0;outline:none}
+  input[type="number"]{background:var(--glass);color:var(--text);border:1px solid rgba(255,255,255,0.03)}
+  .btn{cursor:pointer;font-weight:700}
+  .btn-buy{background:linear-gradient(180deg,var(--green),#11b85a);color:#04260f}
+  .btn-sell{background:linear-gradient(180deg,#ff7b7b,var(--red));color:#2b0606}
+  .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text)}
+  .orders{display:flex;flex-direction:column;gap:6px;max-height:140px;overflow:auto}
+  .order{display:flex;justify-content:space-between;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02)}
+  .admin-panel{display:none;gap:8px}
+  .show{display:flex}
+  @media(min-width:900px){
+    .container{flex-direction:row;gap:12px}
+    .left{flex:0 1 68%}
+    .right{flex:0 1 32%;display:flex;flex-direction:column;gap:10px;height:calc(100vh - 20px)}
+    .chart-wrap{height:60vh}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="container">
   <div class="left">
-    <div class="chart-card">
-      <div class="topbar">
+    <div class="chart-wrap panel" id="chartCard">
+      <div class="chart-top">
         <div>
-          <div class="title">Simulator Candlestick — EUR/USD (demo)</div>
-          <div class="small">Harga bergerak acak (random walk). TP/SL auto-trigger.</div>
+          <div class="title">Simulator Candlestick — <span id="marketName">—</span></div>
+          <div style="font-size:12px;color:var(--muted)">Harga disimpan di Firebase (sama antar device) — engine controlled</div>
         </div>
         <div class="metrics">
-          <div class="metric">
-            <div class="small">Balance</div>
-            <div id="balance">1000.00</div>
-          </div>
-          <div class="metric">
-            <div class="small">Equity</div>
-            <div id="equity">1000.00</div>
-          </div>
-          <div class="metric">
-            <div class="small">Price</div>
-            <div id="price">—</div>
-          </div>
+          <div class="metric"><div style="font-size:11px;color:var(--muted)">Balance</div><div id="balance">1000.00</div></div>
+          <div class="metric"><div style="font-size:11px;color:var(--muted)">Equity</div><div id="equity">1000.00</div></div>
+          <div class="metric"><div style="font-size:11px;color:var(--muted)">Price</div><div id="price">—</div></div>
         </div>
       </div>
-
-      <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px">
-        <div class="legend">
-          <div class="box" style="background:var(--green)"></div><div class="small">Bull</div>
-        </div>
-        <div class="legend">
-          <div class="box" style="background:var(--red)"></div><div class="small">Bear</div>
-        </div>
-        <div style="flex:1"></div>
-        <div class="candles-info small" id="candleInfo"></div>
-      </div>
-
       <canvas id="chartCanvas"></canvas>
     </div>
 
-    <div style="display:flex;gap:12px">
-      <div class="panel" style="flex:1">
-        <div style="display:flex;gap:10px;align-items:center">
-          <div style="flex:1">
-            <label>Ukuran (lot)</label>
-            <input id="size" type="number" value="0.1" step="0.1" min="0.01"/>
-          </div>
-          <div style="width:160px">
-            <label>TP (pips)</label>
-            <input id="tp" type="number" value="20" step="1"/>
-          </div>
-          <div style="width:160px">
-            <label>SL (pips)</label>
-            <input id="sl" type="number" value="20" step="1"/>
-          </div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-buy" id="btnBuy">BUY</button>
-            <button class="btn btn-sell" id="btnSell">SELL</button>
-          </div>
+    <div class="panel controls" style="margin-top:10px">
+      <div class="row" style="justify-content:space-between">
+        <div style="flex:1">
+          <label>Market</label>
+          <select id="marketSelect" style="width:100%"></select>
         </div>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <button class="btn-stop" id="btnPause">Pause</button>
-          <button class="btn-stop" id="btnReset">Reset</button>
-          <div style="flex:1"></div>
-          <div class="small">Volatility</div>
-          <input id="vol" type="range" min="0.2" max="3.0" step="0.1" value="1.0" style="width:110px"/>
+        <div style="width:120px">
+          <label>Timeframe</label>
+          <select id="timeframe">
+            <option value="1000">1s</option>
+            <option value="60000">1m</option>
+            <option value="300000">5m</option>
+            <option value="900000">15m</option>
+            <option value="1800000">30m</option>
+            <option value="3600000">1h</option>
+            <option value="86400000">1d</option>
+          </select>
         </div>
-        <div style="margin-top:10px">
-          <div class="small">Order Saat Ini</div>
-          <div class="orders-list" id="ordersList">
-            <!-- active orders -->
-          </div>
+        <div style="width:160px">
+          <label>Volatility (client)</label>
+          <input id="volClient" type="range" min="0.2" max="3.0" step="0.1" value="1.0"/>
         </div>
       </div>
 
-      <div class="panel" style="width:320px">
-        <div class="status">
-          <div class="small">Trade History</div>
-          <div id="history" style="max-height:220px;overflow:auto;padding:6px;display:flex;flex-direction:column;gap:6px"></div>
-          <div class="small footer-small">Sim dibuat sederhana untuk demo. Tidak ada koneksi ke broker.</div>
+      <div class="row" style="margin-top:8px;flex-wrap:wrap">
+        <div style="flex:1;min-width:120px">
+          <label>Lot Size</label>
+          <input id="size" type="number" value="0.1" step="0.1" min="0.01"/>
         </div>
+        <div style="width:120px">
+          <label>TP (pips)</label>
+          <input id="tp" type="number" value="20"/>
+        </div>
+        <div style="width:120px">
+          <label>SL (pips)</label>
+          <input id="sl" type="number" value="20"/>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button id="btnBuy" class="btn btn-buy">BUY</button>
+          <button id="btnSell" class="btn btn-sell">SELL</button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
+        <button id="btnRefreshMarkets" class="btn-ghost">Refresh Markets</button>
+        <button id="btnLoadDemoBalance" class="btn-ghost">Reset Balance</button>
+        <div style="flex:1"></div>
+        <div style="font-size:12px;color:var(--muted)">Engine:</div>
+        <button id="btnStartEngine" class="btn-ghost">Start Engine</button>
+      </div>
+
+      <div style="margin-top:8px">
+        <div style="font-size:13px;color:var(--muted)">Open Orders</div>
+        <div class="orders" id="ordersList"></div>
       </div>
     </div>
   </div>
 
   <div class="right">
     <div class="panel">
-      <div class="small">Pengaturan Chart</div>
-      <div class="label-block">
-        <label class="small">Frame Candle (detik)</label>
-        <input id="candleSeconds" type="number" value="2" min="0.5" step="0.5"/>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:700">User / Admin</div>
+          <div style="font-size:12px;color:var(--muted)">Masukkan UID (demo auth)</div>
+        </div>
+        <div style="width:160px">
+          <input id="uidInput" placeholder="Enter UID (demo)"/>
+        </div>
       </div>
-      <div class="label-block">
-        <label class="small">Jumlah candle terlihat</label>
-        <input id="visibleCandles" type="number" value="80" min="30" max="200" step="10"/>
-      </div>
+
       <div style="display:flex;gap:8px;margin-top:8px">
-        <button class="btn-stop" id="btnZoomIn">Zoom In</button>
-        <button class="btn-stop" id="btnZoomOut">Zoom Out</button>
+        <button id="btnSetUid" class="btn-ghost">Set UID</button>
+        <button id="btnSignOut" class="btn-ghost">Sign Out</button>
+      </div>
+
+      <div style="margin-top:8px">
+        <div style="font-weight:700">Admin Panel</div>
+        <div style="font-size:12px;color:var(--muted)">(Visible jika UID = admin UID)</div>
+        <div id="adminPanel" class="admin-panel" style="flex-direction:column;margin-top:6px">
+          <div style="display:flex;gap:8px">
+            <button id="btnCreateMarket" class="btn-ghost">Create Market</button>
+            <button id="btnListMarkets" class="btn-ghost">List All Markets</button>
+          </div>
+          <div style="margin-top:8px">
+            <label>Global Volatility</label>
+            <input id="volAdmin" type="range" min="0.2" max="5.0" step="0.1" value="1.0"/>
+          </div>
+          <div style="margin-top:8px">
+            <label>Engine Mode</label>
+            <select id="engineMode">
+              <option value="normal">Normal</option>
+              <option value="slow">Slow</option>
+              <option value="extreme">Extreme</option>
+            </select>
+          </div>
+          <div style="margin-top:8px">
+            <div style="font-size:13px;color:var(--muted)">Market Orders (selected market)</div>
+            <div id="adminOrders" style="max-height:150px;overflow:auto;margin-top:6px"></div>
+          </div>
+          <div style="margin-top:8px">
+            <div style="font-size:13px;color:var(--muted)">Deposit Verifications (simulated)</div>
+            <div id="depositsList" style="max-height:100px;overflow:auto;margin-top:6px"></div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="panel">
-      <div class="small">Quick Info</div>
-      <div class="small">1 pip = 0.0001 (standar forex untuk majority pair)</div>
-      <div class="small">PL kalkulasi sederhana: lot * pipValue * pips (pipValue diset asumsi)</div>
-      <div style="margin-top:8px">
-        <div class="small">Legend:</div>
-        <div class="small">Green candle = close &gt; open. Red candle = close &lt; open.</div>
-      </div>
+    <div class="panel" style="margin-top:10px">
+      <div style="font-weight:700">History</div>
+      <div id="historyList" style="max-height:280px;overflow:auto;margin-top:6px"></div>
     </div>
   </div>
 </div>
 
+<!-- Firebase SDKs (compat mode for simplicity). Versions may vary; using common CDN URLs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+
 <script>
 /*
-  Simple candlestick trading simulator
-  - Random walk price generator with volatility control
-  - Candle aggregation per interval (candleSeconds)
-  - Orders: BUY/SELL with TP/SL in pips
-  - TP/SL auto-trigger; history recording
+  Trading Panel + Firebase (Firestore) sync demo
+  - Use Firestore collection "markets" (doc per market)
+  - Each market doc: { name, price, volatility, timeframeMs, ownerUID, autoTick, engineMode, lastUpdate }
+  - Orders stored in subcollection: markets/{marketId}/orders
+  - Admin UID (demo) that can create market: viCOsJo4wHVFmhtpmMx1Wd4sDF52
 */
 
-const canvas = document.getElementById('chartCanvas');
-const ctx = canvas.getContext('2d', {alpha:false});
-let DPR = window.devicePixelRatio || 1;
+/* ================== Firebase config (you provided) ================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
+  authDomain: "zeepaylater-93a94.firebaseapp.com",
+  projectId: "zeepaylater-93a94",
+  storageBucket: "zeepaylater-93a94.appspot.com",
+  messagingSenderId: "358065954807",
+  appId: "1:358065954807:web:66619211fea82a4b2518f2"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+/* =================================================================== */
 
+const ADMIN_UID = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52'; // special UID for create market
+
+// UI refs
+const marketSelect = document.getElementById('marketSelect');
+const marketNameEl = document.getElementById('marketName');
+const priceEl = document.getElementById('price');
+const balanceEl = document.getElementById('balance');
+const equityEl = document.getElementById('equity');
+const ordersListEl = document.getElementById('ordersList');
+const historyListEl = document.getElementById('historyList');
+const uidInput = document.getElementById('uidInput');
+const btnSetUid = document.getElementById('btnSetUid');
+const btnSignOut = document.getElementById('btnSignOut');
+const adminPanel = document.getElementById('adminPanel');
+const btnCreateMarket = document.getElementById('btnCreateMarket');
+const btnListMarkets = document.getElementById('btnListMarkets');
+const adminOrdersEl = document.getElementById('adminOrders');
+const btnStartEngine = document.getElementById('btnStartEngine');
+const btnRefreshMarkets = document.getElementById('btnRefreshMarkets');
+const timeframeSel = document.getElementById('timeframe');
+const volAdmin = document.getElementById('volAdmin');
+const volClient = document.getElementById('volClient');
+const engineModeSel = document.getElementById('engineMode');
+const depositsList = document.getElementById('depositsList');
+
+let clientUid = localStorage.getItem('demo_uid') || null;
+let balance = parseFloat(localStorage.getItem('demo_balance')) || 1000.0;
+let equity = balance;
+let pipValue = 10; // $ per pip per lot (simple)
+let currentMarketId = null;
+let currentMarket = null;
+let orders = []; // local snapshot
+let history = [];
+let unsubscribeMarket = null;
+let unsubscribeOrders = null;
+let engineInterval = null;
+let engineRunning = false;
+let clientId = 'c-' + Math.floor(Math.random()*1000000);
+
+// set initial balance UI
+balanceEl.innerText = balance.toFixed(2);
+equityEl.innerText = equity.toFixed(2);
+
+// Canvas setup
+const canvas = document.getElementById('chartCanvas');
+const ctx = canvas.getContext('2d');
+let DPR = window.devicePixelRatio || 1;
 function resizeCanvas(){
   const rect = canvas.getBoundingClientRect();
   canvas.width = Math.floor(rect.width * DPR);
   canvas.height = Math.floor(rect.height * DPR);
-  canvas.style.width = rect.width + 'px';
-  canvas.style.height = rect.height + 'px';
   ctx.setTransform(DPR,0,0,DPR,0,0);
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-// Simulation params
-let basePrice = 1.1000; // starting EUR/USD
-let lastPrice = basePrice;
-let volatility = 1.0; // slider
-let candleSeconds = parseFloat(document.getElementById('candleSeconds').value);
-let visibleCandles = parseInt(document.getElementById('visibleCandles').value);
-let candleInterval = candleSeconds * 1000;
-let paused = false;
-let tickTimer = null;
+// chart state
+let priceHistory = []; // {t, price}
+let candles = []; // aggregated by timeframeMs
+let timeframeMs = parseInt(timeframeSel.value);
+timeframeSel.addEventListener('change', ()=>{
+  timeframeMs = parseInt(timeframeSel.value);
+  rebuildCandlesFromHistory();
+  draw();
+});
 
-// State
-let candles = []; // {t, o,h,l,c}
-let currentCandle = null;
-let balance = 1000;
-let equity = balance;
-let orders = []; // active orders
-let history = [];
-
-const pipValue = 10; // asumsi $10 per pip per lot, simple
-
-// UI refs
-const priceEl = document.getElementById('price');
-const balanceEl = document.getElementById('balance');
-const equityEl = document.getElementById('equity');
-const ordersListEl = document.getElementById('ordersList');
-const historyEl = document.getElementById('history');
-const candleInfoEl = document.getElementById('candleInfo');
-
-function formatPrice(p){ return p.toFixed(5); }
+// helper
+function formatPrice(p){ return p ? p.toFixed(5) : '—'; }
 function toPips(a,b){ return Math.round((a-b)/0.0001); }
 
-// Candle generator (random-walk with mean reversion component)
-function generateTick(){
-  if(paused) return;
+// Firestore helpers
+async function listMarkets(){
+  const snap = await db.collection('markets').orderBy('createdAt','desc').get();
+  marketSelect.innerHTML = '';
+  snap.forEach(doc=>{
+    const m = doc.data();
+    const opt = document.createElement('option');
+    opt.value = doc.id;
+    opt.innerText = m.name + ' • ' + (m.ownerUID || 'anon');
+    marketSelect.appendChild(opt);
+  });
+  if(marketSelect.options.length>0 && !currentMarketId){
+    marketSelect.selectedIndex = 0;
+    selectMarket(marketSelect.value);
+  }
+}
+btnRefreshMarkets.addEventListener('click', ()=>listMarkets());
+btnListMarkets.addEventListener('click', ()=>listMarkets());
 
-  // update volatility from UI
-  volatility = parseFloat(document.getElementById('vol').value);
-  const rnd = (Math.random() - 0.5) * 2;
-  // use noise scaled by volatility and recent ATR-like factor
-  // create a pseudo-mean-reversion towards basePrice with small pull
-  const mrStrength = 0.001; // mean reversion tiny
-  const atrApprox = estimateATR() || 0.00012;
-  const step = rnd * 0.00008 * volatility + (basePrice - lastPrice) * mrStrength * 0.0001;
-  // add occasional spikes
-  const spike = (Math.random() < 0.01) ? (Math.random() - 0.5) * 0.002 * volatility : 0;
-  const newPrice = Math.max(0.0001, lastPrice + step + spike);
+// create market (admin only)
+btnCreateMarket.addEventListener('click', async ()=>{
+  if(!clientUid || clientUid !== ADMIN_UID){
+    alert('Hanya admin yang boleh create market (demo). Masukkan UID admin terlebih dahulu.');
+    return;
+  }
+  const name = prompt('Nama market (ex: EUR/USD Demo)');
+  if(!name) return;
+  const basePrice = parseFloat(prompt('Harga awal (contoh 1.1000)','1.1000')) || 1.1000;
+  const doc = await db.collection('markets').add({
+    name,
+    price: parseFloat(basePrice.toFixed(5)),
+    volatility: 1.0,
+    timeframeMs: 1000,
+    ownerUID: clientUid,
+    autoTick: false,
+    engineMode: 'normal',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  alert('Market created: ' + doc.id);
+  await listMarkets();
+});
 
-  lastPrice = parseFloat(newPrice.toFixed(5));
-  appendToCandle(lastPrice);
+// select market
+marketSelect.addEventListener('change', ()=>{
+  selectMarket(marketSelect.value);
+});
 
-  // update UI and orders
-  priceEl.innerText = formatPrice(lastPrice);
-  updateOrders(lastPrice);
+async function selectMarket(marketId){
+  if(unsubscribeMarket) unsubscribeMarket();
+  if(unsubscribeOrders) unsubscribeOrders();
+  currentMarketId = marketId;
+  currentMarket = null;
+  priceHistory = []; candles=[];
   draw();
+  // subscribe market doc
+  const ref = db.collection('markets').doc(marketId);
+  unsubscribeMarket = ref.onSnapshot(doc=>{
+    if(!doc.exists) return;
+    const m = doc.data();
+    currentMarket = { id: doc.id, ...m };
+    marketNameEl.innerText = m.name;
+    priceEl.innerText = formatPrice(m.price);
+    // sync volatility/timeframe from market
+    document.getElementById('volClient').value = m.volatility || 1.0;
+    timeframeMs = m.timeframeMs || timeframeMs;
+    timeframeSel.value = String(timeframeMs);
+    // append price update to history for candling
+    pushPriceToHistory(m.price, (m.lastUpdate && m.lastUpdate.toMillis) ? m.lastUpdate.toMillis() : Date.now());
+    draw();
+  });
+
+  // subscribe orders subcollection
+  unsubscribeOrders = db.collection('markets').doc(marketId).collection('orders').orderBy('createdAt','desc').onSnapshot(snap=>{
+    orders = [];
+    snap.forEach(d=>{
+      const o = d.data(); o.id = d.id;
+      orders.push(o);
+    });
+    renderOrders();
+    if(clientUid === ADMIN_UID) renderAdminOrders();
+  });
+
+  // subscribe deposits (for admin verify)
+  db.collection('markets').doc(marketId).collection('deposits').orderBy('createdAt','desc').onSnapshot(snap=>{
+    depositsList.innerHTML = '';
+    snap.forEach(d=>{
+      const dep = d.data(); dep.id = d.id;
+      const el = document.createElement('div');
+      el.style.display='flex'; el.style.justifyContent='space-between'; el.style.padding='6px'; el.style.borderRadius='6px'; el.style.background='rgba(255,255,255,0.02)';
+      el.innerHTML = `<div><div style="font-weight:700">${dep.userUID}</div><div style="font-size:12px;color:#9fb0d6">${dep.amount}</div></div>
+        <div>
+          <button class="btn-ghost" onclick="approveDeposit('${marketId}','${dep.id}')">Accept</button>
+          <button class="btn-ghost" onclick="rejectDeposit('${marketId}','${dep.id}')">Reject</button>
+        </div>`;
+      depositsList.appendChild(el);
+    });
+  });
 }
 
-function estimateATR(){
-  if(candles.length < 5) return 0.00012;
-  let sum = 0;
-  for(let i=candles.length-5;i<candles.length;i++){
-    const c = candles[i];
-    sum += Math.abs(c.h - c.l);
-  }
-  return sum / 5;
-}
+// push deposit approve/reject (admin)
+window.approveDeposit = async (mid, depId) => {
+  if(clientUid !== ADMIN_UID) return alert('Only admin');
+  await db.collection('markets').doc(mid).collection('deposits').doc(depId).update({status:'approved', verifiedAt: firebase.firestore.FieldValue.serverTimestamp(), verifier: clientUid});
+  alert('Approved');
+};
+window.rejectDeposit = async (mid, depId) => {
+  if(clientUid !== ADMIN_UID) return alert('Only admin');
+  await db.collection('markets').doc(mid).collection('deposits').doc(depId).update({status:'rejected', verifiedAt: firebase.firestore.FieldValue.serverTimestamp(), verifier: clientUid});
+  alert('Rejected');
+};
 
-function appendToCandle(price){
-  const now = Date.now();
-  if(!currentCandle){
-    currentCandle = {t:now, o:price, h:price, l:price, c:price};
-  } else {
-    currentCandle.c = price;
-    if(price > currentCandle.h) currentCandle.h = price;
-    if(price < currentCandle.l) currentCandle.l = price;
-    // if candle interval passed, push and start new
-    if(now - currentCandle.t >= candleInterval){
-      candles.push(currentCandle);
-      currentCandle = {t:now, o:price, h:price, l:price, c:price};
-      // keep length to visibleCandles*2 for buffer
-      if(candles.length > visibleCandles*2) candles.splice(0, candles.length - visibleCandles*2);
-    }
-  }
-  updateCandleInfo();
-}
+// place order
+document.getElementById('btnBuy').addEventListener('click', ()=>placeOrder('BUY'));
+document.getElementById('btnSell').addEventListener('click', ()=>placeOrder('SELL'));
 
-function updateCandleInfo(){
-  if(!currentCandle) return;
-  candleInfoEl.innerText = `O:${currentCandle.o.toFixed(5)} H:${currentCandle.h.toFixed(5)} L:${currentCandle.l.toFixed(5)} C:${currentCandle.c.toFixed(5)}`;
-}
-
-// Orders & trading
-function placeOrder(type, size, tp_pips, sl_pips){
-  const entry = lastPrice;
-  const id = Date.now() + Math.floor(Math.random()*999);
-  const order = {
-    id, type, size:parseFloat(size), entry, tp_pips:parseFloat(tp_pips), sl_pips:parseFloat(sl_pips),
-    status:'open', openedAt:Date.now()
+async function placeOrder(type){
+  if(!currentMarketId){ alert('Pilih market dulu'); return; }
+  const lot = parseFloat(document.getElementById('size').value) || 0.1;
+  const tp_pips = parseFloat(document.getElementById('tp').value) || 20;
+  const sl_pips = parseFloat(document.getElementById('sl').value) || 20;
+  const entry = currentMarket.price;
+  const tp = type === 'BUY' ? parseFloat((entry + tp_pips*0.0001).toFixed(5)) : parseFloat((entry - tp_pips*0.0001).toFixed(5));
+  const sl = type === 'BUY' ? parseFloat((entry - sl_pips*0.0001).toFixed(5)) : parseFloat((entry + sl_pips*0.0001).toFixed(5));
+  const orderDoc = {
+    userUID: clientUid || 'anon-'+clientId,
+    type, size: lot, entry, tp, sl,
+    status: 'open', createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
-  // compute absolute TP/SL price for clarity
-  if(type === 'BUY'){
-    order.tp = parseFloat((entry + tp_pips*0.0001).toFixed(5));
-    order.sl = parseFloat((entry - sl_pips*0.0001).toFixed(5));
-  } else {
-    order.tp = parseFloat((entry - tp_pips*0.0001).toFixed(5));
-    order.sl = parseFloat((entry + sl_pips*0.0001).toFixed(5));
-  }
-  orders.push(order);
-  renderOrders();
+  await db.collection('markets').doc(currentMarketId).collection('orders').add(orderDoc);
+  // local feedback
+  alert('Order placed: ' + type + ' @' + formatPrice(entry));
 }
 
-function updateOrders(price){
-  // check TP/SL triggers
-  let closed = [];
-  orders.forEach(o=>{
-    if(o.status !== 'open') return;
-    if(o.type === 'BUY'){
-      if(price >= o.tp){
-        closeOrder(o, 'TP', o.tp);
-        closed.push(o);
-      } else if(price <= o.sl){
-        closeOrder(o, 'SL', o.sl);
-        closed.push(o);
-      }
-    } else {
-      if(price <= o.tp){
-        closeOrder(o, 'TP', o.tp);
-        closed.push(o);
-      } else if(price >= o.sl){
-        closeOrder(o, 'SL', o.sl);
-        closed.push(o);
-      }
-    }
-  });
-  if(closed.length) renderOrders();
-  // update equity
-  equity = balance + unrealizedPL();
-  balanceEl.innerText = balance.toFixed(2);
-  equityEl.innerText = equity.toFixed(2);
-}
-
-function closeOrder(order, reason, closePrice){
-  order.status = 'closed';
-  order.closedAt = Date.now();
-  order.closePrice = closePrice;
-  order.reason = reason;
-  // compute P/L
-  const pips = toPips(order.closePrice, order.entry) * (order.type === 'BUY' ? 1 : -1);
-  const pl = pips * pipValue * order.size;
-  order.pl = pl;
-  balance += pl;
-  history.unshift(order);
-  if(history.length > 200) history.pop();
-  updateHistory();
-}
-
-function unrealizedPL(){
-  let total = 0;
-  orders.forEach(o=>{
-    if(o.status !== 'open') return;
-    const pips = toPips(lastPrice, o.entry) * (o.type === 'BUY' ? 1 : -1);
-    total += pips * pipValue * o.size;
-  });
-  return total;
-}
-
+// render orders UI
 function renderOrders(){
   ordersListEl.innerHTML = '';
-  orders.filter(o=>o.status==='open').forEach(o=>{
-    const div = document.createElement('div');
-    div.className = 'order-card';
-    const left = document.createElement('div');
-    left.innerHTML = `<div style="font-weight:700">${o.type} ${o.size} lot</div>
-                      <div class="small">@ ${formatPrice(o.entry)}</div>
-                      <div class="small">TP ${formatPrice(o.tp)} / SL ${formatPrice(o.sl)}</div>`;
-    const right = document.createElement('div');
-    const uiPL = document.createElement('div');
-    const pips = toPips(lastPrice, o.entry) * (o.type === 'BUY' ? 1 : -1);
-    const up = (pips * pipValue * o.size).toFixed(2);
-    uiPL.innerText = (parseFloat(up) >= 0 ? '+' : '') + up;
-    uiPL.style.fontWeight = '700';
-    uiPL.style.color = (parseFloat(up) >= 0 ? 'var(--green)' : 'var(--red)');
-    const btnClose = document.createElement('button');
-    btnClose.className = 'btn-stop';
-    btnClose.innerText = 'Close';
-    btnClose.onclick = ()=>{ manualClose(o.id); };
-    right.appendChild(uiPL); right.appendChild(btnClose);
-    div.appendChild(left); div.appendChild(right);
-    ordersListEl.appendChild(div);
+  orders.filter(o=>o.status==='open' && (o.userUID === (clientUid||'anon-'+clientId))).forEach(o=>{
+    const el = document.createElement('div'); el.className='order';
+    el.innerHTML = `<div><div style="font-weight:700">${o.type} ${o.size} lot</div><div style="font-size:12px;color:var(--muted)">Entry ${formatPrice(o.entry)} TP ${formatPrice(o.tp)} SL ${formatPrice(o.sl)}</div></div>
+      <div style="text-align:right"><div style="font-weight:700">${o.userUID=== (clientUid||'anon-'+clientId)?'<button class=\"btn-ghost\" onclick=\"closeManual(\\''+o.id+'\\')\">Close</button>':''}</div></div>`;
+    ordersListEl.appendChild(el);
+  });
+
+  // history show closed orders by this user
+  historyListEl.innerHTML='';
+  orders.filter(o=> o.userUID === (clientUid||'anon-'+clientId)).slice(0,40).forEach(o=>{
+    if(o.status !== 'open'){
+      const el = document.createElement('div');
+      el.style.padding='6px'; el.style.borderRadius='6px'; el.style.background='rgba(255,255,255,0.02)'; el.style.marginBottom='6px';
+      el.innerHTML = `<div style="font-weight:700">${o.type} ${o.size} • ${o.status}</div><div style="font-size:12px;color:var(--muted)">Entry ${formatPrice(o.entry)} Close ${o.closePrice?formatPrice(o.closePrice):'-'}</div>`;
+      historyListEl.appendChild(el);
+    }
   });
 }
 
-function manualClose(id){
-  const idx = orders.findIndex(o=>o.id===id && o.status==='open');
-  if(idx === -1) return;
-  const o = orders[idx];
-  o.status = 'closed';
-  o.closedAt = Date.now();
-  o.closePrice = lastPrice;
-  o.reason = 'Manual';
-  const pips = toPips(o.closePrice, o.entry) * (o.type === 'BUY' ? 1 : -1);
-  o.pl = pips * pipValue * o.size;
-  balance += o.pl;
-  history.unshift(o);
-  renderOrders();
-  updateHistory();
-}
+// manual close (user)
+window.closeManual = async (orderId) => {
+  if(!currentMarketId) return;
+  const docRef = db.collection('markets').doc(currentMarketId).collection('orders').doc(orderId);
+  const doc = await docRef.get();
+  if(!doc.exists) return;
+  const o = doc.data();
+  if(o.userUID !== (clientUid||'anon-'+clientId)) return alert('Only owner can close');
+  const closePrice = currentMarket.price;
+  const pips = toPips(closePrice, o.entry) * (o.type === 'BUY' ? 1 : -1);
+  const pl = pips * pipValue * o.size;
+  await docRef.update({status:'closed', closePrice, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'manual', pl});
+  alert('Order closed');
+};
 
-// history UI
-function updateHistory(){
-  historyEl.innerHTML = '';
-  history.slice(0,80).forEach(h=>{
+// admin: render all orders
+function renderAdminOrders(){
+  adminOrdersEl.innerHTML = '';
+  orders.forEach(o=>{
     const el = document.createElement('div');
-    el.style.display='flex'; el.style.justifyContent='space-between';
-    el.style.padding='6px'; el.style.borderRadius='6px'; el.style.background='rgba(255,255,255,0.02)';
-    el.innerHTML = `<div style="max-width:180px">
-      <div style="font-weight:700">${h.type} ${h.size} lot • ${h.reason}</div>
-      <div class="small">Entry ${formatPrice(h.entry)} • Close ${formatPrice(h.closePrice)}</div>
-    </div>
-    <div style="text-align:right">
-      <div style="font-weight:700; color:${(h.pl>=0)?'var(--green)':'var(--red)'}">${(h.pl>=0?'+':'')}${h.pl.toFixed(2)}</div>
-      <div class="small">${new Date(h.closedAt).toLocaleTimeString()}</div>
-    </div>`;
-    historyEl.appendChild(el);
+    el.style.padding='6px'; el.style.borderRadius='6px'; el.style.background='rgba(255,255,255,0.02)'; el.style.marginBottom='6px';
+    el.innerHTML = `<div style="display:flex;justify-content:space-between"><div><div style="font-weight:700">${o.type} ${o.size}</div><div style="font-size:12px;color:var(--muted)">${o.userUID}</div></div>
+      <div style="text-align:right"><div style="font-weight:700">${o.status}</div>
+      ${o.status==='open'?`<button class="btn-ghost" onclick="adminCloseOrder('${o.id}','TP')">Close TP</button><button class="btn-ghost" onclick="adminCloseOrder('${o.id}','SL')">Close SL</button>`:''}
+      </div></div>`;
+    adminOrdersEl.appendChild(el);
   });
-  balanceEl.innerText = balance.toFixed(2);
-  equityEl.innerText = equity.toFixed(2);
+}
+window.adminCloseOrder = async (orderId, reason)=>{
+  if(clientUid !== ADMIN_UID) return alert('Only admin');
+  const ref = db.collection('markets').doc(currentMarketId).collection('orders').doc(orderId);
+  const doc = await ref.get();
+  if(!doc.exists) return;
+  const o = doc.data();
+  const closePrice = reason === 'TP' ? o.tp : (reason==='SL' ? o.sl : currentMarket.price);
+  const pips = toPips(closePrice, o.entry) * (o.type === 'BUY' ? 1 : -1);
+  const pl = pips * pipValue * o.size;
+  await ref.update({status:'closed', closePrice, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'admin-'+reason, pl});
+  alert('Order closed by admin');
+};
+
+// deposits simulation
+async function createDepositForDemo(amount=100){
+  if(!currentMarketId) return;
+  await db.collection('markets').doc(currentMarketId).collection('deposits').add({
+    userUID: clientUid||'anon-'+clientId, amount, status:'pending', createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  alert('Deposit submitted (pending verification)');
 }
 
-// Drawing chart
+// admin toggles engine (start/stop)
+btnStartEngine.addEventListener('click', ()=>{
+  if(clientUid !== ADMIN_UID) return alert('Only admin can start engine (demo)');
+  if(!currentMarketId) return alert('Select market first');
+  engineRunning = !engineRunning;
+  btnStartEngine.innerText = engineRunning ? 'Stop Engine' : 'Start Engine';
+  if(engineRunning) startEngineLoop();
+  else stopEngineLoop();
+});
+
+function stopEngineLoop(){
+  if(engineInterval) clearInterval(engineInterval);
+  engineInterval = null;
+}
+
+// engine: only admin should run this — updates market.price in firestore periodically
+function startEngineLoop(){
+  if(!currentMarketId) return alert('Pilih market dulu');
+  const marketRef = db.collection('markets').doc(currentMarketId);
+  // read current settings
+  marketRef.get().then(doc=>{
+    if(!doc.exists) return alert('Market not found');
+    const m = doc.data();
+    let vol = m.volatility || 1.0;
+    let mode = m.engineMode || 'normal';
+    // engine tick rate depends on timeframe (we'll tick every 200ms by default)
+    let baseTickMs = 500;
+    engineInterval = setInterval(async ()=>{
+      // re-read vol/mode occasionally
+      const snap = await marketRef.get();
+      const ms = snap.exists ? snap.data() : m;
+      vol = ms.volatility || vol;
+      mode = ms.engineMode || mode;
+      // compute step
+      let rnd = (Math.random()-0.5)*2;
+      let spike = (Math.random()<0.01) ? (Math.random()-0.5)*0.002*vol : 0;
+      let mrStrength = 0.001;
+      let last = ms.price || 1.1000;
+      let step = rnd * 0.00008 * vol + (1.1 - last) * mrStrength * 0.0001 + spike;
+      // engineMode adjustments
+      if(mode === 'slow') step *= 0.2;
+      if(mode === 'extreme') step *= 4;
+      const newP = Math.max(0.0001, parseFloat((last + step).toFixed(5)));
+      // write to firestore
+      await marketRef.update({
+        price: newP,
+        lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      // server-side order checks are simulated by admin client: check orders and auto-close
+      // fetch open orders and close those hitting TP/SL
+      const ordersSnap = await marketRef.collection('orders').where('status','==','open').get();
+      ordersSnap.forEach(async odoc=>{
+        const o = odoc.data();
+        if(o.type === 'BUY'){
+          if(newP >= o.tp){
+            const pips = toPips(o.tp, o.entry);
+            const pl = pips * pipValue * o.size;
+            await odoc.ref.update({status:'closed', closePrice:o.tp, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'TP', pl});
+          } else if(newP <= o.sl){
+            const pips = toPips(o.sl, o.entry);
+            const pl = pips * pipValue * o.size * (o.type==='BUY'?1:-1);
+            await odoc.ref.update({status:'closed', closePrice:o.sl, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'SL', pl});
+          }
+        } else {
+          if(newP <= o.tp){
+            const pips = toPips(o.entry, o.tp);
+            const pl = pips * pipValue * o.size;
+            await odoc.ref.update({status:'closed', closePrice:o.tp, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'TP', pl});
+          } else if(newP >= o.sl){
+            const pips = toPips(o.entry, o.sl);
+            const pl = pips * pipValue * o.size * (o.type==='BUY'?1:-1);
+            await odoc.ref.update({status:'closed', closePrice:o.sl, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'SL', pl});
+          }
+        }
+      });
+
+    }, baseTickMs);
+  });
+}
+
+// UI: set uid (demo)
+btnSetUid.addEventListener('click', ()=>{
+  const v = uidInput.value.trim();
+  if(!v) return alert('Masukkan UID demo (string). Untuk admin masukkan: ' + ADMIN_UID);
+  clientUid = v;
+  localStorage.setItem('demo_uid', clientUid);
+  alert('UID set: ' + clientUid);
+  updateAdminUI();
+});
+btnSignOut.addEventListener('click', ()=>{
+  clientUid = null; localStorage.removeItem('demo_uid'); updateAdminUI(); alert('Signed out (demo)');
+});
+
+function updateAdminUI(){
+  if(clientUid === ADMIN_UID){
+    adminPanel.classList.add('show');
+  } else {
+    adminPanel.classList.remove('show');
+  }
+}
+updateAdminUI();
+
+// admin vol change -> update market's volatility if admin toggles and market selected
+volAdmin.addEventListener('input', ()=>{
+  if(clientUid !== ADMIN_UID) return;
+  if(!currentMarketId) return;
+  db.collection('markets').doc(currentMarketId).update({volatility: parseFloat(volAdmin.value)});
+});
+engineModeSel.addEventListener('change', ()=>{
+  if(clientUid !== ADMIN_UID) return;
+  if(!currentMarketId) return;
+  db.collection('markets').doc(currentMarketId).update({engineMode: engineModeSel.value});
+});
+
+// load markets at start
+listMarkets();
+
+// listen for market changes (firestore) - used to build priceHistory
+function pushPriceToHistory(price, t){
+  if(!t) t = Date.now();
+  priceHistory.push({t, price});
+  // limit history
+  if(priceHistory.length > 2000) priceHistory.shift();
+  rebuildCandlesFromHistory();
+}
+
+// rebuild candles according to timeframeMs
+function rebuildCandlesFromHistory(){
+  candles = [];
+  if(priceHistory.length === 0) return;
+  // group ticks into timeframe buckets
+  let bucket = null;
+  priceHistory.forEach(pt=>{
+    const bucketStart = Math.floor(pt.t / timeframeMs) * timeframeMs;
+    if(!bucket || bucket.t !== bucketStart){
+      if(bucket) candles.push(bucket);
+      bucket = {t: bucketStart, o: pt.price, h: pt.price, l: pt.price, c: pt.price};
+    } else {
+      bucket.c = pt.price;
+      if(pt.price > bucket.h) bucket.h = pt.price;
+      if(pt.price < bucket.l) bucket.l = pt.price;
+    }
+  });
+  if(bucket) candles.push(bucket);
+  // keep recent N candles
+  if(candles.length > 400) candles = candles.slice(-400);
+  draw();
+}
+
+// Draw chart based on candles
 function draw(){
-  // clear
-  ctx.clearRect(0,0,canvas.width,canvas.height);
   const W = canvas.width / DPR;
   const H = canvas.height / DPR;
-  ctx.fillStyle = 'transparent';
-  ctx.fillRect(0,0,W,H);
-
-  // combine candles + currentCandle
-  const arr = candles.slice(-visibleCandles);
-  if(currentCandle) arr.push(currentCandle);
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = 'transparent'; ctx.fillRect(0,0,W,H);
+  if(!currentMarket) {
+    ctx.fillStyle = '#9fb0d6'; ctx.font='14px Arial'; ctx.fillText('Pilih market untuk mulai', 20, 30); return;
+  }
+  const arr = candles.slice(-Math.max(40, Math.min(150, Math.floor(W/6))));
   if(arr.length === 0) return;
-
-  // price range
   let maxP = -Infinity, minP = Infinity;
-  arr.forEach(c=>{
-    maxP = Math.max(maxP, c.h);
-    minP = Math.min(minP, c.l);
-  });
+  arr.forEach(c=>{ maxP = Math.max(maxP, c.h); minP = Math.min(minP, c.l); });
   const pad = (maxP - minP) * 0.15 || 0.0005;
   maxP += pad; minP -= pad;
-
-  // scales
-  function pxY(price){
-    return ((maxP - price) / (maxP - minP)) * (H - 40) + 20;
-  }
-  const candleWidth = Math.max(4, (W / Math.max(30, visibleCandles)) * 0.65);
-  const gap = candleWidth * 0.25;
-  const startX = 40;
-
-  // grid lines
-  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  for(let i=0;i<5;i++){
-    const y = 20 + i*(H-40)/4;
-    ctx.moveTo(startX, y);
-    ctx.lineTo(W-10, y);
-  }
-  ctx.stroke();
-
-  // draw candles
-  let x = startX;
+  function py(p){ return ((maxP - p)/(maxP-minP))*(H-40)+20; }
+  const candleW = Math.max(4, (W / Math.max(30, arr.length)) * 0.6);
+  const gap = candleW * 0.25;
+  let x = 40;
   for(let i=0;i<arr.length;i++){
     const c = arr[i];
-    const colorUp = getComputedStyle(document.documentElement).getPropertyValue('--green').trim() || '#2dd36f';
-    const colorDn = getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#ff5c5c';
     const up = c.c >= c.o;
-    const col = up ? colorUp : colorDn;
-    const yOpen = pxY(c.o);
-    const yClose = pxY(c.c);
-    const yHigh = pxY(c.h);
-    const yLow = pxY(c.l);
+    const col = up ? getComputedStyle(document.documentElement).getPropertyValue('--green').trim() : getComputedStyle(document.documentElement).getPropertyValue('--red').trim();
+    const yOpen = py(c.o), yClose = py(c.c), yHigh = py(c.h), yLow = py(c.l);
     // wick
-    ctx.strokeStyle = col;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(x + candleWidth/2, yHigh);
-    ctx.lineTo(x + candleWidth/2, yLow);
-    ctx.stroke();
+    ctx.strokeStyle = col; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x + candleW/2, yHigh); ctx.lineTo(x + candleW/2, yLow); ctx.stroke();
     // body
-    const bodyTop = Math.min(yOpen, yClose);
-    const bodyH = Math.max(1, Math.abs(yClose - yOpen));
-    ctx.fillStyle = col;
-    ctx.fillRect(x, bodyTop, candleWidth, bodyH);
-    x += candleWidth + gap;
+    const top = Math.min(yOpen,yClose), hbody = Math.max(1, Math.abs(yClose-yOpen));
+    ctx.fillStyle = col; ctx.fillRect(x, top, candleW, hbody);
+    x += candleW + gap;
   }
+  // last price line
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.beginPath();
+  const yNow = py(currentMarket.price);
+  ctx.moveTo(40, yNow); ctx.lineTo(W-10, yNow); ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.font='12px Arial'; ctx.textAlign='right'; ctx.fillText(formatPrice(currentMarket.price), W-12, yNow-6);
+}
 
-  // Draw price axis on right
-  ctx.fillStyle = 'rgba(255,255,255,0.06)';
-  ctx.fillRect(W-80, 10, 70, H-20);
-  ctx.fillStyle = '#bcd7ff';
-  ctx.font = '12px Arial';
-  ctx.textAlign = 'right';
-  for(let i=0;i<5;i++){
-    const v = minP + ( (5-i-1)/4 ) * (maxP-minP);
-    const y = 20 + i*(H-40)/4;
-    ctx.fillStyle = 'rgba(0,0,0,0.0)';
-    ctx.fillText(v.toFixed(5), W-12, y+4);
-  }
-
-  // Draw orders' TP/SL lines
-  orders.forEach(o=>{
-    if(o.status !== 'open') return;
-    // draw TP (green) and SL (red)
-    const yTP = pxY(o.tp);
-    const ySL = pxY(o.sl);
-    // TP
-    ctx.strokeStyle = 'rgba(45,211,111,0.9)';
-    ctx.setLineDash([6,4]);
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(startX, yTP);
-    ctx.lineTo(W-90, yTP);
-    ctx.stroke();
-    // SL
-    ctx.strokeStyle = 'rgba(255,92,92,0.9)';
-    ctx.beginPath();
-    ctx.moveTo(startX, ySL);
-    ctx.lineTo(W-90, ySL);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // label
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.font = '12px Arial';
-    ctx.textAlign = 'left';
-    ctx.fillText(`${o.type} ${o.size} • ${formatPrice(o.entry)}`, W-85, Math.max(14, Math.min(H-6, (yTP+ySL)/2)));
+// When orders change, update local balance/equity based on closed PL for this user
+db.collectionGroup('orders').where('status','==','closed').onSnapshot(snap=>{
+  // We'll only update local balance if closed order belongs to this client (simple).
+  snap.docChanges().forEach(change=>{
+    if(change.type === 'added'){
+      const o = change.doc.data();
+      if(o.userUID === (clientUid||'anon-'+clientId) && o.pl){
+        // apply to local balance if not already applied (basic dedupe by storing applied ids)
+        const applied = JSON.parse(localStorage.getItem('applied_pl_ids')||'[]');
+        if(applied.indexOf(change.doc.ref.path) === -1){
+          balance += (o.pl || 0);
+          localStorage.setItem('demo_balance', balance);
+          applied.push(change.doc.ref.path);
+          localStorage.setItem('applied_pl_ids', JSON.stringify(applied));
+          balanceEl.innerText = balance.toFixed(2);
+        }
+      }
+    }
   });
-
-  // Mark last price with a horizontal line
-  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-  ctx.beginPath();
-  const yNow = pxY(lastPrice);
-  ctx.moveTo(startX, yNow);
-  ctx.lineTo(W-10, yNow);
-  ctx.stroke();
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '12px Arial';
-  ctx.textAlign = 'right';
-  ctx.fillText(formatPrice(lastPrice), W-12, yNow - 6);
-}
-
-// UI events
-document.getElementById('btnBuy').addEventListener('click', ()=>{
-  const size = parseFloat(document.getElementById('size').value) || 0.1;
-  const tp = parseFloat(document.getElementById('tp').value) || 20;
-  const sl = parseFloat(document.getElementById('sl').value) || 20;
-  placeOrder('BUY', size, tp, sl);
-  renderOrders();
-});
-document.getElementById('btnSell').addEventListener('click', ()=>{
-  const size = parseFloat(document.getElementById('size').value) || 0.1;
-  const tp = parseFloat(document.getElementById('tp').value) || 20;
-  const sl = parseFloat(document.getElementById('sl').value) || 20;
-  placeOrder('SELL', size, tp, sl);
-  renderOrders();
-});
-document.getElementById('btnPause').addEventListener('click', (e)=>{
-  paused = !paused;
-  e.target.innerText = paused ? 'Resume' : 'Pause';
-});
-document.getElementById('btnReset').addEventListener('click', ()=>{
-  if(confirm('Reset simulator?')) {
-    candles = []; currentCandle = null;
-    orders = []; history = [];
-    balance = 1000; equity = balance;
-    lastPrice = basePrice;
-    updateHistory();
-    renderOrders();
-  }
-});
-document.getElementById('vol').addEventListener('input', ()=>{ volatility = parseFloat(document.getElementById('vol').value); });
-document.getElementById('candleSeconds').addEventListener('change', ()=>{
-  candleSeconds = parseFloat(document.getElementById('candleSeconds').value);
-  candleInterval = candleSeconds * 1000;
-});
-document.getElementById('visibleCandles').addEventListener('change', ()=>{
-  visibleCandles = parseInt(document.getElementById('visibleCandles').value);
-  draw();
-});
-document.getElementById('btnZoomIn').addEventListener('click', ()=>{
-  visibleCandles = Math.max(20, visibleCandles - 10);
-  document.getElementById('visibleCandles').value = visibleCandles;
-  draw();
-});
-document.getElementById('btnZoomOut').addEventListener('click', ()=>{
-  visibleCandles = Math.min(300, visibleCandles + 10);
-  document.getElementById('visibleCandles').value = visibleCandles;
-  draw();
 });
 
-// Start tick loop
-function startTicks(){
-  if(tickTimer) clearInterval(tickTimer);
-  tickTimer = setInterval(generateTick, 200); // 5 ticks per second base
-}
-startTicks();
-setInterval(()=>{ draw(); }, 500);
+// initial market load
+listMarkets();
 
-// initial seed candles
-(function seed(){
-  for(let i=0;i<120;i++){
-    const noise = (Math.random()-0.5) * 0.0003;
-    lastPrice = parseFloat((lastPrice + noise).toFixed(5));
-    appendToCandle(lastPrice);
-  }
-  balanceEl.innerText = balance.toFixed(2);
-  equityEl.innerText = equity.toFixed(2);
-  priceEl.innerText = formatPrice(lastPrice);
-  draw();
-})();
+// quick demo helpers
+document.getElementById('btnLoadDemoBalance').addEventListener('click', ()=>{
+  balance = 1000; localStorage.setItem('demo_balance', balance); balanceEl.innerText = balance.toFixed(2); alert('Balance reset demo');
+});
+
+// sign in on load if saved
+if(clientUid){ uidInput.value = clientUid; updateAdminUI(); }
+
+// refresh draw occasionally
+setInterval(()=>draw(), 800);
 
 </script>
 </body>
