@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Trading Panel — Auth & EUR/USD Default (Fixed Chart)</title>
+<title>Trading Panel — Fixed Chart + Drag/Zoom (Firebase)</title>
 <style>
   :root{
     --bg:#071026; --panel:#0f1724; --muted:#9fb0d6; --text:#dbe7ff;
@@ -11,12 +11,13 @@
   }
   html,body{height:100%;margin:0;background:linear-gradient(180deg,#071026,#071827);color:var(--text);font-family:Inter, Arial}
   .container{display:flex;flex-direction:column;height:100vh;padding:10px;box-sizing:border-box;gap:10px}
-  .chart-wrap{flex:1;min-height:320px;background:var(--panel);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:8px;box-shadow:0 8px 30px rgba(0,0,0,0.6)}
+  /* fixed chart height so it won't expand vertically */
+  .chart-wrap{background:var(--panel);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:8px;box-shadow:0 8px 30px rgba(0,0,0,0.6); flex:none; height:420px; min-height:320px; max-height:52vh; overflow:hidden}
   .chart-top{display:flex;justify-content:space-between;align-items:center}
   .title{font-weight:700}
   .metrics{display:flex;gap:8px;align-items:center}
   .metric{background:rgba(255,255,255,0.02);padding:6px 8px;border-radius:8px;font-size:13px}
-  canvas{border-radius:8px;width:100%;height:100%}
+  canvas{border-radius:8px;width:100%;height:100%;touch-action:none;user-select:none}
   .controls{display:flex;flex-direction:column;gap:8px}
   .row{display:flex;gap:8px;align-items:center}
   .panel{background:var(--panel);padding:10px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.5)}
@@ -31,11 +32,13 @@
   .order{display:flex;justify-content:space-between;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02)}
   .admin-panel{display:none;gap:8px}
   .show{display:flex}
+  .toolbar{display:flex;gap:8px;align-items:center}
+  .zoom-btn{padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:var(--text);cursor:pointer}
   @media(min-width:900px){
     .container{flex-direction:row;gap:12px}
     .left{flex:0 1 68%}
     .right{flex:0 1 32%;display:flex;flex-direction:column;gap:10px;height:calc(100vh - 20px)}
-    .chart-wrap{height:60vh}
+    .chart-wrap{height:60vh;max-height:unset}
   }
 </style>
 </head>
@@ -46,7 +49,7 @@
       <div class="chart-top">
         <div>
           <div class="title">Simulator Candlestick — <span id="marketName">—</span></div>
-          <div style="font-size:12px;color:var(--muted)">Harga disimpan di Firebase (sinkron antar device). Admin bisa menjalankan engine.</div>
+          <div style="font-size:12px;color:var(--muted)">Drag chart untuk geser timeline. Scroll untuk zoom.</div>
         </div>
         <div class="metrics">
           <div class="metric"><div style="font-size:11px;color:var(--muted)">Balance (device)</div><div id="balance">1000.00</div></div>
@@ -54,7 +57,20 @@
           <div class="metric"><div style="font-size:11px;color:var(--muted)">Price</div><div id="price">—</div></div>
         </div>
       </div>
+
       <canvas id="chartCanvas"></canvas>
+
+      <div class="toolbar" style="margin-top:6px;justify-content:space-between">
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="zoom-btn" id="zoomIn">Zoom In</button>
+          <button class="zoom-btn" id="zoomOut">Zoom Out</button>
+          <button class="zoom-btn" id="resetView">Reset View</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="small" style="color:var(--muted)">Visible candles:</div>
+          <div id="visibleCount" style="font-weight:700">—</div>
+        </div>
+      </div>
     </div>
 
     <div class="panel controls" style="margin-top:10px">
@@ -196,7 +212,7 @@ const firebaseConfig = {
   messagingSenderId: "358065954807",
   appId: "1:358065954807:web:66619211fea82a4b2518f2"
 };
-const ADMIN_UID = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52'; // admin detection
+const ADMIN_UID = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52';
 /* ============================================ */
 
 firebase.initializeApp(firebaseConfig);
@@ -209,7 +225,7 @@ if(!deviceId){ deviceId = 'dev-' + Math.floor(Math.random()*10000000); localStor
 let localBalanceKey = 'balance_' + deviceId;
 let balance = parseFloat(localStorage.getItem(localBalanceKey)) || 1000.0;
 let equity = balance;
-const pipValue = 10; // $ per pip per lot (simple)
+const pipValue = 10;
 document.getElementById('balance').innerText = balance.toFixed(2);
 
 /* ========== canvas & chart state ========== */
@@ -217,12 +233,20 @@ const canvas = document.getElementById('chartCanvas');
 const ctx = canvas.getContext('2d');
 let DPR = window.devicePixelRatio || 1;
 function resizeCanvas(){ const r = canvas.getBoundingClientRect(); canvas.width = Math.floor(r.width*DPR); canvas.height = Math.floor(r.height*DPR); ctx.setTransform(DPR,0,0,DPR,0,0); }
-window.addEventListener('resize', resizeCanvas);
+window.addEventListener('resize', ()=>{ resizeCanvas(); draw(); });
 resizeCanvas();
 
 let priceHistory = []; // {t, price}
 let candles = [];
 let timeframeMs = parseInt(document.getElementById('timeframe').value);
+let userTimeframeOverride = false; // jika user pilih timeframe, jangan overwritten oleh market snapshot
+
+/* ========== pan & zoom state ========== */
+let visibleSlotsOverride = null; // jika null -> computed from width; else numeric
+let historyOffset = 0; // number of candles back from latest (0 = latest)
+let isDragging = false;
+let dragStartX = 0;
+let dragAccum = 0; // accumulate pixel movement to convert to slots
 
 /* ========== UI refs ========== */
 const marketSelect = document.getElementById('marketSelect');
@@ -249,6 +273,10 @@ const emailInput = document.getElementById('email');
 const passInput = document.getElementById('password');
 const adminOrdersEl = document.getElementById('adminOrders');
 const depositsList = document.getElementById('depositsList');
+const visibleCountEl = document.getElementById('visibleCount');
+const zoomInBtn = document.getElementById('zoomIn');
+const zoomOutBtn = document.getElementById('zoomOut');
+const resetViewBtn = document.getElementById('resetView');
 
 let currentMarketId = null;
 let currentMarket = null;
@@ -258,32 +286,35 @@ let engineInterval = null;
 let engineRunning = false;
 let ordersSnapshot = []; // current market orders array
 
-/* ========== CHART LAYOUT CONSTS & IMPROVED BUCKET/RENDER FUNCTIONS ========== */
-const MIN_VISIBLE_CANDLES = 30;
-const MAX_VISIBLE_CANDLES = 200;
-const MIN_CANDLE_WIDTH = 4;
+/* ========== CHART CONSTANTS ========== */
+const MIN_VISIBLE_CANDLES = 20;
+const MAX_VISIBLE_CANDLES = 300;
+const MIN_CANDLE_WIDTH = 3;
 const MAX_CANDLE_WIDTH = 18;
 const LEFT_MARGIN = 40;
 const RIGHT_MARGIN = 90;
 
-// push price to history
+/* ========== helper functions ========== */
+function formatPrice(p){ return p ? p.toFixed(5) : '—'; }
+function toPips(a,b){ return Math.round((a-b)/0.0001); }
+
+/* ========== push price to history & rebuild ========== */
 function pushPriceToHistory(price, t){
   if(!t) t = Date.now();
   priceHistory.push({t, price});
-  if(priceHistory.length > 2000) priceHistory.shift();
+  if(priceHistory.length > 20000) priceHistory.shift();
   rebuildCandlesFromHistory();
 }
 
-// --- rebuildCandlesFromHistory: bucket ticks by timeframeMs ---
+/* --- bucket ticks into candles per timeframe --- */
 function rebuildCandlesFromHistory(){
   candles = [];
   if(!priceHistory || priceHistory.length === 0) return;
-  timeframeMs = parseInt(document.getElementById('timeframe').value) || timeframeMs;
-
+  const tf = timeframeMs = parseInt(document.getElementById('timeframe').value) || timeframeMs;
   let bucket = null;
   for(let i=0;i<priceHistory.length;i++){
     const pt = priceHistory[i];
-    const bucketStart = Math.floor(pt.t / timeframeMs) * timeframeMs;
+    const bucketStart = Math.floor(pt.t / tf) * tf;
     if(!bucket || bucket.t !== bucketStart){
       if(bucket) candles.push(bucket);
       bucket = { t: bucketStart, o: pt.price, h: pt.price, l: pt.price, c: pt.price };
@@ -294,10 +325,24 @@ function rebuildCandlesFromHistory(){
     }
   }
   if(bucket) candles.push(bucket);
-  if(candles.length > 2000) candles = candles.slice(-2000);
+  // limit to recent
+  if(candles.length > 5000) candles = candles.slice(-5000);
+  // clamp historyOffset if exceeds available
+  const maxOff = Math.max(0, candles.length - 1);
+  if(historyOffset > maxOff) historyOffset = maxOff;
 }
 
-// --- draw(): fixed view, candle width bounded, right-aligned ---
+/* ========== function to get visible candles according to slotCount & offset ========== */
+function getVisibleSlice(slotCount, offset){
+  // offset = number of candles to shift back from latest (0 = latest)
+  const len = candles.length;
+  if(len === 0) return [];
+  const end = (offset === 0) ? len : Math.max(0, len - offset);
+  const start = Math.max(0, end - slotCount);
+  return candles.slice(start, end);
+}
+
+/* ========== draw chart (fixed view, right-aligned, uses pan/zoom state) ========== */
 function draw(){
   const W = canvas.width / DPR;
   const H = canvas.height / DPR;
@@ -305,60 +350,48 @@ function draw(){
   ctx.fillStyle = 'transparent';
   ctx.fillRect(0,0,W,H);
 
-  if(!currentMarket || !candles || candles.length === 0){
+  if(!currentMarket){
     ctx.fillStyle = '#9fb0d6';
     ctx.font = '14px Arial';
     ctx.fillText('Pilih market untuk mulai', 20, 30);
     return;
   }
 
-  // decide how many candle slots the view should show
-  let desiredVisible = Math.floor(W / 8);
+  // decide slotCount (visible candles)
+  let desiredVisible = visibleSlotsOverride || Math.floor((W - LEFT_MARGIN - RIGHT_MARGIN) / 8);
   desiredVisible = Math.max(MIN_VISIBLE_CANDLES, Math.min(MAX_VISIBLE_CANDLES, desiredVisible));
-  const slotCount = desiredVisible;
 
+  // compute candle width and gap bounded
   const usableW = Math.max(60, W - LEFT_MARGIN - RIGHT_MARGIN);
-  let candleWidth = usableW / slotCount * 0.72;
+  let candleWidth = usableW / desiredVisible * 0.72;
   candleWidth = Math.max(MIN_CANDLE_WIDTH, Math.min(MAX_CANDLE_WIDTH, candleWidth));
-  const totalCandlesWidth = candleWidth * slotCount;
-  let gap = (usableW - totalCandlesWidth) / Math.max(1, slotCount - 1);
+  const totalCandlesWidth = candleWidth * desiredVisible;
+  let gap = (usableW - totalCandlesWidth) / Math.max(1, desiredVisible - 1);
   if(gap < 1) gap = 1;
 
-  const arr = candles.slice(-slotCount);
+  // get slice based on offset
+  const arr = getVisibleSlice(desiredVisible, historyOffset);
   const arrLen = arr.length;
-  const slotsTotalWidth = (candleWidth * slotCount) + ((slotCount - 1) * gap);
+  // compute slots area and startX so right alignment preserved when arrLen < desiredVisible
+  const slotsTotalWidth = (candleWidth * desiredVisible) + ((desiredVisible - 1) * gap);
   const slotsLeft = LEFT_MARGIN + Math.max(0, usableW - slotsTotalWidth);
-  const emptySlots = slotCount - arrLen;
+  const emptySlots = desiredVisible - arrLen;
   const startX = slotsLeft + emptySlots * (candleWidth + gap);
 
-  // compute price range
+  // compute price range from arr
   let maxP = -Infinity, minP = Infinity;
-  if(arrLen === 0) {
+  if(arrLen === 0){
     maxP = minP = currentMarket.price || 1.0;
   } else {
-    for(let i=0;i<arrLen;i++){
-      const c = arr[i];
-      if(c.h > maxP) maxP = c.h;
-      if(c.l < minP) minP = c.l;
-    }
+    for(let i=0;i<arrLen;i++){ const c = arr[i]; if(c.h > maxP) maxP = c.h; if(c.l < minP) minP = c.l; }
   }
   const pad = (maxP - minP) * 0.12 || 0.0005;
   maxP += pad; minP -= pad;
+  function py(p){ if(maxP === minP) return H/2; return ((maxP - p)/(maxP-minP))*(H-40)+20; }
 
-  function py(price){
-    if(maxP === minP) return H/2;
-    return ((maxP - price) / (maxP - minP)) * (H - 40) + 20;
-  }
-
-  // grid
-  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  for(let i=0;i<5;i++){
-    const y = 20 + i * (H - 40) / 4;
-    ctx.moveTo(LEFT_MARGIN, y);
-    ctx.lineTo(W - 10, y);
-  }
+  // background grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)'; ctx.lineWidth = 1; ctx.beginPath();
+  for(let i=0;i<5;i++){ const y = 20 + i * (H - 40) / 4; ctx.moveTo(LEFT_MARGIN, y); ctx.lineTo(W - 10, y); }
   ctx.stroke();
 
   // draw candles
@@ -369,42 +402,26 @@ function draw(){
     const colorUp = getComputedStyle(document.documentElement).getPropertyValue('--green').trim() || '#2dd36f';
     const colorDn = getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#ff5c5c';
     const col = up ? colorUp : colorDn;
-
-    const yOpen = py(c.o);
-    const yClose = py(c.c);
-    const yHigh = py(c.h);
-    const yLow = py(c.l);
-
+    const yOpen = py(c.o), yClose = py(c.c), yHigh = py(c.h), yLow = py(c.l);
     // wick
-    ctx.strokeStyle = col;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(x + candleWidth / 2, yHigh);
-    ctx.lineTo(x + candleWidth / 2, yLow);
-    ctx.stroke();
-
+    ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x + candleWidth/2, yHigh); ctx.lineTo(x + candleWidth/2, yLow); ctx.stroke();
     // body
-    const bodyTop = Math.min(yOpen, yClose);
-    const bodyH = Math.max(1, Math.abs(yClose - yOpen));
-    ctx.fillStyle = col;
-    ctx.fillRect(x, bodyTop, candleWidth, bodyH);
-
+    const bodyTop = Math.min(yOpen,yClose), bodyH = Math.max(1, Math.abs(yClose-yOpen));
+    ctx.fillStyle = col; ctx.fillRect(x, bodyTop, candleWidth, bodyH);
     x += candleWidth + gap;
   }
 
-  // price axis right
+  // price axis (right)
   ctx.fillStyle = 'rgba(255,255,255,0.06)';
   ctx.fillRect(W - RIGHT_MARGIN + 10, 10, RIGHT_MARGIN - 20, H - 20);
-  ctx.fillStyle = '#bcd7ff';
-  ctx.font = '12px Arial';
-  ctx.textAlign = 'right';
+  ctx.fillStyle = '#bcd7ff'; ctx.font = '12px Arial'; ctx.textAlign = 'right';
   for(let i=0;i<5;i++){
-    const v = minP + ( (5 - i - 1) / 4 ) * (maxP - minP);
-    const y = 20 + i * (H - 40) / 4;
+    const v = minP + ((5 - i - 1) / 4) * (maxP - minP);
+    const y = 20 + i*(H-40)/4;
     ctx.fillText(v.toFixed(5), W - 14, y + 4);
   }
 
-  // draw TP/SL lines for visible orders (use ordersSnapshot)
+  // TP/SL lines (from ordersSnapshot)
   const orders = window.ordersSnapshot || [];
   if(orders.length){
     orders.forEach(o=>{
@@ -412,28 +429,106 @@ function draw(){
       if(o.tp && o.sl){
         const yTP = py(o.tp);
         const ySL = py(o.sl);
-        ctx.setLineDash([6,4]);
-        ctx.lineWidth = 1.2;
-        ctx.strokeStyle = 'rgba(45,211,111,0.9)';
-        ctx.beginPath(); ctx.moveTo(LEFT_MARGIN, yTP); ctx.lineTo(W - RIGHT_MARGIN + 10, yTP); ctx.stroke();
-        ctx.strokeStyle = 'rgba(255,92,92,0.9)';
-        ctx.beginPath(); ctx.moveTo(LEFT_MARGIN, ySL); ctx.lineTo(W - RIGHT_MARGIN + 10, ySL); ctx.stroke();
+        ctx.setLineDash([6,4]); ctx.lineWidth = 1.2;
+        ctx.strokeStyle = 'rgba(45,211,111,0.9)'; ctx.beginPath(); ctx.moveTo(LEFT_MARGIN, yTP); ctx.lineTo(W - RIGHT_MARGIN + 10, yTP); ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,92,92,0.9)'; ctx.beginPath(); ctx.moveTo(LEFT_MARGIN, ySL); ctx.lineTo(W - RIGHT_MARGIN + 10, ySL); ctx.stroke();
         ctx.setLineDash([]);
       }
     });
   }
 
   // last price line
-  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-  ctx.beginPath();
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.beginPath();
   const yNow = py(currentMarket.price);
-  ctx.moveTo(LEFT_MARGIN, yNow); ctx.lineTo(W - 10, yNow);
-  ctx.stroke();
+  ctx.moveTo(LEFT_MARGIN, yNow); ctx.lineTo(W - 10, yNow); ctx.stroke();
   ctx.fillStyle = '#fff'; ctx.font = '12px Arial'; ctx.textAlign='right';
   ctx.fillText((currentMarket.price||0).toFixed(5), W - 14, yNow - 6);
+
+  // update visible count UI
+  visibleCountEl.innerText = String(arrLen) + '/' + String(desiredVisible);
 }
 
-/* ========== UI & Firestore logic (Auth, markets, orders, engine) ========== */
+/* ========== mouse/touch handlers for pan & wheel zoom ========== */
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+canvas.addEventListener('mousedown', (e)=>{
+  isDragging = true; dragStartX = e.clientX; dragAccum = 0; canvas.style.cursor = 'grabbing';
+});
+window.addEventListener('mouseup', (e)=>{ isDragging = false; canvas.style.cursor = 'default'; dragAccum = 0; });
+
+canvas.addEventListener('mousemove', (e)=>{
+  if(!isDragging) return;
+  const dx = e.clientX - dragStartX;
+  dragStartX = e.clientX;
+  dragAccum += dx;
+  // compute approx slot width from last render
+  const W = canvas.width / DPR; const usableW = Math.max(60, W - LEFT_MARGIN - RIGHT_MARGIN);
+  const defaultSlots = visibleSlotsOverride || Math.floor((W - LEFT_MARGIN - RIGHT_MARGIN) / 8);
+  const slotCount = Math.max(MIN_VISIBLE_CANDLES, Math.min(MAX_VISIBLE_CANDLES, defaultSlots));
+  let candleWidth = usableW / slotCount * 0.72; candleWidth = Math.max(MIN_CANDLE_WIDTH, Math.min(MAX_CANDLE_WIDTH, candleWidth));
+  const gap = Math.max(1, (usableW - (candleWidth*slotCount)) / Math.max(1, slotCount - 1));
+  const pixelPerSlot = candleWidth + gap;
+  const deltaSlots = Math.round(-dragAccum / pixelPerSlot);
+  if(deltaSlots !== 0){
+    dragAccum = 0;
+    // update historyOffset
+    const maxOffset = Math.max(0, candles.length - 1);
+    historyOffset = clamp(historyOffset + deltaSlots, 0, maxOffset);
+    draw();
+  }
+});
+
+// touch support (pan)
+let touchStartX = null;
+canvas.addEventListener('touchstart', (e)=>{
+  if(e.touches.length === 1){
+    touchStartX = e.touches[0].clientX;
+  }
+});
+canvas.addEventListener('touchmove', (e)=>{
+  if(e.touches.length === 1 && touchStartX !== null){
+    const dx = e.touches[0].clientX - touchStartX;
+    touchStartX = e.touches[0].clientX;
+    // same logic as mouse move
+    const W = canvas.width / DPR; const usableW = Math.max(60, W - LEFT_MARGIN - RIGHT_MARGIN);
+    const defaultSlots = visibleSlotsOverride || Math.floor((W - LEFT_MARGIN - RIGHT_MARGIN) / 8);
+    const slotCount = Math.max(MIN_VISIBLE_CANDLES, Math.min(MAX_VISIBLE_CANDLES, defaultSlots));
+    let candleWidth = usableW / slotCount * 0.72; candleWidth = Math.max(MIN_CANDLE_WIDTH, Math.min(MAX_CANDLE_WIDTH, candleWidth));
+    const gap = Math.max(1, (usableW - (candleWidth*slotCount)) / Math.max(1, slotCount - 1));
+    const pixelPerSlot = candleWidth + gap;
+    const deltaSlots = Math.round(-dx / pixelPerSlot);
+    if(deltaSlots !== 0){
+      const maxOffset = Math.max(0, candles.length - 1);
+      historyOffset = clamp(historyOffset + deltaSlots, 0, maxOffset);
+      draw();
+    }
+  }
+});
+canvas.addEventListener('touchend', ()=>{ touchStartX = null; });
+
+// wheel zoom (desktop)
+canvas.addEventListener('wheel', (e)=>{
+  e.preventDefault();
+  const delta = Math.sign(e.deltaY);
+  // delta > 0 => zoom out (more candles), delta < 0 => zoom in (fewer candles)
+  const current = visibleSlotsOverride || Math.floor((canvas.width/DPR - LEFT_MARGIN - RIGHT_MARGIN) / 8);
+  if(delta > 0){
+    visibleSlotsOverride = clamp(current + 10, MIN_VISIBLE_CANDLES, MAX_VISIBLE_CANDLES);
+  } else {
+    visibleSlotsOverride = clamp(current - 10, MIN_VISIBLE_CANDLES, MAX_VISIBLE_CANDLES);
+  }
+  draw();
+}, { passive: false });
+
+zoomInBtn.addEventListener('click', ()=>{
+  const cur = visibleSlotsOverride || Math.floor((canvas.width/DPR - LEFT_MARGIN - RIGHT_MARGIN) / 8);
+  visibleSlotsOverride = clamp(cur - 10, MIN_VISIBLE_CANDLES, MAX_VISIBLE_CANDLES);
+  draw();
+});
+zoomOutBtn.addEventListener('click', ()=>{ const cur = visibleSlotsOverride || Math.floor((canvas.width/DPR - LEFT_MARGIN - RIGHT_MARGIN) / 8); visibleSlotsOverride = clamp(cur + 10, MIN_VISIBLE_CANDLES, MAX_VISIBLE_CANDLES); draw(); });
+resetViewBtn.addEventListener('click', ()=>{ visibleSlotsOverride = null; historyOffset = 0; draw(); });
+
+/* ========== Firestore & UI logic (Auth, markets, orders, engine) ========== */
 
 // list markets
 async function listMarkets(){
@@ -456,7 +551,7 @@ async function listMarkets(){
 btnRefreshMarkets.addEventListener('click', listMarkets);
 btnListMarkets.addEventListener('click', listMarkets);
 
-// create default market (eur-usd) if not exists
+// ensure default market
 async function ensureDefaultMarket(){
   try {
     const defaultId = 'eur-usd';
@@ -476,7 +571,7 @@ async function ensureDefaultMarket(){
       });
       console.log('Default market created:', defaultId);
     } else { console.log('Default market exists'); }
-  } catch(e){ console.error('ensureDefaultMarket err', e); }
+  } catch(e){ console.error(e); }
 }
 
 // select market
@@ -487,6 +582,7 @@ async function selectMarket(marketId){
   currentMarketId = marketId;
   currentMarket = null;
   priceHistory = []; candles = [];
+  historyOffset = 0; visibleSlotsOverride = null;
   draw();
   const ref = db.collection('markets').doc(marketId);
   unsubscribeMarket = ref.onSnapshot(doc=>{
@@ -494,11 +590,15 @@ async function selectMarket(marketId){
     const m = doc.data();
     currentMarket = { id: doc.id, ...m };
     marketNameEl.innerText = m.name;
-    priceEl.innerText = (m.price || 0).toFixed(5);
-    document.getElementById('volClient').value = m.volatility || 1.0;
-    timeframeMs = m.timeframeMs || timeframeMs;
-    document.getElementById('timeframe').value = String(timeframeMs);
-    pushPriceToHistory(m.price, (m.lastUpdate && m.lastUpdate.toMillis)? m.lastUpdate.toMillis() : Date.now());
+    priceEl.innerText = formatPrice(m.price);
+    // only set timeframe from market if user belum overridden
+    if(!userTimeframeOverride){
+      timeframeMs = m.timeframeMs || timeframeMs;
+      document.getElementById('timeframe').value = String(timeframeMs);
+    }
+    // push tick
+    const stamp = (m.lastUpdate && m.lastUpdate.toMillis) ? m.lastUpdate.toMillis() : Date.now();
+    pushPriceToHistory(m.price, stamp);
     draw();
   });
 
@@ -529,7 +629,16 @@ async function selectMarket(marketId){
   });
 }
 
-// place order
+/* ========== Timeframe select handling ========== */
+document.getElementById('timeframe').addEventListener('change', ()=>{
+  userTimeframeOverride = true;
+  timeframeMs = parseInt(document.getElementById('timeframe').value);
+  rebuildCandlesFromHistory();
+  historyOffset = 0; // reset view to latest on timeframe change
+  draw();
+});
+
+/* ========== place order ========== */
 document.getElementById('btnBuy').addEventListener('click', ()=>placeOrder('BUY'));
 document.getElementById('btnSell').addEventListener('click', ()=>placeOrder('SELL'));
 
@@ -552,7 +661,7 @@ async function placeOrder(type){
   alert('Order placed: ' + type + ' @' + entry.toFixed(5));
 }
 
-// render orders
+/* ========== render orders (user device) ========== */
 function renderOrders(){
   ordersListEl.innerHTML = '';
   ordersSnapshot.filter(o => o.status === 'open' && o.deviceId === deviceId).forEach(o=>{
@@ -562,7 +671,6 @@ function renderOrders(){
     ordersListEl.appendChild(el);
   });
 
-  // history: closed orders of this device
   historyListEl.innerHTML = '';
   ordersSnapshot.filter(o => o.status === 'closed' && o.deviceId === deviceId).slice(0,40).forEach(o=>{
     const el = document.createElement('div');
@@ -572,7 +680,7 @@ function renderOrders(){
   });
 }
 
-// manual close (by device owner)
+// manual close
 window.closeManual = async (orderId) => {
   if(!currentMarketId) return;
   const ref = db.collection('markets').doc(currentMarketId).collection('orders').doc(orderId);
@@ -587,8 +695,8 @@ window.closeManual = async (orderId) => {
   alert('Order closed (manual)');
 };
 
-// admin create market
-btnCreateMarket.addEventListener('click', async ()=>{
+/* ========== admin create market & engine control ========== */
+document.getElementById('btnCreateMarket').addEventListener('click', async ()=>{
   if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only admin');
   const name = prompt('Nama market (ex: EUR/USD Demo)');
   if(!name) return;
@@ -608,8 +716,7 @@ btnCreateMarket.addEventListener('click', async ()=>{
   await listMarkets();
 });
 
-// engine start/stop (admin)
-btnStartEngine.addEventListener('click', ()=>{
+document.getElementById('btnStartEngine').addEventListener('click', ()=>{
   if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only admin can start engine (demo)');
   if(!currentMarketId) return alert('Select market first');
   engineRunning = !engineRunning;
@@ -684,7 +791,7 @@ db.collectionGroup('orders').where('status','==','closed').onSnapshot(snap=>{
   });
 });
 
-/* ========== admin UI render orders ========== */
+/* ========== admin orders render ========== */
 function renderAdminOrders(){
   adminOrdersEl.innerHTML = '';
   ordersSnapshot.forEach(o=>{
@@ -710,7 +817,7 @@ window.adminCloseOrder = async (orderId, reason)=>{
   alert('Order closed by admin');
 };
 
-/* deposits approve/reject (admin) */
+/* ========== deposits approve/reject (admin) ========== */
 window.approveDeposit = async (mid, depId) => {
   if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only admin');
   await db.collection('markets').doc(mid).collection('deposits').doc(depId).update({status:'approved', verifiedAt: firebase.firestore.FieldValue.serverTimestamp(), verifier: currentUser.uid});
@@ -725,10 +832,8 @@ window.rejectDeposit = async (mid, depId) => {
 /* ========== Auth (Google + Email) ========== */
 let currentUser = null;
 const provider = new firebase.auth.GoogleAuthProvider();
-
 document.getElementById('btnSignInGoogle').addEventListener('click', ()=>auth.signInWithPopup(provider).catch(e=>alert(e.message)));
 document.getElementById('btnSignOut').addEventListener('click', ()=>auth.signOut());
-
 document.getElementById('btnRegisterEmail').addEventListener('click', ()=>{
   const email = emailInput.value.trim(); const pw = passInput.value;
   if(!email || !pw) return alert('Email & password required');
@@ -757,8 +862,9 @@ auth.onAuthStateChanged(async (user)=>{
 (async function init(){
   await ensureDefaultMarket();
   await listMarkets();
-  setInterval(()=>draw(), 800);
+  setInterval(()=>draw(), 700);
 })();
+
 </script>
 </body>
 </html>
