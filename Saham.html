@@ -34,8 +34,11 @@
   .nav-btn.active{background:rgba(255,255,255,0.02);color:var(--text)}
   /* modal */
   .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:2000}
-  .modal{width:92%;max-width:720px;background:var(--card);padding:16px;border-radius:12px}
+  .modal{width:92%;max-width:920px;background:var(--card);padding:16px;border-radius:12px;max-height:90vh;overflow:auto}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .muted{color:var(--muted)}
+  .pill{padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.02)}
+  input[type="text"], input[type="number"], input[type="datetime-local"], select{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);padding:8px;border-radius:8px;color:var(--text);width:100%}
   @media(max-width:900px){ .main{flex-direction:column} .right{width:100%} footer.bottom-nav{left:8px;right:8px;bottom:8px} }
 </style>
 </head>
@@ -180,8 +183,15 @@
             </div>
             <div style="margin-top:8px">
               <div class="small">Edit Volatility per Market</div>
-              <div id="adminVolList" style="margin-top:8px;max-height:180px;overflow:auto"></div>
+              <div id="adminVolList" style="margin-top:8px;max-height:120px;overflow:auto"></div>
             </div>
+
+            <!-- New admin actions -->
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button id="btnManageBalances" class="btn btn-ghost">Manage Balances</button>
+              <button id="btnViewAllTrades" class="btn btn-ghost">View All Trades</button>
+            </div>
+
             <div style="margin-top:8px">
               <button id="btnEngineAll" class="btn btn-ghost">Start Engine (All)</button>
             </div>
@@ -272,6 +282,10 @@ let engineAllRunning = false;
 /* positions/trades realtime for user (collectionGroup) */
 let positionsSnapshotCache = []; // for PnL calc
 
+/* admin realtime subs (created only for admin modal) */
+let adminTradesUnsub = null;
+let adminPositionsUnsub = null;
+
 /* UI refs */
 const marketListEl = document.getElementById('marketList');
 const positionsListEl = document.getElementById('positionsList');
@@ -279,6 +293,9 @@ const tradesListEl = document.getElementById('tradesList');
 const eventsListEl = document.getElementById('eventsList');
 const adminControlsEl = document.getElementById('adminControls');
 const adminVolListEl = document.getElementById('adminVolList');
+const btnOpenAddEvent = document.getElementById('btnOpenAddEvent');
+const btnManageBalances = document.getElementById('btnManageBalances');
+const btnViewAllTrades = document.getElementById('btnViewAllTrades');
 
 /* ----------------- helpers ----------------- */
 function formatPrice(p){ return Number(p).toFixed(2); }
@@ -291,21 +308,64 @@ const provider = new firebase.auth.GoogleAuthProvider();
 document.getElementById('btnSignIn').addEventListener('click', ()=> auth.signInWithPopup(provider).catch(e=>alert(e.message)));
 document.getElementById('btnSignOut').addEventListener('click', ()=> auth.signOut());
 
-auth.onAuthStateChanged(user=>{
+// apply remote balance override (if any) - checks uid first then deviceId
+async function applyRemoteBalanceIfExists(){
+  try{
+    // check uid override
+    if(currentUser && currentUser.uid){
+      const udoc = await db.collection('balances').doc('uid_'+currentUser.uid).get();
+      if(udoc.exists){
+        const data = udoc.data();
+        if(data && typeof data.amount === 'number'){
+          balance = data.amount;
+          localStorage.setItem(balanceKey, balance);
+          document.getElementById('bal').innerText = balance.toFixed(2);
+          return;
+        }
+      }
+    }
+    // check device override
+    const ddoc = await db.collection('balances').doc(deviceId).get();
+    if(ddoc.exists){
+      const data = ddoc.data();
+      if(data && typeof data.amount === 'number'){
+        balance = data.amount;
+        localStorage.setItem(balanceKey, balance);
+        document.getElementById('bal').innerText = balance.toFixed(2);
+        return;
+      }
+    }
+  }catch(e){ console.warn('applyRemoteBalanceIfExists err', e); }
+}
+
+auth.onAuthStateChanged(async user=>{
   currentUser = user;
   if(user){
     document.getElementById('userInfo').innerText = user.email || user.uid;
     document.getElementById('btnSignIn').style.display = 'none';
     document.getElementById('btnSignOut').style.display = 'inline-block';
-    if(user.uid === ADMIN_UID){ adminControlsEl.style.display = 'flex'; document.getElementById('adminHint').style.display = 'none'; }
-    else { adminControlsEl.style.display = 'none'; document.getElementById('adminHint').style.display = 'block'; }
+    if(user.uid === ADMIN_UID){
+      adminControlsEl.style.display = 'flex';
+      document.getElementById('adminHint').style.display = 'none';
+      // admin sees add event button
+      btnOpenAddEvent.style.display = 'inline-block';
+    } else {
+      adminControlsEl.style.display = 'none';
+      document.getElementById('adminHint').style.display = 'block';
+      // non-admin cannot add event
+      btnOpenAddEvent.style.display = 'none';
+    }
   } else {
     document.getElementById('userInfo').innerText = 'not signed';
     document.getElementById('btnSignIn').style.display = 'inline-block';
     document.getElementById('btnSignOut').style.display = 'none';
     adminControlsEl.style.display = 'none';
     document.getElementById('adminHint').style.display = 'block';
+    btnOpenAddEvent.style.display = 'none';
   }
+
+  // always apply remote balance overrides on login state change
+  await applyRemoteBalanceIfExists();
 });
 
 /* ----------------- SPA nav ----------------- */
@@ -318,7 +378,6 @@ document.querySelectorAll('.nav-btn').forEach(b=>{
   });
 });
 function showPage(name){
-  // FIX: correct mapping so 'markets' shows page-market (previous bug: showed home)
   ['page-home','page-market','page-portfolio','page-events'].forEach(id=>document.getElementById(id).style.display='none');
   if(name==='home') document.getElementById('page-home').style.display='block';
   else if(name==='markets') document.getElementById('page-market').style.display='block';
@@ -398,8 +457,7 @@ async function selectMarket(marketId){
   document.getElementById('page-market').style.display='block';
   showPage('markets');
 
-  // FIX: when showing a page that was hidden, resize canvas so chart draws correctly
-  // small timeout to allow layout -> then resize & draw
+  // ensure chart visible draws
   setTimeout(()=>{ try{ DPR = window.devicePixelRatio || 1; resizeCanvas(); draw(); }catch(e){} }, 80);
 }
 
@@ -441,10 +499,11 @@ function renderEventsAll(){
     const start = tsToDate(ev.startTs);
     const end = tsToDate(ev.endTs);
     const el = document.createElement('div'); el.className='list-item';
+    // If user not admin, do not show edit/hapus buttons (btnOpenAddEvent already hidden), here also hide event edit buttons
     el.innerHTML = `<div><div style="font-weight:700">${ev.title || 'Event'}</div><div class="small">${ev.description||''}</div><div class="small">${ev.marketId} • ${start?start.toLocaleString():''} → ${end?end.toLocaleString():''}</div></div>
       <div style="text-align:right"><div class="small">Vol x${ev.volMultiplier||1}</div>${currentUser && currentUser.uid===ADMIN_UID?`<div style="margin-top:8px"><button class="btn btn-ghost" data-mid="${ev.marketId}" data-id="${ev.id}">Edit</button> <button class="btn btn-ghost" onclick="deleteEvent('${ev.marketId}','${ev.id}')">Hapus</button></div>`:''}</div>`;
     eventsListEl.appendChild(el);
-    // edit button
+    // admin edit button hook (only present if admin)
     const btn = el.querySelector('button[data-id]');
     if(btn){
       btn.addEventListener('click', async ()=>{
@@ -484,7 +543,7 @@ window.deleteEvent = async (mid,id) => {
 };
 
 /* ----------------- event modal (multi-market selection) ----------------- */
-document.getElementById('btnOpenAddEvent').addEventListener('click', ()=> showEventModal({mode:'add'}));
+btnOpenAddEvent.addEventListener('click', ()=> showEventModal({mode:'add'}));
 
 function showEventModal(opts){
   // opts: {mode:'add'|'edit', marketId?, eventId?, data?}
@@ -521,7 +580,6 @@ function showEventModal(opts){
     const s = opts.data.startTs && opts.data.startTs.toDate ? opts.data.startTs.toDate() : (opts.data.startTs? new Date(opts.data.startTs): null);
     if(s) modal.querySelector('#ev_start').value = s.toISOString().slice(0,16);
     modal.querySelector('#ev_dur').value = Math.max(1, Math.round(((opts.data.endTs && opts.data.endTs.toDate?opts.data.endTs.toDate():new Date()) - (opts.data.startTs && opts.data.startTs.toDate?opts.data.startTs.toDate():new Date()))/60000)) || 30;
-    // check the market if event is per-market (we used per-market storage) -> mark checkbox for that market only
     if(opts.marketId) {
       const cb = modal.querySelector(`input[type=checkbox][data-id="${opts.marketId}"]`);
       if(cb) cb.checked = true;
@@ -652,6 +710,16 @@ function startEngineAllMarkets(){
 document.getElementById('btnBuy').addEventListener('click', buyShares);
 document.getElementById('btnSell').addEventListener('click', sellShares);
 
+/* helper: check if sells are locked for a user/device on a market */
+async function isSellLockedFor(marketId, ownerId){
+  try{
+    const doc = await db.collection('locks').doc(`${marketId}_${ownerId}`).get();
+    if(!doc.exists) return false;
+    const d = doc.data();
+    return !!d.locked;
+  }catch(e){ console.warn('isSellLockedFor err', e); return false; }
+}
+
 async function buyShares(){
   if(!currentMarketId || !currentMarket) return alert('Pilih market');
   const shares = Math.max(0, Math.floor(Number(document.getElementById('buyShares').value) || 0));
@@ -669,6 +737,14 @@ async function sellShares(){
   if(!currentMarketId || !currentMarket) return alert('Pilih market');
   const sellShares = Math.max(0, Math.floor(Number(document.getElementById('buyShares').value) || 0));
   if(isNaN(sellShares) || sellShares < 100) return alert('Minimal jual 100 lembar');
+
+  // check lock for this seller (by uid or device)
+  const ownerIdent = currentUser ? currentUser.uid : deviceId;
+  const locked = await isSellLockedFor(currentMarketId, ownerIdent);
+  if(locked){
+    return alert('Penjualan saham gagal, liquidity tidak terpenuhi. Mohon bersabar untuk tindak lanjut kami.');
+  }
+
   // gather open positions for this device/user in current market
   const coll = db.collection('markets').doc(currentMarketId).collection('positions');
   const snap = await coll.where('status','==','open').where('deviceId','==',deviceId).get();
@@ -729,7 +805,7 @@ function renderPositionsAndPnL(){
     totalUnreal += unreal;
     const el = document.createElement('div'); el.className='list-item';
     el.innerHTML = `<div><div style="font-weight:700">${p.shares} lembar • ${p.marketName || p.marketId}</div><div class="small muted">Avg ${formatPrice(p.avgPrice)} • Now ${formatPrice(marketPrice)} • Unreal ${unreal>=0?'<span style="color:var(--accent)">+'+unreal.toFixed(2)+'</span>':'<span style="color:var(--danger)">'+unreal.toFixed(2)+'</span>'}</div></div>
-      <div style="text-align:right"><button class="btn btn-ghost" onclick="closePositionPath('${p._path}')">Jual</button></div>`;
+      <div style="text-align:right"><button class="btn btn-ghost" onclick="attemptClosePositionPath('${p._path}')">Jual</button></div>`;
     positionsListEl.appendChild(el);
   });
   closed.slice(0,60).forEach(p=>{
@@ -740,6 +816,21 @@ function renderPositionsAndPnL(){
   });
   document.getElementById('totalPnl').innerText = ((totalUnreal>=0?'+':'') + totalUnreal.toFixed(2));
 }
+
+/* wrapper to check lock before closing position by path */
+window.attemptClosePositionPath = async (path) => {
+  // read doc to see owner and market
+  const ref = db.doc(path);
+  const doc = await ref.get(); if(!doc.exists) return alert('Position not found');
+  const p = doc.data();
+  const ownerIdent = p.userUID ? p.userUID : p.deviceId;
+  const locked = await isSellLockedFor(p.marketId, ownerIdent);
+  if(locked){
+    return alert('Penjualan saham gagal, liquidity tidak terpenuhi. Mohon bersabar untuk tindak lanjut kami.');
+  }
+  // otherwise perform close
+  await closePositionPath(path);
+};
 
 /* close position by doc path (string path like markets/{mid}/positions/{id}) */
 window.closePositionPath = async (path)=>{
@@ -851,6 +942,8 @@ function updateRightHistoryUI(){
   await ensureDefaultMarket();
   await subscribeMarketsListRealtime();
   subscribePositionsGroup();
+  // apply remote override balance if exists
+  await applyRemoteBalanceIfExists();
   // select prefer market if exists
   const prefer = await db.collection('markets').orderBy('createdAt','asc').limit(1).get();
   if(prefer.docs[0]) selectMarket(prefer.docs[0].id);
@@ -878,15 +971,183 @@ document.getElementById('btnPortfolio').addEventListener('click', ()=> showPage(
 document.getElementById('btnGotoPortfolio').addEventListener('click', ()=> showPage('portfolio'));
 document.getElementById('btnGotoMarket').addEventListener('click', ()=> { if(currentMarketId) selectMarket(currentMarketId); else alert('Pilih market dulu'); });
 
-/* deposit/withdraw demo handlers */
+/* ----------------- Deposit / Withdraw => WhatsApp redirect (sementara) ----------------- */
 document.getElementById('btnDeposit').addEventListener('click', ()=>{
-  const v = parseFloat(prompt('Jumlah deposit (demo)', '1000')); if(!v || v<=0) return; balance += v; localStorage.setItem(balanceKey, balance); document.getElementById('bal').innerText = balance.toFixed(2); alert('Deposit selesai (demo)');
+  // opens WhatsApp composer (no number) with prefilled message including deviceId/user
+  const userTag = currentUser ? (`uid:${currentUser.uid}`) : `dev:${deviceId}`;
+  const msg = `Permintaan DEPOSIT\nDevice/User: ${userTag}\nSaldo saat ini: ${balance.toFixed(2)}\nSilakan isi jumlah deposit (format: IDR xxx).`;
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
 });
 document.getElementById('btnWithdraw').addEventListener('click', ()=>{
-  const v = parseFloat(prompt('Tarik (demo)', '100')); if(!v || v<=0) return; if(v>balance) return alert('Saldo tidak cukup'); balance -= v; localStorage.setItem(balanceKey, balance); document.getElementById('bal').innerText = balance.toFixed(2); alert('Withdraw diproses (demo)');
+  const userTag = currentUser ? (`uid:${currentUser.uid}`) : `dev:${deviceId}`;
+  const msg = `Permintaan WITHDRAW\nDevice/User: ${userTag}\nSaldo saat ini: ${balance.toFixed(2)}\nSilakan isi jumlah withdraw (format: IDR xxx).`;
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
 });
 
-/* ----------------- utility: when marketsCache changes recompute PnL automatically ----------------- */
+/* ----------------- Admin: Manage Balances modal ----------------- */
+btnManageBalances.addEventListener('click', async ()=>{
+  if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only admin');
+  const root = document.getElementById('modalRoot'); root.innerHTML=''; root.style.display='block';
+  const backdrop = document.createElement('div'); backdrop.className='modal-backdrop';
+  const modal = document.createElement('div'); modal.className='modal';
+  modal.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:800">Manage Balances</div><button id="mb_close" class="btn btn-ghost">Tutup</button></div>
+    <div style="margin-top:10px">
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input id="mb_target" placeholder="Target (deviceId or uid_...)" />
+        <input id="mb_amount" type="number" placeholder="Amount (angka)" />
+        <select id="mb_mode"><option value="set">Set</option><option value="add">Tambah</option><option value="sub">Kurangi</option></select>
+        <button id="mb_apply" class="btn btn-primary">Apply</button>
+      </div>
+      <div class="small muted">List balances (last 200)</div>
+      <div id="mb_list" style="margin-top:8px;max-height:320px;overflow:auto"></div>
+    </div>`;
+  backdrop.appendChild(modal); root.appendChild(backdrop);
+
+  modal.querySelector('#mb_close').addEventListener('click', ()=> { root.innerHTML=''; root.style.display='none'; });
+
+  async function refreshList(){
+    const listEl = modal.querySelector('#mb_list'); listEl.innerHTML = '';
+    const snap = await db.collection('balances').limit(200).get();
+    snap.forEach(d=>{
+      const data = d.data();
+      const id = d.id;
+      const row = document.createElement('div'); row.className='list-item';
+      row.innerHTML = `<div><div style="font-weight:700">${id}</div><div class="small muted">Amount: ${typeof data.amount==='number'?data.amount.toFixed(2):'—'}</div></div>
+        <div style="text-align:right"><button class="btn btn-ghost" data-id="${id}" data-set>Set</button></div>`;
+      listEl.appendChild(row);
+      row.querySelector('button[data-set]').addEventListener('click', async ()=>{
+        const val = parseFloat(prompt('Set amount untuk ' + id, String(typeof data.amount==='number'?data.amount:0)));
+        if(isNaN(val)) return;
+        await db.collection('balances').doc(id).set({ amount: val, updatedAt: firebase.firestore.FieldValue.serverTimestamp(), updatedBy: currentUser.uid });
+        alert('Balance diset');
+        if(id === deviceId){ balance = val; localStorage.setItem(balanceKey, balance); document.getElementById('bal').innerText = balance.toFixed(2); }
+        await refreshList();
+      });
+    });
+  }
+
+  modal.querySelector('#mb_apply').addEventListener('click', async ()=>{
+    const target = modal.querySelector('#mb_target').value.trim();
+    const amt = parseFloat(modal.querySelector('#mb_amount').value);
+    const mode = modal.querySelector('#mb_mode').value;
+    if(!target || isNaN(amt)) return alert('Isi target dan amount');
+    const docRef = db.collection('balances').doc(target);
+    const doc = await docRef.get();
+    let cur = 0;
+    if(doc.exists){ const d = doc.data(); cur = typeof d.amount === 'number' ? d.amount : 0; }
+    let result = cur;
+    if(mode === 'set') result = amt;
+    else if(mode === 'add') result = cur + amt;
+    else if(mode === 'sub') result = cur - amt;
+    await docRef.set({ amount: result, updatedAt: firebase.firestore.FieldValue.serverTimestamp(), updatedBy: currentUser.uid });
+    alert('Done: ' + target + ' -> ' + result.toFixed(2));
+    // if admin changed current device or uid balance, apply locally
+    if((currentUser && target === 'uid_'+currentUser.uid) || target === deviceId){
+      balance = result; localStorage.setItem(balanceKey, balance); document.getElementById('bal').innerText = balance.toFixed(2);
+    }
+    await refreshList();
+  });
+
+  await refreshList();
+});
+
+/* ----------------- Admin: View All Trades & Lock/Unlock sells ----------------- */
+btnViewAllTrades.addEventListener('click', async ()=>{
+  if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only admin');
+  const root = document.getElementById('modalRoot'); root.innerHTML=''; root.style.display='block';
+  const backdrop = document.createElement('div'); backdrop.className='modal-backdrop';
+  const modal = document.createElement('div'); modal.className='modal';
+  modal.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:800">Admin - Realtime Trades & Positions</div><button id="at_close" class="btn btn-ghost">Tutup</button></div>
+    <div style="margin-top:10px;display:flex;gap:12px">
+      <div style="flex:1">
+        <div class="small muted">Recent Trades (collectionGroup)</div>
+        <div id="at_trades" style="margin-top:8px;max-height:340px;overflow:auto"></div>
+      </div>
+      <div style="flex:1">
+        <div class="small muted">Open Positions (collectionGroup)</div>
+        <div id="at_positions" style="margin-top:8px;max-height:340px;overflow:auto"></div>
+      </div>
+    </div>
+    <div style="margin-top:12px"><div class="small muted">Locks (market_user)</div><div id="at_locks" style="margin-top:8px;max-height:180px;overflow:auto"></div></div>`;
+  backdrop.appendChild(modal); root.appendChild(backdrop);
+
+  modal.querySelector('#at_close').addEventListener('click', ()=> {
+    // unsubscribe admin subs
+    if(adminTradesUnsub) adminTradesUnsub();
+    if(adminPositionsUnsub) adminPositionsUnsub();
+    root.innerHTML=''; root.style.display='none';
+  });
+
+  const tradesEl = modal.querySelector('#at_trades');
+  const positionsEl = modal.querySelector('#at_positions');
+  const locksEl = modal.querySelector('#at_locks');
+
+  // realtime trades (recent)
+  adminTradesUnsub = db.collectionGroup('trades').orderBy('ts','desc').limit(200).onSnapshot(snap=>{
+    tradesEl.innerHTML = '';
+    snap.forEach(d=>{
+      const t = d.data(); const id = d.id;
+      const who = t.userUID || t.deviceId || 'anon';
+      const marketId = d.ref.parent.parent.id; // markets/{mid}/trades/{id}
+      const row = document.createElement('div'); row.className='list-item';
+      row.innerHTML = `<div><div style="font-weight:700">${t.type} ${t.shares} • ${marketId}</div><div class="small muted">${who} • ${formatPrice(t.price)} • ${t.ts && t.ts.toDate? t.ts.toDate().toLocaleString():''}</div></div>
+        <div style="text-align:right"><button class="btn btn-ghost" data-market="${marketId}" data-owner="${who}" data-lock>Lock Sell</button></div>`;
+      tradesEl.appendChild(row);
+      row.querySelector('button[data-lock]').addEventListener('click', async ()=>{
+        const owner = row.querySelector('button[data-lock]').dataset.owner;
+        const mid = row.querySelector('button[data-lock]').dataset.market;
+        // set lock doc
+        await db.collection('locks').doc(`${mid}_${owner}`).set({ locked:true, by: currentUser.uid, at: firebase.firestore.FieldValue.serverTimestamp() });
+        alert('Sell locked for ' + owner + ' on ' + mid);
+        refreshLocks();
+      });
+    });
+  });
+
+  // realtime positions (open)
+  adminPositionsUnsub = db.collectionGroup('positions').where('status','==','open').orderBy('createdAt','desc').limit(200).onSnapshot(snap=>{
+    positionsEl.innerHTML = '';
+    snap.forEach(d=>{
+      const p = d.data(); const id = d.id;
+      const who = p.userUID || p.deviceId || 'anon';
+      const marketId = p.marketId || (d.ref.parent.parent.id);
+      const row = document.createElement('div'); row.className='list-item';
+      row.innerHTML = `<div><div style="font-weight:700">${p.shares} lembar • ${marketId}</div><div class="small muted">${who} • Avg ${formatPrice(p.avgPrice)} • Opened ${p.createdAt && p.createdAt.toDate? p.createdAt.toDate().toLocaleString():''}</div></div>
+        <div style="text-align:right"><button class="btn btn-ghost" data-market="${marketId}" data-owner="${who}" data-lock>Lock Sell</button></div>`;
+      positionsEl.appendChild(row);
+      row.querySelector('button[data-lock]').addEventListener('click', async ()=>{
+        const owner = row.querySelector('button[data-lock]').dataset.owner;
+        const mid = row.querySelector('button[data-lock]').dataset.market;
+        await db.collection('locks').doc(`${mid}_${owner}`).set({ locked:true, by: currentUser.uid, at: firebase.firestore.FieldValue.serverTimestamp() });
+        alert('Sell locked for ' + owner + ' on ' + mid);
+        refreshLocks();
+      });
+    });
+  });
+
+  async function refreshLocks(){
+    locksEl.innerHTML = '';
+    const snap = await db.collection('locks').get();
+    snap.forEach(d=>{
+      const key = d.id;
+      const data = d.data();
+      const row = document.createElement('div'); row.className='list-item';
+      row.innerHTML = `<div><div style="font-weight:700">${key}</div><div class="small muted">locked: ${data.locked ? 'yes' : 'no'} • by: ${data.by || ''}</div></div>
+        <div style="text-align:right"><button class="btn btn-ghost" data-id="${key}" data-unlock>Unlock</button></div>`;
+      locksEl.appendChild(row);
+      row.querySelector('button[data-unlock]').addEventListener('click', async ()=>{
+        const id = row.querySelector('button[data-unlock]').dataset.id;
+        await db.collection('locks').doc(id).delete();
+        alert('Unlocked ' + id);
+        refreshLocks();
+      });
+    });
+  }
+
+  await refreshLocks();
+});
+
+/* ----------------- helper: when marketsCache changes recompute PnL automatically ----------------- */
 setInterval(()=>{ computeAndRenderPnL(); }, 1000);
 
 </script>
