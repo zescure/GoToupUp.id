@@ -3,14 +3,13 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Trading Panel — Candlestick (Firebase Sync)</title>
+<title>Trading Panel — Auth & EUR/USD Default</title>
 <style>
   :root{
     --bg:#071026; --panel:#0f1724; --muted:#9fb0d6; --text:#dbe7ff;
     --green:#2dd36f; --red:#ff5c5c; --glass: rgba(255,255,255,0.03);
   }
   html,body{height:100%;margin:0;background:linear-gradient(180deg,#071026,#071827);color:var(--text);font-family:Inter, Arial}
-  /* Mobile-first layout: chart top large, controls below */
   .container{display:flex;flex-direction:column;height:100vh;padding:10px;box-sizing:border-box;gap:10px}
   .chart-wrap{flex:1;min-height:320px;background:var(--panel);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:8px;box-shadow:0 8px 30px rgba(0,0,0,0.6)}
   .chart-top{display:flex;justify-content:space-between;align-items:center}
@@ -47,10 +46,10 @@
       <div class="chart-top">
         <div>
           <div class="title">Simulator Candlestick — <span id="marketName">—</span></div>
-          <div style="font-size:12px;color:var(--muted)">Harga disimpan di Firebase (sama antar device) — engine controlled</div>
+          <div style="font-size:12px;color:var(--muted)">Harga disimpan di Firebase (sinkron antar device). Admin bisa menjalankan engine.</div>
         </div>
         <div class="metrics">
-          <div class="metric"><div style="font-size:11px;color:var(--muted)">Balance</div><div id="balance">1000.00</div></div>
+          <div class="metric"><div style="font-size:11px;color:var(--muted)">Balance (device)</div><div id="balance">1000.00</div></div>
           <div class="metric"><div style="font-size:11px;color:var(--muted)">Equity</div><div id="equity">1000.00</div></div>
           <div class="metric"><div style="font-size:11px;color:var(--muted)">Price</div><div id="price">—</div></div>
         </div>
@@ -103,14 +102,14 @@
 
       <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
         <button id="btnRefreshMarkets" class="btn-ghost">Refresh Markets</button>
-        <button id="btnLoadDemoBalance" class="btn-ghost">Reset Balance</button>
+        <button id="btnLoadDemoBalance" class="btn-ghost">Reset Balance (device)</button>
         <div style="flex:1"></div>
         <div style="font-size:12px;color:var(--muted)">Engine:</div>
         <button id="btnStartEngine" class="btn-ghost">Start Engine</button>
       </div>
 
       <div style="margin-top:8px">
-        <div style="font-size:13px;color:var(--muted)">Open Orders</div>
+        <div style="font-size:13px;color:var(--muted)">Open Orders (this device/user)</div>
         <div class="orders" id="ordersList"></div>
       </div>
     </div>
@@ -120,22 +119,32 @@
     <div class="panel">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
-          <div style="font-weight:700">User / Admin</div>
-          <div style="font-size:12px;color:var(--muted)">Masukkan UID (demo auth)</div>
+          <div style="font-weight:700">Login</div>
+          <div style="font-size:12px;color:var(--muted)">Google sign-in atau Email/Password</div>
         </div>
         <div style="width:160px">
-          <input id="uidInput" placeholder="Enter UID (demo)"/>
+          <div id="userInfo" style="font-size:13px;color:var(--muted)"></div>
         </div>
       </div>
 
       <div style="display:flex;gap:8px;margin-top:8px">
-        <button id="btnSetUid" class="btn-ghost">Set UID</button>
-        <button id="btnSignOut" class="btn-ghost">Sign Out</button>
+        <button id="btnSignInGoogle" class="btn-ghost">Sign in with Google</button>
+        <button id="btnSignOut" class="btn-ghost">Sign out</button>
+      </div>
+
+      <div style="margin-top:8px">
+        <div style="font-weight:700">Email Login</div>
+        <input id="email" placeholder="email" style="width:100%;margin-top:6px"/>
+        <input id="password" placeholder="password" type="password" style="width:100%;margin-top:6px"/>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button id="btnRegisterEmail" class="btn-ghost">Register</button>
+          <button id="btnLoginEmail" class="btn-ghost">Login</button>
+        </div>
       </div>
 
       <div style="margin-top:8px">
         <div style="font-weight:700">Admin Panel</div>
-        <div style="font-size:12px;color:var(--muted)">(Visible jika UID = admin UID)</div>
+        <div style="font-size:12px;color:var(--muted)">(Terlihat jika akun login UID = admin)</div>
         <div id="adminPanel" class="admin-panel" style="flex-direction:column;margin-top:6px">
           <div style="display:flex;gap:8px">
             <button id="btnCreateMarket" class="btn-ghost">Create Market</button>
@@ -158,7 +167,7 @@
             <div id="adminOrders" style="max-height:150px;overflow:auto;margin-top:6px"></div>
           </div>
           <div style="margin-top:8px">
-            <div style="font-size:13px;color:var(--muted)">Deposit Verifications (simulated)</div>
+            <div style="font-size:13px;color:var(--muted)">Deposit Verifications</div>
             <div id="depositsList" style="max-height:100px;overflow:auto;margin-top:6px"></div>
           </div>
         </div>
@@ -172,21 +181,13 @@
   </div>
 </div>
 
-<!-- Firebase SDKs (compat mode for simplicity). Versions may vary; using common CDN URLs -->
+<!-- Firebase SDK compat (app, auth, firestore) -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <script>
-/*
-  Trading Panel + Firebase (Firestore) sync demo
-  - Use Firestore collection "markets" (doc per market)
-  - Each market doc: { name, price, volatility, timeframeMs, ownerUID, autoTick, engineMode, lastUpdate }
-  - Orders stored in subcollection: markets/{marketId}/orders
-  - Admin UID (demo) that can create market: viCOsJo4wHVFmhtpmMx1Wd4sDF52
-*/
-
-/* ================== Firebase config (you provided) ================== */
+/* ================== CONFIG ================== */
 const firebaseConfig = {
   apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
   authDomain: "zeepaylater-93a94.firebaseapp.com",
@@ -195,13 +196,35 @@ const firebaseConfig = {
   messagingSenderId: "358065954807",
   appId: "1:358065954807:web:66619211fea82a4b2518f2"
 };
+const ADMIN_UID = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52'; // admin detection
+/* ============================================ */
+
 firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 const db = firebase.firestore();
-/* =================================================================== */
 
-const ADMIN_UID = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52'; // special UID for create market
+/* ========== device & local balance (per device) ========== */
+let deviceId = localStorage.getItem('device_id');
+if(!deviceId){ deviceId = 'dev-' + Math.floor(Math.random()*10000000); localStorage.setItem('device_id', deviceId); }
+let localBalanceKey = 'balance_' + deviceId;
+let balance = parseFloat(localStorage.getItem(localBalanceKey)) || 1000.0;
+let equity = balance;
+const pipValue = 10; // $ per pip per lot (simple)
+document.getElementById('balance').innerText = balance.toFixed(2);
 
-// UI refs
+/* ========== canvas & chart state ========== */
+const canvas = document.getElementById('chartCanvas');
+const ctx = canvas.getContext('2d');
+let DPR = window.devicePixelRatio || 1;
+function resizeCanvas(){ const r = canvas.getBoundingClientRect(); canvas.width = Math.floor(r.width*DPR); canvas.height = Math.floor(r.height*DPR); ctx.setTransform(DPR,0,0,DPR,0,0); }
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+let priceHistory = []; // {t, price}
+let candles = [];
+let timeframeMs = parseInt(document.getElementById('timeframe').value);
+
+/* ========== UI refs ========== */
 const marketSelect = document.getElementById('marketSelect');
 const marketNameEl = document.getElementById('marketName');
 const priceEl = document.getElementById('price');
@@ -209,67 +232,60 @@ const balanceEl = document.getElementById('balance');
 const equityEl = document.getElementById('equity');
 const ordersListEl = document.getElementById('ordersList');
 const historyListEl = document.getElementById('historyList');
-const uidInput = document.getElementById('uidInput');
-const btnSetUid = document.getElementById('btnSetUid');
-const btnSignOut = document.getElementById('btnSignOut');
+const uidInfoEl = document.getElementById('userInfo');
 const adminPanel = document.getElementById('adminPanel');
 const btnCreateMarket = document.getElementById('btnCreateMarket');
 const btnListMarkets = document.getElementById('btnListMarkets');
-const adminOrdersEl = document.getElementById('adminOrders');
 const btnStartEngine = document.getElementById('btnStartEngine');
 const btnRefreshMarkets = document.getElementById('btnRefreshMarkets');
-const timeframeSel = document.getElementById('timeframe');
 const volAdmin = document.getElementById('volAdmin');
 const volClient = document.getElementById('volClient');
 const engineModeSel = document.getElementById('engineMode');
+const btnSignInGoogle = document.getElementById('btnSignInGoogle');
+const btnSignOut = document.getElementById('btnSignOut');
+const btnRegisterEmail = document.getElementById('btnRegisterEmail');
+const btnLoginEmail = document.getElementById('btnLoginEmail');
+const emailInput = document.getElementById('email');
+const passInput = document.getElementById('password');
+const adminOrdersEl = document.getElementById('adminOrders');
 const depositsList = document.getElementById('depositsList');
 
-let clientUid = localStorage.getItem('demo_uid') || null;
-let balance = parseFloat(localStorage.getItem('demo_balance')) || 1000.0;
-let equity = balance;
-let pipValue = 10; // $ per pip per lot (simple)
 let currentMarketId = null;
 let currentMarket = null;
-let orders = []; // local snapshot
-let history = [];
 let unsubscribeMarket = null;
 let unsubscribeOrders = null;
 let engineInterval = null;
 let engineRunning = false;
-let clientId = 'c-' + Math.floor(Math.random()*1000000);
+let ordersSnapshot = []; // current market orders array
 
-// set initial balance UI
-balanceEl.innerText = balance.toFixed(2);
-equityEl.innerText = equity.toFixed(2);
-
-// Canvas setup
-const canvas = document.getElementById('chartCanvas');
-const ctx = canvas.getContext('2d');
-let DPR = window.devicePixelRatio || 1;
-function resizeCanvas(){
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = Math.floor(rect.width * DPR);
-  canvas.height = Math.floor(rect.height * DPR);
-  ctx.setTransform(DPR,0,0,DPR,0,0);
+/* ========== create default market (EUR/USD) if not exists ========== */
+async function ensureDefaultMarket(){
+  try {
+    const defaultId = 'eur-usd';
+    const docRef = db.collection('markets').doc(defaultId);
+    const doc = await docRef.get();
+    if(!doc.exists){
+      await docRef.set({
+        name: 'EUR/USD (Demo)',
+        price: 1.10000,
+        volatility: 1.0,
+        timeframeMs: 1000,
+        ownerUID: null,
+        autoTick: false,
+        engineMode: 'normal',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      console.log('Default market created:', defaultId);
+    } else {
+      console.log('Default market exists');
+    }
+  } catch(e){
+    console.error('ensureDefaultMarket err', e);
+  }
 }
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
 
-// chart state
-let priceHistory = []; // {t, price}
-let candles = []; // aggregated by timeframeMs
-let timeframeMs = parseInt(timeframeSel.value);
-timeframeSel.addEventListener('change', ()=>{
-  timeframeMs = parseInt(timeframeSel.value);
-  rebuildCandlesFromHistory();
-  draw();
-});
-
-// helper
-function formatPrice(p){ return p ? p.toFixed(5) : '—'; }
-function toPips(a,b){ return Math.round((a-b)/0.0001); }
-
-// Firestore helpers
+/* ========== list markets ========== */
 async function listMarkets(){
   const snap = await db.collection('markets').orderBy('createdAt','desc').get();
   marketSelect.innerHTML = '';
@@ -277,82 +293,54 @@ async function listMarkets(){
     const m = doc.data();
     const opt = document.createElement('option');
     opt.value = doc.id;
-    opt.innerText = m.name + ' • ' + (m.ownerUID || 'anon');
+    opt.innerText = m.name;
     marketSelect.appendChild(opt);
   });
-  if(marketSelect.options.length>0 && !currentMarketId){
-    marketSelect.selectedIndex = 0;
-    selectMarket(marketSelect.value);
+  // if no selection yet, pick eur-usd if exists
+  if(!currentMarketId){
+    const prefer = Array.from(marketSelect.options).find(o=>o.value === 'eur-usd');
+    if(prefer) marketSelect.value = 'eur-usd';
+    else if(marketSelect.options.length>0) marketSelect.selectedIndex = 0;
+    if(marketSelect.value) selectMarket(marketSelect.value);
   }
 }
-btnRefreshMarkets.addEventListener('click', ()=>listMarkets());
-btnListMarkets.addEventListener('click', ()=>listMarkets());
+btnRefreshMarkets.addEventListener('click', listMarkets);
+btnListMarkets.addEventListener('click', listMarkets);
 
-// create market (admin only)
-btnCreateMarket.addEventListener('click', async ()=>{
-  if(!clientUid || clientUid !== ADMIN_UID){
-    alert('Hanya admin yang boleh create market (demo). Masukkan UID admin terlebih dahulu.');
-    return;
-  }
-  const name = prompt('Nama market (ex: EUR/USD Demo)');
-  if(!name) return;
-  const basePrice = parseFloat(prompt('Harga awal (contoh 1.1000)','1.1000')) || 1.1000;
-  const doc = await db.collection('markets').add({
-    name,
-    price: parseFloat(basePrice.toFixed(5)),
-    volatility: 1.0,
-    timeframeMs: 1000,
-    ownerUID: clientUid,
-    autoTick: false,
-    engineMode: 'normal',
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
-  });
-  alert('Market created: ' + doc.id);
-  await listMarkets();
-});
-
-// select market
-marketSelect.addEventListener('change', ()=>{
-  selectMarket(marketSelect.value);
-});
-
+/* ========== select market & subscribe ========== */
+marketSelect.addEventListener('change', ()=>selectMarket(marketSelect.value));
 async function selectMarket(marketId){
   if(unsubscribeMarket) unsubscribeMarket();
   if(unsubscribeOrders) unsubscribeOrders();
   currentMarketId = marketId;
   currentMarket = null;
-  priceHistory = []; candles=[];
+  priceHistory = []; candles = [];
   draw();
-  // subscribe market doc
   const ref = db.collection('markets').doc(marketId);
   unsubscribeMarket = ref.onSnapshot(doc=>{
     if(!doc.exists) return;
     const m = doc.data();
     currentMarket = { id: doc.id, ...m };
     marketNameEl.innerText = m.name;
-    priceEl.innerText = formatPrice(m.price);
-    // sync volatility/timeframe from market
+    priceEl.innerText = (m.price || 0).toFixed(5);
     document.getElementById('volClient').value = m.volatility || 1.0;
     timeframeMs = m.timeframeMs || timeframeMs;
-    timeframeSel.value = String(timeframeMs);
-    // append price update to history for candling
-    pushPriceToHistory(m.price, (m.lastUpdate && m.lastUpdate.toMillis) ? m.lastUpdate.toMillis() : Date.now());
+    document.getElementById('timeframe').value = String(timeframeMs);
+    pushPriceToHistory(m.price, (m.lastUpdate && m.lastUpdate.toMillis)? m.lastUpdate.toMillis() : Date.now());
     draw();
   });
 
-  // subscribe orders subcollection
   unsubscribeOrders = db.collection('markets').doc(marketId).collection('orders').orderBy('createdAt','desc').onSnapshot(snap=>{
-    orders = [];
+    ordersSnapshot = [];
     snap.forEach(d=>{
       const o = d.data(); o.id = d.id;
-      orders.push(o);
+      ordersSnapshot.push(o);
     });
     renderOrders();
-    if(clientUid === ADMIN_UID) renderAdminOrders();
+    if(currentUser && currentUser.uid === ADMIN_UID) renderAdminOrders();
   });
 
-  // subscribe deposits (for admin verify)
+  // deposits for admin view
   db.collection('markets').doc(marketId).collection('deposits').orderBy('createdAt','desc').onSnapshot(snap=>{
     depositsList.innerHTML = '';
     snap.forEach(d=>{
@@ -369,243 +357,16 @@ async function selectMarket(marketId){
   });
 }
 
-// push deposit approve/reject (admin)
-window.approveDeposit = async (mid, depId) => {
-  if(clientUid !== ADMIN_UID) return alert('Only admin');
-  await db.collection('markets').doc(mid).collection('deposits').doc(depId).update({status:'approved', verifiedAt: firebase.firestore.FieldValue.serverTimestamp(), verifier: clientUid});
-  alert('Approved');
-};
-window.rejectDeposit = async (mid, depId) => {
-  if(clientUid !== ADMIN_UID) return alert('Only admin');
-  await db.collection('markets').doc(mid).collection('deposits').doc(depId).update({status:'rejected', verifiedAt: firebase.firestore.FieldValue.serverTimestamp(), verifier: clientUid});
-  alert('Rejected');
-};
-
-// place order
-document.getElementById('btnBuy').addEventListener('click', ()=>placeOrder('BUY'));
-document.getElementById('btnSell').addEventListener('click', ()=>placeOrder('SELL'));
-
-async function placeOrder(type){
-  if(!currentMarketId){ alert('Pilih market dulu'); return; }
-  const lot = parseFloat(document.getElementById('size').value) || 0.1;
-  const tp_pips = parseFloat(document.getElementById('tp').value) || 20;
-  const sl_pips = parseFloat(document.getElementById('sl').value) || 20;
-  const entry = currentMarket.price;
-  const tp = type === 'BUY' ? parseFloat((entry + tp_pips*0.0001).toFixed(5)) : parseFloat((entry - tp_pips*0.0001).toFixed(5));
-  const sl = type === 'BUY' ? parseFloat((entry - sl_pips*0.0001).toFixed(5)) : parseFloat((entry + sl_pips*0.0001).toFixed(5));
-  const orderDoc = {
-    userUID: clientUid || 'anon-'+clientId,
-    type, size: lot, entry, tp, sl,
-    status: 'open', createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  };
-  await db.collection('markets').doc(currentMarketId).collection('orders').add(orderDoc);
-  // local feedback
-  alert('Order placed: ' + type + ' @' + formatPrice(entry));
-}
-
-// render orders UI
-function renderOrders(){
-  ordersListEl.innerHTML = '';
-  orders.filter(o=>o.status==='open' && (o.userUID === (clientUid||'anon-'+clientId))).forEach(o=>{
-    const el = document.createElement('div'); el.className='order';
-    el.innerHTML = `<div><div style="font-weight:700">${o.type} ${o.size} lot</div><div style="font-size:12px;color:var(--muted)">Entry ${formatPrice(o.entry)} TP ${formatPrice(o.tp)} SL ${formatPrice(o.sl)}</div></div>
-      <div style="text-align:right"><div style="font-weight:700">${o.userUID=== (clientUid||'anon-'+clientId)?'<button class=\"btn-ghost\" onclick=\"closeManual(\\''+o.id+'\\')\">Close</button>':''}</div></div>`;
-    ordersListEl.appendChild(el);
-  });
-
-  // history show closed orders by this user
-  historyListEl.innerHTML='';
-  orders.filter(o=> o.userUID === (clientUid||'anon-'+clientId)).slice(0,40).forEach(o=>{
-    if(o.status !== 'open'){
-      const el = document.createElement('div');
-      el.style.padding='6px'; el.style.borderRadius='6px'; el.style.background='rgba(255,255,255,0.02)'; el.style.marginBottom='6px';
-      el.innerHTML = `<div style="font-weight:700">${o.type} ${o.size} • ${o.status}</div><div style="font-size:12px;color:var(--muted)">Entry ${formatPrice(o.entry)} Close ${o.closePrice?formatPrice(o.closePrice):'-'}</div>`;
-      historyListEl.appendChild(el);
-    }
-  });
-}
-
-// manual close (user)
-window.closeManual = async (orderId) => {
-  if(!currentMarketId) return;
-  const docRef = db.collection('markets').doc(currentMarketId).collection('orders').doc(orderId);
-  const doc = await docRef.get();
-  if(!doc.exists) return;
-  const o = doc.data();
-  if(o.userUID !== (clientUid||'anon-'+clientId)) return alert('Only owner can close');
-  const closePrice = currentMarket.price;
-  const pips = toPips(closePrice, o.entry) * (o.type === 'BUY' ? 1 : -1);
-  const pl = pips * pipValue * o.size;
-  await docRef.update({status:'closed', closePrice, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'manual', pl});
-  alert('Order closed');
-};
-
-// admin: render all orders
-function renderAdminOrders(){
-  adminOrdersEl.innerHTML = '';
-  orders.forEach(o=>{
-    const el = document.createElement('div');
-    el.style.padding='6px'; el.style.borderRadius='6px'; el.style.background='rgba(255,255,255,0.02)'; el.style.marginBottom='6px';
-    el.innerHTML = `<div style="display:flex;justify-content:space-between"><div><div style="font-weight:700">${o.type} ${o.size}</div><div style="font-size:12px;color:var(--muted)">${o.userUID}</div></div>
-      <div style="text-align:right"><div style="font-weight:700">${o.status}</div>
-      ${o.status==='open'?`<button class="btn-ghost" onclick="adminCloseOrder('${o.id}','TP')">Close TP</button><button class="btn-ghost" onclick="adminCloseOrder('${o.id}','SL')">Close SL</button>`:''}
-      </div></div>`;
-    adminOrdersEl.appendChild(el);
-  });
-}
-window.adminCloseOrder = async (orderId, reason)=>{
-  if(clientUid !== ADMIN_UID) return alert('Only admin');
-  const ref = db.collection('markets').doc(currentMarketId).collection('orders').doc(orderId);
-  const doc = await ref.get();
-  if(!doc.exists) return;
-  const o = doc.data();
-  const closePrice = reason === 'TP' ? o.tp : (reason==='SL' ? o.sl : currentMarket.price);
-  const pips = toPips(closePrice, o.entry) * (o.type === 'BUY' ? 1 : -1);
-  const pl = pips * pipValue * o.size;
-  await ref.update({status:'closed', closePrice, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'admin-'+reason, pl});
-  alert('Order closed by admin');
-};
-
-// deposits simulation
-async function createDepositForDemo(amount=100){
-  if(!currentMarketId) return;
-  await db.collection('markets').doc(currentMarketId).collection('deposits').add({
-    userUID: clientUid||'anon-'+clientId, amount, status:'pending', createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
-  alert('Deposit submitted (pending verification)');
-}
-
-// admin toggles engine (start/stop)
-btnStartEngine.addEventListener('click', ()=>{
-  if(clientUid !== ADMIN_UID) return alert('Only admin can start engine (demo)');
-  if(!currentMarketId) return alert('Select market first');
-  engineRunning = !engineRunning;
-  btnStartEngine.innerText = engineRunning ? 'Stop Engine' : 'Start Engine';
-  if(engineRunning) startEngineLoop();
-  else stopEngineLoop();
-});
-
-function stopEngineLoop(){
-  if(engineInterval) clearInterval(engineInterval);
-  engineInterval = null;
-}
-
-// engine: only admin should run this — updates market.price in firestore periodically
-function startEngineLoop(){
-  if(!currentMarketId) return alert('Pilih market dulu');
-  const marketRef = db.collection('markets').doc(currentMarketId);
-  // read current settings
-  marketRef.get().then(doc=>{
-    if(!doc.exists) return alert('Market not found');
-    const m = doc.data();
-    let vol = m.volatility || 1.0;
-    let mode = m.engineMode || 'normal';
-    // engine tick rate depends on timeframe (we'll tick every 200ms by default)
-    let baseTickMs = 500;
-    engineInterval = setInterval(async ()=>{
-      // re-read vol/mode occasionally
-      const snap = await marketRef.get();
-      const ms = snap.exists ? snap.data() : m;
-      vol = ms.volatility || vol;
-      mode = ms.engineMode || mode;
-      // compute step
-      let rnd = (Math.random()-0.5)*2;
-      let spike = (Math.random()<0.01) ? (Math.random()-0.5)*0.002*vol : 0;
-      let mrStrength = 0.001;
-      let last = ms.price || 1.1000;
-      let step = rnd * 0.00008 * vol + (1.1 - last) * mrStrength * 0.0001 + spike;
-      // engineMode adjustments
-      if(mode === 'slow') step *= 0.2;
-      if(mode === 'extreme') step *= 4;
-      const newP = Math.max(0.0001, parseFloat((last + step).toFixed(5)));
-      // write to firestore
-      await marketRef.update({
-        price: newP,
-        lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      // server-side order checks are simulated by admin client: check orders and auto-close
-      // fetch open orders and close those hitting TP/SL
-      const ordersSnap = await marketRef.collection('orders').where('status','==','open').get();
-      ordersSnap.forEach(async odoc=>{
-        const o = odoc.data();
-        if(o.type === 'BUY'){
-          if(newP >= o.tp){
-            const pips = toPips(o.tp, o.entry);
-            const pl = pips * pipValue * o.size;
-            await odoc.ref.update({status:'closed', closePrice:o.tp, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'TP', pl});
-          } else if(newP <= o.sl){
-            const pips = toPips(o.sl, o.entry);
-            const pl = pips * pipValue * o.size * (o.type==='BUY'?1:-1);
-            await odoc.ref.update({status:'closed', closePrice:o.sl, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'SL', pl});
-          }
-        } else {
-          if(newP <= o.tp){
-            const pips = toPips(o.entry, o.tp);
-            const pl = pips * pipValue * o.size;
-            await odoc.ref.update({status:'closed', closePrice:o.tp, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'TP', pl});
-          } else if(newP >= o.sl){
-            const pips = toPips(o.entry, o.sl);
-            const pl = pips * pipValue * o.size * (o.type==='BUY'?1:-1);
-            await odoc.ref.update({status:'closed', closePrice:o.sl, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'SL', pl});
-          }
-        }
-      });
-
-    }, baseTickMs);
-  });
-}
-
-// UI: set uid (demo)
-btnSetUid.addEventListener('click', ()=>{
-  const v = uidInput.value.trim();
-  if(!v) return alert('Masukkan UID demo (string). Untuk admin masukkan: ' + ADMIN_UID);
-  clientUid = v;
-  localStorage.setItem('demo_uid', clientUid);
-  alert('UID set: ' + clientUid);
-  updateAdminUI();
-});
-btnSignOut.addEventListener('click', ()=>{
-  clientUid = null; localStorage.removeItem('demo_uid'); updateAdminUI(); alert('Signed out (demo)');
-});
-
-function updateAdminUI(){
-  if(clientUid === ADMIN_UID){
-    adminPanel.classList.add('show');
-  } else {
-    adminPanel.classList.remove('show');
-  }
-}
-updateAdminUI();
-
-// admin vol change -> update market's volatility if admin toggles and market selected
-volAdmin.addEventListener('input', ()=>{
-  if(clientUid !== ADMIN_UID) return;
-  if(!currentMarketId) return;
-  db.collection('markets').doc(currentMarketId).update({volatility: parseFloat(volAdmin.value)});
-});
-engineModeSel.addEventListener('change', ()=>{
-  if(clientUid !== ADMIN_UID) return;
-  if(!currentMarketId) return;
-  db.collection('markets').doc(currentMarketId).update({engineMode: engineModeSel.value});
-});
-
-// load markets at start
-listMarkets();
-
-// listen for market changes (firestore) - used to build priceHistory
+/* ========== push price history & candle aggregation ========== */
 function pushPriceToHistory(price, t){
   if(!t) t = Date.now();
   priceHistory.push({t, price});
-  // limit history
   if(priceHistory.length > 2000) priceHistory.shift();
   rebuildCandlesFromHistory();
 }
-
-// rebuild candles according to timeframeMs
 function rebuildCandlesFromHistory(){
   candles = [];
   if(priceHistory.length === 0) return;
-  // group ticks into timeframe buckets
   let bucket = null;
   priceHistory.forEach(pt=>{
     const bucketStart = Math.floor(pt.t / timeframeMs) * timeframeMs;
@@ -613,90 +374,282 @@ function rebuildCandlesFromHistory(){
       if(bucket) candles.push(bucket);
       bucket = {t: bucketStart, o: pt.price, h: pt.price, l: pt.price, c: pt.price};
     } else {
-      bucket.c = pt.price;
-      if(pt.price > bucket.h) bucket.h = pt.price;
-      if(pt.price < bucket.l) bucket.l = pt.price;
+      bucket.c = pt.price; if(pt.price > bucket.h) bucket.h = pt.price; if(pt.price < bucket.l) bucket.l = pt.price;
     }
   });
   if(bucket) candles.push(bucket);
-  // keep recent N candles
   if(candles.length > 400) candles = candles.slice(-400);
-  draw();
 }
 
-// Draw chart based on candles
+/* ========== draw chart ========== */
 function draw(){
-  const W = canvas.width / DPR;
-  const H = canvas.height / DPR;
-  ctx.clearRect(0,0,W,H);
-  ctx.fillStyle = 'transparent'; ctx.fillRect(0,0,W,H);
-  if(!currentMarket) {
-    ctx.fillStyle = '#9fb0d6'; ctx.font='14px Arial'; ctx.fillText('Pilih market untuk mulai', 20, 30); return;
-  }
+  const W = canvas.width / DPR; const H = canvas.height / DPR;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='transparent'; ctx.fillRect(0,0,W,H);
+  if(!currentMarket){ ctx.fillStyle='#9fb0d6'; ctx.font='14px Arial'; ctx.fillText('Pilih market untuk mulai',20,30); return; }
   const arr = candles.slice(-Math.max(40, Math.min(150, Math.floor(W/6))));
   if(arr.length === 0) return;
-  let maxP = -Infinity, minP = Infinity;
-  arr.forEach(c=>{ maxP = Math.max(maxP, c.h); minP = Math.min(minP, c.l); });
-  const pad = (maxP - minP) * 0.15 || 0.0005;
-  maxP += pad; minP -= pad;
-  function py(p){ return ((maxP - p)/(maxP-minP))*(H-40)+20; }
-  const candleW = Math.max(4, (W / Math.max(30, arr.length)) * 0.6);
-  const gap = candleW * 0.25;
+  let maxP=-Infinity, minP=Infinity; arr.forEach(c=>{ maxP=Math.max(maxP,c.h); minP=Math.min(minP,c.l); });
+  const pad = (maxP-minP)*0.15 || 0.0005; maxP+=pad; minP-=pad;
+  function py(p){ return ((maxP-p)/(maxP-minP))*(H-40)+20; }
+  const candleW = Math.max(4, (W/Math.max(30, arr.length))*0.6); const gap = candleW*0.25;
   let x = 40;
   for(let i=0;i<arr.length;i++){
-    const c = arr[i];
-    const up = c.c >= c.o;
+    const c = arr[i]; const up = c.c >= c.o;
     const col = up ? getComputedStyle(document.documentElement).getPropertyValue('--green').trim() : getComputedStyle(document.documentElement).getPropertyValue('--red').trim();
-    const yOpen = py(c.o), yClose = py(c.c), yHigh = py(c.h), yLow = py(c.l);
-    // wick
-    ctx.strokeStyle = col; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(x + candleW/2, yHigh); ctx.lineTo(x + candleW/2, yLow); ctx.stroke();
-    // body
-    const top = Math.min(yOpen,yClose), hbody = Math.max(1, Math.abs(yClose-yOpen));
+    const yO = py(c.o), yC = py(c.c), yH = py(c.h), yL = py(c.l);
+    ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x+candleW/2,yH); ctx.lineTo(x+candleW/2,yL); ctx.stroke();
+    const top = Math.min(yO,yC), hbody = Math.max(1, Math.abs(yC-yO));
     ctx.fillStyle = col; ctx.fillRect(x, top, candleW, hbody);
     x += candleW + gap;
   }
-  // last price line
   ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.beginPath();
-  const yNow = py(currentMarket.price);
-  ctx.moveTo(40, yNow); ctx.lineTo(W-10, yNow); ctx.stroke();
-  ctx.fillStyle = '#fff'; ctx.font='12px Arial'; ctx.textAlign='right'; ctx.fillText(formatPrice(currentMarket.price), W-12, yNow-6);
+  const yNow = py(currentMarket.price); ctx.moveTo(40,yNow); ctx.lineTo(W-10,yNow); ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.font='12px Arial'; ctx.textAlign='right'; ctx.fillText((currentMarket.price||0).toFixed(5), W-12, yNow-6);
 }
 
-// When orders change, update local balance/equity based on closed PL for this user
+/* ========== Auth (Google + Email) ========== */
+let currentUser = null;
+const provider = new firebase.auth.GoogleAuthProvider();
+
+btnSignInGoogle.addEventListener('click', ()=>auth.signInWithPopup(provider).catch(e=>alert(e.message)));
+btnSignOut.addEventListener('click', ()=>auth.signOut());
+
+btnRegisterEmail.addEventListener('click', ()=>{
+  const email = emailInput.value.trim(); const pw = passInput.value;
+  if(!email || !pw) return alert('Email & password required');
+  auth.createUserWithEmailAndPassword(email, pw).then(()=>alert('Registered')).catch(e=>alert(e.message));
+});
+btnLoginEmail.addEventListener('click', ()=>{
+  const email = emailInput.value.trim(); const pw = passInput.value;
+  if(!email || !pw) return alert('Email & password required');
+  auth.signInWithEmailAndPassword(email, pw).catch(e=>alert(e.message));
+});
+
+auth.onAuthStateChanged(async (user)=>{
+  currentUser = user;
+  if(user){
+    uidInfoEl.innerText = user.email ? (user.email) : user.uid;
+    // update admin visibility
+    if(user.uid === ADMIN_UID) adminPanel.classList.add('show'); else adminPanel.classList.remove('show');
+    // update localBalance key so it's per-device but still tied to device (not user)
+    balance = parseFloat(localStorage.getItem(localBalanceKey)) || 1000.0;
+    balanceEl.innerText = balance.toFixed(2);
+  } else {
+    uidInfoEl.innerText = 'not signed in';
+    adminPanel.classList.remove('show');
+  }
+});
+
+/* ========== place order (includes deviceId so balance per device stays correct) ========== */
+document.getElementById('btnBuy').addEventListener('click', ()=>placeOrder('BUY'));
+document.getElementById('btnSell').addEventListener('click', ()=>placeOrder('SELL'));
+
+async function placeOrder(type){
+  if(!currentMarketId) return alert('Pilih market dulu');
+  const lot = parseFloat(document.getElementById('size').value) || 0.1;
+  const tp_pips = parseFloat(document.getElementById('tp').value) || 20;
+  const sl_pips = parseFloat(document.getElementById('sl').value) || 20;
+  const entry = currentMarket.price;
+  const tp = type === 'BUY' ? parseFloat((entry + tp_pips*0.0001).toFixed(5)) : parseFloat((entry - tp_pips*0.0001).toFixed(5));
+  const sl = type === 'BUY' ? parseFloat((entry - sl_pips*0.0001).toFixed(5)) : parseFloat((entry + sl_pips*0.0001).toFixed(5));
+  const orderDoc = {
+    userUID: currentUser ? currentUser.uid : 'anon',
+    deviceId,
+    type, size: lot, entry, tp, sl,
+    status: 'open',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  await db.collection('markets').doc(currentMarketId).collection('orders').add(orderDoc);
+  alert('Order placed: ' + type + ' @' + entry.toFixed(5));
+}
+
+/* ========== render orders (show only open orders for this user/device) ========== */
+function renderOrders(){
+  ordersListEl.innerHTML = '';
+  const myId = currentUser ? currentUser.uid : 'anon';
+  ordersSnapshot.filter(o => o.status === 'open' && o.deviceId === deviceId).forEach(o=>{
+    const el = document.createElement('div'); el.className='order';
+    el.innerHTML = `<div><div style="font-weight:700">${o.type} ${o.size} lot</div><div style="font-size:12px;color:var(--muted)">Entry ${o.entry.toFixed(5)} TP ${o.tp.toFixed(5)} SL ${o.sl.toFixed(5)}</div></div>
+      <div style="text-align:right"><div style="font-weight:700"><button class="btn-ghost" onclick="closeManual('${o.id}')">Close</button></div></div>`;
+    ordersListEl.appendChild(el);
+  });
+
+  // history: show closed orders of this device
+  historyListEl.innerHTML = '';
+  ordersSnapshot.filter(o => o.status === 'closed' && o.deviceId === deviceId).slice(0,40).forEach(o=>{
+    const el = document.createElement('div');
+    el.style.padding='6px'; el.style.borderRadius='6px'; el.style.background='rgba(255,255,255,0.02)'; el.style.marginBottom='6px';
+    el.innerHTML = `<div style="font-weight:700">${o.type} ${o.size} • ${o.reason || o.status}</div><div style="font-size:12px;color:var(--muted)">Entry ${o.entry.toFixed(5)} • Close ${o.closePrice?o.closePrice.toFixed(5):'-'}</div>`;
+    historyListEl.appendChild(el);
+  });
+}
+
+/* manual close (by device owner) */
+window.closeManual = async (orderId) => {
+  if(!currentMarketId) return;
+  const ref = db.collection('markets').doc(currentMarketId).collection('orders').doc(orderId);
+  const doc = await ref.get();
+  if(!doc.exists) return;
+  const o = doc.data();
+  if(o.deviceId !== deviceId) return alert('Only order creator device can manual close (per-device balance model).');
+  const closePrice = currentMarket.price;
+  const pips = Math.round((closePrice - o.entry)/0.0001) * (o.type === 'BUY' ? 1 : -1);
+  const pl = pips * pipValue * o.size;
+  await ref.update({status:'closed', closePrice, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'manual', pl});
+  alert('Order closed (manual)');
+};
+
+/* ========== admin: create market, engine controls ========== */
+btnCreateMarket.addEventListener('click', async ()=>{
+  if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only admin');
+  const name = prompt('Nama market (ex: EUR/USD Demo)');
+  if(!name) return;
+  const basePrice = parseFloat(prompt('Harga awal (contoh 1.1000)','1.1000')) || 1.1000;
+  const doc = await db.collection('markets').add({
+    name,
+    price: parseFloat(basePrice.toFixed(5)),
+    volatility: 1.0,
+    timeframeMs: 1000,
+    ownerUID: currentUser.uid,
+    autoTick: false,
+    engineMode: 'normal',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  alert('Market created: ' + doc.id);
+  await listMarkets();
+});
+
+btnStartEngine.addEventListener('click', ()=>{
+  if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only admin can start engine (demo)');
+  if(!currentMarketId) return alert('Select market first');
+  engineRunning = !engineRunning;
+  btnStartEngine.innerText = engineRunning ? 'Stop Engine' : 'Start Engine';
+  if(engineRunning) startEngineLoop(); else stopEngineLoop();
+});
+
+function stopEngineLoop(){ if(engineInterval) clearInterval(engineInterval); engineInterval = null; }
+
+function startEngineLoop(){
+  if(!currentMarketId) return alert('Pilih market dulu');
+  const marketRef = db.collection('markets').doc(currentMarketId);
+  engineInterval = setInterval(async ()=>{
+    const snap = await marketRef.get();
+    const ms = snap.exists ? snap.data() : null;
+    if(!ms) return;
+    let vol = ms.volatility || 1.0;
+    let mode = ms.engineMode || 'normal';
+    const rnd = (Math.random()-0.5)*2;
+    const spike = (Math.random()<0.01) ? (Math.random()-0.5)*0.002*vol : 0;
+    const mrStrength = 0.001;
+    const last = ms.price || 1.1000;
+    let step = rnd * 0.00008 * vol + (1.1 - last) * mrStrength * 0.0001 + spike;
+    if(mode === 'slow') step *= 0.2;
+    if(mode === 'extreme') step *= 4;
+    const newP = Math.max(0.0001, parseFloat((last + step).toFixed(5)));
+    await marketRef.update({ price: newP, lastUpdate: firebase.firestore.FieldValue.serverTimestamp() });
+
+    // auto-close orders that hit TP/SL
+    const ordersSnap = await marketRef.collection('orders').where('status','==','open').get();
+    const batch = db.batch();
+    ordersSnap.forEach(odoc=>{
+      const o = odoc.data();
+      // check hits
+      if(o.type === 'BUY'){
+        if(newP >= o.tp){
+          batch.update(odoc.ref, {status:'closed', closePrice:o.tp, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'TP', pl: Math.round((o.tp - o.entry)/0.0001) * pipValue * o.size});
+        } else if(newP <= o.sl){
+          batch.update(odoc.ref, {status:'closed', closePrice:o.sl, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'SL', pl: Math.round((o.sl - o.entry)/0.0001) * pipValue * o.size});
+        }
+      } else {
+        if(newP <= o.tp){
+          batch.update(odoc.ref, {status:'closed', closePrice:o.tp, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'TP', pl: Math.round((o.entry - o.tp)/0.0001) * pipValue * o.size});
+        } else if(newP >= o.sl){
+          batch.update(odoc.ref, {status:'closed', closePrice:o.sl, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'SL', pl: Math.round((o.entry - o.sl)/0.0001) * pipValue * o.size});
+        }
+      }
+    });
+    await batch.commit();
+
+  }, 600); // tick ~600ms
+}
+
+/* ========== apply closed order PL to device-local balance when deviceId matches ========== */
 db.collectionGroup('orders').where('status','==','closed').onSnapshot(snap=>{
-  // We'll only update local balance if closed order belongs to this client (simple).
   snap.docChanges().forEach(change=>{
-    if(change.type === 'added'){
+    if(change.type === 'added' || change.type === 'modified'){
       const o = change.doc.data();
-      if(o.userUID === (clientUid||'anon-'+clientId) && o.pl){
-        // apply to local balance if not already applied (basic dedupe by storing applied ids)
-        const applied = JSON.parse(localStorage.getItem('applied_pl_ids')||'[]');
-        if(applied.indexOf(change.doc.ref.path) === -1){
+      if(!o) return;
+      if(o.deviceId === deviceId && o.pl){
+        const appliedKey = 'applied_orders_'+deviceId;
+        let applied = JSON.parse(localStorage.getItem(appliedKey) || '[]');
+        const ordPath = change.doc.ref.path;
+        if(applied.indexOf(ordPath) === -1){
           balance += (o.pl || 0);
-          localStorage.setItem('demo_balance', balance);
-          applied.push(change.doc.ref.path);
-          localStorage.setItem('applied_pl_ids', JSON.stringify(applied));
+          localStorage.setItem(localBalanceKey, balance);
           balanceEl.innerText = balance.toFixed(2);
+          applied.push(ordPath);
+          localStorage.setItem(appliedKey, JSON.stringify(applied));
         }
       }
     }
   });
 });
 
-// initial market load
-listMarkets();
+/* ========== admin UI render orders ========== */
+function renderAdminOrders(){
+  adminOrdersEl.innerHTML = '';
+  ordersSnapshot.forEach(o=>{
+    const el = document.createElement('div');
+    el.style.padding='6px'; el.style.borderRadius='6px'; el.style.background='rgba(255,255,255,0.02)'; el.style.marginBottom='6px';
+    el.innerHTML = `<div style="display:flex;justify-content:space-between"><div><div style="font-weight:700">${o.type} ${o.size}</div><div style="font-size:12px;color:var(--muted)">${o.userUID} • dev:${o.deviceId}</div></div>
+      <div style="text-align:right"><div style="font-weight:700">${o.status}</div>
+      ${o.status==='open'?`<button class="btn-ghost" onclick="adminCloseOrder('${o.id}','TP')">Close TP</button><button class="btn-ghost" onclick="adminCloseOrder('${o.id}','SL')">Close SL</button>`:''}
+      </div></div>`;
+    adminOrdersEl.appendChild(el);
+  });
+}
+window.adminCloseOrder = async (orderId, reason)=>{
+  if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only admin');
+  const ref = db.collection('markets').doc(currentMarketId).collection('orders').doc(orderId);
+  const doc = await ref.get();
+  if(!doc.exists) return;
+  const o = doc.data();
+  const closePrice = reason === 'TP' ? o.tp : (reason === 'SL' ? o.sl : currentMarket.price);
+  const pips = Math.round((closePrice - o.entry)/0.0001) * (o.type === 'BUY' ? 1 : -1);
+  const pl = pips * pipValue * o.size;
+  await ref.update({status:'closed', closePrice, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'admin-'+reason, pl});
+  alert('Order closed by admin');
+};
 
-// quick demo helpers
+/* ========== deposits approve/reject (admin) ========== */
+window.approveDeposit = async (mid, depId) => {
+  if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only admin');
+  await db.collection('markets').doc(mid).collection('deposits').doc(depId).update({status:'approved', verifiedAt: firebase.firestore.FieldValue.serverTimestamp(), verifier: currentUser.uid});
+  alert('Approved');
+};
+window.rejectDeposit = async (mid, depId) => {
+  if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only admin');
+  await db.collection('markets').doc(mid).collection('deposits').doc(depId).update({status:'rejected', verifiedAt: firebase.firestore.FieldValue.serverTimestamp(), verifier: currentUser.uid});
+  alert('Rejected');
+};
+
+/* ========== initial boot ========== */
+(async function init(){
+  await ensureDefaultMarket();
+  await listMarkets();
+  setInterval(()=>draw(), 800);
+})();
+
+/* ========== helpers & UI small bits ========== */
 document.getElementById('btnLoadDemoBalance').addEventListener('click', ()=>{
-  balance = 1000; localStorage.setItem('demo_balance', balance); balanceEl.innerText = balance.toFixed(2); alert('Balance reset demo');
+  balance = 1000; localStorage.setItem(localBalanceKey, balance); balanceEl.innerText = balance.toFixed(2); alert('Balance device reset');
 });
-
-// sign in on load if saved
-if(clientUid){ uidInput.value = clientUid; updateAdminUI(); }
-
-// refresh draw occasionally
-setInterval(()=>draw(), 800);
+document.getElementById('timeframe').addEventListener('change', ()=>{
+  timeframeMs = parseInt(document.getElementById('timeframe').value);
+  rebuildCandlesFromHistory(); draw();
+});
+document.getElementById('btnRefreshMarkets').addEventListener('click', listMarkets);
 
 </script>
 </body>
