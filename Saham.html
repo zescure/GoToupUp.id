@@ -951,7 +951,7 @@ function updateRightHistoryUI(){
 
 /* ensure default market */
 async function ensureDefaultMarket(){
-  const id = 'holez-idr';
+  const id = 'holez-IDR';
   const ref = db.collection('markets').doc(id); const doc = await ref.get();
   if(!doc.exists){
     await ref.set({ name:'HOLEZ (index)', symbol:'HOLEZ/IDR', price:1000.00, volatility:1.0, description:'Perusahaan HOLEZ', ownerUID:null, createdAt: firebase.firestore.FieldValue.serverTimestamp(), lastUpdate: firebase.firestore.FieldValue.serverTimestamp() });
