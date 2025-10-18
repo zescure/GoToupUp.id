@@ -3,27 +3,23 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Trading Panel — SPA + Firebase (Home / Market / Tx / Settings / Admin)</title>
+<title>Trading Panel — SPA + Firebase (Engine All Markets)</title>
 <style>
   :root{
     --bg:#071026; --panel:#0f1724; --muted:#9fb0d6; --text:#dbe7ff;
     --green:#2dd36f; --red:#ff5c5c; --glass: rgba(255,255,255,0.03);
   }
   html,body{height:100%;margin:0;background:linear-gradient(180deg,#071026,#071827);color:var(--text);font-family:Inter, Arial}
-  /* layout */
   .app{display:flex;flex-direction:column;min-height:100vh}
   .main{display:flex;gap:12px;padding:12px;box-sizing:border-box;flex:1}
   .left{flex:1}
   .right{width:360px}
   .panel{background:var(--panel);padding:12px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.6);margin-bottom:12px}
-  /* chart area fixed */
   .chart-wrap{height:420px; min-height:320px; border-radius:10px; overflow:hidden; display:flex;flex-direction:column}
   canvas{width:100%;height:100%; display:block; touch-action:none; user-select:none}
-  /* bottom nav (fixed) */
   .bottom-nav{position:fixed;left:12px;right:12px;bottom:12px;display:flex;justify-content:space-around;background:rgba(15,23,36,0.95);padding:8px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.6);z-index:1000}
   .nav-btn{background:transparent;border:0;color:var(--text);padding:10px 12px;border-radius:8px;cursor:pointer;font-weight:700}
   .nav-btn.active{background:rgba(255,255,255,0.03)}
-  /* lists */
   .list{display:flex;flex-direction:column;gap:8px}
   .list-item{padding:10px;border-radius:8px;background:rgba(255,255,255,0.02);display:flex;justify-content:space-between;align-items:center}
   .small{font-size:13px;color:var(--muted)}
@@ -42,7 +38,6 @@
 <div class="app">
   <div class="main">
     <div class="left">
-      <!-- Page containers (SPA) -->
       <div id="page-home" class="panel">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div><h3 style="margin:0">Home</h3><div class="small">Saldo & Market</div></div>
@@ -160,7 +155,7 @@
         <div style="display:flex;gap:8px;margin-top:8px">
           <button class="btn btn-ghost" id="adminCreateMarket">Create Market</button>
           <button class="btn btn-ghost" id="adminListMarkets">List Markets</button>
-          <button class="btn btn-ghost" id="adminEngineToggle">Start Engine</button>
+          <button class="btn btn-ghost" id="adminEngineToggle">Start Engine (All Markets)</button>
         </div>
         <div style="margin-top:8px">
           <div class="small">Global Volatility</div>
@@ -174,7 +169,6 @@
     </div>
 
     <div class="right">
-      <!-- quick panel -->
       <div class="panel">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div><strong>Quick</strong><div class="small">Info akun & market</div></div>
@@ -200,7 +194,6 @@
     </div>
   </div>
 
-  <!-- bottom nav -->
   <div class="bottom-nav" id="bottomNav">
     <button class="nav-btn active" data-page="home" id="navHome">Home</button>
     <button class="nav-btn" data-page="markets" id="navMarkets">Markets</button>
@@ -217,7 +210,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <script>
-/* ================= CONFIG ================= */
+/* ========== CONFIG ========== */
 const firebaseConfig = {
   apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
   authDomain: "zeepaylater-93a94.firebaseapp.com",
@@ -227,13 +220,13 @@ const firebaseConfig = {
   appId: "1:358065954807:web:66619211fea82a4b2518f2"
 };
 const ADMIN_UID = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52';
-/* ======================================== */
+/* ================================= */
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-/* ===== device & balance ===== */
+/* ========== device & balance ========== */
 let deviceId = localStorage.getItem('device_id');
 if(!deviceId){ deviceId = 'dev-' + Math.floor(Math.random()*10000000); localStorage.setItem('device_id', deviceId); }
 let localBalanceKey = 'balance_' + deviceId;
@@ -242,7 +235,7 @@ let equity = balance;
 document.getElementById('homeBalance').innerText = balance.toFixed(2);
 document.getElementById('marketBalance').innerText = balance.toFixed(2);
 
-/* ===== canvas/chart state (same improved chart as before) ===== */
+/* ========== canvas/chart ========== */
 const canvas = document.getElementById('chartCanvas');
 const ctx = canvas.getContext('2d');
 let DPR = window.devicePixelRatio || 1;
@@ -250,39 +243,41 @@ function resizeCanvas(){ const r = canvas.getBoundingClientRect(); canvas.width 
 window.addEventListener('resize', ()=>{ resizeCanvas(); draw(); });
 resizeCanvas();
 
-/* chart data */
-let priceHistory = []; // array of {t,price} loaded from ticks collection
+/* data state */
+let priceHistory = [];
 let candles = [];
 let timeframeMs = parseInt(document.getElementById('pageTimeframe').value || '1000');
 let userTimeframeOverride = false;
 let lastTickTime = 0;
 
-/* pan/zoom state */
+/* pan/zoom */
 let visibleSlotsOverride = null;
 let historyOffset = 0;
 let MIN_VISIBLE_CANDLES = 20, MAX_VISIBLE_CANDLES = 300;
 let LEFT_MARGIN = 40, RIGHT_MARGIN = 90;
 
-/* orders snapshot for current market */
+/* orders & user & market */
 let ordersSnapshot = [];
 let currentUser = null;
 let currentMarketId = null;
 let currentMarket = null;
 let unsubscribeMarket = null, unsubscribeOrders = null;
-let engineInterval = null;
-let engineRunning = false;
 
-/* quick refs */
+/* engine control for ALL markets */
+let engineAllInterval = null;
+let engineAllRunning = false;
+
+/* refs */
 const homeMarketList = document.getElementById('homeMarketList');
 const selectedMarketName = document.getElementById('selectedMarketName');
 const quickPrice = document.getElementById('quickPrice');
 
-/* ---------- Utilities ---------- */
+/* helpers */
 function formatPrice(p){ return p ? p.toFixed(5) : '—'; }
 function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
 function toPips(a,b){ return Math.round((a-b)/0.0001); }
 
-/* ---------- SPA Navigation ---------- */
+/* ---------- SPA navigation ---------- */
 const pages = {
   home: document.getElementById('page-home'),
   market: document.getElementById('page-market'),
@@ -297,7 +292,6 @@ function showPage(name){
   if(name === 'tx') pages.tx.style.display='block';
   if(name === 'settings') pages.settings.style.display='block';
   if(name === 'admin') pages.admin.style.display='block';
-  // nav active
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   const active = {home:'navHome', markets:'navMarkets', view:'navView', tx:'navTx', settings:'navSettings', admin:'navAdmin'}[name];
   if(active) document.getElementById(active).classList.add('active');
@@ -308,11 +302,9 @@ document.getElementById('navView').addEventListener('click',()=>{ openSelectedMa
 document.getElementById('navTx').addEventListener('click',()=>showPage('tx'));
 document.getElementById('navSettings').addEventListener('click',()=>showPage('settings'));
 document.getElementById('navAdmin').addEventListener('click',()=>showPage('admin'));
-
 showPage('home');
 
-/* ---------- Market list & Home interactions ---------- */
-
+/* ---------- Market list for Home ---------- */
 async function listMarketsToHome(){
   homeMarketList.innerHTML = '';
   const snap = await db.collection('markets').orderBy('createdAt','desc').get();
@@ -333,24 +325,21 @@ async function listMarketsToHome(){
 }
 
 async function selectMarketFromHome(marketId){
-  // set selected market id & open market page
   currentMarketId = marketId;
   document.getElementById('selectedMarketName').innerText = marketId;
   await selectMarket(marketId);
   showPage('market');
 }
 
-/* quick open: if selectedMarketId exists open it, else open default */
 function openSelectedMarketView(){
   if(currentMarketId) { showPage('market'); return; }
-  // pick eur-usd or first market
   db.collection('markets').orderBy('createdAt','desc').limit(1).get().then(snap=>{
     const doc = snap.docs[0];
     if(doc) selectMarket(doc.id).then(()=>showPage('market'));
   });
 }
 
-/* ---------- Tick persistence: read ticks collection on market select ---------- */
+/* ---------- load ticks for market from ticks subcollection ---------- */
 async function loadTicksForMarket(marketId){
   priceHistory = [];
   lastTickTime = 0;
@@ -369,11 +358,8 @@ async function loadTicksForMarket(marketId){
   }
 }
 
-/* ---------- select market & watch ---------- */
-document.getElementById('marketSelect')?.addEventListener?.('change', (e)=>selectMarket(e.target.value));
-
+/* ---------- select market & subscribe ---------- */
 async function selectMarket(marketId){
-  // unsubscribe previous
   if(unsubscribeMarket) unsubscribeMarket();
   if(unsubscribeOrders) unsubscribeOrders();
   currentMarketId = marketId;
@@ -381,9 +367,7 @@ async function selectMarket(marketId){
   ordersSnapshot = [];
   priceHistory = []; candles = []; historyOffset = 0; visibleSlotsOverride = null;
   document.getElementById('selectedMarketName').innerText = marketId || '—';
-  // load ticks history first
   await loadTicksForMarket(marketId);
-  // subscribe market doc
   const ref = db.collection('markets').doc(marketId);
   unsubscribeMarket = ref.onSnapshot(doc=>{
     if(!doc.exists) return;
@@ -394,15 +378,12 @@ async function selectMarket(marketId){
     quickPrice.innerText = formatPrice(m.price);
     document.getElementById('homeBalance').innerText = balance.toFixed(2);
     document.getElementById('marketBalance').innerText = balance.toFixed(2);
-    // update timeframe only if user not override
     if(!userTimeframeOverride){
       timeframeMs = m.timeframeMs || timeframeMs;
       document.getElementById('pageTimeframe').value = String(timeframeMs);
-      document.getElementById('pageTimeframe').value = String(timeframeMs);
     }
-    // push tick only if newer than lastTickTime
     const stamp = (m.lastUpdate && m.lastUpdate.toMillis) ? m.lastUpdate.toMillis() : Date.now();
-    if(stamp > lastTickTime - 1){ // allow small tolerance
+    if(stamp > lastTickTime - 1){
       priceHistory.push({t: stamp, price: m.price});
       lastTickTime = Math.max(lastTickTime, stamp);
       rebuildCandlesFromHistory();
@@ -410,7 +391,6 @@ async function selectMarket(marketId){
     draw();
   });
 
-  // subscribe orders
   unsubscribeOrders = db.collection('markets').doc(marketId).collection('orders').orderBy('createdAt','desc').onSnapshot(snap=>{
     ordersSnapshot = [];
     snap.forEach(d=>{ const o = d.data(); o.id = d.id; ordersSnapshot.push(o); });
@@ -418,78 +398,113 @@ async function selectMarket(marketId){
     renderAdminOrders();
   });
 
-  // set selected UI fields
   document.getElementById('pageTimeframe').value = String(timeframeMs);
   document.getElementById('marketTitle').innerText = currentMarket ? currentMarket.name : 'Market';
   draw();
 }
 
-/* ---------- tick writer (admin engine) ---------- */
+/* ---------- write tick helper (persist) ---------- */
 async function writeTickToFirestore(marketId, price){
   try{
     const tickRef = db.collection('markets').doc(marketId).collection('ticks');
-    // write timestamped tick
     await tickRef.add({ price, ts: firebase.firestore.FieldValue.serverTimestamp() });
   } catch(e){
     console.error('writeTick err', e);
   }
 }
 
-/* ---------- Engine (admin) ---------- */
-document.getElementById('adminEngineToggle').addEventListener('click', ()=>{
+/* ========== ENGINE: START/STOP FOR ALL MARKETS ========== */
+/* When admin clicks Start Engine, engine will now update ALL markets continuously.
+   For each market:
+    - compute new price
+    - update market doc (price, lastUpdate)
+    - write tick to ticks subcollection
+    - check open orders in that market and auto-close TP/SL */
+document.getElementById('adminEngineToggle').addEventListener('click', async ()=>{
   if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only admin');
-  if(!currentMarketId) return alert('Pilih market dulu');
-  engineRunning = !engineRunning;
-  document.getElementById('adminEngineToggle').innerText = engineRunning ? 'Stop Engine' : 'Start Engine';
-  if(engineRunning) startEngine(currentMarketId); else stopEngine();
+  engineAllRunning = !engineAllRunning;
+  document.getElementById('adminEngineToggle').innerText = engineAllRunning ? 'Stop Engine (All)' : 'Start Engine (All)';
+  if(engineAllRunning) startEngineAll(); else stopEngineAll();
 });
 
-function stopEngine(){ if(engineInterval) clearInterval(engineInterval); engineInterval = null; }
-
-function startEngine(marketId){
-  const marketRef = db.collection('markets').doc(marketId);
-  engineInterval = setInterval(async ()=>{
-    const snap = await marketRef.get();
-    const ms = snap.exists ? snap.data() : null;
-    if(!ms) return;
-    let vol = ms.volatility || 1.0;
-    let mode = ms.engineMode || 'normal';
-    const rnd = (Math.random()-0.5)*2;
-    const spike = (Math.random()<0.01) ? (Math.random()-0.5)*0.002*vol : 0;
-    const mrStrength = 0.001;
-    const last = ms.price || 1.1000;
-    let step = rnd * 0.00008 * vol + (1.1 - last) * mrStrength * 0.0001 + spike;
-    if(mode === 'slow') step *= 0.2;
-    if(mode === 'extreme') step *= 4;
-    const newP = Math.max(0.0001, parseFloat((last + step).toFixed(5)));
-    await marketRef.update({ price: newP, lastUpdate: firebase.firestore.FieldValue.serverTimestamp() });
-    // persist tick to ticks collection (so history saved)
-    writeTickToFirestore(marketId, newP);
-
-    // auto-close orders hitting TP/SL
-    const ordersSnap = await marketRef.collection('orders').where('status','==','open').get();
-    const batch = db.batch();
-    ordersSnap.forEach(odoc=>{
-      const o = odoc.data();
-      if(o.type === 'BUY'){
-        if(newP >= o.tp){
-          batch.update(odoc.ref, {status:'closed', closePrice:o.tp, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'TP', pl: Math.round((o.tp - o.entry)/0.0001) * 10 * o.size});
-        } else if(newP <= o.sl){
-          batch.update(odoc.ref, {status:'closed', closePrice:o.sl, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'SL', pl: Math.round((o.sl - o.entry)/0.0001) * 10 * o.size});
-        }
-      } else {
-        if(newP <= o.tp){
-          batch.update(odoc.ref, {status:'closed', closePrice:o.tp, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'TP', pl: Math.round((o.entry - o.tp)/0.0001) * 10 * o.size});
-        } else if(newP >= o.sl){
-          batch.update(odoc.ref, {status:'closed', closePrice:o.sl, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'SL', pl: Math.round((o.entry - o.sl)/0.0001) * 10 * o.size});
-        }
-      }
-    });
-    await batch.commit();
-  }, 600);
+function stopEngineAll(){
+  if(engineAllInterval) clearInterval(engineAllInterval);
+  engineAllInterval = null;
+  engineAllRunning = false;
 }
 
-/* ---------- Candles aggregation & draw (improved) ---------- */
+/* start engine for all markets */
+function startEngineAll(){
+  // interval tick (ms)
+  const TICK_MS = 600;
+  // not re-enter if already running
+  if(engineAllInterval) return;
+  engineAllInterval = setInterval(async ()=>{
+    try {
+      const marketsSnap = await db.collection('markets').get();
+      // process each market sequentially to avoid too many concurrent requests, but you can parallelize if desired
+      for(const mdoc of marketsSnap.docs){
+        try {
+          const mid = mdoc.id;
+          const m = mdoc.data();
+          // get volatility from market doc (or global admin vol fallback)
+          const marketVol = (m.volatility !== undefined) ? m.volatility : (parseFloat(document.getElementById('adminVol').value) || 1.0);
+          let vol = marketVol;
+          let mode = m.engineMode || 'normal';
+          // price step logic (same as before)
+          const rnd = (Math.random()-0.5)*2;
+          const spike = (Math.random()<0.01) ? (Math.random()-0.5)*0.002*vol : 0;
+          const mrStrength = 0.001;
+          const last = m.price || 1.1000;
+          let step = rnd * 0.00008 * vol + (1.1 - last) * mrStrength * 0.0001 + spike;
+          if(mode === 'slow') step *= 0.2;
+          if(mode === 'extreme') step *= 4;
+          const newP = Math.max(0.0001, parseFloat((last + step).toFixed(5)));
+          // update market price & lastUpdate
+          await mdoc.ref.update({ price: newP, lastUpdate: firebase.firestore.FieldValue.serverTimestamp() });
+          // persist tick
+          writeTickToFirestore(mid, newP).catch(e=>console.error('tick write err', e));
+          // check open orders in this market and auto-close TP/SL
+          try {
+            const ordersSnap = await mdoc.ref.collection('orders').where('status','==','open').get();
+            const batch = db.batch();
+            ordersSnap.forEach(odoc=>{
+              const o = odoc.data();
+              if(!o) return;
+              if(o.type === 'BUY'){
+                if(newP >= o.tp){
+                  const pl = Math.round((o.tp - o.entry)/0.0001) * 10 * o.size;
+                  batch.update(odoc.ref, { status:'closed', closePrice:o.tp, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'TP', pl });
+                } else if(newP <= o.sl){
+                  const pl = Math.round((o.sl - o.entry)/0.0001) * 10 * o.size;
+                  batch.update(odoc.ref, { status:'closed', closePrice:o.sl, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'SL', pl });
+                }
+              } else {
+                if(newP <= o.tp){
+                  const pl = Math.round((o.entry - o.tp)/0.0001) * 10 * o.size;
+                  batch.update(odoc.ref, { status:'closed', closePrice:o.tp, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'TP', pl });
+                } else if(newP >= o.sl){
+                  const pl = Math.round((o.entry - o.sl)/0.0001) * 10 * o.size;
+                  batch.update(odoc.ref, { status:'closed', closePrice:o.sl, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'SL', pl });
+                }
+              }
+            });
+            // commit batch if any changes (batch.commit even if empty is fine)
+            await batch.commit();
+          } catch(ordErr){
+            console.error('order processing err for market', mid, ordErr);
+          }
+        } catch(innerErr){
+          console.error('engine per-market err', innerErr);
+        }
+      } // end for each market
+    } catch(e){
+      console.error('engine all markets err', e);
+    }
+  }, TICK_MS);
+}
+
+/* ========== Candles aggregation & draw (same as previous improved) ========== */
 function rebuildCandlesFromHistory(){
   candles = []; if(!priceHistory.length) return;
   const tf = timeframeMs = parseInt(document.getElementById('pageTimeframe').value) || timeframeMs;
@@ -508,7 +523,6 @@ function rebuildCandlesFromHistory(){
   }
   if(bucket) candles.push(bucket);
   if(candles.length > 5000) candles = candles.slice(-5000);
-  // clamp historyOffset
   const maxOff = Math.max(0, candles.length - 1);
   historyOffset = clamp(historyOffset, 0, maxOff);
 }
@@ -549,12 +563,10 @@ function draw(){
   const pad = (maxP - minP) * 0.12 || 0.0005; maxP += pad; minP -= pad;
   function py(p){ if(maxP === minP) return H/2; return ((maxP - p)/(maxP-minP))*(H-40)+20; }
 
-  // grid
   ctx.strokeStyle='rgba(255,255,255,0.03)'; ctx.lineWidth=1; ctx.beginPath();
   for(let i=0;i<5;i++){ const y = 20 + i*(H-40)/4; ctx.moveTo(LEFT_MARGIN, y); ctx.lineTo(W-10, y); }
   ctx.stroke();
 
-  // candles
   let x = startX;
   for(let i=0;i<arrLen;i++){
     const c = arr[i]; const up = c.c >= c.o;
@@ -568,12 +580,10 @@ function draw(){
     x += candleWidth + gap;
   }
 
-  // right axis
   ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.fillRect(W-RIGHT_MARGIN+10,10,RIGHT_MARGIN-20,H-20);
   ctx.fillStyle='#bcd7ff'; ctx.font='12px Arial'; ctx.textAlign='right';
   for(let i=0;i<5;i++){ const v = minP + ((5-i-1)/4)*(maxP-minP); const y = 20 + i*(H-40)/4; ctx.fillText(v.toFixed(5), W-14, y+4); }
 
-  // TP/SL
   ordersSnapshot.forEach(o=>{
     if(o.status !== 'open') return;
     if(o.tp && o.sl){
@@ -584,16 +594,13 @@ function draw(){
     }
   });
 
-  // last price
   ctx.strokeStyle='rgba(255,255,255,0.12)'; ctx.beginPath();
   const yNow = py(currentMarket.price); ctx.moveTo(LEFT_MARGIN, yNow); ctx.lineTo(W-10, yNow); ctx.stroke();
   ctx.fillStyle='#fff'; ctx.font='12px Arial'; ctx.textAlign='right'; ctx.fillText(formatPrice(currentMarket.price), W-14, yNow-6);
-
-  // visible count
   document.getElementById('visibleCount').innerText = String(arrLen) + '/' + String(desiredVisible);
 }
 
-/* ---------- input handlers: timeframe select (market page) ---------- */
+/* ---------- timeframe change ---------- */
 document.getElementById('pageTimeframe').addEventListener('change', ()=>{
   userTimeframeOverride = true;
   timeframeMs = parseInt(document.getElementById('pageTimeframe').value);
@@ -601,7 +608,7 @@ document.getElementById('pageTimeframe').addEventListener('change', ()=>{
   historyOffset = 0; draw();
 });
 
-/* ---------- orders: place from market page and UI ---------- */
+/* ---------- orders placing ---------- */
 document.getElementById('pageBuy').addEventListener('click', ()=>placeOrderFromPage('BUY'));
 document.getElementById('pageSell').addEventListener('click', ()=>placeOrderFromPage('SELL'));
 
@@ -613,17 +620,13 @@ async function placeOrderFromPage(type){
   const entry = currentMarket.price;
   const tp = type==='BUY' ? parseFloat((entry + tp_pips*0.0001).toFixed(5)) : parseFloat((entry - tp_pips*0.0001).toFixed(5));
   const sl = type==='BUY' ? parseFloat((entry - sl_pips*0.0001).toFixed(5)) : parseFloat((entry + sl_pips*0.0001).toFixed(5));
-  const doc = {
-    userUID: currentUser ? currentUser.uid : 'anon',
-    deviceId, type, size: lot, entry, tp, sl, status:'open', createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  };
+  const doc = { userUID: currentUser ? currentUser.uid : 'anon', deviceId, type, size: lot, entry, tp, sl, status:'open', createdAt: firebase.firestore.FieldValue.serverTimestamp() };
   await db.collection('markets').doc(currentMarketId).collection('orders').add(doc);
   alert('Order placed: ' + type + ' @' + formatPrice(entry));
 }
 
 /* ---------- render orders UI ---------- */
 function renderOrdersUI(){
-  // tx page open list for this device
   const openList = document.getElementById('txOpenList');
   openList.innerHTML = '';
   const closedList = document.getElementById('txClosedList');
@@ -637,15 +640,13 @@ function renderOrdersUI(){
         openList.appendChild(el);
       } else {
         const el = document.createElement('div'); el.className='list-item';
-        el.innerHTML = `<div><div style="font-weight:700">${o.type} ${o.size} • ${o.reason||o.status}</div>
-          <div class="small">Entry ${formatPrice(o.entry)} • Close ${o.closePrice?formatPrice(o.closePrice):'-'}</div></div>
+        el.innerHTML = `<div><div style="font-weight:700">${o.type} ${o.size} • ${o.reason||o.status}</div><div class="small">Entry ${formatPrice(o.entry)} • Close ${o.closePrice?formatPrice(o.closePrice):'-'}</div></div>
           <div style="text-align:right">${o.pl? (o.pl>=0?'<div style="color:var(--green);font-weight:700">+'+o.pl.toFixed(2)+'</div>':'<div style="color:var(--red);font-weight:700">'+o.pl.toFixed(2)+'</div>') : ''}</div>`;
         closedList.appendChild(el);
       }
     }
   });
 
-  // quick right history (recent closed for device)
   const rightHistory = document.getElementById('rightHistory'); rightHistory.innerHTML = '';
   ordersSnapshot.filter(o=>o.deviceId===deviceId && o.status==='closed').slice(0,50).forEach(o=>{
     const el = document.createElement('div'); el.className='list-item';
@@ -654,17 +655,16 @@ function renderOrdersUI(){
     rightHistory.appendChild(el);
   });
 
-  // update transactions page margin calc
   updateMarginInfo();
 }
 
-/* manual close for an order by device */
+/* ---------- manual close ---------- */
 window.manualClose = async (orderId) => {
   if(!currentMarketId) return;
   const ref = db.collection('markets').doc(currentMarketId).collection('orders').doc(orderId);
   const doc = await ref.get(); if(!doc.exists) return;
   const o = doc.data();
-  if(o.deviceId !== deviceId) return alert('Hanya device pembuat order yang bisa close manual (model device-balance)');
+  if(o.deviceId !== deviceId) return alert('Hanya device pembuat order yang bisa close manual');
   const closePrice = currentMarket.price;
   const pips = Math.round((closePrice - o.entry)/0.0001) * (o.type==='BUY'?1:-1);
   const pl = pips * 10 * o.size;
@@ -672,59 +672,44 @@ window.manualClose = async (orderId) => {
   alert('Order ditutup manual');
 };
 
-/* ---------- Close All Orders (device) ---------- */
+/* ---------- close all device orders ---------- */
 document.getElementById('closeAllBtn')?.addEventListener('click', async ()=>{
   if(!currentMarketId) return alert('Pilih market');
   const coll = db.collection('markets').doc(currentMarketId).collection('orders');
   const snap = await coll.where('deviceId','==',deviceId).where('status','==','open').get();
   const batch = db.batch();
   snap.forEach(d=> {
-    const o = d.data();
-    const closePrice = currentMarket.price;
-    const pips = Math.round((closePrice - o.entry)/0.0001) * (o.type==='BUY'?1:-1);
-    const pl = pips * 10 * o.size;
+    const o = d.data(); const closePrice = currentMarket.price; const pips = Math.round((closePrice - o.entry)/0.0001) * (o.type==='BUY'?1:-1); const pl = pips * 10 * o.size;
     batch.update(d.ref, { status:'closed', closePrice, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'close_all', pl });
   });
   await batch.commit();
   alert('Close all executed for this device');
 });
 
-/* page-level Close All from market page */
-document.getElementById('pageCloseAll').addEventListener('click', async ()=>{
-  // same as above
-  if(!currentMarketId) return alert('Pilih market');
-  const coll = db.collection('markets').doc(currentMarketId).collection('orders');
-  const snap = await coll.where('deviceId','==',deviceId).where('status','==','open').get();
-  const batch = db.batch();
-  snap.forEach(d=> {
-    const o = d.data();
-    const closePrice = currentMarket.price;
-    const pips = Math.round((closePrice - o.entry)/0.0001) * (o.type==='BUY'?1:-1);
-    const pl = pips * 10 * o.size;
-    batch.update(d.ref, { status:'closed', closePrice, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'close_all', pl });
+/* ---------- apply closed PL to device balance ---------- */
+db.collectionGroup('orders').where('status','==','closed').onSnapshot(snap=>{
+  snap.docChanges().forEach(change=>{
+    if(change.type === 'added' || change.type === 'modified'){
+      const o = change.doc.data();
+      if(!o) return;
+      if(o.deviceId === deviceId && o.pl){
+        const appliedKey = 'applied_orders_'+deviceId;
+        let applied = JSON.parse(localStorage.getItem(appliedKey) || '[]');
+        const ordPath = change.doc.ref.path;
+        if(applied.indexOf(ordPath) === -1){
+          balance += (o.pl || 0);
+          localStorage.setItem(localBalanceKey, balance);
+          document.getElementById('homeBalance').innerText = balance.toFixed(2);
+          document.getElementById('marketBalance').innerText = balance.toFixed(2);
+          applied.push(ordPath);
+          localStorage.setItem(appliedKey, JSON.stringify(applied));
+        }
+      }
+    }
   });
-  await batch.commit();
-  alert('Close all executed (market page)');
 });
 
-/* ---------- Margin calculation ---------- */
-function updateMarginInfo(){
-  const leverage = parseFloat(document.getElementById('leverage').value) || parseFloat(document.getElementById('settingsLeverage').value) || 100;
-  // compute notional and margin used for open orders of this device across all markets
-  let used = 0;
-  ordersSnapshot.forEach(o=>{
-    if(o.deviceId !== deviceId || o.status !== 'open') return;
-    const price = currentMarket && currentMarket.price ? currentMarket.price : o.entry;
-    const notional = o.size * 100000 * (price || o.entry); // standard lot base
-    used += notional / leverage;
-  });
-  const marginUsed = used;
-  const marginFree = Math.max(0, balance - marginUsed);
-  document.getElementById('marginUsed').innerText = marginUsed.toFixed(2);
-  document.getElementById('marginFree').innerText = marginFree.toFixed(2);
-}
-
-/* ---------- Admin orders render ---------- */
+/* ---------- admin orders render ---------- */
 function renderAdminOrders(){
   const container = document.getElementById('adminOrders');
   container.innerHTML = '';
@@ -747,19 +732,16 @@ window.adminCloseOrder = async (orderId, reason) => {
   alert('Order closed by admin');
 };
 
-/* ---------- Sign in/out (Google) ---------- */
+/* ---------- auth ---------- */
 const provider = new firebase.auth.GoogleAuthProvider();
 document.getElementById('btnSignInGoogle').addEventListener('click', ()=>auth.signInWithPopup(provider).catch(e=>alert(e.message)));
 document.getElementById('btnSignOut').addEventListener('click', ()=>auth.signOut());
-
 auth.onAuthStateChanged(async (user)=>{
   currentUser = user;
   if(user){
     document.getElementById('settingsUser').innerText = user.email || user.displayName || user.uid;
     document.getElementById('settingsUID').innerText = user.uid;
-    // show admin button if admin
-    if(user.uid === ADMIN_UID){ document.getElementById('navAdmin').style.display='inline-block'; document.getElementById('page-admin').style.display = document.getElementById('navAdmin').classList.contains('active') ? 'block' : 'none'; }
-    else { document.getElementById('navAdmin').style.display='none'; }
+    if(user.uid === ADMIN_UID){ document.getElementById('navAdmin').style.display = 'inline-block'; } else { document.getElementById('navAdmin').style.display='none'; }
   } else {
     document.getElementById('settingsUser').innerText = 'not signed in';
     document.getElementById('settingsUID').innerText = '-';
@@ -767,17 +749,15 @@ auth.onAuthStateChanged(async (user)=>{
   }
 });
 
-/* ---------- list markets initially ---------- */
+/* ---------- boot ---------- */
 async function boot(){
   await ensureDefaultMarket();
   await listMarketsToHome();
-  // if eur-usd exists, select it as default
   const prefer = await db.collection('markets').doc('eur-usd').get();
   if(prefer.exists) {
     await selectMarket('eur-usd');
     currentMarketId = 'eur-usd';
   } else {
-    // pick first available
     const first = await db.collection('markets').orderBy('createdAt','desc').limit(1).get();
     if(first.docs[0]) await selectMarket(first.docs[0].id);
   }
@@ -785,7 +765,6 @@ async function boot(){
 }
 boot();
 
-/* ---------- ensure default market (eur-usd) ---------- */
 async function ensureDefaultMarket(){
   try {
     const defaultId = 'eur-usd';
@@ -797,11 +776,10 @@ async function ensureDefaultMarket(){
   } catch(e){ console.error(e); }
 }
 
-/* ---------- home deposit/withdraw (simple simulation) ---------- */
+/* ---------- home deposit/withdraw (demo) ---------- */
 document.getElementById('homeDeposit').addEventListener('click', async ()=>{
   const amt = parseFloat(prompt('Jumlah deposit (demo)', '100'));
   if(!amt || amt <= 0) return;
-  // create deposit doc (pending) and if admin verifies later will add funds; for demo, instantly apply to device balance
   balance += amt; localStorage.setItem(localBalanceKey, balance); document.getElementById('homeBalance').innerText = balance.toFixed(2); document.getElementById('marketBalance').innerText = balance.toFixed(2);
   alert('Deposit diterima (demo) +'+amt);
 });
@@ -825,58 +803,8 @@ document.getElementById('adminCreateMarket').addEventListener('click', async ()=
 });
 document.getElementById('adminListMarkets').addEventListener('click', ()=>listMarketsToHome());
 
-/* ---------- close all orders button (home) ---------- */
-document.getElementById('homeOpenOrders').addEventListener('click', ()=>showPage('tx'));
-
-/* ---------- Close All button on market page ---------- */
-document.getElementById('pageCloseAll').addEventListener('click', async ()=>{
-  if(!currentMarketId) return alert('Pilih market');
-  const coll = db.collection('markets').doc(currentMarketId).collection('orders');
-  const snap = await coll.where('deviceId','==',deviceId).where('status','==','open').get();
-  const batch = db.batch();
-  snap.forEach(d=>{
-    const o = d.data(); const closePrice = currentMarket.price; const pips = Math.round((closePrice - o.entry)/0.0001) * (o.type==='BUY'?1:-1); const pl = pips * 10 * o.size;
-    batch.update(d.ref, { status:'closed', closePrice, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'close_all', pl });
-  });
-  await batch.commit();
-  alert('Close all executed');
-});
-
-/* ---------- tick subscription: when a market doc updates we already push tick based on lastUpdate in selectMarket onSnapshot */
-
- // apply closed PL to device balance (same logic as before)
-db.collectionGroup('orders').where('status','==','closed').onSnapshot(snap=>{
-  snap.docChanges().forEach(change=>{
-    if(change.type === 'added' || change.type === 'modified'){
-      const o = change.doc.data();
-      if(!o) return;
-      if(o.deviceId === deviceId && o.pl){
-        const appliedKey = 'applied_orders_'+deviceId;
-        let applied = JSON.parse(localStorage.getItem(appliedKey) || '[]');
-        const ordPath = change.doc.ref.path;
-        if(applied.indexOf(ordPath) === -1){
-          balance += (o.pl || 0);
-          localStorage.setItem(localBalanceKey, balance);
-          document.getElementById('homeBalance').innerText = balance.toFixed(2);
-          document.getElementById('marketBalance').innerText = balance.toFixed(2);
-          applied.push(ordPath);
-          localStorage.setItem(appliedKey, JSON.stringify(applied));
-        }
-      }
-    }
-  });
-});
-
-/* ---------- render admin button visibility after auth change (also done in auth.onAuthStateChanged) ---------- */
-auth.onAuthStateChanged(user=>{
-  currentUser = user;
-  if(user && user.uid === ADMIN_UID) { document.getElementById('navAdmin').style.display = 'inline-block'; } else { document.getElementById('navAdmin').style.display = 'none'; }
-});
-
-/* ---------- housekeeping: redraw frequently ---------- */
+/* ---------- utilities ---------- */
 setInterval(()=>{ draw(); }, 700);
-
-/* ---------- small helpers to update UI at boot ---------- */
 setInterval(()=>{ document.getElementById('homeBalance').innerText = balance.toFixed(2); document.getElementById('marketBalance').innerText = balance.toFixed(2); }, 2000);
 
 </script>
