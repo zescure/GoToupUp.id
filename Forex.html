@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Trading Panel — Auth & EUR/USD Default</title>
+<title>Trading Panel — Auth & EUR/USD Default (Fixed Chart)</title>
 <style>
   :root{
     --bg:#071026; --panel:#0f1724; --muted:#9fb0d6; --text:#dbe7ff;
@@ -258,7 +258,205 @@ let engineInterval = null;
 let engineRunning = false;
 let ordersSnapshot = []; // current market orders array
 
-/* ========== create default market (EUR/USD) if not exists ========== */
+/* ========== CHART LAYOUT CONSTS & IMPROVED BUCKET/RENDER FUNCTIONS ========== */
+const MIN_VISIBLE_CANDLES = 30;
+const MAX_VISIBLE_CANDLES = 200;
+const MIN_CANDLE_WIDTH = 4;
+const MAX_CANDLE_WIDTH = 18;
+const LEFT_MARGIN = 40;
+const RIGHT_MARGIN = 90;
+
+// push price to history
+function pushPriceToHistory(price, t){
+  if(!t) t = Date.now();
+  priceHistory.push({t, price});
+  if(priceHistory.length > 2000) priceHistory.shift();
+  rebuildCandlesFromHistory();
+}
+
+// --- rebuildCandlesFromHistory: bucket ticks by timeframeMs ---
+function rebuildCandlesFromHistory(){
+  candles = [];
+  if(!priceHistory || priceHistory.length === 0) return;
+  timeframeMs = parseInt(document.getElementById('timeframe').value) || timeframeMs;
+
+  let bucket = null;
+  for(let i=0;i<priceHistory.length;i++){
+    const pt = priceHistory[i];
+    const bucketStart = Math.floor(pt.t / timeframeMs) * timeframeMs;
+    if(!bucket || bucket.t !== bucketStart){
+      if(bucket) candles.push(bucket);
+      bucket = { t: bucketStart, o: pt.price, h: pt.price, l: pt.price, c: pt.price };
+    } else {
+      bucket.c = pt.price;
+      if(pt.price > bucket.h) bucket.h = pt.price;
+      if(pt.price < bucket.l) bucket.l = pt.price;
+    }
+  }
+  if(bucket) candles.push(bucket);
+  if(candles.length > 2000) candles = candles.slice(-2000);
+}
+
+// --- draw(): fixed view, candle width bounded, right-aligned ---
+function draw(){
+  const W = canvas.width / DPR;
+  const H = canvas.height / DPR;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = 'transparent';
+  ctx.fillRect(0,0,W,H);
+
+  if(!currentMarket || !candles || candles.length === 0){
+    ctx.fillStyle = '#9fb0d6';
+    ctx.font = '14px Arial';
+    ctx.fillText('Pilih market untuk mulai', 20, 30);
+    return;
+  }
+
+  // decide how many candle slots the view should show
+  let desiredVisible = Math.floor(W / 8);
+  desiredVisible = Math.max(MIN_VISIBLE_CANDLES, Math.min(MAX_VISIBLE_CANDLES, desiredVisible));
+  const slotCount = desiredVisible;
+
+  const usableW = Math.max(60, W - LEFT_MARGIN - RIGHT_MARGIN);
+  let candleWidth = usableW / slotCount * 0.72;
+  candleWidth = Math.max(MIN_CANDLE_WIDTH, Math.min(MAX_CANDLE_WIDTH, candleWidth));
+  const totalCandlesWidth = candleWidth * slotCount;
+  let gap = (usableW - totalCandlesWidth) / Math.max(1, slotCount - 1);
+  if(gap < 1) gap = 1;
+
+  const arr = candles.slice(-slotCount);
+  const arrLen = arr.length;
+  const slotsTotalWidth = (candleWidth * slotCount) + ((slotCount - 1) * gap);
+  const slotsLeft = LEFT_MARGIN + Math.max(0, usableW - slotsTotalWidth);
+  const emptySlots = slotCount - arrLen;
+  const startX = slotsLeft + emptySlots * (candleWidth + gap);
+
+  // compute price range
+  let maxP = -Infinity, minP = Infinity;
+  if(arrLen === 0) {
+    maxP = minP = currentMarket.price || 1.0;
+  } else {
+    for(let i=0;i<arrLen;i++){
+      const c = arr[i];
+      if(c.h > maxP) maxP = c.h;
+      if(c.l < minP) minP = c.l;
+    }
+  }
+  const pad = (maxP - minP) * 0.12 || 0.0005;
+  maxP += pad; minP -= pad;
+
+  function py(price){
+    if(maxP === minP) return H/2;
+    return ((maxP - price) / (maxP - minP)) * (H - 40) + 20;
+  }
+
+  // grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for(let i=0;i<5;i++){
+    const y = 20 + i * (H - 40) / 4;
+    ctx.moveTo(LEFT_MARGIN, y);
+    ctx.lineTo(W - 10, y);
+  }
+  ctx.stroke();
+
+  // draw candles
+  let x = startX;
+  for(let i=0;i<arrLen;i++){
+    const c = arr[i];
+    const up = c.c >= c.o;
+    const colorUp = getComputedStyle(document.documentElement).getPropertyValue('--green').trim() || '#2dd36f';
+    const colorDn = getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#ff5c5c';
+    const col = up ? colorUp : colorDn;
+
+    const yOpen = py(c.o);
+    const yClose = py(c.c);
+    const yHigh = py(c.h);
+    const yLow = py(c.l);
+
+    // wick
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x + candleWidth / 2, yHigh);
+    ctx.lineTo(x + candleWidth / 2, yLow);
+    ctx.stroke();
+
+    // body
+    const bodyTop = Math.min(yOpen, yClose);
+    const bodyH = Math.max(1, Math.abs(yClose - yOpen));
+    ctx.fillStyle = col;
+    ctx.fillRect(x, bodyTop, candleWidth, bodyH);
+
+    x += candleWidth + gap;
+  }
+
+  // price axis right
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  ctx.fillRect(W - RIGHT_MARGIN + 10, 10, RIGHT_MARGIN - 20, H - 20);
+  ctx.fillStyle = '#bcd7ff';
+  ctx.font = '12px Arial';
+  ctx.textAlign = 'right';
+  for(let i=0;i<5;i++){
+    const v = minP + ( (5 - i - 1) / 4 ) * (maxP - minP);
+    const y = 20 + i * (H - 40) / 4;
+    ctx.fillText(v.toFixed(5), W - 14, y + 4);
+  }
+
+  // draw TP/SL lines for visible orders (use ordersSnapshot)
+  const orders = window.ordersSnapshot || [];
+  if(orders.length){
+    orders.forEach(o=>{
+      if(o.status !== 'open') return;
+      if(o.tp && o.sl){
+        const yTP = py(o.tp);
+        const ySL = py(o.sl);
+        ctx.setLineDash([6,4]);
+        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = 'rgba(45,211,111,0.9)';
+        ctx.beginPath(); ctx.moveTo(LEFT_MARGIN, yTP); ctx.lineTo(W - RIGHT_MARGIN + 10, yTP); ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,92,92,0.9)';
+        ctx.beginPath(); ctx.moveTo(LEFT_MARGIN, ySL); ctx.lineTo(W - RIGHT_MARGIN + 10, ySL); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    });
+  }
+
+  // last price line
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.beginPath();
+  const yNow = py(currentMarket.price);
+  ctx.moveTo(LEFT_MARGIN, yNow); ctx.lineTo(W - 10, yNow);
+  ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.font = '12px Arial'; ctx.textAlign='right';
+  ctx.fillText((currentMarket.price||0).toFixed(5), W - 14, yNow - 6);
+}
+
+/* ========== UI & Firestore logic (Auth, markets, orders, engine) ========== */
+
+// list markets
+async function listMarkets(){
+  const snap = await db.collection('markets').orderBy('createdAt','desc').get();
+  marketSelect.innerHTML = '';
+  snap.forEach(doc=>{
+    const m = doc.data();
+    const opt = document.createElement('option');
+    opt.value = doc.id;
+    opt.innerText = m.name;
+    marketSelect.appendChild(opt);
+  });
+  if(!currentMarketId){
+    const prefer = Array.from(marketSelect.options).find(o=>o.value === 'eur-usd');
+    if(prefer) marketSelect.value = 'eur-usd';
+    else if(marketSelect.options.length>0) marketSelect.selectedIndex = 0;
+    if(marketSelect.value) selectMarket(marketSelect.value);
+  }
+}
+btnRefreshMarkets.addEventListener('click', listMarkets);
+btnListMarkets.addEventListener('click', listMarkets);
+
+// create default market (eur-usd) if not exists
 async function ensureDefaultMarket(){
   try {
     const defaultId = 'eur-usd';
@@ -277,37 +475,11 @@ async function ensureDefaultMarket(){
         lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
       });
       console.log('Default market created:', defaultId);
-    } else {
-      console.log('Default market exists');
-    }
-  } catch(e){
-    console.error('ensureDefaultMarket err', e);
-  }
+    } else { console.log('Default market exists'); }
+  } catch(e){ console.error('ensureDefaultMarket err', e); }
 }
 
-/* ========== list markets ========== */
-async function listMarkets(){
-  const snap = await db.collection('markets').orderBy('createdAt','desc').get();
-  marketSelect.innerHTML = '';
-  snap.forEach(doc=>{
-    const m = doc.data();
-    const opt = document.createElement('option');
-    opt.value = doc.id;
-    opt.innerText = m.name;
-    marketSelect.appendChild(opt);
-  });
-  // if no selection yet, pick eur-usd if exists
-  if(!currentMarketId){
-    const prefer = Array.from(marketSelect.options).find(o=>o.value === 'eur-usd');
-    if(prefer) marketSelect.value = 'eur-usd';
-    else if(marketSelect.options.length>0) marketSelect.selectedIndex = 0;
-    if(marketSelect.value) selectMarket(marketSelect.value);
-  }
-}
-btnRefreshMarkets.addEventListener('click', listMarkets);
-btnListMarkets.addEventListener('click', listMarkets);
-
-/* ========== select market & subscribe ========== */
+// select market
 marketSelect.addEventListener('change', ()=>selectMarket(marketSelect.value));
 async function selectMarket(marketId){
   if(unsubscribeMarket) unsubscribeMarket();
@@ -357,90 +529,7 @@ async function selectMarket(marketId){
   });
 }
 
-/* ========== push price history & candle aggregation ========== */
-function pushPriceToHistory(price, t){
-  if(!t) t = Date.now();
-  priceHistory.push({t, price});
-  if(priceHistory.length > 2000) priceHistory.shift();
-  rebuildCandlesFromHistory();
-}
-function rebuildCandlesFromHistory(){
-  candles = [];
-  if(priceHistory.length === 0) return;
-  let bucket = null;
-  priceHistory.forEach(pt=>{
-    const bucketStart = Math.floor(pt.t / timeframeMs) * timeframeMs;
-    if(!bucket || bucket.t !== bucketStart){
-      if(bucket) candles.push(bucket);
-      bucket = {t: bucketStart, o: pt.price, h: pt.price, l: pt.price, c: pt.price};
-    } else {
-      bucket.c = pt.price; if(pt.price > bucket.h) bucket.h = pt.price; if(pt.price < bucket.l) bucket.l = pt.price;
-    }
-  });
-  if(bucket) candles.push(bucket);
-  if(candles.length > 400) candles = candles.slice(-400);
-}
-
-/* ========== draw chart ========== */
-function draw(){
-  const W = canvas.width / DPR; const H = canvas.height / DPR;
-  ctx.clearRect(0,0,W,H); ctx.fillStyle='transparent'; ctx.fillRect(0,0,W,H);
-  if(!currentMarket){ ctx.fillStyle='#9fb0d6'; ctx.font='14px Arial'; ctx.fillText('Pilih market untuk mulai',20,30); return; }
-  const arr = candles.slice(-Math.max(40, Math.min(150, Math.floor(W/6))));
-  if(arr.length === 0) return;
-  let maxP=-Infinity, minP=Infinity; arr.forEach(c=>{ maxP=Math.max(maxP,c.h); minP=Math.min(minP,c.l); });
-  const pad = (maxP-minP)*0.15 || 0.0005; maxP+=pad; minP-=pad;
-  function py(p){ return ((maxP-p)/(maxP-minP))*(H-40)+20; }
-  const candleW = Math.max(4, (W/Math.max(30, arr.length))*0.6); const gap = candleW*0.25;
-  let x = 40;
-  for(let i=0;i<arr.length;i++){
-    const c = arr[i]; const up = c.c >= c.o;
-    const col = up ? getComputedStyle(document.documentElement).getPropertyValue('--green').trim() : getComputedStyle(document.documentElement).getPropertyValue('--red').trim();
-    const yO = py(c.o), yC = py(c.c), yH = py(c.h), yL = py(c.l);
-    ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x+candleW/2,yH); ctx.lineTo(x+candleW/2,yL); ctx.stroke();
-    const top = Math.min(yO,yC), hbody = Math.max(1, Math.abs(yC-yO));
-    ctx.fillStyle = col; ctx.fillRect(x, top, candleW, hbody);
-    x += candleW + gap;
-  }
-  ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.beginPath();
-  const yNow = py(currentMarket.price); ctx.moveTo(40,yNow); ctx.lineTo(W-10,yNow); ctx.stroke();
-  ctx.fillStyle = '#fff'; ctx.font='12px Arial'; ctx.textAlign='right'; ctx.fillText((currentMarket.price||0).toFixed(5), W-12, yNow-6);
-}
-
-/* ========== Auth (Google + Email) ========== */
-let currentUser = null;
-const provider = new firebase.auth.GoogleAuthProvider();
-
-btnSignInGoogle.addEventListener('click', ()=>auth.signInWithPopup(provider).catch(e=>alert(e.message)));
-btnSignOut.addEventListener('click', ()=>auth.signOut());
-
-btnRegisterEmail.addEventListener('click', ()=>{
-  const email = emailInput.value.trim(); const pw = passInput.value;
-  if(!email || !pw) return alert('Email & password required');
-  auth.createUserWithEmailAndPassword(email, pw).then(()=>alert('Registered')).catch(e=>alert(e.message));
-});
-btnLoginEmail.addEventListener('click', ()=>{
-  const email = emailInput.value.trim(); const pw = passInput.value;
-  if(!email || !pw) return alert('Email & password required');
-  auth.signInWithEmailAndPassword(email, pw).catch(e=>alert(e.message));
-});
-
-auth.onAuthStateChanged(async (user)=>{
-  currentUser = user;
-  if(user){
-    uidInfoEl.innerText = user.email ? (user.email) : user.uid;
-    // update admin visibility
-    if(user.uid === ADMIN_UID) adminPanel.classList.add('show'); else adminPanel.classList.remove('show');
-    // update localBalance key so it's per-device but still tied to device (not user)
-    balance = parseFloat(localStorage.getItem(localBalanceKey)) || 1000.0;
-    balanceEl.innerText = balance.toFixed(2);
-  } else {
-    uidInfoEl.innerText = 'not signed in';
-    adminPanel.classList.remove('show');
-  }
-});
-
-/* ========== place order (includes deviceId so balance per device stays correct) ========== */
+// place order
 document.getElementById('btnBuy').addEventListener('click', ()=>placeOrder('BUY'));
 document.getElementById('btnSell').addEventListener('click', ()=>placeOrder('SELL'));
 
@@ -463,10 +552,9 @@ async function placeOrder(type){
   alert('Order placed: ' + type + ' @' + entry.toFixed(5));
 }
 
-/* ========== render orders (show only open orders for this user/device) ========== */
+// render orders
 function renderOrders(){
   ordersListEl.innerHTML = '';
-  const myId = currentUser ? currentUser.uid : 'anon';
   ordersSnapshot.filter(o => o.status === 'open' && o.deviceId === deviceId).forEach(o=>{
     const el = document.createElement('div'); el.className='order';
     el.innerHTML = `<div><div style="font-weight:700">${o.type} ${o.size} lot</div><div style="font-size:12px;color:var(--muted)">Entry ${o.entry.toFixed(5)} TP ${o.tp.toFixed(5)} SL ${o.sl.toFixed(5)}</div></div>
@@ -474,7 +562,7 @@ function renderOrders(){
     ordersListEl.appendChild(el);
   });
 
-  // history: show closed orders of this device
+  // history: closed orders of this device
   historyListEl.innerHTML = '';
   ordersSnapshot.filter(o => o.status === 'closed' && o.deviceId === deviceId).slice(0,40).forEach(o=>{
     const el = document.createElement('div');
@@ -484,7 +572,7 @@ function renderOrders(){
   });
 }
 
-/* manual close (by device owner) */
+// manual close (by device owner)
 window.closeManual = async (orderId) => {
   if(!currentMarketId) return;
   const ref = db.collection('markets').doc(currentMarketId).collection('orders').doc(orderId);
@@ -499,7 +587,7 @@ window.closeManual = async (orderId) => {
   alert('Order closed (manual)');
 };
 
-/* ========== admin: create market, engine controls ========== */
+// admin create market
 btnCreateMarket.addEventListener('click', async ()=>{
   if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only admin');
   const name = prompt('Nama market (ex: EUR/USD Demo)');
@@ -520,6 +608,7 @@ btnCreateMarket.addEventListener('click', async ()=>{
   await listMarkets();
 });
 
+// engine start/stop (admin)
 btnStartEngine.addEventListener('click', ()=>{
   if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only admin can start engine (demo)');
   if(!currentMarketId) return alert('Select market first');
@@ -554,7 +643,6 @@ function startEngineLoop(){
     const batch = db.batch();
     ordersSnap.forEach(odoc=>{
       const o = odoc.data();
-      // check hits
       if(o.type === 'BUY'){
         if(newP >= o.tp){
           batch.update(odoc.ref, {status:'closed', closePrice:o.tp, closedAt: firebase.firestore.FieldValue.serverTimestamp(), reason:'TP', pl: Math.round((o.tp - o.entry)/0.0001) * pipValue * o.size});
@@ -571,10 +659,10 @@ function startEngineLoop(){
     });
     await batch.commit();
 
-  }, 600); // tick ~600ms
+  }, 600);
 }
 
-/* ========== apply closed order PL to device-local balance when deviceId matches ========== */
+/* ========== apply closed PL to device-local balance when deviceId matches ========== */
 db.collectionGroup('orders').where('status','==','closed').onSnapshot(snap=>{
   snap.docChanges().forEach(change=>{
     if(change.type === 'added' || change.type === 'modified'){
@@ -622,7 +710,7 @@ window.adminCloseOrder = async (orderId, reason)=>{
   alert('Order closed by admin');
 };
 
-/* ========== deposits approve/reject (admin) ========== */
+/* deposits approve/reject (admin) */
 window.approveDeposit = async (mid, depId) => {
   if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only admin');
   await db.collection('markets').doc(mid).collection('deposits').doc(depId).update({status:'approved', verifiedAt: firebase.firestore.FieldValue.serverTimestamp(), verifier: currentUser.uid});
@@ -634,23 +722,43 @@ window.rejectDeposit = async (mid, depId) => {
   alert('Rejected');
 };
 
+/* ========== Auth (Google + Email) ========== */
+let currentUser = null;
+const provider = new firebase.auth.GoogleAuthProvider();
+
+document.getElementById('btnSignInGoogle').addEventListener('click', ()=>auth.signInWithPopup(provider).catch(e=>alert(e.message)));
+document.getElementById('btnSignOut').addEventListener('click', ()=>auth.signOut());
+
+document.getElementById('btnRegisterEmail').addEventListener('click', ()=>{
+  const email = emailInput.value.trim(); const pw = passInput.value;
+  if(!email || !pw) return alert('Email & password required');
+  auth.createUserWithEmailAndPassword(email, pw).then(()=>alert('Registered')).catch(e=>alert(e.message));
+});
+document.getElementById('btnLoginEmail').addEventListener('click', ()=>{
+  const email = emailInput.value.trim(); const pw = passInput.value;
+  if(!email || !pw) return alert('Email & password required');
+  auth.signInWithEmailAndPassword(email, pw).catch(e=>alert(e.message));
+});
+
+auth.onAuthStateChanged(async (user)=>{
+  currentUser = user;
+  if(user){
+    uidInfoEl.innerText = user.email ? (user.email) : user.uid;
+    if(user.uid === ADMIN_UID) adminPanel.classList.add('show'); else adminPanel.classList.remove('show');
+    balance = parseFloat(localStorage.getItem(localBalanceKey)) || 1000.0;
+    balanceEl.innerText = balance.toFixed(2);
+  } else {
+    uidInfoEl.innerText = 'not signed in';
+    adminPanel.classList.remove('show');
+  }
+});
+
 /* ========== initial boot ========== */
 (async function init(){
   await ensureDefaultMarket();
   await listMarkets();
   setInterval(()=>draw(), 800);
 })();
-
-/* ========== helpers & UI small bits ========== */
-document.getElementById('btnLoadDemoBalance').addEventListener('click', ()=>{
-  balance = 1000; localStorage.setItem(localBalanceKey, balance); balanceEl.innerText = balance.toFixed(2); alert('Balance device reset');
-});
-document.getElementById('timeframe').addEventListener('change', ()=>{
-  timeframeMs = parseInt(document.getElementById('timeframe').value);
-  rebuildCandlesFromHistory(); draw();
-});
-document.getElementById('btnRefreshMarkets').addEventListener('click', listMarkets);
-
 </script>
 </body>
 </html>
