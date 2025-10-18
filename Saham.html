@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<title>PaperStocks — Admin Events & Realtime PnL (Revisi)</title>
+<title>PaperStocks — Admin Events & Realtime PnL</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -32,10 +32,10 @@
   footer.bottom-nav{position:fixed;left:12px;right:12px;bottom:12px;background:rgba(7,10,14,0.95);padding:8px;border-radius:14px;display:flex;justify-content:space-around;align-items:center;z-index:999}
   .nav-btn{background:transparent;border:0;color:var(--muted);font-weight:700;padding:6px 8px;border-radius:8px;cursor:pointer}
   .nav-btn.active{background:rgba(255,255,255,0.02);color:var(--text)}
+  /* modal */
   .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:2000}
   .modal{width:92%;max-width:720px;background:var(--card);padding:16px;border-radius:12px}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .admin-only{display:none}
   @media(max-width:900px){ .main{flex-direction:column} .right{width:100%} footer.bottom-nav{left:8px;right:8px;bottom:8px} }
 </style>
 </head>
@@ -98,8 +98,8 @@
             <input id="buyShares" type="number" value="100" min="100"/>
           </div>
           <div style="display:flex;flex-direction:column;gap:8px">
-            <button id="btnBuy" class="btn btn-primary" disabled>Beli</button>
-            <button id="btnSell" class="btn btn-danger" disabled>Jual</button>
+            <button id="btnBuy" class="btn btn-primary">Beli</button>
+            <button id="btnSell" class="btn btn-danger">Jual</button>
           </div>
         </div>
 
@@ -128,10 +128,12 @@
           <div><div style="font-weight:800">Portfolio</div><div class="small">Posisi & PnL realtime</div></div>
           <div style="text-align:right"><div class="small">Total Unrealized PnL</div><div id="totalPnl" style="font-weight:900">—</div></div>
         </div>
+
         <div style="margin-top:12px">
           <div class="small">Open Positions</div>
           <div id="positionsList" class="list" style="margin-top:8px;max-height:240px;overflow:auto"></div>
         </div>
+
         <div style="margin-top:12px">
           <div class="small">Trade History</div>
           <div id="tradesList" class="list" style="margin-top:8px;max-height:240px;overflow:auto"></div>
@@ -142,7 +144,7 @@
       <div id="page-events" class="card" style="display:none">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div><div style="font-weight:800">Kalender & Berita</div><div class="small">Admin dapat tambah/edit event untuk market tertentu</div></div>
-          <div><button id="btnOpenAddEvent" class="btn btn-ghost" style="display:none">Tambah Event</button></div>
+          <div><button id="btnOpenAddEvent" class="btn btn-ghost">Tambah Event</button></div>
         </div>
         <div style="margin-top:10px">
           <div class="small">Upcoming Events</div>
@@ -158,6 +160,7 @@
           <div><div class="small">Selected</div><div id="selectedSymbol" style="font-weight:800">—</div></div>
           <div style="text-align:right"><div class="small">Price</div><div id="selectedPrice">—</div></div>
         </div>
+
         <div style="margin-top:10px">
           <div class="small">Actions</div>
           <div style="display:flex;gap:8px;margin-top:8px">
@@ -203,6 +206,7 @@
   </footer>
 </div>
 
+<!-- modal container -->
 <div id="modalRoot" style="display:none"></div>
 
 <!-- Firebase SDK compat -->
@@ -237,20 +241,19 @@ document.getElementById('bal').innerText = balance.toFixed(2);
 /* --------------- chart & canvas --------------- */
 const canvas = document.getElementById('chartCanvas');
 const ctx = canvas.getContext('2d');
-let DPR = Math.max(1, window.devicePixelRatio || 1);
-function resizeCanvas(){ const r = canvas.getBoundingClientRect(); canvas.width = Math.floor(r.width*DPR); canvas.height = Math.floor(r.height*DPR); ctx.setTransform(DPR,0,0,DPR,0,0); draw(); }
-window.addEventListener('resize', resizeCanvas);
+let DPR = window.devicePixelRatio || 1;
+function resizeCanvas(){ const r = canvas.getBoundingClientRect(); canvas.width = Math.floor(r.width*DPR); canvas.height = Math.floor(r.height*DPR); ctx.setTransform(DPR,0,0,DPR,0,0); }
+window.addEventListener('resize', ()=>{ resizeCanvas(); draw(); });
 resizeCanvas();
 
 /* --------------- app state --------------- */
 let currentUser = null;
-let currentMarketId = null;    // market loaded on Market page
-let selectedMarketId = null;   // market chosen on Home (for opening)
+let currentMarketId = null;
 let currentMarket = null;
 let unsubscribeMarket = null;
 let marketsCache = {};     // id -> market doc
 let eventsCache = {};      // marketId -> [events...]
-let priceHistory = [];     // ticks {t,price} for currentMarket
+let priceHistory = [];     // for selected market
 let candles = [];
 let timeframeMs = 1000;
 let lastTickTime = 0;
@@ -268,7 +271,6 @@ let engineAllRunning = false;
 
 /* positions/trades realtime for user (collectionGroup) */
 let positionsSnapshotCache = []; // for PnL calc
-let unsubPositionsGroup = null;
 
 /* UI refs */
 const marketListEl = document.getElementById('marketList');
@@ -277,7 +279,6 @@ const tradesListEl = document.getElementById('tradesList');
 const eventsListEl = document.getElementById('eventsList');
 const adminControlsEl = document.getElementById('adminControls');
 const adminVolListEl = document.getElementById('adminVolList');
-const btnOpenAddEvent = document.getElementById('btnOpenAddEvent');
 
 /* ----------------- helpers ----------------- */
 function formatPrice(p){ return Number(p).toFixed(2); }
@@ -296,22 +297,14 @@ auth.onAuthStateChanged(user=>{
     document.getElementById('userInfo').innerText = user.email || user.uid;
     document.getElementById('btnSignIn').style.display = 'none';
     document.getElementById('btnSignOut').style.display = 'inline-block';
-    if(user.uid === ADMIN_UID){
-      adminControlsEl.style.display = 'flex';
-      document.getElementById('adminHint').style.display = 'none';
-      btnOpenAddEvent.style.display = 'inline-block';
-    } else {
-      adminControlsEl.style.display = 'none';
-      document.getElementById('adminHint').style.display = 'block';
-      btnOpenAddEvent.style.display = 'none';
-    }
+    if(user.uid === ADMIN_UID){ adminControlsEl.style.display = 'flex'; document.getElementById('adminHint').style.display = 'none'; }
+    else { adminControlsEl.style.display = 'none'; document.getElementById('adminHint').style.display = 'block'; }
   } else {
     document.getElementById('userInfo').innerText = 'not signed';
     document.getElementById('btnSignIn').style.display = 'inline-block';
     document.getElementById('btnSignOut').style.display = 'none';
     adminControlsEl.style.display = 'none';
     document.getElementById('adminHint').style.display = 'block';
-    btnOpenAddEvent.style.display = 'none';
   }
 });
 
@@ -332,11 +325,11 @@ function showPage(name){
   if(name==='events') document.getElementById('page-events').style.display='block';
 }
 
-/* ----------------- markets list (Home) ----------------- */
+/* ----------------- market listing + realtime subscription ----------------- */
 let unsubscribeMarketsList = null;
-function subscribeMarketsListRealtime(){
+async function subscribeMarketsListRealtime(){
   if(unsubscribeMarketsList) unsubscribeMarketsList();
-  unsubscribeMarketsList = db.collection('markets').orderBy('createdAt','desc').onSnapshot(snap=>{
+  unsubscribeMarketsList = db.collection('markets').onSnapshot(snap=>{
     marketListEl.innerHTML = '';
     marketsCache = {};
     snap.forEach(doc=>{
@@ -344,21 +337,16 @@ function subscribeMarketsListRealtime(){
       const el = document.createElement('div'); el.className='list-item';
       el.innerHTML = `<div><div style="font-weight:700">${m.name}</div><div class="small">${m.symbol || m.id}</div></div>
         <div style="text-align:right"><div style="font-weight:800">${formatPrice(m.price)}</div><div style="margin-top:6px"><button class="btn btn-ghost" data-id="${m.id}">View</button></div></div>`;
-      el.querySelector('button').addEventListener('click', ()=>{
-        // set selection (for quick open) and open Market page
-        selectedMarketId = m.id;
-        document.getElementById('selectedSymbol').innerText = m.name;
-        document.getElementById('selectedPrice').innerText = formatPrice(m.price);
-        openMarketFromHome(m.id);
-      });
+      el.querySelector('button').addEventListener('click', ()=>selectMarket(m.id));
       marketListEl.appendChild(el);
     });
     renderAdminVolList();
+    // update PnL view (prices changed)
     computeAndRenderPnL();
-  }, err=>console.warn('markets list err', err));
+  });
 }
 
-/* ----------------- admin volatility editor ----------------- */
+/* ----------------- render admin volatility editor ----------------- */
 function renderAdminVolList(){
   adminVolListEl.innerHTML = '';
   for(const id in marketsCache){
@@ -377,90 +365,67 @@ function renderAdminVolList(){
   }
 }
 
-/* ----------------- open market from Home (View) ----------------- */
-async function openMarketFromHome(marketId){
-  // show market page and load market data
-  showPage('markets');
-  document.getElementById('page-market').style.display = 'block';
-  await selectMarket(marketId);
-}
-
-/* ----------------- select market (load ticks, subscribe doc) ----------------- */
+/* ----------------- select market & load ticks & events & positions subscribe ----------------- */
+let unsubscribePositionsGroup = null;
 async function selectMarket(marketId){
-  // tear down previous subscriptions if any
-  try{ if(unsubscribeMarket) unsubscribeMarket(); } catch(e){}
-  // set pointers
-  selectedMarketId = marketId;
-  currentMarketId = marketId;
-  currentMarket = null;
-  priceHistory = []; candles = []; lastTickTime = 0;
-  // disable buy/sell until load complete
-  document.getElementById('btnBuy').disabled = true;
-  document.getElementById('btnSell').disabled = true;
-  // load persisted ticks (if any)
+  if(unsubscribeMarket) unsubscribeMarket();
+  currentMarketId = marketId; currentMarket = null; priceHistory=[]; candles=[]; lastTickTime=0;
+  document.getElementById('selectedSymbol').innerText = marketId;
+  // load persisted ticks for this market
   await loadTicksForMarket(marketId);
-  // subscribe market doc realtime
-  const ref = db.collection('markets').doc(marketId);
-  unsubscribeMarket = ref.onSnapshot(doc=>{
+  // subscribe doc realtime
+  unsubscribeMarket = db.collection('markets').doc(marketId).onSnapshot(doc=>{
     if(!doc.exists) return;
-    const m = doc.data(); currentMarket = { id:doc.id, ...m }; marketsCache[doc.id] = m;
-    // UI
-    document.getElementById('marketName').innerText = m.name;
-    document.getElementById('marketSymbol').innerText = m.symbol || doc.id;
+    const m = doc.data(); currentMarket = {...m, id:doc.id}; marketsCache[doc.id]=m;
+    document.getElementById('marketName').innerText = m.name; document.getElementById('marketSymbol').innerText = m.symbol || doc.id;
     document.getElementById('marketDesc').innerText = m.description || '';
-    document.getElementById('marketPrice').innerText = formatPrice(m.price);
+    document.getElementById('marketPrice').innerText = formatPrice(m.price); document.getElementById('marketVolDisplay').innerText = 'Vol x' + (m.volatility||1);
     document.getElementById('selectedPrice').innerText = formatPrice(m.price);
-    document.getElementById('marketVolDisplay').innerText = 'Vol x' + (m.volatility || 1);
-    // timeframe sync only when user hasn't overridden
-    if(!userTfOverride){
-      timeframeMs = m.timeframeMs || timeframeMs;
-      document.getElementById('tfSelect').value = String(timeframeMs);
-    }
-    // add latest tick into history to maintain same tick across devices
+    // push tick if new
     const stamp = (m.lastUpdate && m.lastUpdate.toMillis) ? m.lastUpdate.toMillis() : Date.now();
     if(stamp > lastTickTime - 1){
-      priceHistory.push({ t: stamp, price: m.price });
+      priceHistory.push({t: stamp, price: m.price});
       lastTickTime = Math.max(lastTickTime, stamp);
       rebuildCandlesFromHistory();
     }
-    // enable buy/sell now that market loaded
-    document.getElementById('btnBuy').disabled = false;
-    document.getElementById('btnSell').disabled = false;
     draw();
     computeAndRenderPnL();
-  }, err=>console.warn('market snapshot err', err));
-  // load events
+  });
+  // subscribe positions (for current user/device) across this market (not necessary to subscribe all markets here because we have collectionGroup below for global positions)
+  // load events for this market
   await loadEventsForMarket(marketId);
+  // show market page
+  document.getElementById('page-market').style.display='block';
+  showPage('markets');
 }
 
-/* ----------------- load persisted ticks for market ----------------- */
+/* load ticks */
 async function loadTicksForMarket(mid){
-  priceHistory = []; lastTickTime = 0;
+  priceHistory=[]; lastTickTime=0;
   try{
     const snap = await db.collection('markets').doc(mid).collection('ticks').orderBy('ts','asc').limit(5000).get();
     snap.forEach(d=>{
       const data = d.data();
       const t = (data.ts && data.ts.toMillis) ? data.ts.toMillis() : (data.t || Date.now());
-      priceHistory.push({ t, price: data.price });
+      priceHistory.push({t, price: data.price});
       lastTickTime = Math.max(lastTickTime, t);
     });
-    // ensure sorted
-    priceHistory.sort((a,b)=>a.t - b.t);
     rebuildCandlesFromHistory();
-  } catch(e){ console.warn('loadTicksForMarket err', e); }
+  }catch(e){ console.warn('load ticks err', e); }
 }
 
-/* ----------------- events load & render ----------------- */
+/* ----------------- events per market load & render ----------------- */
 async function loadEventsForMarket(mid){
   eventsCache[mid] = [];
   try{
     const snap = await db.collection('markets').doc(mid).collection('events').orderBy('startTs','asc').get();
     snap.forEach(d=>{ const ev = d.data(); ev.id = d.id; eventsCache[mid].push(ev); });
     renderEventsAll();
-  } catch(e){ console.warn('loadEventsForMarket err', e); }
+  }catch(e){ console.warn('load events err', e); }
 }
 function renderEventsAll(){
   eventsListEl.innerHTML = '';
+  // flatten events
   let all = [];
   for(const mid in eventsCache) all = all.concat(eventsCache[mid].map(e=>({marketId:mid, ...e})));
   all.sort((a,b)=>{
@@ -475,6 +440,7 @@ function renderEventsAll(){
     el.innerHTML = `<div><div style="font-weight:700">${ev.title || 'Event'}</div><div class="small">${ev.description||''}</div><div class="small">${ev.marketId} • ${start?start.toLocaleString():''} → ${end?end.toLocaleString():''}</div></div>
       <div style="text-align:right"><div class="small">Vol x${ev.volMultiplier||1}</div>${currentUser && currentUser.uid===ADMIN_UID?`<div style="margin-top:8px"><button class="btn btn-ghost" data-mid="${ev.marketId}" data-id="${ev.id}">Edit</button> <button class="btn btn-ghost" onclick="deleteEvent('${ev.marketId}','${ev.id}')">Hapus</button></div>`:''}</div>`;
     eventsListEl.appendChild(el);
+    // edit button
     const btn = el.querySelector('button[data-id]');
     if(btn){
       btn.addEventListener('click', async ()=>{
@@ -482,7 +448,25 @@ function renderEventsAll(){
         const doc = await db.collection('markets').doc(mid).collection('events').doc(id).get();
         if(!doc.exists) return alert('Event tidak ditemukan');
         const data = doc.data();
-        showEventModal({mode:'edit', marketId:mid, eventId:id, data});
+        const newTitle = prompt('Title', data.title || '');
+        if(newTitle === null) return;
+        const newDesc = prompt('Keterangan', data.description || '');
+        if(newDesc === null) return;
+        const newVol = parseFloat(prompt('Vol Multiplier (e.g. 5)', String(data.volMultiplier || 1))) || 1;
+        const durMin = parseInt(prompt('Durasi menit (30)', '30')) || 30;
+        const startStr = prompt('Start (YYYY-MM-DDTHH:MM)', new Date(data.startTs.toMillis()).toISOString().slice(0,16));
+        if(!startStr) return;
+        const startMs = new Date(startStr).getTime();
+        const endMs = startMs + durMin*60*1000;
+        await db.collection('markets').doc(mid).collection('events').doc(id).update({
+          title: newTitle,
+          description: newDesc,
+          volMultiplier: newVol,
+          startTs: firebase.firestore.Timestamp.fromMillis(startMs),
+          endTs: firebase.firestore.Timestamp.fromMillis(endMs),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        await loadEventsForMarket(mid);
       });
     }
   });
@@ -495,10 +479,12 @@ window.deleteEvent = async (mid,id) => {
   alert('Event dihapus');
 };
 
-/* ----------------- event modal ----------------- */
+/* ----------------- event modal (multi-market selection) ----------------- */
 document.getElementById('btnOpenAddEvent').addEventListener('click', ()=> showEventModal({mode:'add'}));
+
 function showEventModal(opts){
-  const root = document.getElementById('modalRoot'); root.innerHTML = ''; root.style.display = 'block';
+  // opts: {mode:'add'|'edit', marketId?, eventId?, data?}
+  const root = document.getElementById('modalRoot'); root.innerHTML = ''; root.style.display='block';
   const backdrop = document.createElement('div'); backdrop.className='modal-backdrop';
   const modal = document.createElement('div'); modal.className='modal';
   modal.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:800">${opts.mode==='add'?'Tambah Event':'Edit Event'}</div><button id="modalClose" class="btn btn-ghost">Tutup</button></div>
@@ -513,6 +499,7 @@ function showEventModal(opts){
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="ev_save" class="btn btn-primary">Simpan</button><button id="ev_cancel" class="btn btn-ghost">Batal</button></div>`;
   backdrop.appendChild(modal); root.appendChild(backdrop);
 
+  // populate market checklist
   const ml = modal.querySelector('#ev_marketlist');
   for(const id in marketsCache){
     const m = marketsCache[id];
@@ -522,6 +509,7 @@ function showEventModal(opts){
     ml.appendChild(row);
   }
 
+  // if edit mode populate fields
   if(opts.mode === 'edit' && opts.data){
     modal.querySelector('#ev_title').value = opts.data.title || '';
     modal.querySelector('#ev_desc').value = opts.data.description || '';
@@ -529,16 +517,17 @@ function showEventModal(opts){
     const s = opts.data.startTs && opts.data.startTs.toDate ? opts.data.startTs.toDate() : (opts.data.startTs? new Date(opts.data.startTs): null);
     if(s) modal.querySelector('#ev_start').value = s.toISOString().slice(0,16);
     modal.querySelector('#ev_dur').value = Math.max(1, Math.round(((opts.data.endTs && opts.data.endTs.toDate?opts.data.endTs.toDate():new Date()) - (opts.data.startTs && opts.data.startTs.toDate?opts.data.startTs.toDate():new Date()))/60000)) || 30;
-    if(opts.marketId){
+    // check the market if event is per-market (we used per-market storage) -> mark checkbox for that market only
+    if(opts.marketId) {
       const cb = modal.querySelector(`input[type=checkbox][data-id="${opts.marketId}"]`);
       if(cb) cb.checked = true;
     }
   }
 
+  // handlers
   modal.querySelector('#modalClose').addEventListener('click', closeModal);
   modal.querySelector('#ev_cancel').addEventListener('click', closeModal);
   modal.querySelector('#ev_save').addEventListener('click', async ()=>{
-    if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only admin can create event');
     const title = modal.querySelector('#ev_title').value.trim() || 'Event';
     const desc = modal.querySelector('#ev_desc').value.trim() || '';
     const vol = parseFloat(modal.querySelector('#ev_vol').value) || 1;
@@ -547,10 +536,12 @@ function showEventModal(opts){
     const dur = parseInt(modal.querySelector('#ev_dur').value) || 30;
     const startMs = new Date(startStr).getTime();
     const endMs = startMs + dur*60*1000;
+    // collect selected markets
     const cbs = modal.querySelectorAll('input[type=checkbox][data-id]');
     const selected = [];
     cbs.forEach(cb=>{ if(cb.checked) selected.push(cb.dataset.id) });
     if(selected.length === 0) return alert('Pilih minimal satu market yang terkena event');
+    // create event document for each market selected (store under market's events subcollection)
     try{
       for(const mid of selected){
         await db.collection('markets').doc(mid).collection('events').add({
@@ -558,8 +549,9 @@ function showEventModal(opts){
           startTs: firebase.firestore.Timestamp.fromMillis(startMs),
           endTs: firebase.firestore.Timestamp.fromMillis(endMs),
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          createdBy: currentUser.uid
+          createdBy: currentUser ? currentUser.uid : 'anon'
         });
+        // reload events for that market
         await loadEventsForMarket(mid);
       }
       alert('Event ditambahkan pada market terpilih');
@@ -570,7 +562,7 @@ function showEventModal(opts){
   function closeModal(){ root.innerHTML=''; root.style.display='none'; renderEventsAll(); }
 }
 
-/* ----------------- admin market create/edit ----------------- */
+/* ----------------- admin create/edit market & volatility is immediate --------------- */
 document.getElementById('btnCreateMarket').addEventListener('click', async ()=>{
   if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only admin');
   const name = prompt('Nama perusahaan (contoh: Holez)');
@@ -582,29 +574,33 @@ document.getElementById('btnCreateMarket').addEventListener('click', async ()=>{
   const doc = await db.collection('markets').add({ name, symbol, price: parseFloat(price.toFixed(2)), volatility: vol, description: desc || '', createdAt: firebase.firestore.FieldValue.serverTimestamp(), lastUpdate: firebase.firestore.FieldValue.serverTimestamp() });
   alert('Market dibuat: ' + doc.id);
 });
+
 document.getElementById('btnEditMarket').addEventListener('click', async ()=>{
   if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only admin');
   if(!currentMarketId) return alert('Pilih market dulu');
-  const ref = db.collection('markets').doc(currentMarketId);
-  const doc = await ref.get(); if(!doc.exists) return alert('Market tidak ditemukan');
+  const docRef = db.collection('markets').doc(currentMarketId);
+  const doc = await docRef.get();
+  if(!doc.exists) return alert('Market tidak ditemukan');
   const m = doc.data();
   const name = prompt('Nama', m.name) || m.name;
   const symbol = prompt('Symbol', m.symbol) || m.symbol;
   const price = parseFloat(prompt('Price', String(m.price))) || m.price;
   const vol = parseFloat(prompt('Volatility', String(m.volatility || 1))) || m.volatility;
   const desc = prompt('Deskripsi', m.description || '') || m.description;
-  await ref.update({ name, symbol, price: parseFloat(price.toFixed(2)), volatility: vol, description: desc, lastUpdate: firebase.firestore.FieldValue.serverTimestamp() });
+  await docRef.update({ name, symbol, price: parseFloat(price.toFixed(2)), volatility: vol, description: desc, lastUpdate: firebase.firestore.FieldValue.serverTimestamp() });
   alert('Market updated — volatility langsung berlaku');
 });
 
-/* ----------------- engine all markets (event-aware) ----------------- */
+/* ----------------- engine for all markets (event-aware) ----------------- */
 document.getElementById('btnEngineAll').addEventListener('click', ()=>{
   if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only admin');
   engineAllRunning = !engineAllRunning;
   document.getElementById('btnEngineAll').innerText = engineAllRunning ? 'Stop Engine (All)' : 'Start Engine (All)';
   if(engineAllRunning) startEngineAllMarkets(); else stopEngineAllMarkets();
 });
+
 function stopEngineAllMarkets(){ if(engineAllInterval) clearInterval(engineAllInterval); engineAllInterval=null; engineAllRunning=false; }
+
 function startEngineAllMarkets(){
   if(engineAllInterval) return;
   const TICK_MS = 800;
@@ -615,28 +611,36 @@ function startEngineAllMarkets(){
       for(const doc of snap.docs){
         try{
           const mid = doc.id; const m = doc.data();
-          let baseVol = (m.volatility !== undefined) ? m.volatility : 1.0;
+          // compute effective volatility considering events
+          let baseVol = (m.volatility !== undefined) ? m.volatility : (parseFloat(document.getElementById('adminGlobalVol').value) || 1.0);
+          // check for active events for this market
           let effMultiplier = 1.0;
           try {
+            const now = firebase.firestore.Timestamp.now();
             const evSnap = await db.collection('markets').doc(mid).collection('events').where('startTs','<=',now).where('endTs','>=',now).get();
             evSnap.forEach(ed=>{
-              const e = ed.data();
-              if(e.volMultiplier && e.volMultiplier > effMultiplier) effMultiplier = e.volMultiplier;
+              const ev = ed.data();
+              if(ev.volMultiplier && ev.volMultiplier > effMultiplier) effMultiplier = ev.volMultiplier;
             });
-          } catch(e){}
+          } catch(e){ /* ignore */ }
           const vol = baseVol * effMultiplier;
+          // price step logic (stock-like, more random component proportional to vol)
           const last = m.price || 1.0;
           const rnd = (Math.random()-0.5)*2;
           const spike = (Math.random()<0.02)? (Math.random()-0.5)*0.05*vol : 0;
           const meanRevert = (1.0 - last) * 0.0001;
           const step = rnd * 0.0005 * vol + spike + meanRevert;
           const newP = Math.max(0.01, parseFloat((last + step).toFixed(2)));
+          // update market price
           await doc.ref.update({ price: newP, lastUpdate: firebase.firestore.FieldValue.serverTimestamp() });
-          // persist tick for everyone
-          await doc.ref.collection('ticks').add({ price: newP, ts: firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
-        }catch(e){ console.warn('engine market err', e); }
+          // persist tick
+          await doc.ref.collection('ticks').add({ price: newP, ts: firebase.firestore.FieldValue.serverTimestamp() }).catch(err=>console.warn('tick write err', err));
+          // NOTE: for stocks we don't auto-close positions — users sell manually
+        } catch(e){ console.error('per-market engine err', e); }
       }
-    }catch(e){ console.warn('engine all err', e); }
+    } catch(e){
+      console.error('engine all err', e);
+    }
   }, TICK_MS);
 }
 
@@ -661,6 +665,7 @@ async function sellShares(){
   if(!currentMarketId || !currentMarket) return alert('Pilih market');
   const sellShares = Math.max(0, Math.floor(Number(document.getElementById('buyShares').value) || 0));
   if(isNaN(sellShares) || sellShares < 100) return alert('Minimal jual 100 lembar');
+  // gather open positions for this device/user in current market
   const coll = db.collection('markets').doc(currentMarketId).collection('positions');
   const snap = await coll.where('status','==','open').where('deviceId','==',deviceId).get();
   let available = 0; const docs = [];
@@ -684,47 +689,55 @@ async function sellShares(){
   await batch.commit();
   localStorage.setItem(balanceKey, balance);
   document.getElementById('bal').innerText = balance.toFixed(2);
-  await db.collection('markets').doc(currentMarketId).collection('trades').add({ type:'SELL', userUID: currentUser?currentUser.uid:'anon', deviceId, shares:sellShares, price: currentMarket.price, ts: firebase.firestore.FieldValue.serverTimestamp() });
+  await db.collection('markets').doc(currentMarketId).collection('trades').add({ type:'SELL', userUID: currentUser?currentUser.uid:'anon', deviceId, shares: sellShares, price: currentMarket.price, ts: firebase.firestore.FieldValue.serverTimestamp() });
   alert(`Jual ${sellShares} lembar berhasil`);
 }
 
-/* ----------------- subscribe positions group for realtime PnL ----------------- */
+/* ----------------- subscribe positions for this user/device (collectionGroup) for realtime PnL ----------------- */
+let unsubPositionsGroup = null;
 function subscribePositionsGroup(){
   if(unsubPositionsGroup) unsubPositionsGroup();
   unsubPositionsGroup = db.collectionGroup('positions').onSnapshot(snap=>{
     positionsSnapshotCache = [];
     snap.forEach(d=>{
       const p = d.data(); p._path = d.ref.path; p._id = d.id;
-      if(p.userUID === (currentUser?currentUser.uid:'anon') || p.deviceId === deviceId) positionsSnapshotCache.push(p);
+      // keep only positions that belong to current user or device
+      if(p.userUID === (currentUser?currentUser.uid:'anon') || p.deviceId === deviceId){
+        positionsSnapshotCache.push(p);
+      }
     });
     renderPositionsAndPnL();
-  }, err=>console.warn('positions group err', err));
+  });
 }
 
-/* render positions & pnl */
+/* compute PnL (unrealized) and render positions list and total PnL */
 function renderPositionsAndPnL(){
-  const open = positionsSnapshotCache.filter(p=>p.status === 'open');
-  const closed = positionsSnapshotCache.filter(p=>p.status !== 'open');
-  positionsListEl.innerHTML = ''; tradesListEl.innerHTML = '';
+  // positionsSnapshotCache contains open & closed; we will show open as positions and closed as trades
+  const open = positionsSnapshotCache.filter(p => p.status === 'open');
+  const closed = positionsSnapshotCache.filter(p => p.status !== 'open');
+  positionsListEl.innerHTML = '';
+  tradesListEl.innerHTML = '';
   let totalUnreal = 0;
+  // for each open position compute unrealized using market current price from marketsCache or fallback to position.avgPrice
   open.forEach(p=>{
     const marketPrice = (marketsCache[p.marketId] && marketsCache[p.marketId].price) ? marketsCache[p.marketId].price : p.avgPrice;
     const unreal = p.shares * (marketPrice - p.avgPrice);
     totalUnreal += unreal;
-    const item = document.createElement('div'); item.className='list-item';
-    item.innerHTML = `<div><div style="font-weight:700">${p.shares} lembar • ${p.marketName || p.marketId}</div><div class="small muted">Avg ${formatPrice(p.avgPrice)} • Now ${formatPrice(marketPrice)} • ${unreal>=0?'<span style="color:var(--accent)">+'+unreal.toFixed(2)+'</span>':'<span style="color:var(--danger)">'+unreal.toFixed(2)+'</span>'}</div></div>
+    const el = document.createElement('div'); el.className='list-item';
+    el.innerHTML = `<div><div style="font-weight:700">${p.shares} lembar • ${p.marketName || p.marketId}</div><div class="small muted">Avg ${formatPrice(p.avgPrice)} • Now ${formatPrice(marketPrice)} • Unreal ${unreal>=0?'<span style="color:var(--accent)">+'+unreal.toFixed(2)+'</span>':'<span style="color:var(--danger)">'+unreal.toFixed(2)+'</span>'}</div></div>
       <div style="text-align:right"><button class="btn btn-ghost" onclick="closePositionPath('${p._path}')">Jual</button></div>`;
-    positionsListEl.appendChild(item);
+    positionsListEl.appendChild(el);
   });
   closed.slice(0,60).forEach(p=>{
-    const item = document.createElement('div'); item.className='list-item';
-    item.innerHTML = `<div><div style="font-weight:700">${p.shares} lembar • ${p.marketName||p.marketId}</div><div class="small muted">${p.reason||p.status} • P/L ${p.pl? p.pl.toFixed(2) : '0.00'}</div></div><div style="text-align:right">${p.closedAt?(new Date(p.closedAt.seconds*1000).toLocaleString()):''}</div>`;
-    tradesListEl.appendChild(item);
+    const el = document.createElement('div'); el.className='list-item';
+    el.innerHTML = `<div><div style="font-weight:700">${p.shares} lembar • ${p.marketName||p.marketId}</div><div class="small muted">${p.reason||p.status} • P/L ${p.pl ? p.pl.toFixed(2) : '0.00'}</div></div>
+      <div style="text-align:right">${p.closedAt? (new Date(p.closedAt.seconds*1000).toLocaleString()): ''}</div>`;
+    tradesListEl.appendChild(el);
   });
-  document.getElementById('totalPnl').innerText = (totalUnreal>=0?'+':'') + totalUnreal.toFixed(2);
+  document.getElementById('totalPnl').innerText = ((totalUnreal>=0?'+':'') + totalUnreal.toFixed(2));
 }
 
-/* close position by path */
+/* close position by doc path (string path like markets/{mid}/positions/{id}) */
 window.closePositionPath = async (path)=>{
   const ref = db.doc(path);
   const doc = await ref.get(); if(!doc.exists) return alert('Position not found');
@@ -737,7 +750,13 @@ window.closePositionPath = async (path)=>{
   alert('Position closed');
 };
 
-/* ----------------- candles aggregation & draw ----------------- */
+/* ----------------- compute PnL triggered when market prices change (marketsCache updated) ----------------- */
+function computeAndRenderPnL(){
+  // simply re-render positions view if visible
+  renderPositionsAndPnL();
+}
+
+/* ----------------- draw chart & candles (same logic) ----------------- */
 document.getElementById('tfSelect').addEventListener('change', ()=>{
   userTfOverride = true;
   timeframeMs = parseInt(document.getElementById('tfSelect').value);
@@ -749,8 +768,6 @@ function rebuildCandlesFromHistory(){
   if(!priceHistory.length) return;
   const tf = timeframeMs || 1000;
   let bucket = null;
-  // ensure sorted by t
-  priceHistory.sort((a,b)=>a.t - b.t);
   for(let i=0;i<priceHistory.length;i++){
     const pt = priceHistory[i];
     const bucketStart = Math.floor(pt.t / tf) * tf;
@@ -777,123 +794,100 @@ function getVisibleSlice(slotCount, offset){
 
 function draw(){
   const W = canvas.width / DPR; const H = canvas.height / DPR;
-  ctx.clearRect(0,0,W,H);
-  if(!currentMarket){
-    ctx.fillStyle='#9fb0d6'; ctx.font='14px Arial'; ctx.fillText('Pilih market untuk melihat chart',20,30);
-    document.getElementById('visibleCount').innerText = `0/${Math.max(30, Math.floor((W-LEFT_MARGIN-RIGHT_MARGIN)/8))}`;
-    return;
-  }
-
-  let desired = visibleSlots || Math.floor((W - LEFT_MARGIN - RIGHT_MARGIN)/8);
-  desired = clamp(desired, MIN_VISIBLE, MAX_VISIBLE);
+  ctx.clearRect(0,0,W,H); if(!currentMarket){ ctx.fillStyle='#9fb0d6'; ctx.font='14px Arial'; ctx.fillText('Pilih market untuk melihat chart',20,30); return; }
+  let desired = visibleSlots || Math.floor((W - LEFT_MARGIN - RIGHT_MARGIN)/8); desired = clamp(desired, MIN_VISIBLE, MAX_VISIBLE);
   const usableW = Math.max(60, W - LEFT_MARGIN - RIGHT_MARGIN);
   let cw = usableW / desired * 0.72; cw = Math.max(3, Math.min(18, cw));
-  const totalCandlesWidth = cw * desired;
-  let gap = (usableW - totalCandlesWidth) / Math.max(1, desired - 1); if(gap < 1) gap = 1;
+  const totalWidth = cw * desired; let gap = (usableW - totalWidth) / Math.max(1, desired - 1); if(gap < 1) gap = 1;
   const arr = getVisibleSlice(desired, historyOffset); const arrLen = arr.length;
-  const slotsTotalWidth = (cw * desired) + ((desired - 1) * gap);
+  const slotsTotalWidth = (cw*desired) + ((desired - 1)*gap);
   const slotsLeft = LEFT_MARGIN + Math.max(0, usableW - slotsTotalWidth);
-  const empty = desired - arrLen;
-  const startX = slotsLeft + empty * (cw + gap);
-
+  const empty = desired - arrLen; const startX = slotsLeft + empty * (cw + gap);
   let maxP = -Infinity, minP = Infinity;
-  if(arrLen === 0){ maxP = minP = currentMarket.price || 1.0; }
-  else { for(let i=0;i<arrLen;i++){ const c = arr[i]; if(c.h > maxP) maxP = c.h; if(c.l < minP) minP = c.l; } }
-  const pad = (maxP - minP) * 0.12 || 0.5; maxP += pad; minP -= pad;
-  function py(p){ if(maxP === minP) return H/2; return ((maxP - p)/(maxP-minP))*(H-40)+20; }
-
+  if(arrLen === 0){ maxP = minP = currentMarket.price || 1.0; } else { for(let i=0;i<arrLen;i++){ const c=arr[i]; if(c.h>maxP) maxP=c.h; if(c.l<minP) minP=c.l; } }
+  const pad = (maxP-minP)*0.12 || 0.5; maxP += pad; minP -= pad;
+  function py(p){ if(maxP===minP) return H/2; return ((maxP-p)/(maxP-minP))*(H-40)+20; }
   // grid
-  ctx.strokeStyle='rgba(255,255,255,0.03)'; ctx.lineWidth=1; ctx.beginPath();
-  for(let i=0;i<5;i++){ const y = 20 + i*(H-40)/4; ctx.moveTo(LEFT_MARGIN, y); ctx.lineTo(W-10, y); }
-  ctx.stroke();
-
+  ctx.strokeStyle='rgba(255,255,255,0.03)'; ctx.lineWidth=1; ctx.beginPath(); for(let i=0;i<5;i++){ const y = 20 + i*(H-40)/4; ctx.moveTo(LEFT_MARGIN,y); ctx.lineTo(W-10,y); } ctx.stroke();
   // candles
   let x = startX;
   for(let i=0;i<arrLen;i++){
-    const c = arr[i]; const up = c.c >= c.o;
-    const colorUp = '#5de3a6', colorDn = '#ff7373';
+    const c = arr[i]; const up = c.c >= c.o; const colorUp = '#5de3a6', colorDn = '#ff7373';
     const yO = py(c.o), yC = py(c.c), yH = py(c.h), yL = py(c.l);
     ctx.strokeStyle = up ? colorUp : colorDn; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x + cw/2, yH); ctx.lineTo(x + cw/2, yL); ctx.stroke();
     const top = Math.min(yO,yC), h = Math.max(1, Math.abs(yC - yO));
     ctx.fillStyle = up ? colorUp : colorDn; ctx.fillRect(x, top, cw, h);
     x += cw + gap;
   }
-
-  // price axis
-  ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.fillRect(W - RIGHT_MARGIN + 10, 10, RIGHT_MARGIN - 20, H - 20);
+  // right axis
+  ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.fillRect(W-RIGHT_MARGIN+10,10,RIGHT_MARGIN-20,H-20);
   ctx.fillStyle='#bcd7ff'; ctx.font='12px Arial'; ctx.textAlign='right';
   for(let i=0;i<5;i++){ const v = minP + ((5-i-1)/4)*(maxP-minP); const y = 20 + i*(H-40)/4; ctx.fillText(Number(v).toFixed(2), W-14, y+4); }
-
-  // last price line + UI
-  const yNow = py(currentMarket.price);
-  ctx.strokeStyle='rgba(255,255,255,0.12)'; ctx.beginPath(); ctx.moveTo(LEFT_MARGIN, yNow); ctx.lineTo(W-10, yNow); ctx.stroke();
+  // last price line
+  ctx.strokeStyle='rgba(255,255,255,0.12)'; ctx.beginPath(); const yNow = py(currentMarket.price); ctx.moveTo(LEFT_MARGIN, yNow); ctx.lineTo(W-10,yNow); ctx.stroke();
   ctx.fillStyle='#fff'; ctx.font='12px Arial'; ctx.textAlign='right'; ctx.fillText(formatPrice(currentMarket.price), W-14, yNow-6);
-
   document.getElementById('visibleCount').innerText = `${arrLen}/${desired}`;
 }
+
+/* ----------------- periodic housekeeping ----------------- */
+setInterval(()=>{ draw(); updateRightHistoryUI(); }, 800);
 
 /* ----------------- right history quick view ----------------- */
 function updateRightHistoryUI(){
   db.collectionGroup('trades').where('deviceId','==',deviceId).orderBy('ts','desc').limit(10).get().then(snap=>{
-    const el = document.getElementById('rightHistory'); el.innerHTML='';
-    snap.forEach(d=>{
+    const el = document.getElementById('rightHistory'); el.innerHTML=''; snap.forEach(d=>{
       const t = d.data(); const time = t.ts && t.ts.toDate ? t.ts.toDate().toLocaleString() : '';
-      const item = document.createElement('div'); item.className='list-item';
-      item.innerHTML = `<div><div style="font-weight:700">${t.type} ${t.shares}</div><div class="small muted">${formatPrice(t.price)} • ${time}</div></div>`;
-      el.appendChild(item);
+      const item = document.createElement('div'); item.className='list-item'; item.innerHTML = `<div><div style="font-weight:700">${t.type} ${t.shares}</div><div class="small muted">${formatPrice(t.price)} • ${time}</div></div>`; el.appendChild(item);
     });
   }).catch(()=>{});
 }
 
 /* ----------------- initial boot ----------------- */
+(async function init(){
+  await ensureDefaultMarket();
+  await subscribeMarketsListRealtime();
+  subscribePositionsGroup();
+  // select prefer market if exists
+  const prefer = await db.collection('markets').orderBy('createdAt','asc').limit(1).get();
+  if(prefer.docs[0]) selectMarket(prefer.docs[0].id);
+})();
+
+/* ensure default market */
 async function ensureDefaultMarket(){
-  const id = 'holez-idr'; const ref = db.collection('markets').doc(id);
-  const doc = await ref.get();
+  const id = 'holez-idr';
+  const ref = db.collection('markets').doc(id); const doc = await ref.get();
   if(!doc.exists){
     await ref.set({ name:'HOLEZ (Demo)', symbol:'HOLEZ/IDR', price:1000.00, volatility:1.0, description:'Perusahaan demo HOLEZ', ownerUID:null, createdAt: firebase.firestore.FieldValue.serverTimestamp(), lastUpdate: firebase.firestore.FieldValue.serverTimestamp() });
   }
 }
 
-(async function init(){
-  await ensureDefaultMarket();
-  subscribeMarketsListRealtime();
-  subscribePositionsGroup();
+/* ----------------- event loading for all markets on boot (periodic) ----------------- */
+setInterval(async ()=>{ // refresh events every minute
+  try{
+    for(const id in marketsCache) await loadEventsForMarket(id);
+  }catch(e){}
+}, 60000);
 
-  // set selectedMarketId to first market as default but DO NOT auto-open market page:
-  const prefer = await db.collection('markets').orderBy('createdAt','asc').limit(1).get();
-  if(prefer.docs[0]){
-    selectedMarketId = prefer.docs[0].id;
-    document.getElementById('selectedSymbol').innerText = prefer.docs[0].data().name;
-    document.getElementById('selectedPrice').innerText = formatPrice(prefer.docs[0].data().price);
-  }
+/* ----------------- subscribe to marketsCache changes (already handled by subscribeMarketsListRealtime) to compute PnL live --------------- */
+/* subscribeMarketsListRealtime will update marketsCache; computeAndRenderPnL invoked there */
 
-  // periodic reload events for all markets
-  setInterval(async ()=>{ try{ for(const id in marketsCache) await loadEventsForMarket(id); }catch(e){} }, 60000);
-
-  // periodic redraw + UI
-  setInterval(()=>{ draw(); updateRightHistoryUI(); }, 800);
-})();
-
-/* ----------------- quick UI buttons ----------------- */
+/* ----------------- helpers to show pages from quick buttons ----------------- */
 document.getElementById('btnMarkets').addEventListener('click', ()=> showPage('markets'));
 document.getElementById('btnPortfolio').addEventListener('click', ()=> showPage('portfolio'));
 document.getElementById('btnGotoPortfolio').addEventListener('click', ()=> showPage('portfolio'));
-document.getElementById('btnGotoMarket').addEventListener('click', ()=> {
-  if(!selectedMarketId) return alert('Pilih market dulu dari Home');
-  openMarketFromHome(selectedMarketId);
-});
-document.getElementById('btnDeposit').addEventListener('click', ()=> {
+document.getElementById('btnGotoMarket').addEventListener('click', ()=> { if(currentMarketId) selectMarket(currentMarketId); else alert('Pilih market dulu'); });
+
+/* deposit/withdraw demo handlers */
+document.getElementById('btnDeposit').addEventListener('click', ()=>{
   const v = parseFloat(prompt('Jumlah deposit (demo)', '1000')); if(!v || v<=0) return; balance += v; localStorage.setItem(balanceKey, balance); document.getElementById('bal').innerText = balance.toFixed(2); alert('Deposit selesai (demo)');
 });
-document.getElementById('btnWithdraw').addEventListener('click', ()=> {
+document.getElementById('btnWithdraw').addEventListener('click', ()=>{
   const v = parseFloat(prompt('Tarik (demo)', '100')); if(!v || v<=0) return; if(v>balance) return alert('Saldo tidak cukup'); balance -= v; localStorage.setItem(balanceKey, balance); document.getElementById('bal').innerText = balance.toFixed(2); alert('Withdraw diproses (demo)');
 });
 
-/* recompute PnL periodically as prices update */
+/* ----------------- utility: when marketsCache changes recompute PnL automatically ----------------- */
 setInterval(()=>{ computeAndRenderPnL(); }, 1000);
 
-/* expose some debug helpers (optional) */
-window._marketsCache = marketsCache;
 </script>
 </body>
 </html>
