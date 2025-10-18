@@ -771,7 +771,7 @@ async function ensureDefaultMarket(){
     const docRef = db.collection('markets').doc(defaultId);
     const doc = await docRef.get();
     if(!doc.exists){
-      await docRef.set({ name:'EUR/USD (Demo)', price:1.10000, volatility:1.0, timeframeMs:1000, ownerUID:null, autoTick:false, engineMode:'normal', createdAt: firebase.firestore.FieldValue.serverTimestamp(), lastUpdate: firebase.firestore.FieldValue.serverTimestamp() });
+      await docRef.set({ name:'ZECOIN/IDR (1:1)', price:1.10000, volatility:1.0, timeframeMs:1000, ownerUID:null, autoTick:false, engineMode:'normal', createdAt: firebase.firestore.FieldValue.serverTimestamp(), lastUpdate: firebase.firestore.FieldValue.serverTimestamp() });
     }
   } catch(e){ console.error(e); }
 }
