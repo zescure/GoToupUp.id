@@ -3,163 +3,239 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>QRIS Statis → Dinamis (Nominal + fee)</title>
+<title>QRIS Dynamic Generator — King Zezy</title>
 <style>
-  body { font-family: Inter, system-ui, sans-serif; padding:20px; max-width:820px; margin:0 auto; }
-  h1{ margin:0 0 12px 0; font-size:18px }
-  .row{ display:flex; gap:12px; align-items:center; margin-bottom:12px; flex-wrap:wrap;}
-  label{ min-width:140px; }
-  input[type="number"]{ padding:8px; width:160px; }
-  button{ padding:8px 12px; cursor:pointer; }
-  .card{ border:1px solid #e5e5e5; padding:12px; border-radius:8px; margin-top:12px; }
-  .qr { width:300px; height:300px; }
-  pre{ background:#f6f6f6; padding:8px; overflow:auto; }
-  .small{ font-size:13px; color:#666; }
+  body{font-family:system-ui,Segoe UI,Roboto,Arial;max-width:960px;margin:24px auto;padding:16px}
+  h1{margin:0 0 12px}
+  label{display:block;margin-top:10px;font-weight:600}
+  input[type="number"]{width:160px;padding:8px;margin-top:6px}
+  select{padding:8px;margin-top:6px}
+  .row{display:flex;gap:12px;align-items:center;margin-top:12px;flex-wrap:wrap}
+  #qrcode{margin-top:18px;padding:12px;background:#fff;border:1px solid #eee;display:inline-block}
+  .info{margin-top:10px;color:#444}
+  button{padding:10px 14px;border:0;background:#111;color:#fff;border-radius:6px;cursor:pointer}
+  button.secondary{background:#2d6df6}
+  pre{background:#0f1724;color:#cbd5e1;padding:12px;border-radius:6px;overflow:auto}
+  .small{font-size:13px;color:#666;margin-top:6px}
 </style>
 </head>
 <body>
-  <h1>Ubah QRIS statis → dinamis (nominal + 0.8% + Rp850)</h1>
-  <div class="card">
-    <div class="row">
-      <label>Payload QRIS statis (raw):</label>
-      <textarea id="basePayload" rows="3" style="width:100%;max-width:520px">00020101021126610014COM.GO-JEK.WWW01189360091433055874630210G3055874630303UMI51440014ID.CO.QRIS.WWW0215ID10254231099470303UMI5204481453033605802ID5925ZkgamingstoreGoTo, Toko H6007TANGSEL61051522062070703A0163040657</textarea>
-    </div>
+<h1>QRIS Dynamic — Top up</h1>
+<div class="small">Masukkan nominal yang mau di-topup, pilih metode. QRIS pakai fee 0.8% + Rp850. E-wallet cuma +Rp850.</div>
 
-    <div class="row">
-      <label>Masukkan nominal (Rp):</label>
-      <input id="nominal" type="number" min="0" step="1" placeholder="contoh: 100000" />
-      <button id="genBtn">Generate QR Dinamis</button>
-    </div>
+<label>Nominal (Rp)</label>
+<input id="nominal" type="number" min="1000" step="100" value="10000">
 
-    <div id="out" class="card" style="display:none">
-      <div class="row">
-        <div>
-          <div class="small">Nominal input</div>
-          <div id="nominalLabel"></div>
-        </div>
-        <div>
-          <div class="small">Fee 0.8%</div>
-          <div id="feePercent"></div>
-        </div>
-        <div>
-          <div class="small">Biaya tetap</div>
-          <div>Rp 850</div>
-        </div>
-        <div>
-          <div class="small">Total (dibulatkan ke Rupiah)</div>
-          <div id="totalLabel" style="font-weight:700"></div>
-        </div>
-      </div>
+<label>Metode</label>
+<select id="method">
+  <option value="qris">QRIS (scan)</option>
+  <option value="gopay">GoPay (deeplink)</option>
+  <option value="dana">Dana (deeplink)</option>
+  <option value="shopeepay">ShopeePay (deeplink)</option>
+</select>
 
-      <div style="display:flex; gap:24px; align-items:flex-start; margin-top:12px; flex-wrap:wrap">
-        <div id="qrcode" class="qr"></div>
-        <div style="flex:1; min-width:280px">
-          <div class="small">Payload QRIS akhir (untuk scan/give kepada user):</div>
-          <pre id="finalPayload" style="max-height:260px"></pre>
-          <button id="copyBtn">Salin payload</button>
-        </div>
-      </div>
-    </div>
-  </div>
+<div class="row">
+  <button id="calculateBtn">Generate / Update</button>
+  <button id="payBtn" class="secondary">Bayar Sekarang</button>
+</div>
 
-  <!-- QRCode.js (CDN) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script>
-  // CRC16-CCITT (poly 0x1021, init 0xFFFF) — cocok untuk EMV QR CRC
-  function crc16ccitt(str) {
-    let crc = 0xFFFF;
-    for (let i = 0; i < str.length; i++) {
-      crc ^= (str.charCodeAt(i) << 8);
-      for (let j = 0; j < 8; j++) {
-        crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
-        crc &= 0xFFFF;
-      }
-    }
-    return crc.toString(16).toUpperCase().padStart(4, '0');
+<div class="info" id="breakdown"></div>
+
+<div id="qrcode"></div>
+
+<label>Payload QRIS (core) — contoh payload statis (lu bisa ganti)</label>
+<pre id="basePayload" contenteditable style="min-height:80px;">
+00020101021126610014COM.GO-JEK.WWW01189360091433055874630210G3055874630303UMI51440014ID.CO.QRIS.WWW0215ID10254231099470303UMI5204481453033605802ID5925ZkgamingstoreGoTo, Toko H6007TANGSEL61051522062070703A016304
+</pre>
+<div class="small">Note: kode di atas contoh — script otomatis akan tambahkan CRC (tag 63) saat generate.</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+/* --------------- UTILS: EMV TLV parser + CRC16 --------------- */
+
+// parse EMV-like TLV string (ASCII) into [{tag, len, value}, ...]
+function parseTLV(s){
+  let i=0, out=[];
+  while(i<s.length){
+    const tag = s.substr(i,2); i+=2;
+    const len = parseInt(s.substr(i,2),10); i+=2;
+    const value = s.substr(i, len);
+    i += len;
+    out.push({tag, len, value});
   }
+  return out;
+}
 
-  // Pad 2 digits for EMV length
-  function padLen(n) { return String(n).padStart(2, '0'); }
+// build TLV back from array (will auto compute len)
+function buildTLV(arr){
+  return arr.map(o=>{
+    const v = o.value;
+    const l = String(v.length).padStart(2,'0');
+    return o.tag + l + v;
+  }).join('');
+}
 
-  // Insert tag '54' (amount) before tag '53' if present, else before '6304'
-  function insertAmountTag(payload630, amountStr) {
-    // payload630: string that ends with '6304' (no CRC yet)
-    const amountField = '54' + padLen(amountStr.length) + amountStr;
-    const idx5303 = payload630.indexOf('5303'); // tag 53 start
-    if (idx5303 !== -1) {
-      return payload630.slice(0, idx5303) + amountField + payload630.slice(idx5303);
-    } else {
-      // insert before '6304'
-      const idx6304 = payload630.indexOf('6304');
-      if (idx6304 !== -1) {
-        return payload630.slice(0, idx6304) + amountField + payload630.slice(idx6304);
-      } else {
-        // fallback: append
-        return payload630 + amountField;
-      }
+// CRC16-CCITT (poly 0x1021, init 0xFFFF) over ASCII bytes
+function crc16ccitt(str){
+  let crc = 0xFFFF;
+  for(let i=0;i<str.length;i++){
+    crc ^= (str.charCodeAt(i) & 0xFF) << 8;
+    for(let j=0;j<8;j++){
+      if((crc & 0x8000) !== 0) crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
+      else crc = (crc << 1) & 0xFFFF;
     }
   }
+  return crc & 0xFFFF;
+}
 
-  function formatRupiahTwoDecimals(rp) {
-    // rp is number (rupiah). We produce string with 2 decimals "10000.00"
-    return rp.toFixed(2);
+// insert or replace tag 54 (transaction amount) in core TLV array
+function setAmountInPayloadCore(corePayload, amountStr){
+  // corePayload is TLV string without trailing 63 CRC tag.
+  // parse then replace or insert tag 54 before '58' or before end.
+  const parsed = parseTLV(corePayload);
+  // remove any existing 54
+  const filtered = parsed.filter(o=>o.tag !== '54');
+  // insert 54 before tag '58' if exists, else push before end
+  const idx58 = filtered.findIndex(o=>o.tag === '58');
+  const amountObj = {tag:'54', len: String(amountStr.length).padStart(2,'0'), value: amountStr};
+  if(idx58 >= 0) filtered.splice(idx58,0,{tag:'54', value:amountStr});
+  else filtered.push({tag:'54', value:amountStr});
+  return buildTLV(filtered);
+}
+
+/* --------------- UI & Logic --------------- */
+
+let qrcodeEl = null;
+let qrcodeObj = null;
+
+function formatRp(x){
+  return Number(x).toLocaleString('id-ID');
+}
+
+function calcFees(nominal){
+  const feeQris = Math.round(nominal * 0.008); // 0.8% rounding to nearest rupiah
+  const qrisTotal = nominal + feeQris + 850;
+  const ewTotal = nominal + 850;
+  return {feeQris, qrisTotal, ewTotal};
+}
+
+function generate(){
+  const nominal = Number(document.getElementById('nominal').value || 0);
+  const method = document.getElementById('method').value;
+  let base = document.getElementById('basePayload').innerText.trim();
+  // if base ends with existing '63' CRC (like '6304....'), strip it
+  if(base.length > 8 && base.slice(-8, -4) === '6304'){
+    base = base.slice(0, -8);
   }
+  // ensure base ends with no CRC and not contain 63 tag at end
+  // prepare amounts
+  const {feeQris, qrisTotal, ewTotal} = calcFees(nominal);
+  const display = document.getElementById('breakdown');
+  if(method === 'qris'){
+    // QRIS uses nominal + 0.8% + 850
+    // Amount format: digits, may include decimal point (use .00)
+    const amountStr = (qrisTotal.toFixed ? qrisTotal.toFixed(2) : (qrisTotal + '.00')).toString();
+    // Insert/replace tag 54 into TLV core, then append CRC tag 63 (6304 + CRCHEX)
+    const core = setAmountInPayloadCore(base, amountStr);
+    const payloadWith6304 = core + '6304';
+    const crcVal = crc16ccitt(payloadWith6304);
+    const crcHex = crcVal.toString(16).toUpperCase().padStart(4,'0');
+    const finalPayload = payloadWith6304 + crcHex;
+    renderQRCode(finalPayload);
+    display.innerHTML = `
+      <strong>QRIS</strong><br>
+      Nominal: Rp ${formatRp(nominal)}<br>
+      Fee 0.8%: Rp ${formatRp(feeQris)} + biaya tetap Rp 850<br>
+      Total ditagihkan: Rp ${formatRp(qrisTotal)} (ditampilkan di QR sebagai ${amountStr})<br>
+      <small>Payload final (untuk QR):</small>
+      <pre>${finalPayload}</pre>
+    `;
+    // store finalPayload for pay button
+    qrcodeEl.dataset.payload = finalPayload;
+  } else {
+    // e-wallet: rumus (nominal + Rp850)
+    const total = ewTotal;
+    // For e-wallets we typically do NOT embed amount into the QRIS payload (different flow).
+    // But user wanted same payload utama -> we'll show the computed amount and build "attempted" deeplink.
+    display.innerHTML = `
+      <strong>${method.toUpperCase()}</strong><br>
+      Nominal: Rp ${formatRp(nominal)}<br>
+      Biaya tetap: Rp 850<br>
+      Total ditagihkan: Rp ${formatRp(total)}<br>
+      <small>Catatan: untuk buka app e-wallet langsung, biasanya harus generate deeplink via provider (server-side). Skrip ini akan mencoba membuka scheme app (bisa gagal di browser/IOS).</small>
+    `;
+    // show QR of base payload with replaced amount too (opsional) so merchant still can show QR if wanted
+    const amountStr = (total.toFixed ? total.toFixed(2) : (total + '.00')).toString();
+    const core = setAmountInPayloadCore(base, amountStr);
+    const payloadWith6304 = core + '6304';
+    const crcVal = crc16ccitt(payloadWith6304);
+    const crcHex = crcVal.toString(16).toUpperCase().padStart(4,'0');
+    const finalPayload = payloadWith6304 + crcHex;
+    renderQRCode(finalPayload);
+    qrcodeEl.dataset.payload = finalPayload;
+    qrcodeEl.dataset.ewtotal = total;
+  }
+}
 
-  // main
-  document.getElementById('genBtn').addEventListener('click', () => {
-    const raw = document.getElementById('basePayload').value.trim();
-    if (!raw) return alert('Masukkan payload QRIS statis dulu.');
-    const nominal = Number(document.getElementById('nominal').value || 0);
-    if (!nominal || nominal <= 0) return alert('Masukkan nominal valid (>0).');
-
-    // fees
-    const feePercent = nominal * 0.008;
-    const fixedFee = 850;
-    const total = Math.round(nominal + feePercent + fixedFee); // dibulatkan ke rupiah
-    const amountStr = formatRupiahTwoDecimals(total); // e.g. "10000.00"
-
-    // prepare base payload without CRC: ensure it ends with '6304'
-    // assume last 8 chars are '6304' + 4hex if original has CRC
-    let payloadNoCRC;
-    if (raw.slice(-8, -4) === '6304') {
-      // original has 6304 + 4 hex = last 8 chars
-      payloadNoCRC = raw.slice(0, -8) + '6304';
-    } else {
-      // if not, try find '6304' position
-      const idx = raw.indexOf('6304');
-      if (idx !== -1) payloadNoCRC = raw.slice(0, idx+4);
-      else payloadNoCRC = raw + '6304';
-    }
-
-    // insert amount
-    const withAmount630 = insertAmountTag(payloadNoCRC, amountStr);
-
-    // compute CRC
-    const crc = crc16ccitt(withAmount630);
-    const finalPayload = withAmount630 + crc;
-
-    // show results & generate QR
-    document.getElementById('out').style.display = 'block';
-    document.getElementById('nominalLabel').innerText = `Rp ${nominal.toLocaleString('id-ID')}`;
-    document.getElementById('feePercent').innerText = `Rp ${Math.round(feePercent).toLocaleString('id-ID')} (${(0.8)}%)`;
-    document.getElementById('totalLabel').innerText = `Rp ${total.toLocaleString('id-ID')}`;
-    document.getElementById('finalPayload').innerText = finalPayload;
-
-    // generate QR (replace previous)
-    document.getElementById('qrcode').innerHTML = '';
-    new QRCode(document.getElementById('qrcode'), {
-      text: finalPayload,
-      width: 300,
-      height: 300,
-      correctLevel: QRCode.CorrectLevel.H
-    });
+function renderQRCode(text){
+  // create qrcode element if not exist
+  if(!qrcodeEl){
+    qrcodeEl = document.getElementById('qrcode');
+  }
+  // clear
+  qrcodeEl.innerHTML = '';
+  // create QR
+  qrcodeObj = new QRCode(qrcodeEl, {
+    text: text,
+    width: 320,
+    height: 320,
+    correctLevel: QRCode.CorrectLevel.H
   });
+}
 
-  document.getElementById('copyBtn').addEventListener('click', () => {
-    const t = document.getElementById('finalPayload').innerText;
-    if (!t) return;
-    navigator.clipboard?.writeText(t).then(()=> alert('Payload disalin ke clipboard.'));
-  });
-  </script>
+document.getElementById('calculateBtn').addEventListener('click', generate);
+
+// PAY button behavior: for QRIS user can scan. for ewallet try to open deeplink (best effort)
+document.getElementById('payBtn').addEventListener('click', function(){
+  const method = document.getElementById('method').value;
+  const payload = (qrcodeEl && qrcodeEl.dataset && qrcodeEl.dataset.payload) ? qrcodeEl.dataset.payload : null;
+  const ewtotal = (qrcodeEl && qrcodeEl.dataset && qrcodeEl.dataset.ewtotal) ? qrcodeEl.dataset.ewtotal : null;
+  if(method === 'qris'){
+    alert('QRIS: scan QR yang muncul dengan aplikasi e-wallet / scan app pengguna.');
+    return;
+  }
+  // Try opening app via URI schemes (PLACEHOLDERS — may not work reliably). Real flow: server generate deeplink via provider.
+  // We'll attempt naive schemes and fallback to showing a message.
+  let tried = [];
+  const amount = ewtotal || 0;
+  const amtStr = amount.toFixed ? amount.toFixed(2) : (amount + '.00');
+  if(method === 'gopay'){
+    // Note: production: use provider (Midtrans/Xendit) to create deeplink. This is placeholder.
+    tried.push(`gopay://pay?amount=${amtStr}`);
+    tried.push(`https://checkout.gopay.com/pay?amount=${amtStr}`);
+  } else if(method === 'dana'){
+    // DANA widget / deeplink usually provided by DANA API endpoint returned URL
+    tried.push(`dana://pay?amount=${amtStr}`);
+    tried.push(`https://m.dana.id/n/link/pay?amount=${amtStr}`);
+  } else if(method === 'shopeepay'){
+    tried.push(`shopeepay://pay?amount=${amtStr}`);
+    tried.push(`https://checkout.shopee.co.id/pay?amount=${amtStr}`);
+  }
+  // attempt to open first, then fallback to show modal with payload and instruction
+  const openAttempt = tried[0];
+  // open by setting location (best effort on mobile)
+  window.location.href = openAttempt;
+  // also set a timer to show fallback instructions after small delay (can't detect reliably if opened)
+  setTimeout(()=>{
+    const ok = confirm('Kalau app tidak kebuka otomatis, mau lihat instruksi fallback/lihat payload yang bisa di-copy?');
+    if(ok){
+      alert('Fallback: untuk production lu harus generate deeplink via payment provider (Midtrans/Xendit/DANA/ShopeePay). \n\nSementara ini, payload QRIS yang di-generate:\n\n' + (payload||'(tidak ada)') + '\n\nAtau copy total: Rp ' + (ewtotal?ewtotal:'-') + '\n\nGunakan provider untuk dapatkan deeplink yang valid.');
+    }
+  }, 1200);
+});
+
+// init
+generate();
+</script>
 </body>
 </html>
