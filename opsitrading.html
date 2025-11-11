@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Crash GOOGLE - Binary Option Trading</title>
+  <title>Binary Option Trading</title>
   <style>
     :root {
       --primary-color: #1e88e5;
@@ -31,28 +31,22 @@
       background:#fff; cursor:pointer;
     }
     /* Deposit: hijau cerah dengan teks putih */
-/* setelah semua aturan .controls select, .controls button */
-
-/* Deposit: hijau cerah dengan teks putih */
 .controls .btn-deposit {
   background-color: #28a745;
   color: #ffffff;
   border: none;
 }
-
 /* Withdraw: merah cerah dengan teks putih */
 .controls .btn-withdraw {
   background-color: #dc3545;
   color: #ffffff;
   border: none;
 }
-
 /* efek hover/focus */
 .controls .btn-deposit:hover,
 .controls .btn-deposit:focus {
   background-color: #218838;
 }
-
 .controls .btn-withdraw:hover,
 .controls .btn-withdraw:focus {
   background-color: #c82333;
@@ -122,7 +116,7 @@
       cursor:pointer; margin-top:.5rem;
     }
     .qrcode-container { text-align:center; margin-top:1rem; }
-    .qrcode-container img { max-width:200px; display:block; margin:0 auto; }
+    .qrcode-container img { max-width:260px; display:block; margin:0 auto; }
     .qrcode-container p { margin:.5rem 0; }
 
     /* Promo & FAQ */
@@ -220,8 +214,7 @@
       <input type="text" id="depositAccount" placeholder="1234567890">
       <label>Metode Pembayaran</label>
       <select id="depositMethod">
-        <option value="Dana">QRIS Dana</option>
-        
+        <option value="QRIS">QRIS</option>
       </select>
       <button id="depositPay">Bayar</button>
       <div class="qrcode-container" id="qrcodeContainer" style="display:none;">
@@ -230,6 +223,9 @@
         <p>Menunggu pembayaran... Sisa waktu: <span id="depositTimer">15</span>s</p>
         <button id="depositConfirm" style="display:none;">Sudah Bayar</button>
       </div>
+      <!-- OPTIONAL: internal field to override base payload -->
+      <label style="margin-top:.5rem">(Opsional) Payload dasar QRIS</label>
+      <input type="text" id="basePayload" value="00020101021126610014COM.GO-JEK.WWW01189360091433055874630210G3055874630303UMI51440014ID.CO.QRIS.WWW0215ID10254231099470303UMI5204481453033605802ID5925ZkgamingstoreGoTo, Toko H6007TANGSEL61051522062070703A0163040657">
     </div>
   </div>
 
@@ -255,7 +251,7 @@
   <section class="promo">
     <h2>🚀 Siap Uji Insting Trading Lu?</h2>
     <p>
-      Gabung di <strong>Crash GOOGLE</strong>, memperkenalkan trading binary options yang bikin deg‑deg‑an!  
+      Gabung di <strong>Crash GOOGLE</strong>, memperkenalkan trading binary options yang bikin deg-deg-an!  
       opsi trading bukan cuma untuk pasar forex/saham/boom index karena disini kalian bisa melakukan opsi trading untuk index lingkungan, wilayah atau negara tertentu dibumi ini
       Bosan Opsi Biner di Pasar Yang Sama? Cobalah Teritori Index!!
       Klik Buy/Sell, pantau timer, dan raih profit 80%—atau terima risikonya.  
@@ -269,7 +265,7 @@
     <h2>FAQ Opsi Trading</h2>
     <details class="faq-item">
       <summary>Apa itu binary options?</summary>
-      <p>Instrumen keuangan all‑or‑nothing: tebak naik/turun dalam waktu tertentu.</p>
+      <p>Instrumen keuangan all-or-nothing: tebak naik/turun dalam waktu tertentu.</p>
     </details>
     <details class="faq-item">
       <summary>Bagaimana cara main?</summary>
@@ -289,7 +285,7 @@
     </details>
   </section>
 
-  <div class="footer">© 2025 Dolphin LLC</div>
+  <div class="footer">© 2025 Dolphin LLC</div>
 
   <script>
     // State & cache
@@ -502,7 +498,7 @@ const win = (isBuy  && exitPrice > entryPrice) ||
     btnUp.addEventListener('click', ()=>placeTrade('BELI'));
     btnDown.addEventListener('click', ()=>placeTrade('JUAL'));
 
-    // Deposit/Withdraw logic (sama dengan sebelumnya)
+    // Deposit/Withdraw logic (sama dengan sebelumnya) - hanya bagian QRIS dibuat dinamis
     const btnDeposit     = document.getElementById('btnDeposit'),
           depositModal   = document.getElementById('depositModal'),
           depositClose   = document.getElementById('depositClose'),
@@ -511,7 +507,8 @@ const win = (isBuy  && exitPrice > entryPrice) ||
           qrTotal        = document.getElementById('qrTotal'),
           qrImage        = document.getElementById('qrImage'),
           depositTimerEl = document.getElementById('depositTimer'),
-          depositConfirm = document.getElementById('depositConfirm');
+          depositConfirm = document.getElementById('depositConfirm'),
+          basePayloadEl  = document.getElementById('basePayload');
     let depositTimer, depositCountdown;
     const btnWithdraw    = document.getElementById('btnWithdraw'),
           withdrawModal  = document.getElementById('withdrawModal'),
@@ -534,47 +531,142 @@ window.addEventListener('click', e => {
   if (e.target === depositModal) depositModal.style.display = 'none';
 });
 
-depositPay.addEventListener('click', ()=>{
-  const amt = parseFloat(document.getElementById('depositAmount').value);
-  const acc = document.getElementById('depositAccount').value.trim();
-  const method = document.getElementById('depositMethod').value;
-
-  if (!amt || amt < 1000) return alert('Minimal Rp 1.000');
-  if (!acc) return alert('Masukkan no. rekening');
-
-  const adminFee = 5000, total = amt + adminFee;
-
-  qrTotal.textContent = `Total bayar: Rp ${total.toLocaleString()} (admin Rp ${adminFee.toLocaleString()})`;
-
-  const data = encodeURIComponent(`PAY:${method};ACC:${acc};AMT:${total}`);
-  qrImage.src = `https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKarqRzAZP1G0-5ie2-iFPG3y30n8EvQeIxNoSODfAU6PpvKfwgT5e4L1ONVa6ePcwmkfL8zJDJz6gMp8AaARdYsTuP3L4uDgSc-MxvnPaVqB6NDoyFstNUJdnhSpddyB2MSCM9YOYpa95EsIWvcrBlUkFDTKdEoNnQVl998YAoPuX-Ja7Fh7bcv5XPDrZ/s320/20250205_151426.png${data}`;
-
-  qrcodeContainer.style.display = 'block';
-  depositCountdown = 15;
-  depositTimerEl.textContent = 15;
-
-  depositTimer = setInterval(()=>{
-    depositCountdown--;
-    depositTimerEl.textContent = depositCountdown;
-    if (depositCountdown <= 0) {
-      clearInterval(depositTimer);
-      depositConfirm.style.display = 'block';
+    // ====== QRIS dynamic logic ======
+    // Helper: remove existing TLV tag (tag is 2 or 4 char string, followed by 2-digit length)
+    function removeTLV(payload, tag) {
+      let s = payload;
+      let idx = s.indexOf(tag);
+      while (idx !== -1) {
+        // ensure there are at least 2 chars after tag for length
+        if (idx + tag.length + 2 > s.length) break;
+        const lenStr = s.substr(idx + tag.length, 2);
+        const len = parseInt(lenStr, 10);
+        if (isNaN(len)) break;
+        const removeLen = tag.length + 2 + len;
+        s = s.slice(0, idx) + s.slice(idx + removeLen);
+        idx = s.indexOf(tag);
+      }
+      return s;
     }
-  }, 1000);
-});
 
-depositConfirm.addEventListener('click', ()=>{
-  const amt = parseFloat(document.getElementById('depositAmount').value);
-  const acc = document.getElementById('depositAccount').value.trim();
-  const method = document.getElementById('depositMethod').value;
-  const adminFee = 5000, total = amt + adminFee;
+    // Helper: strip trailing CRC (tag 63 with length 04 and 4 hex chars)
+    function stripCRC(payload) {
+      // if ends with 6304xxxx (8 chars)
+      if (payload.length >= 8 && payload.slice(-8, -4) === '6304') {
+        return payload.slice(0, -8);
+      }
+      // otherwise try to find first 63 tag at end
+      const idx = payload.lastIndexOf('63');
+      if (idx !== -1 && idx + 6 <= payload.length) {
+        const lenStr = payload.substr(idx + 2, 2);
+        if (lenStr === '04') {
+          return payload.slice(0, idx);
+        }
+      }
+      return payload;
+    }
 
-  balance += amt;
-  balanceEl.textContent = balance.toFixed(2);
-  depositModal.style.display = 'none';
+    // CRC16-CCITT (poly 0x1021, init 0xFFFF)
+    function crc16ccitt(str) {
+      // compute over ASCII bytes
+      let crc = 0xFFFF;
+      for (let i = 0; i < str.length; i++) {
+        crc ^= str.charCodeAt(i) << 8;
+        for (let j = 0; j < 8; j++) {
+          if ((crc & 0x8000) !== 0) crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
+          else crc = (crc << 1) & 0xFFFF;
+        }
+      }
+      return crc.toString(16).toUpperCase().padStart(4, '0');
+    }
 
-  // Format pesan untuk WhatsApp
-  const message = `
+    function buildAmountTag(amountRp) {
+      // amountRp is integer (Rp), convert to format '12345.00'
+      const amtStr = amountRp.toString() + '.00';
+      const len = amtStr.length.toString().padStart(2, '0');
+      return '54' + len + amtStr;
+    }
+
+    depositPay.addEventListener('click', ()=>{
+      const baseAmt = parseInt(document.getElementById('depositAmount').value);
+      const acc = document.getElementById('depositAccount').value.trim();
+      const method = document.getElementById('depositMethod').value;
+      const basePayloadInput = (basePayloadEl.value || '').trim();
+
+      if (!baseAmt || baseAmt < 1000) return alert('Minimal Rp 1.000');
+      if (!acc) return alert('Masukkan no. rekening');
+
+      // Rumus sesuai permintaan: nominal + 0.8% + Rp 850 + kode unik (3 digit)
+      const percentFee = Math.ceil(baseAmt * 0.008); // 0.8%, dibulatkan ke atas
+      const fixedFee = 850;
+      const uniqueCode = Math.floor(Math.random() * 999) + 1; // 1..999
+      // Pastikan kode unik 3 digit diappend langsung (misal 5 -> 005)
+      const uniq = uniqueCode;
+      const total = baseAmt + percentFee + fixedFee + uniq;
+
+      // Tampilkan breakdown
+      qrTotal.innerHTML = `
+        Total bayar: <strong>Rp ${total.toLocaleString('id-ID')}</strong><br>
+        (Nominal: Rp ${baseAmt.toLocaleString('id-ID')} + 0.8%: Rp ${percentFee.toLocaleString('id-ID')} + admin Rp ${fixedFee.toLocaleString('id-ID')} + kode unik ${uniq.toString().padStart(3,'0')})
+      `;
+
+      // Build EMV payload dynamically:
+      // Start from base payload (user-supplied or default). Remove existing CRC and tag 54 if ada.
+      if (!basePayloadInput) return alert('Payload dasar QRIS kosong.');
+      let payload = basePayloadInput.trim();
+      // strip CRC part if present
+      payload = stripCRC(payload);
+      // remove any existing amount tag (54)
+      payload = removeTLV(payload, '54');
+
+      // Append new amount tag
+      const amountTag = buildAmountTag(total);
+      payload = payload + amountTag;
+
+      // Append CRC placeholder tag 6304 (must compute CRC over full ASCII string of payload + '6304')
+      const payloadForCrc = payload + '6304';
+      // compute CRC on ASCII characters
+      const crcHex = crc16ccitt(payloadForCrc);
+      const finalPayload = payload + '6304' + crcHex;
+
+      // Generate QR image using public API
+      const qrData = encodeURIComponent(finalPayload);
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${qrData}`;
+
+      qrImage.src = qrUrl;
+      qrcodeContainer.style.display = 'block';
+      depositCountdown = 15;
+      depositTimerEl.textContent = depositCountdown;
+
+      // reset any previous timer
+      clearInterval(depositTimer);
+      depositTimer = setInterval(()=>{
+        depositCountdown--;
+        depositTimerEl.textContent = depositCountdown;
+        if (depositCountdown <= 0) {
+          clearInterval(depositTimer);
+          depositConfirm.style.display = 'block';
+        }
+      },1000);
+
+      // Save some info to data-attributes for later (optional)
+      qrImage.dataset.finalPayload = finalPayload;
+      qrImage.dataset.total = total;
+      qrImage.dataset.unique = uniq.toString().padStart(3,'0');
+    });
+
+    depositConfirm.addEventListener('click', ()=>{
+      const amt = parseFloat(document.getElementById('depositAmount').value);
+      const acc = document.getElementById('depositAccount').value.trim();
+      const method = document.getElementById('depositMethod').value;
+      const adminFee = 5000, total = amt + adminFee;
+
+      balance += amt;
+      balanceEl.textContent = balance.toFixed(2);
+      depositModal.style.display = 'none';
+
+      // Format pesan untuk WhatsApp
+      const message = `
 *Konfirmasi Deposit*
 *Option Trading*
 ➤ Nominal: Rp ${amt.toLocaleString('id-ID')}
@@ -585,13 +677,11 @@ depositConfirm.addEventListener('click', ()=>{
 *Setelah Mengirim Form ini, Harap Kirim SS bukti Transfer Pembayaran*
 `.trim();
 
-  // Ganti nomor WA admin di bawah ini
-  const whatsappNumber = '6285697747768';
-  const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-
-  // Arahkan ke WhatsApp
-  window.open(whatsappLink, '_blank');
-});
+      // Ganti nomor WA admin di bawah ini
+      const whatsappNumber = '6285697747768';
+      const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappLink, '_blank');
+    });
 
     btnWithdraw.addEventListener('click', () => {
   document.getElementById('withdrawAmount').value = '';
