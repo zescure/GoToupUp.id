@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Binary Option Trading</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Crash GOOGLE - Binary Option Trading</title>
   <style>
     :root {
       --primary-color: #1e88e5;
@@ -31,24 +31,24 @@
       background:#fff; cursor:pointer;
     }
     /* Deposit: hijau cerah dengan teks putih */
-.controls .btn-deposit {
-  background-color: #28a745;
-  color: #ffffff;
-  border: none;
-}
-.controls .btn-withdraw {
-  background-color: #dc3545;
-  color: #ffffff;
-  border: none;
-}
-.controls .btn-deposit:hover,
-.controls .btn-deposit:focus {
-  background-color: #218838;
-}
-.controls .btn-withdraw:hover,
-.controls .btn-withdraw:focus {
-  background-color: #c82333;
-}
+    .controls .btn-deposit {
+      background-color: #28a745;
+      color: #ffffff;
+      border: none;
+    }
+    .controls .btn-withdraw {
+      background-color: #dc3545;
+      color: #ffffff;
+      border: none;
+    }
+    .controls .btn-deposit:hover,
+    .controls .btn-deposit:focus {
+      background-color: #218838;
+    }
+    .controls .btn-withdraw:hover,
+    .controls .btn-withdraw:focus {
+      background-color: #c82333;
+    }
 
     .trading-panel {
       background:var(--card-bg); max-width:960px; margin:1rem auto; padding:1rem;
@@ -96,7 +96,7 @@
     }
     .modal-content {
       background:#fff; margin:10% auto; padding:1.5rem;
-      border-radius:8px; width:90%; max-width:400px; position:relative;
+      border-radius:8px; width:90%; max-width:420px; position:relative;
     }
     .modal-close {
       position:absolute; top:.5rem; right:.8rem;
@@ -137,6 +137,10 @@
     }
     .faq-item details[open] summary { background:#e0e0e0; }
     .faq-item p { padding:0 1rem 1rem; color:#333; }
+
+    /* small helper */
+    .small{ font-size:13px; color:#666; text-align:left; margin:6px 0; }
+    pre.payload { background:#f6f6f6; padding:8px; overflow:auto; text-align:left; }
   </style>
 </head>
 <body>
@@ -201,7 +205,7 @@
     <ul id="tradeHistory"></ul>
   </section>
 
-  <!-- Deposit Modal -->
+  <!-- Deposit Modal (DIUBAH: pakai QRIS dinamis) -->
   <div id="depositModal" class="modal">
     <div class="modal-content">
       <span class="modal-close" id="depositClose">&times;</span>
@@ -212,14 +216,24 @@
       <input type="text" id="depositAccount" placeholder="1234567890">
       <label>Metode Pembayaran</label>
       <select id="depositMethod">
-        <option value="QRIS">QRIS</option>
+        <option value="Dana">QRIS Dana</option>
       </select>
       <button id="depositPay">Bayar</button>
+
       <div class="qrcode-container" id="qrcodeContainer" style="display:none;">
-        <p id="qrTotal"></p>
-        <img id="qrImage" alt="QRIS Code">
+        <div class="small">Nominal input: <span id="nominalLabel"></span></div>
+        <div class="small">Fee 0.8%: <span id="feePercentLabel"></span></div>
+        <div class="small">Biaya tetap: Rp <span id="fixedFeeLabel">850</span></div>
+        <div class="small">Total (dibulatkan): <strong>Rp <span id="totalLabel"></span></strong></div>
+
+        <div id="qrcodeDyn" style="margin:8px auto;"></div>
+
+        <div class="small">Payload QRIS akhir (untuk scan/give kepada user):</div>
+        <pre id="finalPayload" class="payload"></pre>
+        <button id="copyPayloadBtn" style="margin-top:8px;">Salin payload</button>
+
         <p>Menunggu pembayaran... Sisa waktu: <span id="depositTimer">15</span>s</p>
-        <button id="depositConfirm" style="display:none;">Sudah Bayar</button>
+        <button id="depositConfirm" style="display:none; margin-top:8px;">Sudah Bayar</button>
       </div>
     </div>
   </div>
@@ -247,7 +261,12 @@
     <h2>🚀 Siap Uji Insting Trading Lu?</h2>
     <p>
       Gabung di <strong>Crash GOOGLE</strong>, memperkenalkan trading binary options yang bikin deg-deg-an!  
+      opsi trading bukan cuma untuk pasar forex/saham/boom index karena disini kalian bisa melakukan opsi trading untuk index lingkungan, wilayah atau negara tertentu dibumi ini
+      Bosan Opsi Biner di Pasar Yang Sama? Cobalah Teritori Index!!
+      Klik Buy/Sell, pantau timer, dan raih profit 80%—atau terima risikonya.  
+      Semua hasil tercatat otomatis untuk evaluasi strategi.
     </p>
+    
   </section>
 
   <!-- FAQ -->
@@ -257,30 +276,74 @@
       <summary>Apa itu binary options?</summary>
       <p>Instrumen keuangan all-or-nothing: tebak naik/turun dalam waktu tertentu.</p>
     </details>
+    <details class="faq-item">
+      <summary>Bagaimana cara main?</summary>
+      <p>Masukkan nominal, klik Buy/Sell, tunggu countdown, lihat hasil.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Durasi trade?</summary>
+      <p>1–5 menit sesuai pilihan di dropdown Durasi.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Riwayat trade?</summary>
+      <p>Terlihat di bawah chart: waktu, tipe, harga masuk, dan hasil.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Apa risiko bermain?</summary>
+      <p>Risiko kehilangan seluruh taruhan. Gunakan modal kecil.</p>
+    </details>
   </section>
 
   <div class="footer">© 2025 Dolphin LLC</div>
 
-  <script>
-    // === Tambahan: base static payload QRIS yang diberikan user ===
-    const basePayload = "00020101021126610014COM.GO-JEK.WWW01189360091433055874630210G3055874630303UMI51440014ID.CO.QRIS.WWW0215ID10254231099470303UMI5204481453033605802ID5925ZkgamingstoreGoTo, Toko H6007TANGSEL61051522062070703A0163040657";
-    // ===========================================================
+  <!-- QRCode.js (CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-    // State & cache
+  <script>
+    // ========= QRIS helper functions (dari kode lo sebelumnya) =========
+    // CRC16-CCITT (poly 0x1021, init 0xFFFF) — cocok untuk EMV QR CRC
+    function crc16ccitt(str) {
+      let crc = 0xFFFF;
+      for (let i = 0; i < str.length; i++) {
+        crc ^= (str.charCodeAt(i) << 8);
+        for (let j = 0; j < 8; j++) {
+          crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+          crc &= 0xFFFF;
+        }
+      }
+      return crc.toString(16).toUpperCase().padStart(4, '0');
+    }
+    function padLen(n) { return String(n).padStart(2, '0'); }
+    function insertAmountTag(payload630, amountStr) {
+      const amountField = '54' + padLen(amountStr.length) + amountStr;
+      const idx5303 = payload630.indexOf('5303'); // tag 53 start
+      if (idx5303 !== -1) {
+        return payload630.slice(0, idx5303) + amountField + payload630.slice(idx5303);
+      } else {
+        const idx6304 = payload630.indexOf('6304');
+        if (idx6304 !== -1) {
+          return payload630.slice(0, idx6304) + amountField + payload630.slice(idx6304);
+        } else {
+          return payload630 + amountField;
+        }
+      }
+    }
+    function formatRupiahTwoDecimals(rp) { return rp.toFixed(2); }
+
+    // Default base payload (statis) — lo bisa ganti sesuai payload merchant lo
+    const DEFAULT_BASE_PAYLOAD = "00020101021126610014COM.GO-JEK.WWW01189360091433055874630210G3055874630303UMI51440014ID.CO.QRIS.WWW0215ID10254231099470303UMI5204481453033605802ID5925ZkgamingstoreGoTo, Toko H6007TANGSEL61051522062070703A0163040657";
+
+    // ========= App state & UI bindings =========
     let balance = 0;
     const balanceEl = document.getElementById('balance');
-    const historyCache = {};
-    const candlesCache = {};
 
-    // Controls
+    // Trading UI (tetap sama)
     const symbolSelect = document.getElementById('symbolSelect');
     const tfSelect     = document.getElementById('tfSelect');
     const durSelect    = document.getElementById('durSelect');
     const currSymbol   = document.getElementById('currSymbol');
     const currDur      = document.getElementById('currDur');
     const tradeHistory = document.getElementById('tradeHistory');
-
-    // Chart & trading
     const canvas    = document.getElementById('chartCanvas');
     const ctx       = canvas.getContext('2d');
     const priceEl   = document.getElementById('currentPrice');
@@ -292,9 +355,9 @@
 
     let candles = [], markers = [], lastPrice = 1.2;
     let tradeDur = +durSelect.value;
+    const historyCache = {}, candlesCache = {};
 
     function key() { return symbolSelect.value + '_' + tfSelect.value; }
-
     function loadHistoryUI() {
       const k = key();
       tradeHistory.innerHTML = historyCache[k]?.join('') || '';
@@ -304,7 +367,6 @@
       historyCache[k] = historyCache[k] || [];
       historyCache[k].unshift(html);
     }
-
     function genHistory(base, count=50) {
       const tf = +tfSelect.value;
       const now = Date.now();
@@ -320,7 +382,6 @@
       }
       return arr;
     }
-
     function loadChart() {
       currSymbol.textContent = symbolSelect.selectedOptions[0].text;
       currDur.textContent = tradeDur = +durSelect.value;
@@ -337,7 +398,6 @@
       draw();
       startTicks();
     }
-
     let tickInterval;
     function startTicks() {
       clearInterval(tickInterval);
@@ -356,42 +416,31 @@
         draw();
       },2500);
     }
-
     function draw() {
       canvas.width  = canvas.clientWidth;
       canvas.height = canvas.clientHeight;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       if (!candles.length) return;
-
       const allPrices = candles.flatMap(c => [c.high, c.low]);
       const maxP = Math.max(...allPrices);
       const minP = Math.min(...allPrices);
-
-      const upColor   = getComputedStyle(document.documentElement)
-                          .getPropertyValue('--up-color').trim();
-      const downColor = getComputedStyle(document.documentElement)
-                          .getPropertyValue('--down-color').trim();
-
+      const upColor   = getComputedStyle(document.documentElement).getPropertyValue('--up-color').trim();
+      const downColor = getComputedStyle(document.documentElement).getPropertyValue('--down-color').trim();
       const w = canvas.width / candles.length * 0.8;
-
       candles.forEach((c, i) => {
         const x  = i * (canvas.width / candles.length) + (canvas.width / candles.length - w) / 2;
         const yO = ((maxP - c.open)  / (maxP - minP)) * canvas.height;
         const yC = ((maxP - c.close) / (maxP - minP)) * canvas.height;
         const yH = ((maxP - c.high)  / (maxP - minP)) * canvas.height;
         const yL = ((maxP - c.low)   / (maxP - minP)) * canvas.height;
-
         ctx.strokeStyle = '#000000';
         ctx.beginPath();
         ctx.moveTo(x + w/2, yH);
         ctx.lineTo(x + w/2, yL);
         ctx.stroke();
-
         ctx.fillStyle = c.close >= c.open ? upColor : downColor;
         ctx.fillRect(x, Math.min(yO, yC), w, Math.max(1, Math.abs(yC - yO)));
       });
-
       markers.forEach(m=>{
         const i = candles.findIndex(c=>c.time===m.time);
         if(i<0) return;
@@ -407,12 +456,10 @@
       const bet = parseFloat(betAmount.value);
       if (!bet || bet <= 14900) return alert('Minimal transaksi Rp.15.000');
       if (bet > balance) return alert('Saldo tidak cukup');
-
       const entryPrice = lastPrice;
       const entryTime  = Date.now();
       markers.push({ time: entryTime, price: entryPrice, type });
       draw();
-
       let t = tradeDur;
       activeTrade.textContent = `${type} @ ${entryPrice.toFixed(4)} | Sisa waktu: ${t}s`;
       const iv = setInterval(() => {
@@ -420,14 +467,10 @@
         activeTrade.textContent = `${type} @ ${entryPrice.toFixed(4)} | Sisa waktu: ${t}s`;
         if (t <= 0) {
           clearInterval(iv);
-
           const exitPrice = lastPrice;
           const isBuy  = type.toUpperCase() === 'BELI' || type.toLowerCase() === 'call';
           const isSell = type.toUpperCase() === 'JUAL' || type.toLowerCase() === 'put';
-
-          const win = (isBuy  && exitPrice > entryPrice) ||
-                      (isSell && exitPrice < entryPrice);
-
+          const win = (isBuy  && exitPrice > entryPrice) || (isSell && exitPrice < entryPrice);
           let text, color;
           if (win) {
             const profit = bet * 0.7;
@@ -439,17 +482,14 @@
             text = `Tutup Kerugian -${bet.toFixed(2)} Rp (Exit @ ${exitPrice.toFixed(4)})`;
             color = 'red';
           }
-
           balanceEl.textContent = balance.toFixed(2);
           resultEl.textContent  = text;
           activeTrade.textContent = '';
-
           const html = `<li style="color:${color};">
             ${new Date().toLocaleTimeString()} — ${type} @ ${entryPrice.toFixed(4)} → Exit @ ${exitPrice.toFixed(4)} — ${text}
           </li>`;
           saveHistoryItem(html);
           tradeHistory.insertAdjacentHTML('afterbegin', html);
-
           betAmount.value = '';
         }
       }, 1000);
@@ -459,25 +499,26 @@
     symbolSelect.addEventListener('change', loadChart);
     tfSelect.addEventListener('change', loadChart);
     durSelect.addEventListener('change', ()=>{ currDur.textContent = tradeDur = +durSelect.value; });
-
     btnUp.addEventListener('click', ()=>placeTrade('BELI'));
     btnDown.addEventListener('click', ()=>placeTrade('JUAL'));
 
-    // Deposit/Withdraw logic (sama dengan sebelumnya) - hanya bagian QR diubah agar jadi dinamis dan valid
+    // ========= Deposit/QRIS logic (DIGANTI: pakai mekanisme dinamis) =========
     const btnDeposit     = document.getElementById('btnDeposit'),
           depositModal   = document.getElementById('depositModal'),
           depositClose   = document.getElementById('depositClose'),
           depositPay     = document.getElementById('depositPay'),
           qrcodeContainer= document.getElementById('qrcodeContainer'),
-          qrTotal        = document.getElementById('qrTotal'),
-          qrImage        = document.getElementById('qrImage'),
+          nominalLabel   = document.getElementById('nominalLabel'),
+          feePercentLabel= document.getElementById('feePercentLabel'),
+          fixedFeeLabel  = document.getElementById('fixedFeeLabel'),
+          totalLabelEl   = document.getElementById('totalLabel'),
+          qrcodeDynEl    = document.getElementById('qrcodeDyn'),
+          finalPayloadEl = document.getElementById('finalPayload'),
+          copyPayloadBtn = document.getElementById('copyPayloadBtn'),
           depositTimerEl = document.getElementById('depositTimer'),
           depositConfirm = document.getElementById('depositConfirm');
-    let depositTimer, depositCountdown;
-    const btnWithdraw    = document.getElementById('btnWithdraw'),
-          withdrawModal  = document.getElementById('withdrawModal'),
-          withdrawClose  = document.getElementById('withdrawClose'),
-          withdrawSubmit = document.getElementById('withdrawSubmit');
+
+    let depositTimer, depositCountdown, currentFinalPayload = '', currentNominal = 0;
 
     btnDeposit.addEventListener('click', ()=>{
       document.getElementById('depositAmount').value = '';
@@ -490,38 +531,61 @@
     });
 
     depositClose.addEventListener('click', ()=> depositModal.style.display = 'none');
-
-    window.addEventListener('click', e => {
-      if (e.target === depositModal) depositModal.style.display = 'none';
-    });
+    window.addEventListener('click', e => { if (e.target === depositModal) depositModal.style.display = 'none'; });
 
     depositPay.addEventListener('click', ()=>{
       const amt = parseFloat(document.getElementById('depositAmount').value);
       const acc = document.getElementById('depositAccount').value.trim();
       const method = document.getElementById('depositMethod').value;
-
       if (!amt || amt < 1000) return alert('Minimal Rp 1.000');
       if (!acc) return alert('Masukkan no. rekening');
 
-      // RUMUS BARU SESUAI PERMINTAAN: (nominal + Rp 5.000)
-      const adminFee = 5000;
-      const total = amt + adminFee;
+      // fees (sesuai permintaan): 0.8% + Rp850 (dibulatkan ke rupiah)
+      const feePercent = amt * 0.008;
+      const fixedFee = 850;
+      const totalPay = Math.round(amt + feePercent + fixedFee); // total customer bayar
+      const amountStr = formatRupiahTwoDecimals(totalPay); // "10000.00"
 
-      // Tampilkan total di UI
-      qrTotal.textContent = `Total bayar: Rp ${total.toLocaleString('id-ID')} (admin Rp ${adminFee.toLocaleString('id-ID')})`;
+      // prepare base payload without CRC: ensure it ends with '6304'
+      let base = DEFAULT_BASE_PAYLOAD.trim();
+      let payloadNoCRC;
+      if (base.slice(-8, -4) === '6304') {
+        payloadNoCRC = base.slice(0, -8) + '6304';
+      } else {
+        const idx = base.indexOf('6304');
+        if (idx !== -1) payloadNoCRC = base.slice(0, idx+4);
+        else payloadNoCRC = base + '6304';
+      }
 
-      // Buat payload QR dinamis: gabungkan basePayload dengan informasi jumlah.
-      // NOTE: format payload EMV/QRIS lebih kompleks; di sini kita append info amount agar QR yang di-generate mengandung nominal.
-      // Jika butuh format EMV yang presisi, kita refine lagi sesuai spesifikasi EMV QRIS.
-      const payloadWithAmount = basePayload + "|AMT:" + total;
+      // insert amount tag (54)
+      const withAmount630 = insertAmountTag(payloadNoCRC, amountStr);
 
-      // Gunakan QR generator service untuk menghasilkan gambar QR yang bisa discan
-      qrImage.src = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" + encodeURIComponent(payloadWithAmount);
+      // compute CRC
+      const crc = crc16ccitt(withAmount630);
+      const finalPayload = withAmount630 + crc;
+
+      // show in UI
+      nominalLabel.innerText = `Rp ${amt.toLocaleString('id-ID')}`;
+      feePercentLabel.innerText = `Rp ${Math.round(feePercent).toLocaleString('id-ID')} (${(0.8)}%)`;
+      fixedFeeLabel.innerText = fixedFee.toLocaleString('id-ID');
+      totalLabelEl.innerText = totalPay.toLocaleString('id-ID');
+      finalPayloadEl.innerText = finalPayload;
+      currentFinalPayload = finalPayload;
+      currentNominal = amt;
+
+      // generate QR (replace previous)
+      qrcodeDynEl.innerHTML = '';
+      new QRCode(qrcodeDynEl, {
+        text: finalPayload,
+        width: 200,
+        height: 200,
+        correctLevel: QRCode.CorrectLevel.H
+      });
 
       qrcodeContainer.style.display = 'block';
       depositCountdown = 15;
-      depositTimerEl.textContent = 15;
-
+      depositTimerEl.textContent = depositCountdown;
+      depositConfirm.style.display = 'none';
       clearInterval(depositTimer);
       depositTimer = setInterval(()=>{
         depositCountdown--;
@@ -533,36 +597,51 @@
       }, 1000);
     });
 
+    copyPayloadBtn.addEventListener('click', ()=>{
+      if (!currentFinalPayload) return;
+      navigator.clipboard?.writeText(currentFinalPayload).then(()=> alert('Payload disalin ke clipboard.'));
+    });
+
     depositConfirm.addEventListener('click', ()=>{
-      const amt = parseFloat(document.getElementById('depositAmount').value);
+      const amt = currentNominal || parseFloat(document.getElementById('depositAmount').value);
       const acc = document.getElementById('depositAccount').value.trim();
       const method = document.getElementById('depositMethod').value;
-      // pastikan rumus sama (nominal + Rp5000)
-      const adminFee = 5000, total = amt + adminFee;
 
-      balance += amt;
+      if (!amt || !acc) {
+        alert('Data deposit tidak lengkap.');
+        return;
+      }
+
+      balance += amt; // credit nominal ke saldo (customer bayar lebih karena fee)
       balanceEl.textContent = balance.toFixed(2);
       depositModal.style.display = 'none';
 
       // Format pesan untuk WhatsApp
+      const feePercent = Math.round(amt * 0.008);
+      const fixedFee = 850;
+      const totalPay = Math.round(amt + feePercent + fixedFee);
+
       const message = `
 *Konfirmasi Deposit*
 *Option Trading*
 ➤ Nominal: Rp ${amt.toLocaleString('id-ID')}
-➤ Total Bayar: Rp ${total.toLocaleString('id-ID')} (admin Rp ${adminFee.toLocaleString('id-ID')})
+➤ Total Bayar: Rp ${totalPay.toLocaleString('id-ID')} (fee ${feePercent.toLocaleString('id-ID')} + tetap Rp ${fixedFee.toLocaleString('id-ID')})
 ➤ Rekening: ${acc}
 ➤ Metode: ${method}
 
 *Setelah Mengirim Form ini, Harap Kirim SS bukti Transfer Pembayaran*
 `.trim();
 
-      // Ganti nomor WA admin di bawah ini
       const whatsappNumber = '6285697747768';
       const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-
-      // Arahkan ke WhatsApp
       window.open(whatsappLink, '_blank');
     });
+
+    // ========= Withdraw (tetap) =========
+    const btnWithdraw    = document.getElementById('btnWithdraw'),
+          withdrawModal  = document.getElementById('withdrawModal'),
+          withdrawClose  = document.getElementById('withdrawClose'),
+          withdrawSubmit = document.getElementById('withdrawSubmit');
 
     btnWithdraw.addEventListener('click', () => {
       document.getElementById('withdrawAmount').value = '';
@@ -571,13 +650,8 @@
       withdrawModal.style.display = 'block';
     });
 
-    withdrawClose.addEventListener('click', () => {
-      withdrawModal.style.display = 'none';
-    });
-
-    window.addEventListener('click', e => {
-      if (e.target === withdrawModal) withdrawModal.style.display = 'none';
-    });
+    withdrawClose.addEventListener('click', () => { withdrawModal.style.display = 'none'; });
+    window.addEventListener('click', e => { if (e.target === withdrawModal) withdrawModal.style.display = 'none'; });
 
     withdrawSubmit.addEventListener('click', () => {
       const amt = parseFloat(document.getElementById('withdrawAmount').value);
@@ -604,7 +678,6 @@ Metode: ${method}
 
       const whatsappNumber = '6285697747768';
       const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-
       window.open(whatsappLink, '_blank');
     });
 
