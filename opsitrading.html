@@ -3,114 +3,44 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Crash GOOGLE - Binary Option Trading (Firebase)</title>
+  <title>Crash GOOGLE - Binary Option Trading (Firebase + Admin)</title>
   <style>
-    :root {
-      --primary-color: #1e88e5;
-      --bg-color: #f5f5f5;
-      --text-color: #333;
-      --card-bg: #fff;
-      --up-color: #4caf50;
-      --down-color: #f44336;
-    }
-    * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif; }
-    body { background:var(--bg-color); color:var(--text-color); }
-
-    .header {
-      display:flex; justify-content:space-between; align-items:center;
-      background:var(--primary-color); color:#fff; padding:1rem;
-    }
-    .header .balance { font-weight:bold; }
-    
-    .controls {
-      display:flex; gap:.5rem; padding:1rem; justify-content:center;
-      background:#eee;
-    }
-    .controls select, .controls button {
-      padding:.5rem; border-radius:4px; border:1px solid #ccc;
-      background:#fff; cursor:pointer;
-    }
-    .controls .btn-deposit { background-color: #28a745; color:#fff; border:none; }
-    .controls .btn-withdraw { background-color: #dc3545; color:#fff; border:none; }
-    .controls .btn-deposit:hover, .controls .btn-deposit:focus { background-color:#218838; }
-    .controls .btn-withdraw:hover, .controls .btn-withdraw:focus { background-color:#c82333; }
-
-    .trading-panel {
-      background:var(--card-bg); max-width:960px; margin:1rem auto; padding:1rem;
-      border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,.1);
-    }
-    .chart-container { display:flex; flex-wrap:wrap; gap:1rem; }
-    #chartCanvas { flex:1 1 0; width:100%; height:300px; border:1px solid #ddd; }
-    .price-display {
-      width:100px; padding:1rem; font-size:1.1rem;
-      border-left:1px solid #ccc; text-align:center;
-      display:flex; flex-direction:column; justify-content:center;
-      background:#f9f9f9;
-    }
-
-    .market-info { display:flex; justify-content:space-between; margin:.5rem 0; }
-    .options { display:flex; gap:.5rem; margin-bottom:.5rem; }
-    .option-btn {
-      flex:1; padding:.8rem; border:none; border-radius:4px;
-      color:#fff; font-weight:bold; cursor:pointer;
-    }
-    #btnUp { background:var(--up-color); }
-    #btnDown { background:var(--down-color); }
-
-    .bet-controls { display:flex; gap:.5rem; margin-bottom:.5rem; }
-    .bet-controls input {
-      flex:1; padding:.6rem; border-radius:4px; border:1px solid #ccc;
-    }
-
-    .result, #activeTrade {
-      text-align:center; font-weight:bold; margin-top:.5rem;
-    }
-    #tradeHistory {
-      list-style:none; padding:0; max-width:600px; margin:1rem auto;
-      font-size:.9rem;
-    }
-    #tradeHistory li { margin-bottom:.3rem; }
-
-    .footer { text-align:center; margin:1rem; color:#777; }
-
-    /* Modals */
-    .modal {
-      display:none; position:fixed; z-index:10;
-      left:0; top:0; width:100%; height:100%;
-      background:rgba(0,0,0,0.4); overflow:auto;
-    }
-    .modal-content {
-      background:#fff; margin:10% auto; padding:1.5rem;
-      border-radius:8px; width:90%; max-width:420px; position:relative;
-    }
-    .modal-close {
-      position:absolute; top:.5rem; right:.8rem;
-      font-size:1.2rem; cursor:pointer; color:#666;
-    }
-    .modal-content h3 { margin-bottom:1rem; color:var(--primary-color); }
-    .modal-content label { display:block; margin:.5rem 0 .2rem; }
-    .modal-content input, .modal-content select {
-      width:100%; padding:.6rem; margin-bottom:.8rem;
-      border:1px solid #ccc; border-radius:4px;
-    }
-    .modal-content button {
-      width:100%; padding:.8rem; background:var(--primary-color);
-      color:#fff; border:none; border-radius:4px; font-size:1rem;
-      cursor:pointer; margin-top:.5rem;
-    }
-    .qrcode-container { text-align:center; margin-top:1rem; }
-    .qrcode-container img { max-width:200px; display:block; margin:0 auto; }
-    .qrcode-container p { margin:.5rem 0; }
-
-    .promo {
-      max-width:600px; margin:2rem auto; padding:1.5rem;
-      background:var(--card-bg); border-radius:8px;
-      box-shadow:0 2px 8px rgba(0,0,0,0.1); text-align:center;
-    }
-    .promo h2 { color:var(--primary-color); margin-bottom:.5rem; }
-    .faq { max-width:900px; margin:0.5rem auto; }
-    .small{ font-size:13px; color:#666; text-align:left; margin:6px 0; }
-    pre.payload { background:#f6f6f6; padding:8px; overflow:auto; text-align:left; }
+    :root { --primary-color:#1e88e5; --bg-color:#f5f5f5; --text-color:#333; --card-bg:#fff; --up-color:#4caf50; --down-color:#f44336; }
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Poppins,sans-serif;}
+    body{background:var(--bg-color);color:var(--text-color);}
+    .header{display:flex;justify-content:space-between;align-items:center;background:var(--primary-color);color:#fff;padding:1rem;}
+    .header .balance{font-weight:bold;}
+    .controls{display:flex;gap:.5rem;padding:1rem;justify-content:center;background:#eee;}
+    .controls select,.controls button{padding:.5rem;border-radius:4px;border:1px solid #ccc;background:#fff;cursor:pointer;}
+    .controls .btn-deposit{background-color:#28a745;color:#fff;border:none;}
+    .controls .btn-withdraw{background-color:#dc3545;color:#fff;border:none;}
+    .trading-panel{background:var(--card-bg);max-width:960px;margin:1rem auto;padding:1rem;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,.1);}
+    #chartCanvas{width:100%;height:300px;border:1px solid #ddd;display:block;}
+    .price-display{width:100px;padding:1rem;font-size:1.1rem;border-left:1px solid #ccc;text-align:center;background:#f9f9f9;}
+    .options{display:flex;gap:.5rem;margin-bottom:.5rem;}
+    .option-btn{flex:1;padding:.8rem;border:none;border-radius:4px;color:#fff;font-weight:bold;cursor:pointer;}
+    #btnUp{background:var(--up-color);} #btnDown{background:var(--down-color);}
+    .bet-controls{display:flex;gap:.5rem;margin-bottom:.5rem;}
+    .result,#activeTrade{text-align:center;font-weight:bold;margin-top:.5rem;}
+    #tradeHistory{list-style:none;padding:0;max-width:900px;margin:1rem auto;font-size:.9rem;}
+    .footer{text-align:center;margin:1rem;color:#777;}
+    .modal{display:none;position:fixed;z-index:10;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.4);overflow:auto;}
+    .modal-content{background:#fff;margin:6% auto;padding:1.5rem;border-radius:8px;width:90%;max-width:520px;position:relative;}
+    .modal-close{position:absolute;top:.5rem;right:.8rem;font-size:1.2rem;cursor:pointer;color:#666;}
+    .modal-content label{display:block;margin:.5rem 0 .2rem;}
+    .modal-content input,.modal-content select{width:100%;padding:.6rem;margin-bottom:.8rem;border:1px solid #ccc;border-radius:4px;}
+    .qrcode-container{text-align:center;margin-top:1rem;}
+    .qrcode-container img{max-width:200px;display:block;margin:0 auto;}
+    .small{font-size:13px;color:#666;text-align:left;margin:6px 0;}
+    pre.payload{background:#f6f6f6;padding:8px;overflow:auto;text-align:left;}
+    /* admin panel */
+    #adminPanel{display:none;max-width:980px;margin:1rem auto;padding:1rem;background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+    #adminPanel h3{color:var(--primary-color);margin-bottom:.5rem;}
+    .req-item{border:1px solid #eee;padding:.6rem;border-radius:6px;margin:.4rem 0;display:flex;justify-content:space-between;align-items:center;}
+    .req-left{flex:1;}
+    .req-actions button{margin-left:.4rem;padding:.4rem .6rem;border-radius:4px;border:none;cursor:pointer;}
+    .btn-confirm{background:#28a745;color:#fff;}
+    .btn-reject{background:#dc3545;color:#fff;}
   </style>
 </head>
 <body>
@@ -120,11 +50,6 @@
     <div class="balance">Saldo Real: Rp.<span id="balance">0.00</span></div>
   </div>
 
-  <section class="faq">
-    <h5>Sudah Trading/Deposit/Penarikan Jangan di Refresh Agar Tidak menghapus History dan Saldo Trading</h5>
-  </section>
-  
-  <p style="text-align:center; margin-top:.5rem;">Informasi: Market – Server – Durasi Trading</p>
   <div class="controls">
     <select id="symbolSelect">
       <option value="EURUSD">Polusi Index</option>
@@ -152,31 +77,19 @@
   </div>
 
   <section class="trading-panel">
-    <div class="chart-container">
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;">
       <canvas id="chartCanvas"></canvas>
-      <div class="price-display">
-        <div>Index Poin</div>
-        <div id="currentPrice">–</div>
-      </div>
+      <div class="price-display"><div>Index Poin</div><div id="currentPrice">–</div></div>
     </div>
-    <div class="market-info">
-      <div id="currSymbol">Polusi Index</div>
-      <div>Durasi: <span id="currDur">60</span>s</div>
-    </div>
-    <div class="options">
-      <button id="btnUp" class="option-btn">BELI</button>
-      <button id="btnDown" class="option-btn">JUAL</button>
-    </div>
-    <div class="bet-controls">
-      <input type="number" id="betAmount" placeholder="Jumlah (Rp)" min="14900">
-    </div>
-    <div id="result" class="result"></div>
-    <div id="activeTrade" class="result"></div>
-    <h3 style="text-align:center; margin-top:1rem;">Riwayat Perdagangan</h3>
+    <div class="market-info"><div id="currSymbol">Polusi Index</div><div>Durasi: <span id="currDur">60</span>s</div></div>
+    <div class="options"><button id="btnUp" class="option-btn">BELI</button><button id="btnDown" class="option-btn">JUAL</button></div>
+    <div class="bet-controls"><input type="number" id="betAmount" placeholder="Jumlah (Rp)" min="14900"></div>
+    <div id="result" class="result"></div><div id="activeTrade" class="result"></div>
+    <h3 style="text-align:center;margin-top:1rem;">Riwayat Perdagangan & Activity</h3>
     <ul id="tradeHistory"></ul>
   </section>
 
-  <!-- Deposit Modal (DIUBAH: pakai QRIS dinamis) -->
+  <!-- Deposit Modal -->
   <div id="depositModal" class="modal">
     <div class="modal-content">
       <span class="modal-close" id="depositClose">&times;</span>
@@ -186,10 +99,8 @@
       <label>No. Rekening Pengirim</label>
       <input type="text" id="depositAccount" placeholder="1234567890">
       <label>Metode Pembayaran</label>
-      <select id="depositMethod">
-        <option value="Dana">QRIS Dana</option>
-      </select>
-      <button id="depositPay">Bayar</button>
+      <select id="depositMethod"><option value="Dana">QRIS Dana</option></select>
+      <button id="depositPay">Generate QR & Request</button>
 
       <div class="qrcode-container" id="qrcodeContainer" style="display:none;">
         <div class="small">Nominal input: <span id="nominalLabel"></span></div>
@@ -198,13 +109,15 @@
         <div class="small">Total (dibulatkan): <strong>Rp <span id="totalLabel"></span></strong></div>
 
         <div id="qrcodeDyn" style="margin:8px auto;"></div>
-
         <div class="small">Payload QRIS akhir (untuk scan/give kepada user):</div>
         <pre id="finalPayload" class="payload"></pre>
         <button id="copyPayloadBtn" style="margin-top:8px;">Salin payload</button>
 
-        <p>Menunggu pembayaran... Sisa waktu: <span id="depositTimer">15</span>s</p>
-        <button id="depositConfirm" style="display:none; margin-top:8px;">Sudah Bayar</button>
+        <p>Setelah bayar: klik "Sudah Bayar" untuk menandai ke admin.</p>
+        <button id="markPaidBtn" style="margin-top:8px;">Sudah Bayar</button>
+
+        <p>Status request: <span id="myRequestStatus">-</span></p>
+        <p>Menunggu konfirmasi admin... Sisa waktu: <span id="depositTimer">15</span>s</p>
       </div>
     </div>
   </div>
@@ -219,27 +132,22 @@
       <label>No. Rekening Tujuan</label>
       <input type="text" id="withdrawAccount" placeholder="1234567890">
       <label>Metode Penarikan</label>
-      <select id="withdrawMethod">
-        <option value="Bank">Dana</option>
-        <option value="E-Wallet">Gopay</option>
-      </select>
-      <button id="withdrawSubmit">Tarik</button>
+      <select id="withdrawMethod"><option value="Bank">Bank</option><option value="E-Wallet">Gopay</option></select>
+      <button id="withdrawSubmit">Kirim Permintaan Tarik</button>
+      <p>Status request: <span id="myWithdrawStatus">-</span></p>
     </div>
   </div>
 
-  <section class="promo">
-    <h2>🚀 Siap Uji Insting Trading Lu?</h2>
-    <p>
-      Gabung di <strong>Crash GOOGLE</strong>... (konten promo sama seperti sebelumnya)
-    </p>
-  </section>
+  <!-- Admin Panel -->
+  <div id="adminPanel">
+    <h3>Admin Panel — Pending Requests</h3>
+    <div id="requestsList">Loading requests...</div>
+  </div>
 
   <div class="footer">© 2025 Dolphin LLC</div>
 
-  <!-- QRCode.js (CDN) -->
+  <!-- libs -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
-  <!-- Firebase v8 scripts -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -257,15 +165,14 @@
     const ADMIN_UID = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52';
     /* ================================= */
 
-    // init firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // Default base payload (statis) — ubah sesuai merchant lo
+    // default QR payload (merchant)
     const DEFAULT_BASE_PAYLOAD = "00020101021126610014COM.GO-JEK.WWW01189360091433055874630210G3055874630303UMI51440014ID.CO.QRIS.WWW0215ID10254231099470303UMI5204481453033605802ID5925ZkgamingstoreGoTo, Toko H6007TANGSEL61051522062070703A0163040657";
 
-    // ========= QRIS helper functions (sama) =========
+    // helpers: CRC, pad, insert amount
     function crc16ccitt(str) {
       let crc = 0xFFFF;
       for (let i = 0; i < str.length; i++) {
@@ -277,83 +184,84 @@
       }
       return crc.toString(16).toUpperCase().padStart(4, '0');
     }
-    function padLen(n) { return String(n).padStart(2, '0'); }
+    function padLen(n){ return String(n).padStart(2,'0'); }
     function insertAmountTag(payload630, amountStr) {
       const amountField = '54' + padLen(amountStr.length) + amountStr;
-      const idx5303 = payload630.indexOf('5303'); // tag 53 start
-      if (idx5303 !== -1) {
-        return payload630.slice(0, idx5303) + amountField + payload630.slice(idx5303);
-      } else {
-        const idx6304 = payload630.indexOf('6304');
-        if (idx6304 !== -1) {
-          return payload630.slice(0, idx6304) + amountField + payload630.slice(idx6304);
-        } else {
-          return payload630 + amountField;
-        }
-      }
+      const idx5303 = payload630.indexOf('5303');
+      if (idx5303 !== -1) return payload630.slice(0, idx5303) + amountField + payload630.slice(idx5303);
+      const idx6304 = payload630.indexOf('6304');
+      if (idx6304 !== -1) return payload630.slice(0, idx6304) + amountField + payload630.slice(idx6304);
+      return payload630 + amountField;
     }
-    function formatRupiahTwoDecimals(rp) { return rp.toFixed(2); }
+    function formatRupiahTwoDecimals(rp){ return rp.toFixed(2); }
 
-    // ========= App state & UI bindings =========
+    // app state & elements
     let currentUser = null;
     let balance = 0;
+    let currentRequestDocId = null; // user deposit request id
     const balanceEl = document.getElementById('balance');
-
-    // Trading UI elements (sama seperti sebelumnya)
-    const symbolSelect = document.getElementById('symbolSelect');
-    const tfSelect     = document.getElementById('tfSelect');
-    const durSelect    = document.getElementById('durSelect');
-    const currSymbol   = document.getElementById('currSymbol');
-    const currDur      = document.getElementById('currDur');
     const tradeHistory = document.getElementById('tradeHistory');
-    const canvas    = document.getElementById('chartCanvas');
-    const ctx       = canvas.getContext('2d');
-    const priceEl   = document.getElementById('currentPrice');
-    const btnUp     = document.getElementById('btnUp');
-    const btnDown   = document.getElementById('btnDown');
+
+    // trading UI (kept minimal)
+    const symbolSelect = document.getElementById('symbolSelect');
+    const tfSelect = document.getElementById('tfSelect');
+    const durSelect = document.getElementById('durSelect');
+    const currSymbol = document.getElementById('currSymbol');
+    const currDur = document.getElementById('currDur');
+    const chartCanvas = document.getElementById('chartCanvas');
+    const ctx = chartCanvas.getContext('2d');
+    const priceEl = document.getElementById('currentPrice');
+    const btnUp = document.getElementById('btnUp');
+    const btnDown = document.getElementById('btnDown');
     const betAmount = document.getElementById('betAmount');
-    const resultEl  = document.getElementById('result');
+    const resultEl = document.getElementById('result');
     const activeTrade = document.getElementById('activeTrade');
 
-    let candles = [], markers = [], lastPrice = 1.2;
-    let tradeDur = +durSelect.value;
-    const historyCache = {}, candlesCache = {};
+    // deposit UI elems
+    const btnDeposit = document.getElementById('btnDeposit'),
+          depositModal = document.getElementById('depositModal'),
+          depositClose = document.getElementById('depositClose'),
+          depositPay = document.getElementById('depositPay'),
+          qrcodeContainer = document.getElementById('qrcodeContainer'),
+          nominalLabel = document.getElementById('nominalLabel'),
+          feePercentLabel = document.getElementById('feePercentLabel'),
+          fixedFeeLabel = document.getElementById('fixedFeeLabel'),
+          totalLabelEl = document.getElementById('totalLabel'),
+          qrcodeDynEl = document.getElementById('qrcodeDyn'),
+          finalPayloadEl = document.getElementById('finalPayload'),
+          copyPayloadBtn = document.getElementById('copyPayloadBtn'),
+          markPaidBtn = document.getElementById('markPaidBtn'),
+          myRequestStatusEl = document.getElementById('myRequestStatus'),
+          depositTimerEl = document.getElementById('depositTimer');
 
-    function key() { return symbolSelect.value + '_' + tfSelect.value; }
-    function loadHistoryUI() {
-      const k = key();
-      // show from local cache (will be supplemented by firestore load)
-      tradeHistory.innerHTML = historyCache[k]?.join('') || '';
+    // withdraw UI elems
+    const btnWithdraw = document.getElementById('btnWithdraw'),
+          withdrawModal = document.getElementById('withdrawModal'),
+          withdrawClose = document.getElementById('withdrawClose'),
+          withdrawSubmit = document.getElementById('withdrawSubmit'),
+          myWithdrawStatusEl = document.getElementById('myWithdrawStatus');
+
+    // admin panel elems
+    const adminPanel = document.getElementById('adminPanel'),
+          requestsList = document.getElementById('requestsList');
+
+    // request refs
+    function requestsRef(){ return db.collection('requests'); }
+    function userDocRef(uid){ return db.collection('users').doc(uid); }
+    function userHistoryRef(uid){ return userDocRef(uid).collection('history'); }
+
+    // write helpers
+    function writeBalanceToFirestore(uid, newBalance){
+      return userDocRef(uid).set({ balance: Number(newBalance) || 0, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
     }
-    function saveHistoryItemLocal(html) {
-      const k = key();
-      historyCache[k] = historyCache[k] || [];
-      historyCache[k].unshift(html);
+    function addHistoryToFirestore(uid, item){
+      return userHistoryRef(uid).add({ ...item, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
     }
 
-    // Firestore helpers
-    function userDocRef(uid) { return db.collection('users').doc(uid); }
-    function userHistoryRef(uid) { return db.collection('users').doc(uid).collection('history'); }
-
-    function writeBalanceToFirestore(uid, newBalance) {
-      return userDocRef(uid).set({
-        balance: Number(newBalance) || 0,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
-    }
-
-    function addHistoryToFirestore(uid, item) {
-      // item: { type:'trade'|'deposit'|'withdraw', text, amount, timestamp }
-      return userHistoryRef(uid).add({
-        ...item,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }
-
-    function listenToUser(uid) {
-      // listen to balance changes
-      userDocRef(uid).onSnapshot(doc => {
-        if (!doc.exists) return;
+    // listen to user doc & history
+    function listenToUser(uid){
+      userDocRef(uid).onSnapshot(doc=>{
+        if(!doc.exists) return;
         const data = doc.data();
         if (data && typeof data.balance !== 'undefined') {
           balance = Number(data.balance) || 0;
@@ -361,448 +269,312 @@
         }
       });
 
-      // listen to latest history (limit 50) and render
-      userHistoryRef(uid).orderBy('timestamp', 'desc').limit(50)
-        .onSnapshot(snap => {
-          tradeHistory.innerHTML = ''; // replace with firestore-backed history
-          snap.forEach(d => {
-            const it = d.data();
-            const time = it.timestamp && it.timestamp.toDate ? it.timestamp.toDate().toLocaleTimeString() : new Date().toLocaleTimeString();
-            let color = '#333';
-            let label = '';
-            if (it.type === 'trade') {
-              color = it.result === 'win' ? 'green' : 'red';
-              label = `${time} — ${it.side} @ ${it.entryPrice} → Exit @ ${it.exitPrice} — ${it.text}`;
-            } else if (it.type === 'deposit') {
-              color = 'blue';
-              label = `${time} — Deposit: Rp ${Number(it.amount).toLocaleString()} — ${it.text || ''}`;
-            } else if (it.type === 'withdraw') {
-              color = 'orange';
-              label = `${time} — Withdraw: Rp ${Number(it.amount).toLocaleString()} — ${it.text || ''}`;
-            } else {
-              label = `${time} — ${it.text || JSON.stringify(it)}`;
-            }
-            const li = document.createElement('li');
-            li.style.color = color;
-            li.innerText = label;
-            tradeHistory.appendChild(li);
+      userHistoryRef(uid).orderBy('timestamp','desc').limit(50).onSnapshot(snap=>{
+        tradeHistory.innerHTML = '';
+        snap.forEach(d=>{
+          const it = d.data();
+          const time = it.timestamp && it.timestamp.toDate ? it.timestamp.toDate().toLocaleTimeString() : new Date().toLocaleTimeString();
+          let color='#333', label='';
+          if(it.type==='trade'){ color = it.result==='win'?'green':'red'; label = `${time} — ${it.side} @ ${it.entryPrice} → Exit @ ${it.exitPrice} — ${it.text}`; }
+          else if(it.type==='deposit'){ color='blue'; label = `${time} — Deposit: Rp ${Number(it.amount).toLocaleString()} — ${it.text || ''}`; }
+          else if(it.type==='withdraw'){ color='orange'; label = `${time} — Withdraw: Rp ${Number(it.amount).toLocaleString()} — ${it.text || ''}`; }
+          else label = `${time} — ${it.text || JSON.stringify(it)}`;
+          const li = document.createElement('li'); li.style.color=color; li.innerText=label; tradeHistory.appendChild(li);
+        });
+      });
+
+      // listen to user's own requests to update status UI
+      requestsRef().where('uid','==',uid).orderBy('createdAt','desc').limit(20)
+        .onSnapshot(snap=>{
+          // find latest deposit and withdraw statuses
+          let latestDeposit = null, latestWithdraw = null;
+          snap.forEach(docSnap=>{
+            const r = docSnap.data();
+            if(r.type === 'deposit' && !latestDeposit) latestDeposit = { id: docSnap.id, ...r };
+            if(r.type === 'withdraw' && !latestWithdraw) latestWithdraw = { id: docSnap.id, ...r };
           });
+          if(latestDeposit) {
+            myRequestStatusEl.innerText = (latestDeposit.status || 'pending') + (latestDeposit.paidByUser ? ' (user marked paid)' : '');
+            currentRequestDocId = latestDeposit.id;
+          } else {
+            myRequestStatusEl.innerText = '-';
+            currentRequestDocId = null;
+          }
+          if(latestWithdraw) {
+            myWithdrawStatusEl.innerText = (latestWithdraw.status || 'pending');
+          } else {
+            myWithdrawStatusEl.innerText = '-';
+          }
         });
     }
 
-    // Auth: try restore / sign in anonymously
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        currentUser = user;
-        // ensure user doc exists
-        userDocRef(user.uid).get().then(doc => {
-          if (!doc.exists) {
-            // create default doc
-            userDocRef(user.uid).set({
-              balance: 0,
-              createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(()=> {
-              // listen
-              listenToUser(user.uid);
-            });
+    // admin panel: show requests realtime
+    function enableAdminPanel(){
+      adminPanel.style.display = 'block';
+      requestsRef().orderBy('createdAt','desc').limit(200).onSnapshot(snap=>{
+        requestsList.innerHTML = '';
+        if(snap.empty){ requestsList.innerHTML = '<div>No requests</div>'; return; }
+        snap.forEach(docSnap=>{
+          const r = docSnap.data();
+          const id = docSnap.id;
+          const status = r.status || 'pending';
+          const item = document.createElement('div'); item.className='req-item';
+          const left = document.createElement('div'); left.className='req-left';
+          left.innerHTML = `
+            <div><strong>${(r.type||'req').toUpperCase()}</strong> — uid: ${r.uid}</div>
+            <div>Nominal: Rp ${Number(r.nominal||r.amount||0).toLocaleString()} | Total bayar: Rp ${Number(r.totalPay||0).toLocaleString()}</div>
+            <div>Method: ${r.method||'-'} | Acc: ${r.account||'-'}</div>
+            <div>Status: <strong>${status}</strong> ${r.paidByUser ? '(user marked paid)' : ''}</div>
+            <div style="margin-top:6px; font-size:12px;">Payload: <small style="word-break:break-word;">${r.payload||''}</small></div>
+          `;
+          const actions = document.createElement('div'); actions.className='req-actions';
+          if(status === 'pending' || status === 'paidByUser'){
+            const confirmBtn = document.createElement('button'); confirmBtn.className='btn-confirm'; confirmBtn.innerText='Confirm';
+            confirmBtn.onclick = ()=> adminConfirmRequest(id);
+            const rejectBtn = document.createElement('button'); rejectBtn.className='btn-reject'; rejectBtn.innerText='Reject';
+            rejectBtn.onclick = ()=> adminRejectRequest(id);
+            actions.appendChild(confirmBtn); actions.appendChild(rejectBtn);
           } else {
-            // listen
+            actions.innerHTML = `<small>Processed: ${status}</small>`;
+          }
+          item.appendChild(left); item.appendChild(actions);
+          requestsList.appendChild(item);
+        });
+      });
+    }
+
+    // admin confirm/reject logic (transaction-safe)
+    async function adminConfirmRequest(requestId){
+      if(!currentUser) return alert('Admin belum terautentikasi');
+      if(currentUser.uid !== ADMIN_UID) return alert('Bukan admin');
+      const reqRef = requestsRef().doc(requestId);
+      try {
+        await db.runTransaction(async t=>{
+          const reqDoc = await t.get(reqRef);
+          if(!reqDoc.exists) throw 'Request not found';
+          const r = reqDoc.data();
+          if(r.status === 'confirmed') throw 'Sudah dikonfirmasi';
+          const uid = r.uid;
+          const userRef = userDocRef(uid);
+          const userDoc = await t.get(userRef);
+          const prevBal = userDoc.exists && userDoc.data().balance ? Number(userDoc.data().balance) : 0;
+          if(r.type === 'deposit'){
+            const add = Number(r.nominal || r.amount || 0);
+            const newBal = prevBal + add;
+            t.update(userRef, { balance: newBal, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+            t.update(reqRef, { status: 'confirmed', confirmedBy: currentUser.uid, confirmedAt: firebase.firestore.FieldValue.serverTimestamp() });
+          } else if(r.type === 'withdraw'){
+            const amt = Number(r.nominal || r.amount || 0);
+            if(prevBal < amt){
+              // reject automatically
+              t.update(reqRef, { status: 'rejected', rejectedBy: currentUser.uid, rejectedAt: firebase.firestore.FieldValue.serverTimestamp(), rejectedReason: 'insufficient_balance' });
+              throw 'Insufficient balance';
+            } else {
+              const newBal = prevBal - amt;
+              t.update(userRef, { balance: newBal, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+              t.update(reqRef, { status: 'confirmed', confirmedBy: currentUser.uid, confirmedAt: firebase.firestore.FieldValue.serverTimestamp() });
+            }
+          } else {
+            t.update(reqRef, { status: 'confirmed', confirmedBy: currentUser.uid, confirmedAt: firebase.firestore.FieldValue.serverTimestamp() });
+          }
+        });
+
+        // Add history entry (out of transaction)
+        const reqSnapshot = await reqRef.get();
+        const r2 = reqSnapshot.data();
+        if(r2){
+          if(r2.type === 'deposit'){
+            await addHistoryToFirestore(r2.uid, { type:'deposit', amount: r2.nominal || r2.amount || 0, text:`Deposit confirmed by admin ${currentUser.uid}` });
+          } else if(r2.type === 'withdraw'){
+            await addHistoryToFirestore(r2.uid, { type:'withdraw', amount: r2.nominal || r2.amount || 0, text:`Withdraw confirmed by admin ${currentUser.uid}` });
+          } else {
+            await addHistoryToFirestore(r2.uid, { type: r2.type || 'other', amount: r2.nominal || r2.amount || 0, text:`Request confirmed by admin ${currentUser.uid}` });
+          }
+        }
+        alert('Request berhasil dikonfirmasi.');
+      } catch (err) {
+        console.error('adminConfirmRequest err', err);
+        if(err === 'Insufficient balance') alert('Gagal konfirmasi: saldo user tidak cukup. Request otomatis ditolak.');
+        else alert('Konfirmasi gagal. Cek console.');
+      }
+    }
+
+    async function adminRejectRequest(requestId){
+      if(!currentUser) return alert('Admin belum terautentikasi');
+      if(currentUser.uid !== ADMIN_UID) return alert('Bukan admin');
+      try {
+        await requestsRef().doc(requestId).update({ status: 'rejected', rejectedBy: currentUser.uid, rejectedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        alert('Request ditolak.');
+      } catch(e){
+        console.error(e); alert('Gagal menolak request.');
+      }
+    }
+
+    // Auth: anonymous sign-in; on auth change -> init listeners + admin panel check
+    auth.onAuthStateChanged(user=>{
+      if(user){
+        currentUser = user;
+        // ensure user doc
+        userDocRef(user.uid).get().then(doc=>{
+          if(!doc.exists){
+            userDocRef(user.uid).set({ balance:0, createdAt: firebase.firestore.FieldValue.serverTimestamp() }).then(()=> listenToUser(user.uid));
+          } else {
             listenToUser(user.uid);
           }
-        }).catch(err => {
-          console.error('Firestore get user doc error:', err);
-        });
+        }).catch(e=>console.error(e));
+
+        // Admin panel only for ADMIN_UID
+        if(user.uid === ADMIN_UID){
+          enableAdminPanel();
+        } else {
+          adminPanel.style.display = 'none';
+        }
       } else {
-        // not signed in => sign in anonymously
-        auth.signInAnonymously().catch(err => {
-          console.error('Anon sign-in failed:', err);
-        });
+        auth.signInAnonymously().catch(e=>console.error('Anon sign-in failed',e));
       }
     });
 
-    // ========= Chart & trading logic (sama seperti sebelumnya) =========
-    function genHistory(base, count=50) {
-      const tf = +tfSelect.value;
-      const now = Date.now();
-      let b = base, arr = [];
-      for(let i=count; i>0; i--) {
-        const t = now - i*tf*60000;
-        const open = b;
-        const close = open*(1+(Math.random()*0.02-0.01));
-        const high = Math.max(open,close)*(1+Math.random()*0.005);
-        const low  = Math.min(open,close)*(1-Math.random()*0.005);
-        arr.push({ time:t, open, high, low, close });
-        b = close;
-      }
-      return arr;
-    }
-    function loadChart() {
-      currSymbol.textContent = symbolSelect.selectedOptions[0].text;
-      currDur.textContent = tradeDur = +durSelect.value;
-      const k = key();
-      if (!candlesCache[k]) {
-        lastPrice = 1 + Math.random();
-        candlesCache[k] = genHistory(lastPrice);
-      }
-      candles = candlesCache[k];
-      lastPrice = candles[candles.length-1].close;
-      markers = [];
-      priceEl.textContent = lastPrice.toFixed(4);
-      loadHistoryUI();
-      draw();
-      startTicks();
-    }
+    // ===== trading sim (short) =====
+    function genHistory(base, count=50){ const tf=+tfSelect.value; const now=Date.now(); let b=base, arr=[]; for(let i=count;i>0;i--){ const t=now - i*tf*60000; const open=b; const close=open*(1+(Math.random()*0.02-0.01)); const high=Math.max(open,close)*(1+Math.random()*0.005); const low=Math.min(open,close)*(1-Math.random()*0.005); arr.push({time:t,open,high,low,close}); b=close;} return arr; }
+    let candles=[], lastPrice=1.2, tradeDur = +durSelect.value, candlesCache = {}, markers = [];
+    function loadChart(){ currSymbol.textContent = symbolSelect.selectedOptions[0].text; currDur.textContent = tradeDur = +durSelect.value; const k = symbolSelect.value + '_' + tfSelect.value; if(!candlesCache[k]){ lastPrice = 1 + Math.random(); candlesCache[k] = genHistory(lastPrice); } candles = candlesCache[k]; lastPrice = candles[candles.length-1].close; markers=[]; priceEl.textContent = lastPrice.toFixed(4); draw(); startTicks(); }
     let tickInterval;
-    function startTicks() {
-      clearInterval(tickInterval);
-      tickInterval = setInterval(()=>{
-        const change = lastPrice*(Math.random()*0.010-0.005);
-        lastPrice += change;
-        candles.push({
-          time:Date.now(),
-          open:candles[candles.length-1].close,
-          high:Math.max(candles[candles.length-2].close,lastPrice),
-          low:Math.min(candles[candles.length-2].close,lastPrice),
-          close:lastPrice
-        });
-        if(candles.length>50) candles.shift();
-        priceEl.textContent = lastPrice.toFixed(4);
-        draw();
-      },2500);
-    }
-    function draw() {
-      canvas.width  = canvas.clientWidth;
-      canvas.height = canvas.clientHeight;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (!candles.length) return;
-      const allPrices = candles.flatMap(c => [c.high, c.low]);
-      const maxP = Math.max(...allPrices);
-      const minP = Math.min(...allPrices);
-      const upColor   = getComputedStyle(document.documentElement).getPropertyValue('--up-color').trim();
-      const downColor = getComputedStyle(document.documentElement).getPropertyValue('--down-color').trim();
-      const w = canvas.width / candles.length * 0.8;
-      candles.forEach((c, i) => {
-        const x  = i * (canvas.width / candles.length) + (canvas.width / candles.length - w) / 2;
-        const yO = ((maxP - c.open)  / (maxP - minP || 1)) * canvas.height;
-        const yC = ((maxP - c.close) / (maxP - minP || 1)) * canvas.height;
-        const yH = ((maxP - c.high)  / (maxP - minP || 1)) * canvas.height;
-        const yL = ((maxP - c.low)   / (maxP - minP || 1)) * canvas.height;
-        ctx.strokeStyle = '#000000';
-        ctx.beginPath();
-        ctx.moveTo(x + w/2, yH);
-        ctx.lineTo(x + w/2, yL);
-        ctx.stroke();
-        ctx.fillStyle = c.close >= c.open ? upColor : downColor;
-        ctx.fillRect(x, Math.min(yO, yC), w, Math.max(1, Math.abs(yC - yO)));
-      });
-      markers.forEach(m=>{
-        const i = candles.findIndex(c=>c.time===m.time);
-        if(i<0) return;
-        const x = i*(canvas.width/candles.length)+(canvas.width/candles.length)/2;
-        const y = ((maxP-m.price)/(maxP-minP || 1))*canvas.height + (m.type==='Buy'?-12:12);
-        ctx.fillStyle = m.type==='Buy'?'var(--up-color)':'var(--down-color)';
-        ctx.font='12px sans-serif'; ctx.textAlign='center';
-        ctx.fillText(m.type, x, y);
-      });
-    }
+    function startTicks(){ clearInterval(tickInterval); tickInterval = setInterval(()=>{ const change = lastPrice*(Math.random()*0.010-0.005); lastPrice += change; candles.push({ time:Date.now(), open:candles[candles.length-1].close, high:Math.max(candles[candles.length-2].close,lastPrice), low:Math.min(candles[candles.length-2].close,lastPrice), close:lastPrice }); if(candles.length>50) candles.shift(); priceEl.textContent = lastPrice.toFixed(4); draw(); },2500); }
+    function draw(){ chartCanvas.width = chartCanvas.clientWidth; chartCanvas.height = chartCanvas.clientHeight; ctx.clearRect(0,0,chartCanvas.width,chartCanvas.height); if(!candles.length) return; const allPrices = candles.flatMap(c=>[c.high,c.low]); const maxP = Math.max(...allPrices); const minP = Math.min(...allPrices); const upColor = getComputedStyle(document.documentElement).getPropertyValue('--up-color').trim(); const downColor = getComputedStyle(document.documentElement).getPropertyValue('--down-color').trim(); const w = chartCanvas.width / candles.length * 0.8; candles.forEach((c,i)=>{ const x = i*(chartCanvas.width / candles.length) + (chartCanvas.width / candles.length - w)/2; const yO = ((maxP - c.open)/(maxP - minP || 1))*chartCanvas.height; const yC = ((maxP - c.close)/(maxP - minP || 1))*chartCanvas.height; const yH = ((maxP - c.high)/(maxP - minP || 1))*chartCanvas.height; const yL = ((maxP - c.low)/(maxP - minP || 1))*chartCanvas.height; ctx.strokeStyle = '#000'; ctx.beginPath(); ctx.moveTo(x+w/2,yH); ctx.lineTo(x+w/2,yL); ctx.stroke(); ctx.fillStyle = c.close >= c.open ? upColor : downColor; ctx.fillRect(x, Math.min(yO,yC), w, Math.max(1, Math.abs(yC-yO))); }); markers.forEach(m=>{ const i = candles.findIndex(c=>c.time===m.time); if(i<0) return; const x = i*(chartCanvas.width/candles.length)+(chartCanvas.width/candles.length)/2; const y = ((maxP-m.price)/(maxP-minP || 1))*chartCanvas.height + (m.type==='Buy'?-12:12); ctx.fillStyle = m.type==='Buy'?'var(--up-color)':'var(--down-color)'; ctx.font='12px sans-serif'; ctx.textAlign='center'; ctx.fillText(m.type, x, y); }); }
 
-    function placeTrade(type) {
+    function placeTrade(type){
       const bet = parseFloat(betAmount.value);
-      if (!bet || bet <= 14900) return alert('Minimal transaksi Rp.15.000');
-      if (bet > balance) return alert('Saldo tidak cukup');
-
-      const entryPrice = lastPrice;
-      const entryTime  = Date.now();
+      if(!bet || bet <= 14900) return alert('Minimal transaksi Rp.15.000');
+      if(bet > balance) return alert('Saldo tidak cukup');
+      const entryPrice = lastPrice, entryTime = Date.now();
       markers.push({ time: entryTime, price: entryPrice, type });
       draw();
-
       let t = tradeDur;
       activeTrade.textContent = `${type} @ ${entryPrice.toFixed(4)} | Sisa waktu: ${t}s`;
-      const iv = setInterval(() => {
-        t--;
-        activeTrade.textContent = `${type} @ ${entryPrice.toFixed(4)} | Sisa waktu: ${t}s`;
-        if (t <= 0) {
-          clearInterval(iv);
-          const exitPrice = lastPrice;
-          const isBuy  = type.toUpperCase() === 'BELI' || type.toLowerCase() === 'call';
-          const isSell = type.toUpperCase() === 'JUAL' || type.toLowerCase() === 'put';
-          const win = (isBuy  && exitPrice > entryPrice) || (isSell && exitPrice < entryPrice);
+      const iv = setInterval(()=>{ t--; activeTrade.textContent = `${type} @ ${entryPrice.toFixed(4)} | Sisa waktu: ${t}s`; if(t<=0){ clearInterval(iv); const exitPrice = lastPrice; const isBuy = type.toUpperCase()==='BELI' || type.toLowerCase()==='call'; const isSell = type.toUpperCase()==='JUAL' || type.toLowerCase()==='put'; const win = (isBuy && exitPrice>entryPrice) || (isSell && exitPrice<entryPrice); let text,color; if(win){ const profit = bet * 0.7; balance += profit; text = `Tutup Keuntungan +${profit.toFixed(2)} Rp (Exit @ ${exitPrice.toFixed(4)})`; color='green'; if(currentUser){ writeBalanceToFirestore(currentUser.uid, balance).catch(()=>{}); addHistoryToFirestore(currentUser.uid,{ type:'trade', side:type, entryPrice:entryPrice.toFixed(4), exitPrice:exitPrice.toFixed(4), amount:bet, result:'win', text}).catch(()=>{}); } } else { balance -= bet; text = `Tutup Kerugian -${bet.toFixed(2)} Rp (Exit @ ${exitPrice.toFixed(4)})`; color='red'; if(currentUser){ writeBalanceToFirestore(currentUser.uid, balance).catch(()=>{}); addHistoryToFirestore(currentUser.uid,{ type:'trade', side:type, entryPrice:entryPrice.toFixed(4), exitPrice:exitPrice.toFixed(4), amount:bet, result:'lose', text}).catch(()=>{}); } } balanceEl.textContent = balance.toFixed(2); resultEl.textContent = text; activeTrade.textContent = ''; if(!currentUser){ const html = `<li style="color:${color};">${new Date().toLocaleTimeString()} — ${type} @ ${entryPrice.toFixed(4)} → Exit @ ${exitPrice.toFixed(4)} — ${text}</li>`; tradeHistory.insertAdjacentHTML('afterbegin', html); } betAmount.value=''; } },1000); }
 
-          let text, color;
-          if (win) {
-            const profit = bet * 0.7;
-            balance += profit;
-            text = `Tutup Keuntungan +${profit.toFixed(2)} Rp (Exit @ ${exitPrice.toFixed(4)})`;
-            color = 'green';
-            // persist balance + history
-            if (currentUser) {
-              writeBalanceToFirestore(currentUser.uid, balance)
-                .catch(e => console.error('writeBalance err', e));
-              addHistoryToFirestore(currentUser.uid, {
-                type: 'trade',
-                side: type,
-                entryPrice: entryPrice.toFixed(4),
-                exitPrice: exitPrice.toFixed(4),
-                amount: bet,
-                result: 'win',
-                text
-              }).catch(e => console.error('addHistory err', e));
-            } else {
-              const html = `<li style="color:${color};">${new Date().toLocaleTimeString()} — ${type} @ ${entryPrice.toFixed(4)} → Exit @ ${exitPrice.toFixed(4)} — ${text}</li>`;
-              saveHistoryItemLocal(html);
-            }
-          } else {
-            balance -= bet;
-            text = `Tutup Kerugian -${bet.toFixed(2)} Rp (Exit @ ${exitPrice.toFixed(4)})`;
-            color = 'red';
-            if (currentUser) {
-              writeBalanceToFirestore(currentUser.uid, balance)
-                .catch(e => console.error('writeBalance err', e));
-              addHistoryToFirestore(currentUser.uid, {
-                type: 'trade',
-                side: type,
-                entryPrice: entryPrice.toFixed(4),
-                exitPrice: exitPrice.toFixed(4),
-                amount: bet,
-                result: 'lose',
-                text
-              }).catch(e => console.error('addHistory err', e));
-            } else {
-              const html = `<li style="color:${color};">${new Date().toLocaleTimeString()} — ${type} @ ${entryPrice.toFixed(4)} → Exit @ ${exitPrice.toFixed(4)} — ${text}</li>`;
-              saveHistoryItemLocal(html);
-            }
-          }
-
-          // Update UI
-          balanceEl.textContent = balance.toFixed(2);
-          resultEl.textContent  = text;
-          activeTrade.textContent = '';
-
-          // if not using firestore, push local history UI
-          if (!currentUser) {
-            const html = `<li style="color:${color};">${new Date().toLocaleTimeString()} — ${type} @ ${entryPrice.toFixed(4)} → Exit @ ${exitPrice.toFixed(4)} — ${text}</li>`;
-            saveHistoryItemLocal(html);
-            tradeHistory.insertAdjacentHTML('afterbegin', html);
-          }
-          betAmount.value = '';
-        }
-      }, 1000);
-    }
-
-    // Events (trading)
+    // events
     symbolSelect.addEventListener('change', loadChart);
     tfSelect.addEventListener('change', loadChart);
     durSelect.addEventListener('change', ()=>{ currDur.textContent = tradeDur = +durSelect.value; });
     btnUp.addEventListener('click', ()=>placeTrade('BELI'));
     btnDown.addEventListener('click', ()=>placeTrade('JUAL'));
 
-    // ========= Deposit/QRIS logic (DIGANTI: pakai mekanisme dinamis) =========
-    const btnDeposit     = document.getElementById('btnDeposit'),
-          depositModal   = document.getElementById('depositModal'),
-          depositClose   = document.getElementById('depositClose'),
-          depositPay     = document.getElementById('depositPay'),
-          qrcodeContainer= document.getElementById('qrcodeContainer'),
-          nominalLabel   = document.getElementById('nominalLabel'),
-          feePercentLabel= document.getElementById('feePercentLabel'),
-          fixedFeeLabel  = document.getElementById('fixedFeeLabel'),
-          totalLabelEl   = document.getElementById('totalLabel'),
-          qrcodeDynEl    = document.getElementById('qrcodeDyn'),
-          finalPayloadEl = document.getElementById('finalPayload'),
-          copyPayloadBtn = document.getElementById('copyPayloadBtn'),
-          depositTimerEl = document.getElementById('depositTimer'),
-          depositConfirm = document.getElementById('depositConfirm');
+    // deposit flow: generate QR, create request doc (status: pending)
+    let depositCountdown = 15, depositTimer = null, currentFinalPayload='', currentNominal=0;
+    btnDeposit.addEventListener('click', ()=>{ document.getElementById('depositAmount').value=''; document.getElementById('depositAccount').value=''; document.getElementById('depositMethod').selectedIndex=0; qrcodeContainer.style.display='none'; depositModal.style.display='block'; myRequestStatusEl.innerText='-'; });
 
-    let depositTimer, depositCountdown, currentFinalPayload = '', currentNominal = 0;
+    depositClose.addEventListener('click', ()=> depositModal.style.display='none');
+    window.addEventListener('click', e => { if(e.target === depositModal) depositModal.style.display='none'; });
 
-    btnDeposit.addEventListener('click', ()=>{
-      document.getElementById('depositAmount').value = '';
-      document.getElementById('depositAccount').value = '';
-      document.getElementById('depositMethod').selectedIndex = 0;
-      qrcodeContainer.style.display = 'none';
-      depositConfirm.style.display = 'none';
-      clearInterval(depositTimer);
-      depositModal.style.display = 'block';
-    });
-
-    depositClose.addEventListener('click', ()=> depositModal.style.display = 'none');
-    window.addEventListener('click', e => { if (e.target === depositModal) depositModal.style.display = 'none'; });
-
-    depositPay.addEventListener('click', ()=>{
+    depositPay.addEventListener('click', async ()=>{
       const amt = parseFloat(document.getElementById('depositAmount').value);
       const acc = document.getElementById('depositAccount').value.trim();
       const method = document.getElementById('depositMethod').value;
-      if (!amt || amt < 1000) return alert('Minimal Rp 1.000');
-      if (!acc) return alert('Masukkan no. rekening');
+      if(!amt || amt < 1000) return alert('Minimal Rp 1.000');
+      if(!acc) return alert('Masukkan no. rekening');
 
-      // fees: 0.8% + Rp850
+      // fees: 0.8% + 850
       const feePercent = amt * 0.008;
       const fixedFee = 850;
-      const totalPay = Math.round(amt + feePercent + fixedFee); // total customer bayar
-      const amountStr = formatRupiahTwoDecimals(totalPay); // "10000.00"
+      const totalPay = Math.round(amt + feePercent + fixedFee);
+      const amountStr = formatRupiahTwoDecimals(totalPay);
 
-      // prepare base payload without CRC: ensure it ends with '6304'
+      // prepare payload without CRC
       let base = DEFAULT_BASE_PAYLOAD.trim();
       let payloadNoCRC;
-      if (base.slice(-8, -4) === '6304') {
-        payloadNoCRC = base.slice(0, -8) + '6304';
-      } else {
-        const idx = base.indexOf('6304');
-        if (idx !== -1) payloadNoCRC = base.slice(0, idx+4);
-        else payloadNoCRC = base + '6304';
-      }
+      if(base.slice(-8, -4) === '6304') payloadNoCRC = base.slice(0, -8) + '6304';
+      else { const idx = base.indexOf('6304'); if(idx !== -1) payloadNoCRC = base.slice(0, idx+4); else payloadNoCRC = base + '6304'; }
 
-      // insert amount tag (54)
       const withAmount630 = insertAmountTag(payloadNoCRC, amountStr);
-      // compute CRC
       const crc = crc16ccitt(withAmount630);
       const finalPayload = withAmount630 + crc;
 
-      // show in UI
+      // show UI
       nominalLabel.innerText = `Rp ${amt.toLocaleString('id-ID')}`;
-      feePercentLabel.innerText = `Rp ${Math.round(feePercent).toLocaleString('id-ID')} (${(0.8)}%)`;
+      feePercentLabel.innerText = `Rp ${Math.round(feePercent).toLocaleString('id-ID')} (0.8%)`;
       fixedFeeLabel.innerText = fixedFee.toLocaleString('id-ID');
       totalLabelEl.innerText = totalPay.toLocaleString('id-ID');
       finalPayloadEl.innerText = finalPayload;
       currentFinalPayload = finalPayload;
       currentNominal = amt;
 
-      // generate QR
       qrcodeDynEl.innerHTML = '';
-      new QRCode(qrcodeDynEl, {
-        text: finalPayload,
-        width: 200,
-        height: 200,
-        correctLevel: QRCode.CorrectLevel.H
-      });
+      new QRCode(qrcodeDynEl, { text: finalPayload, width:200, height:200, correctLevel: QRCode.CorrectLevel.H });
 
-      qrcodeContainer.style.display = 'block';
+      qrcodeContainer.style.display='block';
       depositCountdown = 15;
       depositTimerEl.textContent = depositCountdown;
-      depositConfirm.style.display = 'none';
       clearInterval(depositTimer);
-      depositTimer = setInterval(()=>{
-        depositCountdown--;
-        depositTimerEl.textContent = depositCountdown;
-        if (depositCountdown <= 0) {
-          clearInterval(depositTimer);
-          depositConfirm.style.display = 'block';
-        }
-      }, 1000);
-    });
+      depositTimer = setInterval(()=>{ depositCountdown--; depositTimerEl.textContent = depositCountdown; if(depositCountdown <= 0){ clearInterval(depositTimer); } },1000);
 
-    copyPayloadBtn.addEventListener('click', ()=>{
-      if (!currentFinalPayload) return;
-      navigator.clipboard?.writeText(currentFinalPayload).then(()=> alert('Payload disalin ke clipboard.'));
-    });
-
-    depositConfirm.addEventListener('click', ()=>{
-      const amt = currentNominal || parseFloat(document.getElementById('depositAmount').value);
-      const acc = document.getElementById('depositAccount').value.trim();
-      const method = document.getElementById('depositMethod').value;
-
-      if (!amt || !acc) {
-        alert('Data deposit tidak lengkap.');
-        return;
-      }
-
-      // credit nominal to user's balance (merchant credits the nominal)
-      balance += amt;
-      balanceEl.textContent = balance.toFixed(2);
-      depositModal.style.display = 'none';
-
-      if (currentUser) {
-        // persist
-        writeBalanceToFirestore(currentUser.uid, balance).catch(e => console.error('writeBalance err', e));
-        addHistoryToFirestore(currentUser.uid, {
+      // create request document (status: pending)
+      try{
+        const req = {
+          uid: currentUser ? currentUser.uid : null,
           type: 'deposit',
-          amount: amt,
-          text: `Confirmed deposit (method ${method}, acc ${acc})`
-        }).catch(e => console.error('addHistory err', e));
-      } else {
-        // no user (unlikely) -> keep local
-        const html = `<li style="color:blue;">${new Date().toLocaleTimeString()} — Deposit: Rp ${amt.toLocaleString()} — Confirmed</li>`;
-        saveHistoryItemLocal(html);
-        tradeHistory.insertAdjacentHTML('afterbegin', html);
+          nominal: amt,
+          totalPay: totalPay,
+          method: method,
+          account: acc,
+          payload: finalPayload,
+          status: 'pending',
+          paidByUser: false,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        const docRef = await requestsRef().add(req);
+        currentRequestDocId = docRef.id;
+        myRequestStatusEl.innerText = 'pending';
+        alert('Request deposit dibuat. Tunggu konfirmasi admin. Catat atau simpan payload QR untuk pembayaran.');
+      }catch(e){
+        console.error('create request err', e);
+        alert('Gagal membuat request. Cek console.');
       }
-
-      // open WA for admin confirmation (sama flow)
-      const feePercent = Math.round(amt * 0.008);
-      const fixedFee = 850;
-      const totalPay = Math.round(amt + feePercent + fixedFee);
-      const message = `
-*Konfirmasi Deposit*
-*Option Trading*
-➤ Nominal: Rp ${amt.toLocaleString('id-ID')}
-➤ Total Bayar: Rp ${totalPay.toLocaleString('id-ID')} (fee ${feePercent.toLocaleString('id-ID')} + tetap Rp ${fixedFee.toLocaleString('id-ID')})
-➤ Rekening: ${acc}
-➤ Metode: ${method}
-
-*Setelah Mengirim Form ini, Harap Kirim SS bukti Transfer Pembayaran*
-`.trim();
-
-      const whatsappNumber = '6285697747768';
-      const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-      window.open(whatsappLink, '_blank');
     });
 
-    // ========= Withdraw =========
-    const btnWithdraw    = document.getElementById('btnWithdraw'),
-          withdrawModal  = document.getElementById('withdrawModal'),
-          withdrawClose  = document.getElementById('withdrawClose'),
-          withdrawSubmit = document.getElementById('withdrawSubmit');
+    copyPayloadBtn.addEventListener('click', ()=>{ if(!currentFinalPayload) return; navigator.clipboard?.writeText(currentFinalPayload).then(()=> alert('Payload disalin ke clipboard.')); });
 
-    btnWithdraw.addEventListener('click', () => {
-      document.getElementById('withdrawAmount').value = '';
-      document.getElementById('withdrawAccount').value = '';
-      document.getElementById('withdrawMethod').selectedIndex = 0;
-      withdrawModal.style.display = 'block';
+    // user marks paid
+    markPaidBtn.addEventListener('click', async ()=>{
+      if(!currentRequestDocId) return alert('Tidak ada request aktif.');
+      try{
+        await requestsRef().doc(currentRequestDocId).update({ paidByUser: true, status: 'paidByUser', paidAt: firebase.firestore.FieldValue.serverTimestamp() });
+        myRequestStatusEl.innerText = 'paidByUser (waiting admin)';
+        alert('Ditandai sudah bayar. Tunggu konfirmasi admin.');
+      }catch(e){ console.error(e); alert('Gagal menandai paid.'); }
     });
 
-    withdrawClose.addEventListener('click', () => { withdrawModal.style.display = 'none'; });
-    window.addEventListener('click', e => { if (e.target === withdrawModal) withdrawModal.style.display = 'none'; });
+    // withdraw: create request (status pending)
+    btnWithdraw.addEventListener('click', ()=>{ document.getElementById('withdrawAmount').value=''; document.getElementById('withdrawAccount').value=''; document.getElementById('withdrawMethod').selectedIndex=0; withdrawModal.style.display='block'; });
+    withdrawClose.addEventListener('click', ()=> withdrawModal.style.display='none');
+    window.addEventListener('click', e => { if(e.target === withdrawModal) withdrawModal.style.display='none'; });
 
-    withdrawSubmit.addEventListener('click', () => {
+    withdrawSubmit.addEventListener('click', async ()=>{
       const amt = parseFloat(document.getElementById('withdrawAmount').value);
       const acc = document.getElementById('withdrawAccount').value.trim();
       const method = document.getElementById('withdrawMethod').value;
-
-      if (!amt || amt < 350000) return alert('Minimal Rp 350.000');
-      if (amt > balance) return alert('Saldo tidak cukup');
-      if (!acc) return alert('Masukkan nomor rekening tujuan');
-
-      balance -= amt;
-      balanceEl.textContent = balance.toFixed(2);
-      withdrawModal.style.display = 'none';
-
-      if (currentUser) {
-        writeBalanceToFirestore(currentUser.uid, balance).catch(e => console.error('writeBalance err', e));
-        addHistoryToFirestore(currentUser.uid, {
+      if(!amt || amt < 350000) return alert('Minimal Rp 350.000');
+      if(!acc) return alert('Masukkan nomor rekening tujuan');
+      // do not deduct immediately — create request pending admin
+      try{
+        const req = {
+          uid: currentUser ? currentUser.uid : null,
           type: 'withdraw',
-          amount: amt,
-          text: `Withdraw request to ${acc} via ${method}`
-        }).catch(e => console.error('addHistory err', e));
-      } else {
-        const html = `<li style="color:orange;">${new Date().toLocaleTimeString()} — Withdraw: Rp ${amt.toLocaleString()} — Requested</li>`;
-        saveHistoryItemLocal(html);
-        tradeHistory.insertAdjacentHTML('afterbegin', html);
+          nominal: amt,
+          method,
+          account: acc,
+          status: 'pending',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        const docRef = await requestsRef().add(req);
+        alert('Permintaan tarik disimpan. Tunggu admin konfirmasi.');
+        withdrawModal.style.display='none';
+      }catch(e){
+        console.error(e); alert('Gagal mengirim permintaan tarik.');
       }
-
-      const message = `
-*Permintaan Penarikan Saldo*
-*Option Trading*
-Nominal: Rp ${amt.toLocaleString('id-ID')}
-Rekening Tujuan: ${acc}
-Metode: ${method}
-
-*Setelah Mengirim Detail Ini, Silahkan Kembali Ke web Sebelumnya Dan Jangan Di Refresh!!*
-      `.trim();
-
-      const whatsappNumber = '6285697747768';
-      const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-      window.open(whatsappLink, '_blank');
     });
 
-    // Init
+    // init
     loadChart();
   </script>
 </body>
