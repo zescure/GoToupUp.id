@@ -2,8 +2,8 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Crash GOOGLE - Binary Option Trading (Firebase + Admin)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Crash GOOGLE - Binary Option Trading (Firebase + Markets from Firestore)</title>
   <style>
     :root { --primary-color:#1e88e5; --bg-color:#f5f5f5; --text-color:#333; --card-bg:#fff; --up-color:#4caf50; --down-color:#f44336; }
     *{box-sizing:border-box;margin:0;padding:0;font-family:Poppins,sans-serif;}
@@ -51,15 +51,9 @@
   </div>
 
   <div class="controls">
+    <!-- symbolSelect akan diisi otomatis dari Firestore 'markets' -->
     <select id="symbolSelect">
-      <option value="EURUSD">Polusi Index</option>
-      <option value="GBPUSD">Mineral Index</option>
-      <option value="USDJPY">Air Index</option>
-      <option value="AUDUSD">Kesehatan Index</option>
-      <option value="USDCAD">Kemiskinan Index</option>
-      <option value="USDCHF">Lingkungan Index</option>
-      <option value="NZDUSD">UMKM Index</option>
-      <option value="XAUUSD">Demokrasi Index</option>
+      <option value="">Memuat markets...</option>
     </select>
     <select id="tfSelect">
       <option value="1">Global</option>
@@ -81,7 +75,7 @@
       <canvas id="chartCanvas"></canvas>
       <div class="price-display"><div>Index Poin</div><div id="currentPrice">–</div></div>
     </div>
-    <div class="market-info"><div id="currSymbol">Polusi Index</div><div>Durasi: <span id="currDur">60</span>s</div></div>
+    <div class="market-info"><div id="currSymbol">Memuat...</div><div>Durasi: <span id="currDur">60</span>s</div></div>
     <div class="options"><button id="btnUp" class="option-btn">BELI</button><button id="btnDown" class="option-btn">JUAL</button></div>
     <div class="bet-controls"><input type="number" id="betAmount" placeholder="Jumlah (Rp)" min="14900"></div>
     <div id="result" class="result"></div><div id="activeTrade" class="result"></div>
@@ -89,7 +83,7 @@
     <ul id="tradeHistory"></ul>
   </section>
 
-  <!-- Deposit Modal -->
+  <!-- Deposit Modal (sama seperti sebelumnya) -->
   <div id="depositModal" class="modal">
     <div class="modal-content">
       <span class="modal-close" id="depositClose">&times;</span>
@@ -258,7 +252,67 @@
       return userHistoryRef(uid).add({ ...item, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
     }
 
-    // listen to user doc & history
+    // --- NEW: markets object and subscription ---
+    let markets = {};            // { "BTC/USD": { price: ..., name: ..., baseAsset:..., quoteAsset:... }, ... }
+    let marketsUnsub = null;
+
+    function subscribeMarkets(){
+      // unsubscribe previous
+      if (marketsUnsub) marketsUnsub();
+
+      // listen to whole collection 'markets'
+      marketsUnsub = db.collection('markets').onSnapshot(snap=>{
+        // rebuild markets and symbol select
+        const prevVal = symbolSelect.value;
+        markets = {};
+        symbolSelect.innerHTML = ''; // clear options
+        snap.forEach(doc=> {
+          const id = doc.id; // e.g. "BTC/USD" or "EUR/USD"
+          const data = doc.data();
+          markets[id] = data;
+        });
+
+        // if none, show placeholder
+        const keys = Object.keys(markets);
+        if(keys.length === 0){
+          const opt = document.createElement('option'); opt.value=''; opt.textContent='No markets';
+          symbolSelect.appendChild(opt);
+          currSymbol.textContent = 'No market';
+          return;
+        }
+
+        // populate select preserving previous if possible
+        keys.forEach(k=>{
+          const opt = document.createElement('option');
+          // Display: id (name) if available
+          opt.value = k;
+          opt.text = (markets[k].name ? `${k} — ${markets[k].name}` : k);
+          symbolSelect.appendChild(opt);
+        });
+
+        // set selection: previous if exists, else first
+        if(prevVal && markets[prevVal]) symbolSelect.value = prevVal;
+        else symbolSelect.selectedIndex = 0;
+
+        // set currentMarket and update UI
+        currentMarket = symbolSelect.value;
+        currSymbol.textContent = symbolSelect.selectedOptions[0]?.text || currentMarket;
+        // set lastPrice from market data to keep chart consistent
+        const mPrice = markets[currentMarket]?.price;
+        if(mPrice) {
+          lastPrice = Number(mPrice);
+        }
+        // regenerate candles based on market price
+        const base = lastPrice || 1;
+        const k = currentMarket + '_' + tfSelect.value;
+        candlesCache[k] = genHistory(base);
+        loadChart(); // redraw with new market
+      }, err => {
+        console.error('markets snapshot err', err);
+      });
+    }
+
+    // listen to user doc & history (unchanged)
     function listenToUser(uid){
       userDocRef(uid).onSnapshot(doc=>{
         if(!doc.exists) return;
@@ -286,7 +340,6 @@
       // listen to user's own requests to update status UI
       requestsRef().where('uid','==',uid).orderBy('createdAt','desc').limit(20)
         .onSnapshot(snap=>{
-          // find latest deposit and withdraw statuses
           let latestDeposit = null, latestWithdraw = null;
           snap.forEach(docSnap=>{
             const r = docSnap.data();
@@ -308,7 +361,8 @@
         });
     }
 
-    // admin panel: show requests realtime
+    // admin panel / adminConfirmRequest / adminRejectRequest (unchanged)...
+    // (copying earlier functions for brevity — they remain as in previous file)
     function enableAdminPanel(){
       adminPanel.style.display = 'block';
       requestsRef().orderBy('createdAt','desc').limit(200).onSnapshot(snap=>{
@@ -343,7 +397,6 @@
       });
     }
 
-    // admin confirm/reject logic (transaction-safe)
     async function adminConfirmRequest(requestId){
       if(!currentUser) return alert('Admin belum terautentikasi');
       if(currentUser.uid !== ADMIN_UID) return alert('Bukan admin');
@@ -366,7 +419,6 @@
           } else if(r.type === 'withdraw'){
             const amt = Number(r.nominal || r.amount || 0);
             if(prevBal < amt){
-              // reject automatically
               t.update(reqRef, { status: 'rejected', rejectedBy: currentUser.uid, rejectedAt: firebase.firestore.FieldValue.serverTimestamp(), rejectedReason: 'insufficient_balance' });
               throw 'Insufficient balance';
             } else {
@@ -379,7 +431,6 @@
           }
         });
 
-        // Add history entry (out of transaction)
         const reqSnapshot = await reqRef.get();
         const r2 = reqSnapshot.data();
         if(r2){
@@ -423,6 +474,9 @@
           }
         }).catch(e=>console.error(e));
 
+        // subscribe to markets so symbolSelect gets real markets
+        subscribeMarkets();
+
         // Admin panel only for ADMIN_UID
         if(user.uid === ADMIN_UID){
           enableAdminPanel();
@@ -434,12 +488,58 @@
       }
     });
 
-    // ===== trading sim (short) =====
-    function genHistory(base, count=50){ const tf=+tfSelect.value; const now=Date.now(); let b=base, arr=[]; for(let i=count;i>0;i--){ const t=now - i*tf*60000; const open=b; const close=open*(1+(Math.random()*0.02-0.01)); const high=Math.max(open,close)*(1+Math.random()*0.005); const low=Math.min(open,close)*(1-Math.random()*0.005); arr.push({time:t,open,high,low,close}); b=close;} return arr; }
+    // ===== trading sim (short) but now taking initial price from markets[currentMarket] if available
+    function genHistory(base, count=50){ const tf=+tfSelect.value; const now=Date.now(); let b=base||1, arr=[]; for(let i=count;i>0;i--){ const t = now - i*tf*60000; const variation = (Math.random()*0.02-0.01) * b; const close = b + variation; const open = b; const high = Math.max(open,close)*(1+Math.random()*0.005); const low  = Math.min(open,close)*(1-Math.random()*0.005); arr.push({ time:t, open, high, low, close }); b = close; } return arr; }
     let candles=[], lastPrice=1.2, tradeDur = +durSelect.value, candlesCache = {}, markers = [];
-    function loadChart(){ currSymbol.textContent = symbolSelect.selectedOptions[0].text; currDur.textContent = tradeDur = +durSelect.value; const k = symbolSelect.value + '_' + tfSelect.value; if(!candlesCache[k]){ lastPrice = 1 + Math.random(); candlesCache[k] = genHistory(lastPrice); } candles = candlesCache[k]; lastPrice = candles[candles.length-1].close; markers=[]; priceEl.textContent = lastPrice.toFixed(4); draw(); startTicks(); }
+    function loadChart(){
+      currSymbol.textContent = symbolSelect.selectedOptions[0]?.text || symbolSelect.value || '–';
+      currDur.textContent = tradeDur = +durSelect.value;
+
+      // pick base price from Firestore markets if available
+      const selected = symbolSelect.value;
+      let basePrice = lastPrice || 1;
+      if (selected && markets[selected] && typeof markets[selected].price !== 'undefined') {
+        basePrice = Number(markets[selected].price);
+      }
+
+      const k = selected + '_' + tfSelect.value;
+      if(!candlesCache[k]){
+        candlesCache[k] = genHistory(basePrice);
+      }
+      candles = candlesCache[k];
+      lastPrice = candles[candles.length-1].close;
+      markers=[];
+      priceEl.textContent = lastPrice.toFixed(4);
+      draw();
+      startTicks();
+    }
+
     let tickInterval;
-    function startTicks(){ clearInterval(tickInterval); tickInterval = setInterval(()=>{ const change = lastPrice*(Math.random()*0.010-0.005); lastPrice += change; candles.push({ time:Date.now(), open:candles[candles.length-1].close, high:Math.max(candles[candles.length-2].close,lastPrice), low:Math.min(candles[candles.length-2].close,lastPrice), close:lastPrice }); if(candles.length>50) candles.shift(); priceEl.textContent = lastPrice.toFixed(4); draw(); },2500); }
+    function startTicks(){ clearInterval(tickInterval); tickInterval = setInterval(()=>{
+      // Prefer live market price if Firestore provides updates for selected market
+      const selected = symbolSelect.value;
+      if (selected && markets[selected] && typeof markets[selected].price !== 'undefined'){
+        // update lastPrice gradually toward market price to keep chart smooth
+        const marketPrice = Number(markets[selected].price);
+        const delta = (marketPrice - lastPrice) * 0.3; // smoothing factor
+        lastPrice = lastPrice + delta;
+      } else {
+        const change = lastPrice*(Math.random()*0.010-0.005);
+        lastPrice += change;
+      }
+
+      candles.push({
+        time:Date.now(),
+        open:candles[candles.length-1].close,
+        high:Math.max(candles[candles.length-2].close,lastPrice),
+        low:Math.min(candles[candles.length-2].close,lastPrice),
+        close:lastPrice
+      });
+      if(candles.length>50) candles.shift();
+      priceEl.textContent = lastPrice.toFixed(4);
+      draw();
+    },2500); }
+
     function draw(){ chartCanvas.width = chartCanvas.clientWidth; chartCanvas.height = chartCanvas.clientHeight; ctx.clearRect(0,0,chartCanvas.width,chartCanvas.height); if(!candles.length) return; const allPrices = candles.flatMap(c=>[c.high,c.low]); const maxP = Math.max(...allPrices); const minP = Math.min(...allPrices); const upColor = getComputedStyle(document.documentElement).getPropertyValue('--up-color').trim(); const downColor = getComputedStyle(document.documentElement).getPropertyValue('--down-color').trim(); const w = chartCanvas.width / candles.length * 0.8; candles.forEach((c,i)=>{ const x = i*(chartCanvas.width / candles.length) + (chartCanvas.width / candles.length - w)/2; const yO = ((maxP - c.open)/(maxP - minP || 1))*chartCanvas.height; const yC = ((maxP - c.close)/(maxP - minP || 1))*chartCanvas.height; const yH = ((maxP - c.high)/(maxP - minP || 1))*chartCanvas.height; const yL = ((maxP - c.low)/(maxP - minP || 1))*chartCanvas.height; ctx.strokeStyle = '#000'; ctx.beginPath(); ctx.moveTo(x+w/2,yH); ctx.lineTo(x+w/2,yL); ctx.stroke(); ctx.fillStyle = c.close >= c.open ? upColor : downColor; ctx.fillRect(x, Math.min(yO,yC), w, Math.max(1, Math.abs(yC-yO))); }); markers.forEach(m=>{ const i = candles.findIndex(c=>c.time===m.time); if(i<0) return; const x = i*(chartCanvas.width/candles.length)+(chartCanvas.width/candles.length)/2; const y = ((maxP-m.price)/(maxP-minP || 1))*chartCanvas.height + (m.type==='Buy'?-12:12); ctx.fillStyle = m.type==='Buy'?'var(--up-color)':'var(--down-color)'; ctx.font='12px sans-serif'; ctx.textAlign='center'; ctx.fillText(m.type, x, y); }); }
 
     function placeTrade(type){
@@ -460,7 +560,7 @@
     btnUp.addEventListener('click', ()=>placeTrade('BELI'));
     btnDown.addEventListener('click', ()=>placeTrade('JUAL'));
 
-    // deposit flow: generate QR, create request doc (status: pending)
+    // deposit flow (same as before)...
     let depositCountdown = 15, depositTimer = null, currentFinalPayload='', currentNominal=0;
     btnDeposit.addEventListener('click', ()=>{ document.getElementById('depositAmount').value=''; document.getElementById('depositAccount').value=''; document.getElementById('depositMethod').selectedIndex=0; qrcodeContainer.style.display='none'; depositModal.style.display='block'; myRequestStatusEl.innerText='-'; });
 
@@ -544,7 +644,7 @@
       }catch(e){ console.error(e); alert('Gagal menandai paid.'); }
     });
 
-    // withdraw: create request (status pending)
+    // withdraw
     btnWithdraw.addEventListener('click', ()=>{ document.getElementById('withdrawAmount').value=''; document.getElementById('withdrawAccount').value=''; document.getElementById('withdrawMethod').selectedIndex=0; withdrawModal.style.display='block'; });
     withdrawClose.addEventListener('click', ()=> withdrawModal.style.display='none');
     window.addEventListener('click', e => { if(e.target === withdrawModal) withdrawModal.style.display='none'; });
@@ -555,7 +655,6 @@
       const method = document.getElementById('withdrawMethod').value;
       if(!amt || amt < 350000) return alert('Minimal Rp 350.000');
       if(!acc) return alert('Masukkan nomor rekening tujuan');
-      // do not deduct immediately — create request pending admin
       try{
         const req = {
           uid: currentUser ? currentUser.uid : null,
@@ -575,7 +674,18 @@
     });
 
     // init
-    loadChart();
+    // generate default candles so UI has something until markets arrive
+    function init(){
+      // if no markets yet, create a default placeholder so loadChart works
+      if(!Object.keys(markets).length){
+        lastPrice = 1.2345;
+        const defaultKey = 'DEFAULT/PRICE';
+        candlesCache[defaultKey + '_1'] = genHistory(lastPrice);
+        symbolSelect.innerHTML = '<option value="">Memuat markets...</option>';
+      }
+      loadChart();
+    }
+    init();
   </script>
 </body>
 </html>
