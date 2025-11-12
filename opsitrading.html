@@ -2,60 +2,82 @@
 <html lang="id">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <title>Crash GOOGLE — New UI (Dark) + Deterministic Markets + Admin</title>
-
-<!-- Minimal external fonts omitted for simplicity -->
 <style>
   :root{
     --bg:#0f1720; --panel:#0b1220; --muted:#9199a6; --accent:#2dd4bf; --green:#22c55e; --red:#fb7185;
     --card:#07101a; --glass: rgba(255,255,255,0.03);
   }
-  *{box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
-  html,body{height:100%;margin:0;background:linear-gradient(180deg,#07101a 0%, #071628 100%);color:#e6eef6;}
-  .topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;background:transparent;gap:12px;}
-  .left-top{display:flex;align-items:center;gap:12px;}
-  .badge-live{background:#064e3b;color:var(--accent);padding:6px 10px;border-radius:8px;font-weight:700;display:flex;align-items:center;gap:8px;}
-  .balance-pill{background:var(--panel);padding:8px 12px;border-radius:10px;font-weight:700;display:flex;gap:8px;align-items:center;}
-  .deposit-btn{background:linear-gradient(90deg,#10b981,#059669);border:none;padding:10px 16px;border-radius:10px;color:#fff;font-weight:700;cursor:pointer;}
-  .container{max-width:1150px;margin:12px auto;padding:12px;display:grid;grid-template-columns: 1fr 360px;gap:12px;}
-  .main-card{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 6px 24px rgba(2,6,23,0.6);min-height:520px;}
-  .side-card{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 6px 24px rgba(2,6,23,0.6);min-height:520px;}
-  /* Chart area */
-  .chart-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;}
-  .pair-info{display:flex;gap:12px;align-items:center;}
-  .pair-title{font-weight:800;font-size:18px;}
-  .payout-pill{background:rgba(255,255,255,0.03);padding:6px 10px;border-radius:8px;font-weight:700;color:#fff;}
-  canvas#chartCanvas{width:100%;height:360px;border-radius:8px;background:linear-gradient(180deg,#07101a,#081627);display:block;}
-  .chart-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;}
-  .time-select{background:var(--glass);border:1px solid rgba(255,255,255,0.04);padding:6px;border-radius:8px;color:var(--muted);}
-  /* controls big */
-  .big-controls{display:flex;gap:12px;align-items:center;margin-top:12px;}
-  .big-left{flex:1;display:flex;flex-direction:column;gap:8px;}
-  .big-right{width:320px;display:flex;flex-direction:column;gap:8px;}
-  .input-box{background:#06101a;border:1px solid rgba(255,255,255,0.03);padding:10px;border-radius:8px;color:var(--muted);}
+  *{box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;color:inherit}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#07101a 0%, #071628 100%);color:#e6eef6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:transparent;gap:12px;max-width:1200px;margin:0 auto;}
+  .left-top{display:flex;align-items:center;gap:12px;min-width:0}
+  .badge-live{background:#064e3b;color:var(--accent);padding:6px 10px;border-radius:8px;font-weight:700;display:flex;align-items:center;gap:8px;white-space:nowrap}
+  .balance-pill{background:var(--panel);padding:8px 12px;border-radius:10px;font-weight:700;display:flex;gap:8px;align-items:center;white-space:nowrap}
+  .deposit-btn{background:linear-gradient(90deg,#10b981,#059669);border:none;padding:10px 14px;border-radius:10px;color:#fff;font-weight:700;cursor:pointer;white-space:nowrap}
+  .container{max-width:1200px;margin:12px auto;padding:12px;display:grid;grid-template-columns: 1fr 360px;gap:12px;width:100%;}
+  .main-card{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 6px 24px rgba(2,6,23,0.6);min-height:420px;overflow:hidden;}
+  .side-card{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 6px 24px rgba(2,6,23,0.6);min-height:420px;overflow:auto}
+  .chart-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .pair-info{display:flex;gap:12px;align-items:center;min-width:0}
+  .pair-title{font-weight:800;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .payout-pill{background:rgba(255,255,255,0.03);padding:6px 10px;border-radius:8px;font-weight:700;color:#fff;white-space:nowrap}
+  /* responsive canvas sizing handled in JS; set a flexible CSS fallback */
+  canvas#chartCanvas{width:100%;display:block;border-radius:8px;background:linear-gradient(180deg,#07101a,#081627);min-height:220px}
+  .chart-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap}
+  .time-select{background:var(--glass);border:1px solid rgba(255,255,255,0.04);padding:6px;border-radius:8px;color:var(--muted);min-width:80px}
+  .big-controls{display:flex;gap:12px;align-items:flex-start;margin-top:12px;flex-wrap:wrap}
+  .big-left{flex:1;display:flex;flex-direction:column;gap:8px;min-width:220px}
+  .big-right{flex-basis:320px;display:flex;flex-direction:column;gap:8px;transition:transform 220ms ease, box-shadow 220ms ease;}
+  .input-box{background:#06101a;border:1px solid rgba(255,255,255,0.03);padding:10px;border-radius:8px;color:var(--muted);width:100%}
   .price-row{display:flex;justify-content:space-between;align-items:center;}
   .large-buttons{display:flex;gap:12px;}
-  .btn-down{flex:1;padding:14px;border-radius:10px;background:linear-gradient(180deg,#ff7b7b,#ff6b6b);border:none;color:#fff;font-weight:800;font-size:18px;cursor:pointer;}
-  .btn-up{flex:1;padding:14px;border-radius:10px;background:linear-gradient(180deg,#22c55e,#16a34a);border:none;color:#05201a;font-weight:800;font-size:18px;cursor:pointer;}
-  .muted-small{color:var(--muted);font-size:13px;}
-  /* history & open trades */
-  .tabs{display:flex;gap:8px;margin-top:8px;}
+  .btn-down{flex:1;padding:14px;border-radius:10px;background:linear-gradient(180deg,#ff7b7b,#ff6b6b);border:none;color:#fff;font-weight:800;font-size:18px;cursor:pointer;min-width:120px}
+  .btn-up{flex:1;padding:14px;border-radius:10px;background:linear-gradient(180deg,#22c55e,#16a34a);border:none;color:#05201a;font-weight:800;font-size:18px;cursor:pointer;min-width:120px}
+  .muted-small{color:var(--muted);font-size:13px;white-space:nowrap}
+  .tabs{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
   .tab{padding:8px 12px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.03);cursor:pointer;color:var(--muted);}
   .tab.active{background:linear-gradient(90deg,#0f1724,#06202a);border:1px solid rgba(255,255,255,0.06);color:#fff;}
-  .history-list{margin-top:10px;max-height:220px;overflow:auto;padding-right:6px;}
-  .history-item{display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid rgba(255,255,255,0.02);font-size:13px;}
-  .status-badge{padding:4px 8px;border-radius:6px;font-weight:700;font-size:12px;}
-  .status-pending{background:rgba(255,193,7,0.12);color:#ffb020;}
-  .status-confirmed{background:rgba(34,197,94,0.12);color:var(--green);}
-  .status-rejected{background:rgba(239,68,68,0.08);color:var(--red);}
-  /* admin panel inline small */
+  .history-list{margin-top:10px;max-height:220px;overflow:auto;padding-right:6px}
+  .history-item{display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid rgba(255,255,255,0.02);font-size:13px}
+  .status-badge{padding:4px 8px;border-radius:6px;font-weight:700;font-size:12px}
+  .status-pending{background:rgba(255,193,7,0.12);color:#ffb020}
+  .status-confirmed{background:rgba(34,197,94,0.12);color:var(--green)}
+  .status-rejected{background:rgba(239,68,68,0.08);color:var(--red)}
   .admin-controls{margin-top:12px;padding:8px;background:rgba(255,255,255,0.02);border-radius:8px;}
-  .market-edit{display:flex;gap:8px;align-items:center;margin-top:8px;}
-  .market-edit input{padding:6px;border-radius:6px;background:#06101a;border:1px solid rgba(255,255,255,0.03);color:#fff;}
-  .save-btn{padding:6px 10px;border-radius:8px;background:#0ea5a4;border:none;color:#012;cursor:pointer;}
-  /* responsive */
-  @media (max-width:1000px){ .container{grid-template-columns:1fr;} .big-right{width:100%;} .side-card{order:2} }
+  .market-edit{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+  .market-edit input{padding:6px;border-radius:6px;background:#06101a;border:1px solid rgba(255,255,255,0.03);color:#fff}
+  .save-btn{padding:6px 10px;border-radius:8px;background:#0ea5a4;border:none;color:#012;cursor:pointer}
+
+  /* small screens: stack and fluid widths */
+  @media (max-width:1000px){
+    .container{grid-template-columns:1fr; padding:10px}
+    .big-right{flex-basis:100%}
+    .side-card{order:2}
+    .main-card{order:1}
+    .topbar{padding:12px}
+    .pair-title{font-size:16px}
+  }
+  @media (max-width:520px){
+    .topbar{padding:10px}
+    .badge-live{padding:6px 8px;font-size:13px}
+    .deposit-btn{padding:8px 10px;font-size:14px}
+    .pair-title{font-size:15px}
+    .btn-up,.btn-down{font-size:16px;padding:12px}
+    .history-item{font-size:12px;padding:6px}
+  }
+
+  /* price marker on chart container */
+  .chart-wrap{position:relative}
+  .price-marker{
+    position:absolute;
+    right:10px;
+    top:10px;
+    background:rgba(0,0,0,0.45);
+    padding:6px 10px;border-radius:8px;font-weight:800;border:1px solid rgba(255,255,255,0.04);
+    backdrop-filter: blur(4px)
+  }
 </style>
 </head>
 <body>
@@ -75,7 +97,7 @@
       <div class="chart-top">
         <div class="pair-info">
           <div style="width:48px;height:48px;border-radius:8px;background:linear-gradient(180deg,#0b1220,#06101a);display:flex;align-items:center;justify-content:center;font-weight:800">🔷</div>
-          <div>
+          <div style="min-width:0">
             <div class="pair-title" id="pairTitle">Memuat market...</div>
             <div class="muted-small" id="pairSub">—</div>
           </div>
@@ -90,7 +112,10 @@
         </div>
       </div>
 
-      <canvas id="chartCanvas"></canvas>
+      <div class="chart-wrap">
+        <canvas id="chartCanvas"></canvas>
+        <div class="price-marker" id="priceMarker">—</div>
+      </div>
 
       <div class="chart-footer">
         <div style="display:flex;gap:8px;align-items:center;">
@@ -107,12 +132,12 @@
 
       <div class="big-controls">
         <div class="big-left">
-          <div style="display:flex;gap:8px;">
-            <div style="flex:1">
-              <div class="muted-small">Waktu kedaluwarsa (mm:ss)</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:150px">
+              <div class="muted-small">Waktu kedaluwarsa (hh:mm:ss)</div>
               <input id="durationInput" class="input-box" type="text" value="00:01:00">
             </div>
-            <div style="width:180px">
+            <div style="width:180px;min-width:120px">
               <div class="muted-small">Investasi (Rp)</div>
               <input id="betAmount" class="input-box" type="number" min="14900" value="14000">
             </div>
@@ -136,7 +161,7 @@
 
         </div>
 
-        <div class="big-right">
+        <div class="big-right" id="bigRight">
           <div style="display:flex;flex-direction:column;gap:10px;">
             <div style="display:flex;gap:8px;align-items:center;">
               <button class="btn-down" id="btnDown">TURUN</button>
@@ -165,7 +190,6 @@
               <div style="margin-top:8px" id="miniRequests"></div>
             </div>
 
-            <!-- Admin inline quick panel -->
             <div id="adminInline" style="display:none;">
               <div class="admin-controls">
                 <div style="font-weight:800">Admin — Edit Market</div>
@@ -205,7 +229,7 @@
     </div>
   </div>
 
-  <!-- Deposit Modal (reused) -->
+  <!-- Deposit Modal (tetap ada jika butuh, tapi tombol utama buka page eksternal) -->
   <div id="depositModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:2000;align-items:center;justify-content:center;">
     <div style="background:#07121a;padding:16px;border-radius:12px;width:420px;color:#e6eef6;">
       <div style="display:flex;justify-content:space-between;align-items:center">
@@ -249,6 +273,9 @@ const firebaseConfig = {
   appId: "1:358065954807:web:66619211fea82a4b2518f2"
 };
 const ADMIN_UID = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52';
+
+// === EDIT THIS: URL yang mau dibuka saat klik Deposit ===
+const DEPOSIT_URL = 'https://your-deposit-page.example.com';
 /* ========================================== */
 
 firebase.initializeApp(firebaseConfig);
@@ -258,14 +285,15 @@ const db = firebase.firestore();
 /* ====== GLOBAL STATE & UI EL ====== */
 let currentUser = null;
 let isAdmin = false;
-let markets = {}; // from firestore
-let currentMarketId = null; // e.g., "BTC/USD"
+let markets = {};
+let currentMarketId = null;
 const TICK_INTERVAL = 2500;
 
 const pairTitle = document.getElementById('pairTitle');
 const pairSub = document.getElementById('pairSub');
 const payoutLabel = document.getElementById('payoutLabel');
 const currentPriceLarge = document.getElementById('currentPriceLarge');
+const priceMarker = document.getElementById('priceMarker');
 const symbolSelectTop = document.getElementById('symbolSelectTop');
 const summaryBet = document.getElementById('summaryBet');
 const summaryPayout = document.getElementById('summaryPayout');
@@ -311,10 +339,11 @@ const depositQRWrap = document.getElementById('depositQRWrap');
 const qrcodeDyn = document.getElementById('qrcodeDyn');
 const finalPayloadEl = document.getElementById('finalPayload');
 const markPaidBtn = document.getElementById('markPaidBtn');
+const bigRightEl = document.getElementById('bigRight');
 
 const DEFAULT_BASE_PAYLOAD = "00020101021126610014COM.GO-JEK.WWW01189360091433055874630210G3055874630303UMI51440014ID.CO.QRIS.WWW0215ID10254231099470303UMI5204481453033602ID5925ZkgamingstoreGoTo, Toko H6007TANGSEL61051522062070703A0163040657";
 
-/* ===== deterministic helpers (same as previous impl) ===== */
+/* ===== deterministic helpers ===== */
 function hashStringToInt(s){
   let h = 2166136261 >>> 0;
   for (let i=0;i<s.length;i++){
@@ -349,15 +378,20 @@ let chartData = [];
 let animationId = null;
 let lastBucketAppended = null;
 let lastPrice = 1;
+
+// responsive canvas sizing
 function resizeCanvas(){
+  // set canvas CSS height proportional to viewport (avoid fixed px) but cap for large screens
+  const targetHeight = Math.min(window.innerHeight * 0.45, 420); // 45vh or max 420px
+  chartCanvas.style.height = targetHeight + 'px';
+  // recompute size for devicePixelRatio
   const rect = chartCanvas.getBoundingClientRect();
-  chartCanvas.width = rect.width * devicePixelRatio;
-  chartCanvas.height = rect.height * devicePixelRatio;
-  chartCanvas.style.width = rect.width + 'px';
-  chartCanvas.style.height = rect.height + 'px';
+  chartCanvas.width = Math.max(300, Math.floor(rect.width * devicePixelRatio));
+  chartCanvas.height = Math.max(150, Math.floor(rect.height * devicePixelRatio));
   ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  drawChart();
 }
-window.addEventListener('resize', ()=>{ try{ resizeCanvas(); drawChart(); }catch(e){} });
+window.addEventListener('resize', ()=>{ try{ resizeCanvas(); }catch(e){} });
 
 function generateInitialChartData(){
   chartData = [];
@@ -387,10 +421,12 @@ function drawChart(){
   // grid lines
   ctx.strokeStyle = 'rgba(255,255,255,0.03)';
   ctx.lineWidth = 1;
-  for(let i=0;i<5;i++){
-    ctx.beginPath(); ctx.moveTo(0,(height/5)*i); ctx.lineTo(width,(height/5)*i); ctx.stroke();
+  const gridCount = 5;
+  for(let i=0;i<gridCount;i++){
+    ctx.beginPath(); ctx.moveTo(0,(height/gridCount)*i); ctx.lineTo(width,(height/gridCount)*i); ctx.stroke();
   }
   // line
+  const padding = 12;
   const prices = chartData.map(d=>d.price);
   const minP = Math.min(...prices), maxP = Math.max(...prices);
   const range = (maxP - minP) || (maxP*0.001) || 1;
@@ -398,25 +434,31 @@ function drawChart(){
   ctx.lineWidth = 2;
   ctx.beginPath();
   for(let i=0;i<chartData.length;i++){
-    const x = (i/(chartData.length-1))*width;
+    const x = padding + (i/(chartData.length-1))*(width - padding*2);
     const normalized = (chartData[i].price - minP)/range;
-    const y = height - (normalized*height);
+    const y = height - (normalized* (height - padding*2)) - padding;
     if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
   }
   ctx.stroke();
   // latest point
-  const last = chartData[chartData.length-1];
+  const lastIndex = chartData.length - 1;
+  const last = chartData[lastIndex];
+  const lastX = padding + (lastIndex/(chartData.length-1))*(width - padding*2);
+  const lastY = height - ((last.price - minP)/range)*(height - padding*2) - padding;
   ctx.fillStyle = '#0f1724';
-  ctx.beginPath(); ctx.arc(width-40, (1 - (last.price - minP)/range)*height, 6, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(lastX, lastY, 6, 0, Math.PI*2); ctx.fill();
+  // small halo
+  ctx.beginPath(); ctx.arc(lastX, lastY, 10, 0, Math.PI*2); ctx.strokeStyle = 'rgba(45,212,191,0.12)'; ctx.lineWidth=2; ctx.stroke();
 }
 
 function startChartAnimation(){
   if(animationId) cancelAnimationFrame(animationId);
+  let prevPrice = lastPrice;
   function step(){
     const now = Date.now();
     const marketId = currentMarketId || Object.keys(markets)[0] || 'DEFAULT/PRICE';
     const currentBucket = Math.floor(now / TICK_INTERVAL);
-    if(lastBucketAppended === null) lastBucketAppended = Math.floor(chartData[chartData.length-1].timestamp / TICK_INTERVAL);
+    if(lastBucketAppended === null && chartData.length) lastBucketAppended = Math.floor(chartData[chartData.length-1].timestamp / TICK_INTERVAL);
     while(lastBucketAppended < currentBucket){
       lastBucketAppended++;
       const nextT = lastBucketAppended * TICK_INTERVAL;
@@ -427,6 +469,21 @@ function startChartAnimation(){
     }
     drawChart();
     updateDisplayedPrice();
+    // panel movement visual: small translate based on price direction vs prevPrice
+    try{
+      const cur = deterministicPrice(currentMarketId || Object.keys(markets)[0], Date.now());
+      const delta = cur - prevPrice;
+      const move = delta > 0 ? -6 : (delta < 0 ? 6 : 0);
+      bigRightEl.style.transform = `translateY(${move}px)`;
+      if(delta > 0){
+        bigRightEl.style.boxShadow = '0 8px 24px rgba(34,197,94,0.06)';
+      } else if(delta < 0){
+        bigRightEl.style.boxShadow = '0 8px 24px rgba(239,68,68,0.04)';
+      } else {
+        bigRightEl.style.boxShadow = 'none';
+      }
+      prevPrice = cur;
+    }catch(e){}
     animationId = requestAnimationFrame(step);
   }
   step();
@@ -434,8 +491,8 @@ function startChartAnimation(){
 function updateDisplayedPrice(){
   const cur = deterministicPrice(currentMarketId || Object.keys(markets)[0], Date.now());
   currentPriceLarge.textContent = Number(cur).toFixed(2);
-  // update side summary
-  document.getElementById('currentPriceLarge').dataset.price = cur;
+  priceMarker.textContent = Number(cur).toFixed(2);
+  // set price marker color briefly to indicate up/down
 }
 
 /* ===== fetch/subscribe markets from firestore ===== */
@@ -461,7 +518,6 @@ function subscribeMarketsRealtime(){
       opt.text = `${(m.symbol||k)} ${k}`;
       symbolSelectTop.appendChild(opt);
     });
-    // keep previous selection if exist
     if(currentMarketId && markets[currentMarketId]) symbolSelectTop.value = currentMarketId;
     else symbolSelectTop.selectedIndex = 0;
     currentMarketId = symbolSelectTop.value;
@@ -498,18 +554,18 @@ function updateSummary(){
   const m = markets[currentMarketId];
   const payout = (m && m.payoutPercent) ? Number(m.payoutPercent) : 70;
   summaryPayout.innerText = `${payout}%`;
-  const potential = Math.round(bet * (payout/100) + bet); // assume payout returns original + profit — adjust if needed
+  const potential = Math.round(bet * (payout/100) + bet);
   summaryPotential.innerText = `Rp ${potential.toLocaleString('id-ID')}`;
   paymentLabel.innerText = `— Rp ${potential.toLocaleString('id-ID')}`;
 }
 
-/* ===== trade logic (store open trades locally + history to firestore) ===== */
-let openTrades = []; // {id, uid, market, side, amount, entryPrice, expiryTs, payoutPercent}
+/* ===== trade logic ===== */
+let openTrades = [];
 function addOpenTradeUI(tr){
   const el = document.createElement('div');
   el.className = 'history-item';
   el.id = 'open_' + tr.id;
-  el.innerHTML = `<div>${tr.market} • ${tr.side}</div><div>Rp ${Number(tr.amount).toLocaleString()} • Exit ${new Date(tr.expiryTs).toLocaleTimeString()}</div>`;
+  el.innerHTML = `<div style="min-width:0;max-width:70%">${tr.market} • ${tr.side}</div><div>Rp ${Number(tr.amount).toLocaleString()} • Exit ${new Date(tr.expiryTs).toLocaleTimeString()}</div>`;
   listOpenTrades.prepend(el);
 }
 function removeOpenTradeUI(id){
@@ -517,7 +573,6 @@ function removeOpenTradeUI(id){
   if(el) el.remove();
 }
 
-/* execute trade */
 function executeTrade(side){
   const bet = Number(betAmountInput.value || 0);
   if(!bet || bet < 15000) return alert('Minimal transaksi Rp 15.000');
@@ -528,70 +583,55 @@ function executeTrade(side){
   const dur = parseDurationToSeconds(durationInput.value || '00:01:00');
   const expiryTs = Date.now() + (dur*1000);
   const payoutPercent = (m && m.payoutPercent) ? Number(m.payoutPercent) : 70;
-  // deduct stake immediately? in many systems stake locked until resolved. We'll deduct on loss or return stake+profit on win.
-  // For simplicity, we won't deduct immediately from firestore; we'll update when resolved (but local balance check prevented insufficient funds)
   const tradeId = 't_' + Date.now() + '_' + Math.floor(Math.random()*9999);
   const tr = { id: tradeId, uid: currentUser ? currentUser.uid : null, market: currentMarketId, side, amount: bet, entryPrice, expiryTs, payoutPercent };
   openTrades.push(tr);
   addOpenTradeUI(tr);
-  // persist open trade in user's openTrades subcollection (optional)
   if(currentUser){
     db.collection('users').doc(currentUser.uid).collection('openTrades').doc(tradeId).set({...tr, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
   }
-  // schedule resolution
   const intervalResolve = setTimeout(async ()=>{
-    // compute exit price deterministically at expiry
     const exitPrice = deterministicPrice(currentMarketId, expiryTs + 1);
     const isBuy = (side.toLowerCase() === 'naik' || side.toLowerCase() === 'call');
     const isWin = (isBuy && exitPrice > entryPrice) || (!isBuy && exitPrice < entryPrice);
-    // profit
-    const payout = (payoutPercent/100) * bet; // profit amount on win
+    const payout = (payoutPercent/100) * bet;
     let text;
     if(isWin){
-      balance += payout; // return profit (we didn't remove stake earlier)
+      balance += payout;
       text = `Menang +Rp ${Math.round(payout).toLocaleString('id-ID')}`;
     } else {
-      balance -= bet; // lose stake
+      balance -= bet;
       text = `Kalah -Rp ${Math.round(bet).toLocaleString('id-ID')}`;
     }
-    // update firestore balance atomically
     if(currentUser){
-      await db.runTransaction(async (t)=>{
-        const uref = db.collection('users').doc(currentUser.uid);
-        const udoc = await t.get(uref);
-        const prev = (udoc.exists && udoc.data().balance) ? Number(udoc.data().balance) : 0;
-        const newBal = isWin ? prev + payout : prev - bet;
-        t.set(uref, { balance: newBal, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
-      }).catch(e=>console.error('balance tx err',e));
-      // add history
-      await db.collection('users').doc(currentUser.uid).collection('history').add({
-        type: 'trade', side, entryPrice, exitPrice, amount: bet, result: isWin ? 'win':'lose', text, createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).catch(e=>console.error(e));
-      // remove openTrade doc
-      await db.collection('users').doc(currentUser.uid).collection('openTrades').doc(tradeId).delete().catch(()=>{});
+      try{
+        await db.runTransaction(async (t)=>{
+          const uref = db.collection('users').doc(currentUser.uid);
+          const udoc = await t.get(uref);
+          const prev = (udoc.exists && udoc.data().balance) ? Number(udoc.data().balance) : 0;
+          const newBal = isWin ? prev + payout : prev - bet;
+          t.set(uref, { balance: newBal, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
+        });
+        await db.collection('users').doc(currentUser.uid).collection('history').add({
+          type: 'trade', side, entryPrice, exitPrice, amount: bet, result: isWin ? 'win':'lose', text, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        await db.collection('users').doc(currentUser.uid).collection('openTrades').doc(tradeId).delete().catch(()=>{});
+      }catch(e){ console.error(e); }
     }
-    // ui update
     balanceEl.textContent = balance.toFixed(2);
     balanceTop.textContent = balance.toFixed(2);
     balanceMain.textContent = balance.toFixed(2);
-    // remove from openTrades
     openTrades = openTrades.filter(x=>x.id !== tradeId);
     removeOpenTradeUI(tradeId);
-    // push to trade history pane
     const li = document.createElement('div'); li.className='history-item';
     li.innerHTML = `<div>${new Date().toLocaleTimeString()} — ${currentMarketId} — ${side}</div><div style="color:${isWin?'#22c55e':'#fb7185'}">${text}</div>`;
     listTrades.prepend(li);
     sideTradeList.prepend(li.cloneNode(true));
-    // small side recent
-    const sideItem = document.createElement('div'); sideItem.style.padding='6px 0'; sideItem.innerHTML = `${new Date().toLocaleTimeString()} — ${currentMarketId} — ${text}`;
-    sideTradeList.prepend(sideItem);
-
     clearTimeout(intervalResolve);
   }, dur*1000);
   updateSummary();
 }
 
-/* parse hh:mm:ss or mm:ss */
 function parseDurationToSeconds(s){
   const parts = s.split(':').map(p=>Number(p));
   if(parts.length===3) return parts[0]*3600 + parts[1]*60 + parts[2];
@@ -599,7 +639,7 @@ function parseDurationToSeconds(s){
   return Number(s) || 60;
 }
 
-/* ===== deposit request flow (QRIS) ===== */
+/* ===== deposit QRIS helpers (kept as-is) ===== */
 function crc16ccitt(str) {
   let crc = 0xFFFF;
   for (let i = 0; i < str.length; i++) {
@@ -633,7 +673,6 @@ depositPay.addEventListener('click', async ()=>{
   const fixedFee = 850;
   const totalPay = Math.round(amt + feePercent + fixedFee);
   const amountStr = formatRupiahTwoDecimals(totalPay);
-  // prepare payload
   let base = DEFAULT_BASE_PAYLOAD.trim();
   let payloadNoCRC;
   if(base.slice(-8,-4) === '6304') payloadNoCRC = base.slice(0,-8) + '6304';
@@ -641,12 +680,10 @@ depositPay.addEventListener('click', async ()=>{
   const withAmount630 = insertAmountTag(payloadNoCRC, amountStr);
   const crc = crc16ccitt(withAmount630);
   const finalPayload = withAmount630 + crc;
-  // show QR in modal
   depositQRWrap.style.display = 'block';
   qrcodeDyn.innerHTML = '';
   new QRCode(qrcodeDyn, { text: finalPayload, width:200, height:200 });
   finalPayloadEl.textContent = finalPayload;
-  // create request doc
   try{
     const req = {
       uid: currentUser ? currentUser.uid : null,
@@ -663,7 +700,7 @@ depositPay.addEventListener('click', async ()=>{
     const docRef = await db.collection('requests').add(req);
     currentRequestDocId = docRef.id;
     alert('Request deposit dibuat. Klik "Sudah Bayar" setelah melakukan transfer.');
-    renderMiniRequests(); // update side
+    renderMiniRequests();
   }catch(e){
     console.error(e); alert('Gagal membuat request.');
   }
@@ -676,10 +713,20 @@ markPaidBtn.addEventListener('click', async ()=>{
     renderMiniRequests();
   }catch(e){ console.error(e); alert('Gagal mark paid'); }
 });
-openDeposit.addEventListener('click', ()=> depositModal.style.display = 'flex');
-openDeposit2.addEventListener('click', ()=> depositModal.style.display = 'flex');
 depositClose.addEventListener('click', ()=> depositModal.style.display = 'none');
 depositCancel.addEventListener('click', ()=> depositModal.style.display = 'none');
+
+/* === IMPORTANT: make Deposit buttons open external page (as requested) === */
+function openDepositPage(){
+  if(DEPOSIT_URL && DEPOSIT_URL.length){
+    window.open(DEPOSIT_URL, '_blank');
+    return;
+  }
+  // fallback: show modal if no external URL set
+  depositModal.style.display = 'flex';
+}
+openDeposit.addEventListener('click', openDepositPage);
+openDeposit2.addEventListener('click', openDepositPage);
 
 /* ===== listen to user doc & requests and history ===== */
 function listenToUser(uid){
@@ -704,7 +751,6 @@ function listenToUser(uid){
       sideTradeList.appendChild(li.cloneNode(true));
     });
   });
-  // user's requests
   db.collection('requests').where('uid','==',uid).orderBy('createdAt','desc').limit(20).onSnapshot(snap=>{
     sideRequestsList.innerHTML = '';
     listRequests.innerHTML = '';
@@ -724,15 +770,14 @@ function listenToUser(uid){
 function enableAdminUI(){
   adminInline.style.display = 'block';
   adminPanel.style.display = 'block';
-  // render admin market editors
   renderAdminMarkets();
-  // subscribe all requests to admin panel
   db.collection('requests').orderBy('createdAt','desc').limit(200).onSnapshot(snap=>{
     requestsList.innerHTML = '';
     snap.forEach(docSnap=>{
       const r = docSnap.data(); const id = docSnap.id;
       const status = r.status || 'pending';
       const item = document.createElement('div'); item.className='req-item';
+      item.style.display='flex'; item.style.gap='12px'; item.style.padding='8px 0';
       item.innerHTML = `
         <div style="flex:1">
           <div style="font-weight:800">${r.type.toUpperCase()}</div>
@@ -746,7 +791,6 @@ function enableAdminUI(){
       `;
       requestsList.appendChild(item);
     });
-    // attach handlers
     document.querySelectorAll('.btn-confirm').forEach(b=>{
       b.onclick = ()=> adminConfirmRequest(b.dataset.id);
     });
@@ -800,7 +844,6 @@ async function adminRejectRequest(requestId){
   }catch(e){ console.error(e); alert('Gagal menolak'); }
 }
 
-/* render admin markets editor */
 function renderAdminMarkets(){
   adminMarketsContainer.innerHTML = '';
   Object.keys(markets).forEach(id=>{
@@ -814,7 +857,6 @@ function renderAdminMarkets(){
     `;
     adminMarketsContainer.appendChild(row);
   });
-  // handlers
   adminMarketsContainer.querySelectorAll('.save-btn').forEach(btn=>{
     btn.onclick = async ()=>{
       const id = btn.dataset.id;
@@ -834,16 +876,13 @@ auth.onAuthStateChanged(async (user)=>{
   if(user){
     currentUser = user;
     uidLabel.innerText = user.uid;
-    // ensure user doc exists
     const uref = db.collection('users').doc(user.uid);
     const docu = await uref.get();
     if(!docu.exists){
       await uref.set({ balance: 0, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
     }
     listenToUser(user.uid);
-    // subscribe markets
     subscribeMarketsRealtime();
-    // admin check
     isAdmin = (user.uid === ADMIN_UID);
     if(isAdmin){ enableAdminUI(); }
   } else {
@@ -890,7 +929,7 @@ updateSummary();
 resizeCanvas();
 generateInitialChartData();
 startChartAnimation();
-subscribeMarketsRealtime();
+// subscribeMarketsRealtime() will be called after auth (to avoid duplicate calls)
 
 </script>
 </body>
