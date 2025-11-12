@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Crash GOOGLE — New UI (Dark) + Deterministic Markets + Admin</title>
+<title>Crash GOOGLE — New UI (Dark) + Deterministic Markets + Admin (Updated)</title>
 <style>
   :root{
     --bg:#0f1720; --panel:#0b1220; --muted:#9199a6; --accent:#2dd4bf; --green:#22c55e; --red:#fb7185;
@@ -23,7 +23,6 @@
   .pair-info{display:flex;gap:12px;align-items:center;min-width:0}
   .pair-title{font-weight:800;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .payout-pill{background:rgba(255,255,255,0.03);padding:6px 10px;border-radius:8px;font-weight:700;color:#fff;white-space:nowrap}
-  /* responsive canvas sizing handled in JS; set a flexible CSS fallback */
   canvas#chartCanvas{width:100%;display:block;border-radius:8px;background:linear-gradient(180deg,#07101a,#081627);min-height:220px}
   .chart-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap}
   .time-select{background:var(--glass);border:1px solid rgba(255,255,255,0.04);padding:6px;border-radius:8px;color:var(--muted);min-width:80px}
@@ -50,25 +49,44 @@
   .market-edit input{padding:6px;border-radius:6px;background:#06101a;border:1px solid rgba(255,255,255,0.03);color:#fff}
   .save-btn{padding:6px 10px;border-radius:8px;background:#0ea5a4;border:none;color:#012;cursor:pointer}
 
-  /* small screens: stack and fluid widths */
+  /* open trade styling: border + countdown etc */
+  .open-trade {
+    border: 1px solid rgba(45,212,191,0.12);
+    background: linear-gradient(180deg, rgba(45,212,191,0.02), rgba(45,212,191,0.01));
+    border-radius:8px;
+    padding:8px;
+    margin-bottom:8px;
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    align-items:center;
+  }
+  .open-trade .left{min-width:0}
+  .open-trade .meta{font-size:13px;color:var(--muted)}
+  .open-trade .prices{display:flex;flex-direction:column;gap:4px;font-weight:700}
+  .countdown{font-weight:800;color:#fff;background:rgba(0,0,0,0.25);padding:6px 8px;border-radius:8px}
+  .entry-exit{font-size:13px;color:var(--muted)}
+  .trade-closed { opacity: 0.6; border-style: dashed; }
+
+  /* micro price styling: highlight last two digits (tiktik) */
+  .micro-price { font-weight:800; font-family: monospace; }
+  .micro-price .main { color:#e6eef6; }
+  .micro-price .micro { color:#9fe7da; }
+  .micro-price .tiktik { color:#ffd166; font-weight:900; }
+
+  /* responsive */
   @media (max-width:1000px){
-    .container{grid-template-columns:1fr; padding:10px}
+    .container{grid-template-columns:1fr;}
     .big-right{flex-basis:100%}
     .side-card{order:2}
     .main-card{order:1}
-    .topbar{padding:12px}
     .pair-title{font-size:16px}
   }
   @media (max-width:520px){
-    .topbar{padding:10px}
-    .badge-live{padding:6px 8px;font-size:13px}
-    .deposit-btn{padding:8px 10px;font-size:14px}
-    .pair-title{font-size:15px}
     .btn-up,.btn-down{font-size:16px;padding:12px}
     .history-item{font-size:12px;padding:6px}
   }
 
-  /* price marker on chart container */
   .chart-wrap{position:relative}
   .price-marker{
     position:absolute;
@@ -105,9 +123,9 @@
         <div style="display:flex;gap:8px;align-items:center">
           <div class="payout-pill" id="payoutLabel">—%</div>
           <select id="symbolSelectTop" class="time-select"></select>
-          <div style="width:120px;text-align:right;">
-            <div style="font-size:12px;color:var(--muted)">Harga sekarang</div>
-            <div style="font-weight:800;font-size:18px" id="currentPriceLarge">-</div>
+          <div style="width:160px;text-align:right;">
+            <div style="font-size:12px;color:var(--muted)">Harga sekarang (micro)</div>
+            <div id="currentPriceLarge" class="micro-price" style="font-weight:900;font-size:18px">-</div>
           </div>
         </div>
       </div>
@@ -155,7 +173,7 @@
             <div class="tab" id="tabRequests">Deposit/Withdraw</div>
           </div>
 
-          <div class="history-list" id="listOpenTrades"></div>
+          <div id="listOpenTrades" class="history-list"></div>
           <div class="history-list" id="listTrades" style="display:none"></div>
           <div class="history-list" id="listRequests" style="display:none"></div>
 
@@ -229,33 +247,6 @@
     </div>
   </div>
 
-  <!-- Deposit Modal (tetap ada jika butuh, tapi tombol utama buka page eksternal) -->
-  <div id="depositModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:2000;align-items:center;justify-content:center;">
-    <div style="background:#07121a;padding:16px;border-radius:12px;width:420px;color:#e6eef6;">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-weight:800">Deposit Saldo</div>
-        <button id="depositClose" style="background:none;border:none;color:var(--muted);cursor:pointer">✕</button>
-      </div>
-      <div style="margin-top:10px">
-        <label class="muted-small">Nominal (Rp)</label>
-        <input id="depositAmount" type="number" class="input-box" value="20000" min="1000">
-        <label class="muted-small">No. Rekening Pengirim</label>
-        <input id="depositAccount" class="input-box" type="text" placeholder="1234567890">
-        <label class="muted-small">Metode</label>
-        <select id="depositMethod" class="input-box"><option value="Dana">QRIS Dana</option></select>
-        <div style="margin-top:8px;display:flex;gap:8px;">
-          <button id="depositPay" class="deposit-btn" style="flex:1">Generate QR & Request</button>
-          <button id="depositCancel" style="background:#334155;border:none;padding:10px;border-radius:8px;color:#fff;cursor:pointer">Batal</button>
-        </div>
-        <div id="depositQRWrap" style="margin-top:12px;display:none;">
-          <div id="qrcodeDyn"></div>
-          <pre id="finalPayload" style="background:#07121a;padding:8px;border-radius:8px;color:var(--muted);overflow:auto;"></pre>
-          <button id="markPaidBtn" style="margin-top:8px;padding:8px;border-radius:8px;background:#0ea5a4;border:none;color:#012;cursor:pointer">Sudah Bayar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- libs -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -273,9 +264,7 @@ const firebaseConfig = {
   appId: "1:358065954807:web:66619211fea82a4b2518f2"
 };
 const ADMIN_UID = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52';
-
-// === EDIT THIS: URL yang mau dibuka saat klik Deposit ===
-const DEPOSIT_URL = 'https://your-deposit-page.example.com';
+const DEPOSIT_URL = ''; // update jika mau buka page deposit eksternal
 /* ========================================== */
 
 firebase.initializeApp(firebaseConfig);
@@ -285,8 +274,8 @@ const db = firebase.firestore();
 /* ====== GLOBAL STATE & UI EL ====== */
 let currentUser = null;
 let isAdmin = false;
-let markets = {};
-let currentMarketId = null;
+let markets = {}; // from firestore
+let currentMarketId = null; // e.g., "BTC/USD"
 const TICK_INTERVAL = 2500;
 
 const pairTitle = document.getElementById('pairTitle');
@@ -371,6 +360,26 @@ function deterministicPrice(marketId, timestampMs){
   return Math.max(0.0000001, base + offset);
 }
 
+/* ===== micro-price formatting =====
+ We lock the integer part (depan koma) to market.displayBase (set when markets loaded).
+ The fractional part is shown as 6 digits (micro). Last 2 digits are the fastest-moving 'tiktik'.
+ Example display: 100.005345 -> main=100, micro=005345 (last two 45 are tiktik).
+ This keeps integer part visually stable while showing micro volatility.
+*/
+function formatMicroPrice(price, market){
+  const displayBase = (market && typeof market.displayBase !== 'undefined') ? market.displayBase : Math.floor(price);
+  // obtain micro fraction based on actual price's fractional portion relative to displayBase
+  const fractional = Math.abs(price - Math.floor(price));
+  // micro as 6 digits
+  const micro = Math.floor((fractional * 1_000_000)) % 1_000_000;
+  const microStr = String(micro).padStart(6,'0');
+  // build HTML with tiktik (last 2 digits highlighted)
+  const main = displayBase;
+  const firstMicro = microStr.slice(0,4);
+  const tiktik = microStr.slice(4);
+  return { text: `${main}.${microStr}`, html: `<span class="main">${main}.</span><span class="micro">${firstMicro}<span class="tiktik">${tiktik}</span></span>` };
+}
+
 /* ===== chart setup ===== */
 const chartCanvas = document.getElementById('chartCanvas');
 const ctx = chartCanvas.getContext('2d');
@@ -381,10 +390,8 @@ let lastPrice = 1;
 
 // responsive canvas sizing
 function resizeCanvas(){
-  // set canvas CSS height proportional to viewport (avoid fixed px) but cap for large screens
-  const targetHeight = Math.min(window.innerHeight * 0.45, 420); // 45vh or max 420px
+  const targetHeight = Math.min(window.innerHeight * 0.45, 420);
   chartCanvas.style.height = targetHeight + 'px';
-  // recompute size for devicePixelRatio
   const rect = chartCanvas.getBoundingClientRect();
   chartCanvas.width = Math.max(300, Math.floor(rect.width * devicePixelRatio));
   chartCanvas.height = Math.max(150, Math.floor(rect.height * devicePixelRatio));
@@ -415,17 +422,14 @@ function drawChart(){
   const height = canvas.height / devicePixelRatio;
   ctx.clearRect(0,0,width,height);
   if(!chartData.length) return;
-  // background
   ctx.fillStyle = '#07121a';
   ctx.fillRect(0,0,width,height);
-  // grid lines
   ctx.strokeStyle = 'rgba(255,255,255,0.03)';
   ctx.lineWidth = 1;
   const gridCount = 5;
   for(let i=0;i<gridCount;i++){
     ctx.beginPath(); ctx.moveTo(0,(height/gridCount)*i); ctx.lineTo(width,(height/gridCount)*i); ctx.stroke();
   }
-  // line
   const padding = 12;
   const prices = chartData.map(d=>d.price);
   const minP = Math.min(...prices), maxP = Math.max(...prices);
@@ -440,14 +444,12 @@ function drawChart(){
     if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
   }
   ctx.stroke();
-  // latest point
   const lastIndex = chartData.length - 1;
   const last = chartData[lastIndex];
   const lastX = padding + (lastIndex/(chartData.length-1))*(width - padding*2);
   const lastY = height - ((last.price - minP)/range)*(height - padding*2) - padding;
   ctx.fillStyle = '#0f1724';
   ctx.beginPath(); ctx.arc(lastX, lastY, 6, 0, Math.PI*2); ctx.fill();
-  // small halo
   ctx.beginPath(); ctx.arc(lastX, lastY, 10, 0, Math.PI*2); ctx.strokeStyle = 'rgba(45,212,191,0.12)'; ctx.lineWidth=2; ctx.stroke();
 }
 
@@ -469,30 +471,28 @@ function startChartAnimation(){
     }
     drawChart();
     updateDisplayedPrice();
-    // panel movement visual: small translate based on price direction vs prevPrice
     try{
       const cur = deterministicPrice(currentMarketId || Object.keys(markets)[0], Date.now());
       const delta = cur - prevPrice;
       const move = delta > 0 ? -6 : (delta < 0 ? 6 : 0);
       bigRightEl.style.transform = `translateY(${move}px)`;
-      if(delta > 0){
-        bigRightEl.style.boxShadow = '0 8px 24px rgba(34,197,94,0.06)';
-      } else if(delta < 0){
-        bigRightEl.style.boxShadow = '0 8px 24px rgba(239,68,68,0.04)';
-      } else {
-        bigRightEl.style.boxShadow = 'none';
-      }
+      if(delta > 0){ bigRightEl.style.boxShadow = '0 8px 24px rgba(34,197,94,0.06)'; }
+      else if(delta < 0){ bigRightEl.style.boxShadow = '0 8px 24px rgba(239,68,68,0.04)'; }
+      else { bigRightEl.style.boxShadow = 'none'; }
       prevPrice = cur;
     }catch(e){}
     animationId = requestAnimationFrame(step);
   }
   step();
 }
+
 function updateDisplayedPrice(){
   const cur = deterministicPrice(currentMarketId || Object.keys(markets)[0], Date.now());
-  currentPriceLarge.textContent = Number(cur).toFixed(2);
-  priceMarker.textContent = Number(cur).toFixed(2);
-  // set price marker color briefly to indicate up/down
+  const market = markets[currentMarketId];
+  const micro = formatMicroPrice(cur, market);
+  // set innerHTML so micro parts can be styled
+  currentPriceLarge.innerHTML = `<span class="main">${market && typeof market.displayBase !== 'undefined' ? market.displayBase : Math.floor(cur)}.</span><span class="micro">${micro.text.split('.')[1].slice(0,4)}<span class="tiktik">${micro.text.split('.')[1].slice(4)}</span></span>`;
+  priceMarker.textContent = micro.text;
 }
 
 /* ===== fetch/subscribe markets from firestore ===== */
@@ -503,7 +503,10 @@ function subscribeMarketsRealtime(){
     markets = {};
     symbolSelectTop.innerHTML = '';
     snap.forEach(doc=>{
-      markets[doc.id] = doc.data();
+      const data = doc.data();
+      // set a displayBase property to lock integer part visually (floor of price or provided displayBase)
+      data.displayBase = (typeof data.displayBase !== 'undefined') ? data.displayBase : Math.floor(Number(data.price || 100));
+      markets[doc.id] = data;
     });
     const keys = Object.keys(markets);
     if(keys.length === 0){
@@ -559,20 +562,84 @@ function updateSummary(){
   paymentLabel.innerText = `— Rp ${potential.toLocaleString('id-ID')}`;
 }
 
-/* ===== trade logic ===== */
-let openTrades = [];
+/* ===== trade logic (open trades with border + countdown + entry/exit) ===== */
+let openTrades = []; // {id, uid, market, side, amount, entryPrice, expiryTs, payoutPercent, uiInterval}
+function createOpenTradeElement(tr){
+  const wrapper = document.createElement('div');
+  wrapper.className = 'open-trade';
+  wrapper.id = 'open_' + tr.id;
+  // compute display strings
+  const marketInfo = tr.market;
+  const side = tr.side;
+  const entryFormatted = formatMicroPrice(tr.entryPrice, markets[tr.market]).text;
+  // compute expected exit price deterministically (we can precompute so user sees closing)
+  const expectedExit = deterministicPrice(tr.market, tr.expiryTs + 1);
+  const expectedExitFormatted = formatMicroPrice(expectedExit, markets[tr.market]).text;
+  // remaining time
+  const remainingMs = Math.max(0, tr.expiryTs - Date.now());
+  const remainingSec = Math.ceil(remainingMs / 1000);
+  // inner HTML: left info, middle prices, right countdown + amount
+  wrapper.innerHTML = `
+    <div class="left">
+      <div style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${marketInfo} • ${side}</div>
+      <div class="meta entry-exit">Entry: <span class="entryPrice">${entryFormatted}</span> • Exit(at expiry): <span class="exitPrice">${expectedExitFormatted}</span></div>
+      <div class="meta">Investasi: Rp ${Number(tr.amount).toLocaleString()}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+      <div class="countdown" data-expiry="${tr.expiryTs}">${formatSeconds(remainingSec)}</div>
+      <div class="meta" style="color:var(--muted);font-size:12px">ID: ${tr.id}</div>
+    </div>
+  `;
+  return wrapper;
+}
 function addOpenTradeUI(tr){
-  const el = document.createElement('div');
-  el.className = 'history-item';
-  el.id = 'open_' + tr.id;
-  el.innerHTML = `<div style="min-width:0;max-width:70%">${tr.market} • ${tr.side}</div><div>Rp ${Number(tr.amount).toLocaleString()} • Exit ${new Date(tr.expiryTs).toLocaleTimeString()}</div>`;
+  const el = createOpenTradeElement(tr);
   listOpenTrades.prepend(el);
+  // set up per-trade countdown updater
+  const countdownEl = el.querySelector('.countdown');
+  const exitPriceEl = el.querySelector('.exitPrice');
+  // store interval id on trade object so we can clear it later
+  tr.uiInterval = setInterval(()=>{
+    const now = Date.now();
+    const remaining = Math.max(0, tr.expiryTs - now);
+    const sec = Math.ceil(remaining/1000);
+    countdownEl.textContent = formatSeconds(sec);
+    // also update expected exit price live (show price at expiry, deterministic)
+    const expectedExit = deterministicPrice(tr.market, tr.expiryTs + 1);
+    exitPriceEl.textContent = formatMicroPrice(expectedExit, markets[tr.market]).text;
+    // when time up, clear interval and mark
+    if(remaining <= 0){
+      clearInterval(tr.uiInterval);
+      // add a small delay to wait resolution function to run and update UI accordingly
+    }
+  }, 500); // update twice a second for responsiveness
 }
 function removeOpenTradeUI(id){
   const el = document.getElementById('open_' + id);
   if(el) el.remove();
 }
+function markTradeClosedUI(tr, isWin, exitPrice){
+  const el = document.getElementById('open_' + tr.id);
+  if(!el) return;
+  // update content to show result and make dashed
+  el.classList.add('trade-closed');
+  const left = el.querySelector('.left');
+  const countdown = el.querySelector('.countdown');
+  const entryEl = el.querySelector('.entryPrice');
+  const exitEl = el.querySelector('.exitPrice');
+  entryEl.textContent = formatMicroPrice(tr.entryPrice, markets[tr.market]).text;
+  exitEl.textContent = formatMicroPrice(exitPrice, markets[tr.market]).text;
+  countdown.textContent = isWin ? 'MENANG' : 'KALAH';
+  // add small result badge
+  const res = document.createElement('div');
+  res.style.marginTop = '6px';
+  res.innerHTML = `<div style="font-weight:800;color:${isWin? 'var(--green)':'var(--red)'}">${isWin ? 'Win' : 'Lose'}</div>`;
+  left.appendChild(res);
+  // remove after short delay (optional) - keep for transparency; here we remove after 6s
+  setTimeout(()=> { try{ el.remove(); } catch(e){} }, 6000);
+}
 
+/* execute trade */
 function executeTrade(side){
   const bet = Number(betAmountInput.value || 0);
   if(!bet || bet < 15000) return alert('Minimal transaksi Rp 15.000');
@@ -590,7 +657,9 @@ function executeTrade(side){
   if(currentUser){
     db.collection('users').doc(currentUser.uid).collection('openTrades').doc(tradeId).set({...tr, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
   }
+  // schedule resolution
   const intervalResolve = setTimeout(async ()=>{
+    // compute exit price deterministically at expiry
     const exitPrice = deterministicPrice(currentMarketId, expiryTs + 1);
     const isBuy = (side.toLowerCase() === 'naik' || side.toLowerCase() === 'call');
     const isWin = (isBuy && exitPrice > entryPrice) || (!isBuy && exitPrice < entryPrice);
@@ -621,17 +690,20 @@ function executeTrade(side){
     balanceEl.textContent = balance.toFixed(2);
     balanceTop.textContent = balance.toFixed(2);
     balanceMain.textContent = balance.toFixed(2);
-    openTrades = openTrades.filter(x=>x.id !== tradeId);
-    removeOpenTradeUI(tradeId);
+    // update UI: mark closed and then move to history
+    markTradeClosedUI(tr, isWin, exitPrice);
     const li = document.createElement('div'); li.className='history-item';
     li.innerHTML = `<div>${new Date().toLocaleTimeString()} — ${currentMarketId} — ${side}</div><div style="color:${isWin?'#22c55e':'#fb7185'}">${text}</div>`;
     listTrades.prepend(li);
     sideTradeList.prepend(li.cloneNode(true));
+    // cleanup openTrades array and any interval
+    openTrades = openTrades.filter(x=>x.id !== tradeId);
     clearTimeout(intervalResolve);
   }, dur*1000);
   updateSummary();
 }
 
+/* parse hh:mm:ss or mm:ss */
 function parseDurationToSeconds(s){
   const parts = s.split(':').map(p=>Number(p));
   if(parts.length===3) return parts[0]*3600 + parts[1]*60 + parts[2];
@@ -716,13 +788,12 @@ markPaidBtn.addEventListener('click', async ()=>{
 depositClose.addEventListener('click', ()=> depositModal.style.display = 'none');
 depositCancel.addEventListener('click', ()=> depositModal.style.display = 'none');
 
-/* === IMPORTANT: make Deposit buttons open external page (as requested) === */
+/* === open deposit page fallback === */
 function openDepositPage(){
   if(DEPOSIT_URL && DEPOSIT_URL.length){
     window.open(DEPOSIT_URL, '_blank');
     return;
   }
-  // fallback: show modal if no external URL set
   depositModal.style.display = 'flex';
 }
 openDeposit.addEventListener('click', openDepositPage);
@@ -751,7 +822,7 @@ function listenToUser(uid){
       sideTradeList.appendChild(li.cloneNode(true));
     });
   });
-  db.collection('requests').where('uid','==',uid).orderBy('createdAt','desc').limit(20).onSnapshot(snap=>{
+  db.collection('requests').where('uid','==',uid).orderBy('createdAt','desc').limit(50).onSnapshot(snap=>{
     sideRequestsList.innerHTML = '';
     listRequests.innerHTML = '';
     snap.forEach(s=>{
@@ -843,7 +914,6 @@ async function adminRejectRequest(requestId){
     alert('Request ditolak.');
   }catch(e){ console.error(e); alert('Gagal menolak'); }
 }
-
 function renderAdminMarkets(){
   adminMarketsContainer.innerHTML = '';
   Object.keys(markets).forEach(id=>{
@@ -924,12 +994,18 @@ function renderMiniRequests(){
 /* clock */
 setInterval(()=>{ const d = new Date(); document.getElementById('clock').innerText = d.toLocaleTimeString(); },1000);
 
+/* helper: format seconds mm:ss */
+function formatSeconds(s){
+  if(typeof s !== 'number' || s < 0) s = 0;
+  const mm = Math.floor(s/60); const ss = s % 60;
+  return String(mm).padStart(2,'0') + ':' + String(ss).padStart(2,'0');
+}
+
 /* initial UI */
 updateSummary();
 resizeCanvas();
 generateInitialChartData();
 startChartAnimation();
-// subscribeMarketsRealtime() will be called after auth (to avoid duplicate calls)
 
 </script>
 </body>
