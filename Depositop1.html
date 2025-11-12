@@ -3,181 +3,163 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Deposit & Penarikan — King Zezy</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+<title>Deposit QRIS — King Zezy</title>
 <style>
   :root{
-    --bg:#07121a; --card:#0b1722; --muted:#98a0ad; --accent:#2dd4bf; --glass: rgba(255,255,255,0.03);
-    --success:#22c55e; --danger:#fb7185;
+    --bg:#07121a; --card:#0b1722; --muted:#98a0ad; --accent:#2dd4bf;
+    --glass: rgba(255,255,255,0.03);
   }
-  body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#07101a,#081627);color:#e6eef6;margin:0;padding:18px;min-height:100vh}
-  .wrap{max-width:980px;margin:0 auto;display:grid;grid-template-columns:1fr 340px;gap:16px}
-  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-  h1{font-size:18px;margin:0}
-  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:12px;box-shadow:0 6px 20px rgba(0,0,0,0.6)}
-  /* left column */
-  .controls{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-  .btn{background:var(--accent);border:none;color:#012;padding:8px 12px;border-radius:8px;font-weight:700;cursor:pointer}
-  .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);font-weight:600}
-  .panels{display:flex;gap:12px}
-  .panel{flex:1}
-  .panel.hidden{display:none}
-  label{display:block;font-size:13px;color:var(--muted);margin-top:10px}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#07101a,#081627);color:#e6eef6;font-family:Inter,system-ui,Roboto,Arial}
+  .container{max-width:1000px;margin:12px auto;padding:12px;display:grid;grid-template-columns:1fr 340px;gap:14px}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px}
+  h1{margin:0;font-size:18px}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,0.6)}
+  /* controls */
+  .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+  .btn{background:var(--accent);border:none;color:#012;padding:10px 14px;border-radius:10px;font-weight:800;cursor:pointer}
+  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.05);color:var(--muted);font-weight:700}
+  label{display:block;color:var(--muted);font-size:13px;margin-top:8px}
   input,select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;margin-top:6px}
   .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .muted{color:var(--muted);font-size:13px}
-  .qwrap{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-top:12px}
-  #qrcode{background:#fff;padding:10px;border-radius:8px}
-  pre.payload{background:#07121a;border:1px solid rgba(255,255,255,0.03);padding:8px;border-radius:8px;overflow:auto;color:var(--muted);font-size:12px}
-  .history{max-height:320px;overflow:auto;margin-top:8px}
+  .small{font-size:13px;color:var(--muted)}
+  .q-area{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-top:12px}
+  .qr-box{background:#fff;padding:12px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+  .payload{background:#07121a;border:1px solid rgba(255,255,255,0.03);padding:8px;border-radius:8px;color:var(--muted);font-size:12px;word-break:break-all}
+  .history{max-height:360px;overflow:auto;margin-top:10px}
   .hist-item{display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid rgba(255,255,255,0.02);font-size:13px}
   .badge{padding:6px 8px;border-radius:8px;font-weight:700;font-size:12px}
   .badge.pending{background:rgba(255,193,7,0.08);color:#ffb020}
-  .badge.confirmed{background:rgba(34,197,94,0.08);color:var(--success)}
-  .badge.rejected{background:rgba(239,68,68,0.06);color:var(--danger)}
-  .account{display:flex;flex-direction:column;gap:8px}
-  .small{font-size:13px;color:var(--muted)}
-  .submit{margin-top:12px;background:var(--accent);color:#012;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:800}
-  /* right column */
-  .side{display:flex;flex-direction:column;gap:12px}
-  .info-row{display:flex;justify-content:space-between;gap:8px;align-items:center}
-  .info-row div{min-width:0}
-  .label-strong{font-weight:800}
+  .badge.confirmed{background:rgba(34,197,94,0.08);color:#22c55e}
+  .badge.rejected{background:rgba(239,68,68,0.06);color:#fb7185}
+  /* responsive */
   @media (max-width:980px){
-    .wrap{grid-template-columns:1fr; padding-bottom:60px}
-    .side{order:2}
+    .container{grid-template-columns:1fr; padding:12px}
   }
+  /* side */
+  aside .info-row{display:flex;justify-content:space-between;gap:8px;align-items:center}
+  .muted-label{font-size:13px;color:var(--muted)}
 </style>
 </head>
 <body>
-  <header>
-    <h1>Deposit & Penarikan — King Zezy</h1>
-    <div class="muted">Realtime — Firebase Firestore</div>
+  <header style="max-width:1000px;margin:0 auto;padding:12px 12px 0 12px">
+    <div>
+      <h1>Deposit QRIS — King Zezy</h1>
+      <div class="small">Hanya QRIS SCAN. QR tampil setelah klik Generate / Update.</div>
+    </div>
+    <div class="small" id="uidInfo">UID: —</div>
   </header>
 
-  <div class="wrap">
-    <!-- main -->
-    <div>
+  <div class="container">
+    <main>
       <div class="card">
-        <div class="controls">
+        <div class="actions">
           <button id="btnShowDeposit" class="btn">Deposit</button>
-          <button id="btnShowWithdraw" class="btn secondary">Penarikan</button>
+          <button id="btnShowWithdraw" class="btn ghost">Penarikan</button>
           <div style="flex:1"></div>
-          <div class="small" id="uidDisplay">UID: —</div>
+          <div class="small" id="accountBalance">Saldo: Rp 0</div>
         </div>
 
         <!-- Deposit panel -->
-        <div id="depositPanel" class="panel">
+        <div id="depositPanel">
           <div style="display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <div style="font-weight:800">Deposit — QRIS Dynamic</div>
-              <div class="small">Masukkan nominal lalu Generate. Fee: 0.8% + Rp850</div>
-            </div>
-            <div class="muted">Minimal Rp 1.000</div>
+            <div><strong>Deposit (QRIS)</strong></div>
+            <div class="small">Minimal Rp 1.000 • Fee: 0.8% + Rp850</div>
           </div>
 
-          <label>Nominal (Rp)</label>
-          <input id="nominal" type="number" min="1000" step="100" value="10000">
+          <label for="nominal">Nominal (Rp)</label>
+          <input id="nominal" type="number" min="1000" step="100" value="10000" />
 
-          <label>Metode</label>
-          <select id="method">
-            <option value="qris">QRIS (scan)</option>
-            <option value="gopay">GoPay</option>
-            <option value="dana">Dana</option>
-            <option value="shopeepay">ShopeePay</option>
-          </select>
-
-          <div class="row" style="margin-top:12px">
-            <button id="calculateBtn" class="btn">Generate / Update</button>
-            <button id="payBtn" class="btn secondary">Bayar Sekarang</button>
-            <button id="saveRequestBtn" class="btn secondary">Simpan Request (Firestore)</button>
+          <div class="row" style="margin-top:10px">
+            <button id="generateBtn" class="btn">Generate / Update</button>
+            <button id="saveRequestBtn" class="btn ghost">Simpan Request</button>
           </div>
 
           <div id="breakdown" class="small" style="margin-top:10px"></div>
 
-          <div class="qwrap">
-            <div id="qrcode"></div>
+          <!-- QR area hidden until generated -->
+          <div id="qArea" class="q-area" style="display:none">
+            <div id="qWrap" class="qr-box" style="width:260px;height:260px"></div>
             <div style="flex:1">
-              <div class="small">Payload QRIS (final akan otomatis ditambahkan tag 63 CRC)</div>
+              <div class="small">Payload QRIS final (termasuk CRC tag 63)</div>
               <pre id="finalPayload" class="payload">—</pre>
-              <div style="display:flex;gap:8px;margin-top:8px">
-                <button id="copyPayload" class="btn secondary">Copy Payload</button>
-                <button id="downloadQR" class="btn secondary">Download QR</button>
+              <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+                <button id="copyPayload" class="btn ghost">Copy Payload</button>
+                <button id="downloadQR" class="btn ghost">Download QR</button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Withdraw panel -->
-        <div id="withdrawPanel" class="panel hidden">
+        <!-- Withdraw panel (hidden by default) -->
+        <div id="withdrawPanel" style="display:none">
           <div style="display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <div style="font-weight:800">Penarikan</div>
-              <div class="small">Masukkan nominal dan info bank. Request akan disimpan & menunggu konfirmasi admin.</div>
-            </div>
-            <div class="muted">Minimal penarikan Rp 50.000</div>
+            <div><strong>Permintaan Penarikan</strong></div>
+            <div class="small">Minimal penarikan Rp 50.000</div>
           </div>
 
-          <label>Nominal (Rp)</label>
+          <label for="withdrawAmount">Nominal (Rp)</label>
           <input id="withdrawAmount" type="number" min="50000" step="1000" value="50000">
 
-          <label>Nama Bank</label>
+          <label for="bankName">Nama Bank</label>
           <input id="bankName" type="text" placeholder="BCA / BNI / Mandiri">
 
-          <label>Nomor Rekening</label>
+          <label for="bankAccount">No. Rekening</label>
           <input id="bankAccount" type="text" placeholder="1234567890">
 
-          <label>Atas Nama</label>
+          <label for="bankHolder">Atas Nama</label>
           <input id="bankHolder" type="text" placeholder="Nama pemilik rekening">
 
-          <div style="display:flex;gap:8px;margin-top:12px">
-            <button id="submitWithdraw" class="submit">Ajukan Penarikan</button>
-            <button id="cancelWithdraw" class="btn secondary">Batal</button>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button id="submitWithdraw" class="btn">Ajukan Penarikan</button>
+            <button id="cancelWithdraw" class="btn ghost">Batal</button>
           </div>
         </div>
 
-        <!-- Histories -->
-        <div style="margin-top:14px;display:flex;gap:12px;align-items:center">
-          <div style="font-weight:800">Riwayat</div>
-          <div class="muted">Deposit & Withdraw (akun ini)</div>
+        <!-- History (both deposit & withdraw recorded and shown) -->
+        <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:800">Riwayat Transaksi</div>
+          <div class="small">Semua deposit & penarikan akun ini (realtime)</div>
         </div>
         <div style="display:flex;gap:8px;margin-top:8px">
-          <button id="tabDep" class="btn">Deposit</button>
-          <button id="tabWdr" class="btn secondary">Penarikan</button>
+          <button id="tabAll" class="btn">Semua</button>
+          <button id="tabDeposit" class="btn ghost">Deposit</button>
+          <button id="tabWithdraw" class="btn ghost">Penarikan</button>
         </div>
-        <div id="historyDeposit" class="history"></div>
-        <div id="historyWithdraw" class="history" style="display:none"></div>
+
+        <div id="historyAll" class="history" style="margin-top:10px"></div>
+        <div id="historyOnlyDeposit" class="history" style="display:none;margin-top:10px"></div>
+        <div id="historyOnlyWithdraw" class="history" style="display:none;margin-top:10px"></div>
 
       </div>
-    </div>
+    </main>
 
-    <!-- side -->
-    <aside class="side">
+    <aside>
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div style="font-weight:800">Informasi Akun</div>
-          <div class="small" id="createdAtLabel">—</div>
-        </div>
-        <div class="account" style="margin-top:10px">
-          <div class="info-row"><div class="small">UID</div><div class="label-strong" id="uidLabel">—</div></div>
-          <div class="info-row"><div class="small">Email</div><div id="emailLabel" class="small">—</div></div>
-          <div class="info-row"><div class="small">Nama</div><div id="nameLabel" class="small">—</div></div>
-          <div class="info-row"><div class="small">Telepon</div><div id="phoneLabel" class="small">—</div></div>
-          <div class="info-row"><div class="small">Saldo</div><div id="balanceLabel" class="label-strong">Rp 0</div></div>
+          <div class="small" id="createdAt">—</div>
         </div>
 
-        <div style="margin-top:12px;display:flex;gap:8px">
-          <button id="btnSignOut" class="btn secondary">Sign out</button>
-          <button id="btnRefresh" class="btn">Refresh</button>
+        <div style="margin-top:10px">
+          <div class="info-row"><div class="muted-label">UID</div><div id="uid" class="muted-label">—</div></div>
+          <div class="info-row"><div class="muted-label">Email</div><div id="email" class="muted-label">—</div></div>
+          <div class="info-row"><div class="muted-label">Nama</div><div id="fullname" class="muted-label">—</div></div>
+          <div class="info-row"><div class="muted-label">Telepon</div><div id="phone" class="muted-label">—</div></div>
+          <div class="info-row" style="margin-top:8px"><div class="muted-label">Saldo</div><div id="bal" style="font-weight:800">Rp 0</div></div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button id="refreshBtn" class="btn ghost">Refresh</button>
+          <button id="signoutBtn" class="btn ghost">Sign out</button>
         </div>
       </div>
 
-      <div class="card">
-        <div style="font-weight:800">Petunjuk</div>
+      <div class="card" style="margin-top:12px">
+        <div style="font-weight:800">Catatan</div>
         <div class="small" style="margin-top:8px">
-          - Klik <strong>Generate</strong> untuk buat QRIS dinamis (payload + CRC).<br>
-          - Klik <strong>Simpan Request</strong> untuk menyimpan ke Firestore (status pending).<br>
-          - Riwayat akan tampil realtime.
+          - QRIS hanya muncul setelah klik <strong>Generate / Update</strong>.<br>
+          - Klik <strong>Simpan Request</strong> untuk menyimpan permintaan deposit ke Firestore (status: pending).<br>
+          - Riwayat ditampilkan realtime dari koleksi <code>requests</code>.
         </div>
       </div>
     </aside>
@@ -205,19 +187,18 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-/* ====== UI refs ====== */
+/* ====== DOM refs ====== */
 const btnShowDeposit = document.getElementById('btnShowDeposit');
 const btnShowWithdraw = document.getElementById('btnShowWithdraw');
 const depositPanel = document.getElementById('depositPanel');
 const withdrawPanel = document.getElementById('withdrawPanel');
 
 const nominalEl = document.getElementById('nominal');
-const methodEl = document.getElementById('method');
-const calculateBtn = document.getElementById('calculateBtn');
-const payBtn = document.getElementById('payBtn');
+const generateBtn = document.getElementById('generateBtn');
 const saveRequestBtn = document.getElementById('saveRequestBtn');
 const breakdownEl = document.getElementById('breakdown');
-const qrcodeContainer = document.getElementById('qrcode');
+const qArea = document.getElementById('qArea');
+const qWrap = document.getElementById('qWrap');
 const finalPayloadEl = document.getElementById('finalPayload');
 const copyPayloadBtn = document.getElementById('copyPayload');
 const downloadQRBtn = document.getElementById('downloadQR');
@@ -229,23 +210,26 @@ const bankHolder = document.getElementById('bankHolder');
 const submitWithdraw = document.getElementById('submitWithdraw');
 const cancelWithdraw = document.getElementById('cancelWithdraw');
 
-const tabDep = document.getElementById('tabDep');
-const tabWdr = document.getElementById('tabWdr');
-const historyDeposit = document.getElementById('historyDeposit');
-const historyWithdraw = document.getElementById('historyWithdraw');
+const uidField = document.getElementById('uid');
+const uidInfo = document.getElementById('uidInfo');
+const emailField = document.getElementById('email');
+const nameField = document.getElementById('fullname');
+const phoneField = document.getElementById('phone');
+const balField = document.getElementById('bal');
+const createdAt = document.getElementById('createdAt');
+const accountBalance = document.getElementById('accountBalance');
 
-const uidLabel = document.getElementById('uidLabel');
-const uidDisplay = document.getElementById('uidDisplay');
-const emailLabel = document.getElementById('emailLabel');
-const nameLabel = document.getElementById('nameLabel');
-const phoneLabel = document.getElementById('phoneLabel');
-const createdAtLabel = document.getElementById('createdAtLabel');
-const balanceLabel = document.getElementById('balanceLabel');
+const historyAll = document.getElementById('historyAll');
+const historyDeposit = document.getElementById('historyOnlyDeposit');
+const historyWithdraw = document.getElementById('historyOnlyWithdraw');
+const tabAll = document.getElementById('tabAll');
+const tabDep = document.getElementById('tabDeposit');
+const tabWdr = document.getElementById('tabWithdraw');
 
-const btnSignOut = document.getElementById('btnSignOut');
-const btnRefresh = document.getElementById('btnRefresh');
+const refreshBtn = document.getElementById('refreshBtn');
+const signoutBtn = document.getElementById('signoutBtn');
 
-/* ====== QRIS helpers (adapted from user snippet) ====== */
+/* ====== QRIS helpers ====== */
 function parseTLV(s){
   let i=0, out=[];
   while(i<s.length){
@@ -276,171 +260,142 @@ function crc16ccitt(str){
   return crc & 0xFFFF;
 }
 function setAmountInPayloadCore(corePayload, amountStr){
-  // parse and insert/replace 54
-  const parsed = parseTLV(corePayload);
-  const filtered = parsed.filter(o=>o.tag !== '54');
-  const idx58 = filtered.findIndex(o=>o.tag === '58');
-  if(idx58 >= 0) filtered.splice(idx58,0,{tag:'54', value:amountStr});
-  else filtered.push({tag:'54', value:amountStr});
-  return buildTLV(filtered);
+  try{
+    const parsed = parseTLV(corePayload);
+    const filtered = parsed.filter(o=>o.tag !== '54');
+    const idx58 = filtered.findIndex(o=>o.tag === '58');
+    if(idx58 >= 0) filtered.splice(idx58,0,{tag:'54', value:amountStr});
+    else filtered.push({tag:'54', value:amountStr});
+    return buildTLV(filtered);
+  }catch(e){
+    // fallback: append 54 tag naive
+    return corePayload + ('54' + String(amountStr.length).padStart(2,'0') + amountStr);
+  }
 }
 
 /* ====== app state ====== */
 let currentUser = null;
-let qrcodeObj = null;
-let lastGeneratedPayload = null;
-let lastQRCodeCanvas = null;
+let lastGenerated = null; // {finalPayload, amountShown, total}
+let lastQRElement = null;
 
-/* ====== UI behaviors: show/hide panels ====== */
+/* default core payload (editable in code if perlu) */
+const defaultCorePayload = "00020101021126610014COM.GO-JEK.WWW01189360091433055874630210G3055874630303UMI51440014ID.CO.QRIS.WWW0215ID10254231099470303UMI5204481453033605802ID5925ZkgamingstoreGoTo, Toko H6007TANGSEL61051522062070703A016304";
+
+/* ====== UI behaviors ====== */
 function showDeposit(){
-  depositPanel.classList.remove('hidden');
-  withdrawPanel.classList.add('hidden');
-  btnShowDeposit.classList.remove('secondary'); btnShowDeposit.classList.add('btn');
-  btnShowWithdraw.classList.add('secondary'); btnShowWithdraw.classList.remove('btn');
+  depositPanel.style.display = '';
+  withdrawPanel.style.display = 'none';
+  btnShowDeposit.classList.add('btn'); btnShowDeposit.classList.remove('ghost');
+  btnShowWithdraw.classList.add('ghost'); btnShowWithdraw.classList.remove('btn');
 }
 function showWithdraw(){
-  withdrawPanel.classList.remove('hidden');
-  depositPanel.classList.add('hidden');
-  btnShowWithdraw.classList.remove('secondary'); btnShowWithdraw.classList.add('btn');
-  btnShowDeposit.classList.add('secondary'); btnShowDeposit.classList.remove('btn');
+  withdrawPanel.style.display = '';
+  depositPanel.style.display = 'none';
+  btnShowWithdraw.classList.add('btn'); btnShowWithdraw.classList.remove('ghost');
+  btnShowDeposit.classList.add('ghost'); btnShowDeposit.classList.remove('btn');
 }
 btnShowDeposit.addEventListener('click', showDeposit);
 btnShowWithdraw.addEventListener('click', showWithdraw);
 
-/* ====== QR generation & UI ====== */
-let qrcodeEl = qrcodeContainer;
-function formatRp(n){ return Number(n).toLocaleString('id-ID'); }
+/* responsive QR size */
+function getQRSize(){
+  // make QR ~ min(60% of width, 320)
+  const containerW = qWrap.clientWidth || 260;
+  const s = Math.min(Math.max(180, Math.floor(containerW)), 380);
+  return s;
+}
 
+/* fee calcs */
+function formatRp(n){ return Number(n).toLocaleString('id-ID'); }
 function calcFees(nominal){
   const feeQris = Math.round(nominal * 0.008);
   const qrisTotal = nominal + feeQris + 850;
-  const ewTotal = nominal + 850;
-  return {feeQris, qrisTotal, ewTotal};
+  return { feeQris, qrisTotal };
 }
 
-function renderQRCode(text){
-  qrcodeEl.innerHTML = '';
-  // create <canvas> QR (qrcodejs uses table/canvas)
-  qrcodeObj = new QRCode(qrcodeEl, { text, width:220, height:220, correctLevel: QRCode.CorrectLevel.H });
-  // try to capture canvas for download
-  // qrcodejs may create img or canvas; find it
-  setTimeout(()=>{
-    lastQRCodeCanvas = qrcodeEl.querySelector('canvas') || qrcodeEl.querySelector('img');
-  }, 200);
-}
-
-function generateQRPayload(){
+/* Generate QR payload (only QRIS) */
+function generateAndShow(){
   const nominal = Number(nominalEl.value || 0);
-  const method = methodEl.value;
-  const basePayload = (document.getElementById('finalPayload').dataset.baseCore || '').trim() || defaultCorePayload;
-  // make sure basePayload doesn't include trailing 63 tag
-  let base = basePayload;
+  if(!nominal || nominal < 1000) return alert('Minimal Rp 1.000');
+  const { feeQris, qrisTotal } = calcFees(nominal);
+  const amountStr = (qrisTotal.toFixed ? qrisTotal.toFixed(2) : (qrisTotal + '.00')).toString();
+  // build final payload
+  let base = defaultCorePayload;
   if(base.slice(-8,-4) === '6304') base = base.slice(0,-8);
-  const {feeQris, qrisTotal, ewTotal} = calcFees(nominal);
-  if(method === 'qris'){
-    const amountStr = qrisTotal.toFixed ? qrisTotal.toFixed(2) : (qrisTotal + '.00');
-    const core = setAmountInPayloadCore(base, amountStr);
-    const payloadWith6304 = core + '6304';
-    const crcVal = crc16ccitt(payloadWith6304);
-    const crcHex = crcVal.toString(16).toUpperCase().padStart(4,'0');
-    const finalPayload = payloadWith6304 + crcHex;
-    lastGeneratedPayload = {finalPayload, amountShown: amountStr, total: qrisTotal, method:'qris'};
-    breakdownEl.innerHTML = `<strong>QRIS</strong><br>
-      Nominal: Rp ${formatRp(nominal)}<br>
-      Fee 0.8%: Rp ${formatRp(feeQris)} + biaya tetap Rp 850<br>
-      Total ditagihkan: Rp ${formatRp(qrisTotal)} (ditampilkan di QR sebagai ${amountStr})`;
-    renderQRCode(finalPayload);
-    finalPayloadEl.textContent = finalPayload;
-    finalPayloadEl.dataset.core = base;
-  } else {
-    // e-wallet/deeplink: still produce payload with amount (optional), but UI will show info
-    const total = ewTotal;
-    const amountStr = total.toFixed ? total.toFixed(2) : (total + '.00');
-    const core = setAmountInPayloadCore(base, amountStr);
-    const payloadWith6304 = core + '6304';
-    const crcVal = crc16ccitt(payloadWith6304);
-    const crcHex = crcVal.toString(16).toUpperCase().padStart(4,'0');
-    const finalPayload = payloadWith6304 + crcHex;
-    lastGeneratedPayload = {finalPayload, amountShown: amountStr, total, method};
-    breakdownEl.innerHTML = `<strong>${method.toUpperCase()}</strong><br>
-      Nominal: Rp ${formatRp(nominal)}<br>
-      Biaya tetap: Rp 850<br>
-      Total ditagihkan: Rp ${formatRp(total)}<br>
-      <small class="muted">Untuk e-wallet, production flow sebaiknya menggunakan server-side provider (deeplink). Hal ini hanya menampilkan payload/QR sebagai fallback.</small>`;
-    renderQRCode(finalPayload);
-    finalPayloadEl.textContent = finalPayload;
-    finalPayloadEl.dataset.core = base;
-  }
+  const core = setAmountInPayloadCore(base, amountStr);
+  const with6304 = core + '6304';
+  const crc = crc16ccitt(with6304);
+  const crcHex = crc.toString(16).toUpperCase().padStart(4,'0');
+  const finalPayload = with6304 + crcHex;
+  lastGenerated = { finalPayload, amountShown: amountStr, total: qrisTotal };
+
+  // show breakdown
+  breakdownEl.innerHTML = `<strong>QRIS</strong><br>
+    Nominal: Rp ${formatRp(nominal)}<br>
+    Fee 0.8%: Rp ${formatRp(feeQris)} + biaya tetap Rp 850<br>
+    Total ditagihkan: Rp ${formatRp(qrisTotal)} (ditampilkan di QR sebagai ${amountStr})`;
+
+  // render QR
+  qArea.style.display = '';
+  qWrap.innerHTML = '';
+  const size = Math.min(getQRSize(), 380);
+  // create QR, remove previous if any
+  new QRCode(qWrap, { text: finalPayload, width: size, height: size, correctLevel: QRCode.CorrectLevel.H });
+  lastQRElement = qWrap.querySelector('canvas') || qWrap.querySelector('img');
+  finalPayloadEl.textContent = finalPayload;
 }
 
-calculateBtn.addEventListener('click', generateQRPayload);
+generateBtn.addEventListener('click', generateAndShow);
 
-// pay button: for QRIS show instruction; for e-wallet attempt to open deeplink (best-effort)
-payBtn.addEventListener('click', ()=>{
-  if(!lastGeneratedPayload){ alert('Klik Generate dulu'); return; }
-  if(lastGeneratedPayload.method === 'qris'){
-    alert('Scan QR yang muncul menggunakan aplikasi e-wallet atau scan app pengguna.');
-    return;
-  }
-  // best-effort attempt to open (placeholder schemes)
-  const m = lastGeneratedPayload.method;
-  const amt = lastGeneratedPayload.amountShown;
-  const tryUrls = [];
-  if(m === 'gopay') { tryUrls.push(`gopay://pay?amount=${amt}`); tryUrls.push(`https://checkout.gopay.com/pay?amount=${amt}`); }
-  if(m === 'dana') { tryUrls.push(`dana://pay?amount=${amt}`); tryUrls.push(`https://m.dana.id/n/link/pay?amount=${amt}`); }
-  if(m === 'shopeepay') { tryUrls.push(`shopeepay://pay?amount=${amt}`); tryUrls.push(`https://checkout.shopee.co.id/pay?amount=${amt}`); }
-  if(tryUrls.length) window.location.href = tryUrls[0];
-  setTimeout(()=>{ if(confirm('Jika app tidak terbuka, mau lihat instruksi / payload?')) alert('Payload (QRIS fallback):\\n' + (lastGeneratedPayload.finalPayload||'(tidak ada)')); }, 1200);
-});
-
-// copy payload and download QR
-copyPayloadBtn.addEventListener('click', ()=>{
-  if(!lastGeneratedPayload) return alert('Belum ada payload');
-  navigator.clipboard.writeText(lastGeneratedPayload.finalPayload).then(()=> alert('Payload disalin ke clipboard'));
-});
-downloadQRBtn.addEventListener('click', ()=>{
-  if(!lastQRCodeCanvas) return alert('QR belum siap atau browser tidak mendukung download langsung.');
-  // if element is <img>, just open in new tab
-  if(lastQRCodeCanvas.tagName === 'IMG'){
-    const src = lastQRCodeCanvas.src;
-    const a = document.createElement('a'); a.href = src; a.download = 'qris.png'; a.click();
-    return;
-  }
-  // canvas -> toDataURL
-  const dataUrl = lastQRCodeCanvas.toDataURL('image/png');
-  const a = document.createElement('a'); a.href = dataUrl; a.download = 'qris.png'; a.click();
-});
-
-/* ====== Persist deposit request to Firestore ====== */
+/* Save deposit request to Firestore */
 saveRequestBtn.addEventListener('click', async ()=>{
   if(!currentUser) return alert('Belum login');
-  if(!lastGeneratedPayload) return alert('Generate payload dulu');
+  if(!lastGenerated) return alert('Klik Generate / Update terlebih dahulu untuk membuat QRIS');
   const nominal = Number(nominalEl.value || 0);
   if(!nominal || nominal < 1000) return alert('Minimal Rp 1.000');
   const doc = {
     uid: currentUser.uid,
     type: 'deposit',
     nominal: nominal,
-    totalPay: lastGeneratedPayload.total || nominal,
-    method: lastGeneratedPayload.method || methodEl.value,
-    payload: lastGeneratedPayload.finalPayload,
+    totalPay: lastGenerated.total || nominal,
+    method: 'qris',
+    payload: lastGenerated.finalPayload,
     status: 'pending',
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    meta: { generatedBy: 'client' }
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
   try{
     const ref = await db.collection('requests').add(doc);
-    alert('Request deposit tersimpan (id: '+ref.id+'). Tunggu konfirmasi admin.');
-  }catch(e){ console.error(e); alert('Gagal simpan request: '+e); }
+    alert('Request deposit tersimpan (id: ' + ref.id + '). Tunggu konfirmasi admin.');
+  }catch(e){
+    console.error(e); alert('Gagal menyimpan request: ' + e);
+  }
 });
 
-/* ====== Withdraw request ====== */
+/* Copy payload & download QR */
+copyPayloadBtn.addEventListener('click', ()=>{
+  if(!lastGenerated) return alert('Belum ada payload');
+  navigator.clipboard.writeText(lastGenerated.finalPayload).then(()=> alert('Payload disalin ke clipboard'));
+});
+downloadQRBtn.addEventListener('click', ()=>{
+  if(!lastQRElement) return alert('QR belum siap');
+  if(lastQRElement.tagName === 'IMG'){
+    const a = document.createElement('a'); a.href = lastQRElement.src; a.download = 'qris.png'; a.click(); return;
+  }
+  // canvas
+  try{
+    const url = lastQRElement.toDataURL('image/png');
+    const a = document.createElement('a'); a.href = url; a.download = 'qris.png'; a.click();
+  }catch(e){
+    alert('Gagal download: ' + e);
+  }
+});
+
+/* ====== Withdraw handling ====== */
 submitWithdraw.addEventListener('click', async ()=>{
   if(!currentUser) return alert('Belum login');
   const amt = Number(withdrawAmount.value || 0);
   if(!amt || amt < 50000) return alert('Minimal penarikan Rp 50.000');
   if(!bankName.value || !bankAccount.value || !bankHolder.value) return alert('Lengkapi info bank');
-  // create withdraw request
   const req = {
     uid: currentUser.uid,
     type: 'withdraw',
@@ -454,43 +409,45 @@ submitWithdraw.addEventListener('click', async ()=>{
   try{
     await db.collection('requests').add(req);
     alert('Request penarikan dibuat. Tunggu konfirmasi admin.');
-    // optionally clear form
     withdrawAmount.value = 50000; bankName.value=''; bankAccount.value=''; bankHolder.value='';
-  }catch(e){ console.error(e); alert('Gagal membuat request: '+e); }
+    showDeposit();
+  }catch(e){ console.error(e); alert('Gagal membuat request: ' + e); }
 });
-cancelWithdraw.addEventListener('click', ()=> showDeposit());
+cancelWithdraw.addEventListener('click', showDeposit);
 
-/* ====== Tabs history ====== */
-tabDep.addEventListener('click', ()=>{ historyDeposit.style.display='block'; historyWithdraw.style.display='none'; tabDep.classList.remove('secondary'); tabDep.classList.add('btn'); tabWdr.classList.add('secondary'); tabWdr.classList.remove('btn'); });
-tabWdr.addEventListener('click', ()=>{ historyDeposit.style.display='none'; historyWithdraw.style.display='block'; tabWdr.classList.remove('secondary'); tabWdr.classList.add('btn'); tabDep.classList.add('secondary'); tabDep.classList.remove('btn'); });
+/* ====== History tabs ====== */
+tabAll.addEventListener('click', ()=>{ historyAll.style.display='block'; historyDeposit.style.display='none'; historyWithdraw.style.display='none'; tabAll.classList.add('btn'); tabDep.classList.add('ghost'); tabWdr.classList.add('ghost'); });
+tabDep.addEventListener('click', ()=>{ historyAll.style.display='none'; historyDeposit.style.display='block'; historyWithdraw.style.display='none'; tabDep.classList.add('btn'); tabAll.classList.add('ghost'); tabWdr.classList.add('ghost'); });
+tabWdr.addEventListener('click', ()=>{ historyAll.style.display='none'; historyDeposit.style.display='none'; historyWithdraw.style.display='block'; tabWdr.classList.add('btn'); tabDep.classList.add('ghost'); tabAll.classList.add('ghost'); });
 
-/* ====== Auth & listeners ====== */
-function formatTimestamp(ts){
-  try{
-    if(!ts) return '-';
-    const d = ts.toDate ? ts.toDate() : new Date(ts);
-    return d.toLocaleString();
-  }catch(e){ return '-'; }
-}
-
+/* ====== Auth & realtime listeners ====== */
 let requestsUnsub = null;
 let userDocUnsub = null;
 
-function subscribeRequestsForUser(uid){
+function renderRequestItem(r, id){
+  const status = r.status || 'pending';
+  const cls = status === 'confirmed' ? 'confirmed' : status === 'rejected' ? 'rejected' : 'pending';
+  const div = document.createElement('div'); div.className = 'hist-item';
+  const left = document.createElement('div');
+  left.innerHTML = `<div style="font-weight:700">${(r.type||'').toUpperCase()} • Rp ${Number(r.nominal||r.totalPay||0).toLocaleString()}</div><div class="small">${r.method||r.bankName||''} • ${r.createdAt ? (r.createdAt.toDate ? r.createdAt.toDate().toLocaleString() : r.createdAt) : '-'}</div>`;
+  const right = document.createElement('div');
+  right.innerHTML = `<div><span class="badge ${cls}">${status}</span></div><div class="small" style="margin-top:6px">id: ${id}</div>`;
+  div.appendChild(left); div.appendChild(right);
+  return div;
+}
+
+function subscribeUserRequests(uid){
   if(requestsUnsub) requestsUnsub();
   requestsUnsub = db.collection('requests').where('uid','==',uid).orderBy('createdAt','desc').onSnapshot(snap=>{
-    historyDeposit.innerHTML = ''; historyWithdraw.innerHTML = '';
+    historyAll.innerHTML = ''; historyDeposit.innerHTML = ''; historyWithdraw.innerHTML = '';
     snap.forEach(doc=>{
       const r = doc.data(); const id = doc.id;
-      const badgeCls = r.status === 'confirmed' ? 'confirmed' : r.status === 'rejected' ? 'rejected' : 'pending';
-      const node = document.createElement('div'); node.className='hist-item';
-      const left = document.createElement('div'); left.innerHTML = `<div style="font-weight:700">${(r.type||'') .toUpperCase()} • Rp ${Number(r.nominal||r.totalPay||0).toLocaleString()}</div><div class="small">${r.method || r.bankName || ''} • ${formatTimestamp(r.createdAt)}</div>`;
-      const right = document.createElement('div'); right.innerHTML = `<div><span class="badge ${badgeCls}">${r.status}</span></div>`;
-      node.appendChild(left); node.appendChild(right);
+      const node = renderRequestItem(r,id);
+      historyAll.appendChild(node.cloneNode(true));
       if(r.type === 'deposit') historyDeposit.appendChild(node.cloneNode(true));
-      else historyWithdraw.appendChild(node.cloneNode(true));
+      if(r.type === 'withdraw') historyWithdraw.appendChild(node.cloneNode(true));
     });
-  });
+  }, err=>console.error(err));
 }
 
 function subscribeUserDoc(uid){
@@ -498,50 +455,43 @@ function subscribeUserDoc(uid){
   userDocUnsub = db.collection('users').doc(uid).onSnapshot(doc=>{
     if(!doc.exists) return;
     const d = doc.data();
-    nameLabel.textContent = d.name || '-';
-    phoneLabel.textContent = d.phone || '-';
-    balanceLabel.textContent = 'Rp ' + (d.balance ? Number(d.balance).toLocaleString() : '0');
-    createdAtLabel.textContent = d.createdAt ? (d.createdAt.toDate ? d.createdAt.toDate().toLocaleDateString() : '-') : '-';
+    nameField.textContent = d.name || '-';
+    phoneField.textContent = d.phone || '-';
+    balField.textContent = 'Rp ' + (d.balance ? Number(d.balance).toLocaleString() : '0');
+    createdAt.textContent = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate().toLocaleDateString() : '-';
+    accountBalance.textContent = 'Saldo: ' + (d.balance ? 'Rp ' + Number(d.balance).toLocaleString() : 'Rp 0');
   });
 }
 
-auth.onAuthStateChanged(async (user)=>{
+/* auth */
+auth.onAuthStateChanged(async user=>{
   if(user){
     currentUser = user;
-    uidLabel.textContent = user.uid;
-    uidDisplay.textContent = 'UID: ' + user.uid;
-    emailLabel.textContent = user.email || '-';
+    uidField.textContent = user.uid;
+    uidInfo.textContent = 'UID: ' + user.uid;
+    emailField.textContent = user.email || '-';
     // ensure user doc exists
     const uref = db.collection('users').doc(user.uid);
-    const doc = await uref.get();
-    if(!doc.exists){
-      await uref.set({ createdAt: firebase.firestore.FieldValue.serverTimestamp(), balance: 0 });
-    }
-    subscribeRequestsForUser(user.uid);
+    const udoc = await uref.get();
+    if(!udoc.exists) await uref.set({ createdAt: firebase.firestore.FieldValue.serverTimestamp(), balance: 0 });
+    subscribeUserRequests(user.uid);
     subscribeUserDoc(user.uid);
+    showDeposit();
   } else {
-    // sign in anonymously to allow usage
+    // anonymous sign-in
     auth.signInAnonymously().catch(e=>console.error(e));
   }
 });
 
-/* Sign out (if using email auth) */
-btnSignOut.addEventListener('click', ()=> {
-  auth.signOut().then(()=> alert('Signed out')).catch(e=>alert('Gagal sign out: '+e));
-});
-btnRefresh.addEventListener('click', ()=> { if(currentUser) subscribeRequestsForUser(currentUser.uid); });
+/* refresh & signout */
+refreshBtn.addEventListener('click', ()=>{ if(currentUser) subscribeUserRequests(currentUser.uid); });
+signoutBtn.addEventListener('click', ()=>{ auth.signOut().then(()=>alert('Signed out')).catch(e=>alert('Sign out error: '+e)); });
 
-/* ====== initial core payload default (editable if wanted) ====== */
-const defaultCorePayload = "00020101021126610014COM.GO-JEK.WWW01189360091433055874630210G3055874630303UMI51440014ID.CO.QRIS.WWW0215ID10254231099470303UMI5204481453033605802ID5925ZkgamingstoreGoTo, Toko H6007TANGSEL61051522062070703A016304";
+/* ensure QR container resizes nicely on orientation change */
+window.addEventListener('resize', ()=>{ if(lastGenerated) generateAndShow(); });
 
-/* place default base into finalPayload dataset for possible editing */
-document.getElementById('finalPayload').dataset.baseCore = defaultCorePayload;
-
-/* run initial generate so UI ready */
-generateQRPayload();
-
-/* small helpful UX: close withdraw when pressing Escape */
-document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape'){ showDeposit(); } });
+/* UX: start with deposit visible */
+showDeposit();
 
 </script>
 </body>
