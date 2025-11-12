@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Crash GOOGLE - Binary Option Trading (Firebase + Markets from Firestore)</title>
+  <title>Crash GOOGLE - Binary Option Trading (Final Deterministic Markets)</title>
   <style>
     :root { --primary-color:#1e88e5; --bg-color:#f5f5f5; --text-color:#333; --card-bg:#fff; --up-color:#4caf50; --down-color:#f44336; }
     *{box-sizing:border-box;margin:0;padding:0;font-family:Poppins,sans-serif;}
@@ -33,7 +33,6 @@
     .qrcode-container img{max-width:200px;display:block;margin:0 auto;}
     .small{font-size:13px;color:#666;text-align:left;margin:6px 0;}
     pre.payload{background:#f6f6f6;padding:8px;overflow:auto;text-align:left;}
-    /* admin panel */
     #adminPanel{display:none;max-width:980px;margin:1rem auto;padding:1rem;background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.08);}
     #adminPanel h3{color:var(--primary-color);margin-bottom:.5rem;}
     .req-item{border:1px solid #eee;padding:.6rem;border-radius:6px;margin:.4rem 0;display:flex;justify-content:space-between;align-items:center;}
@@ -41,6 +40,8 @@
     .req-actions button{margin-left:.4rem;padding:.4rem .6rem;border-radius:4px;border:none;cursor:pointer;}
     .btn-confirm{background:#28a745;color:#fff;}
     .btn-reject{background:#dc3545;color:#fff;}
+    .price-flash { animation: pulse 0.3s ease-in-out; }
+    @keyframes pulse { 0%{opacity:1} 50%{opacity:.5} 100%{opacity:1} }
   </style>
 </head>
 <body>
@@ -51,10 +52,7 @@
   </div>
 
   <div class="controls">
-    <!-- symbolSelect akan diisi otomatis dari Firestore 'markets' -->
-    <select id="symbolSelect">
-      <option value="">Memuat markets...</option>
-    </select>
+    <select id="symbolSelect"><option value="">Memuat markets...</option></select>
     <select id="tfSelect">
       <option value="1">Global</option>
       <option value="5">Asia</option>
@@ -83,7 +81,7 @@
     <ul id="tradeHistory"></ul>
   </section>
 
-  <!-- Deposit Modal (sama seperti sebelumnya) -->
+  <!-- Deposit Modal -->
   <div id="depositModal" class="modal">
     <div class="modal-content">
       <span class="modal-close" id="depositClose">&times;</span>
@@ -196,7 +194,7 @@
     const balanceEl = document.getElementById('balance');
     const tradeHistory = document.getElementById('tradeHistory');
 
-    // trading UI (kept minimal)
+    // trading UI
     const symbolSelect = document.getElementById('symbolSelect');
     const tfSelect = document.getElementById('tfSelect');
     const durSelect = document.getElementById('durSelect');
@@ -252,67 +250,200 @@
       return userHistoryRef(uid).add({ ...item, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
     }
 
-    // --- NEW: markets object and subscription ---
-    let markets = {};            // { "BTC/USD": { price: ..., name: ..., baseAsset:..., quoteAsset:... }, ... }
+    /* ---------------- MARKETS (realtime) ---------------- */
+    let markets = {};            // { "BTC/USD": {...} }
     let marketsUnsub = null;
 
     function subscribeMarkets(){
-      // unsubscribe previous
       if (marketsUnsub) marketsUnsub();
-
-      // listen to whole collection 'markets'
-      marketsUnsub = db.collection('markets').onSnapshot(snap=>{
-        // rebuild markets and symbol select
-        const prevVal = symbolSelect.value;
+      marketsUnsub = db.collection('markets').orderBy('__name__').onSnapshot(snap=>{
+        const prev = symbolSelect.value;
         markets = {};
-        symbolSelect.innerHTML = ''; // clear options
+        symbolSelect.innerHTML = '';
         snap.forEach(doc=> {
-          const id = doc.id; // e.g. "BTC/USD" or "EUR/USD"
-          const data = doc.data();
-          markets[id] = data;
+          markets[doc.id] = doc.data();
         });
-
-        // if none, show placeholder
         const keys = Object.keys(markets);
         if(keys.length === 0){
-          const opt = document.createElement('option'); opt.value=''; opt.textContent='No markets';
-          symbolSelect.appendChild(opt);
+          const o = document.createElement('option'); o.value=''; o.textContent='No markets'; symbolSelect.appendChild(o);
           currSymbol.textContent = 'No market';
           return;
         }
-
-        // populate select preserving previous if possible
         keys.forEach(k=>{
           const opt = document.createElement('option');
-          // Display: id (name) if available
           opt.value = k;
-          opt.text = (markets[k].name ? `${k} — ${markets[k].name}` : k);
+          opt.text = (markets[k].symbol ? `${k} — ${markets[k].name || ''}` : k);
           symbolSelect.appendChild(opt);
         });
-
-        // set selection: previous if exists, else first
-        if(prevVal && markets[prevVal]) symbolSelect.value = prevVal;
+        if(prev && markets[prev]) symbolSelect.value = prev;
         else symbolSelect.selectedIndex = 0;
 
-        // set currentMarket and update UI
+        // set current market and regenerate deterministic candles
         currentMarket = symbolSelect.value;
         currSymbol.textContent = symbolSelect.selectedOptions[0]?.text || currentMarket;
-        // set lastPrice from market data to keep chart consistent
-        const mPrice = markets[currentMarket]?.price;
-        if(mPrice) {
-          lastPrice = Number(mPrice);
-        }
-        // regenerate candles based on market price
-        const base = lastPrice || 1;
-        const k = currentMarket + '_' + tfSelect.value;
-        candlesCache[k] = genHistory(base);
-        loadChart(); // redraw with new market
-      }, err => {
-        console.error('markets snapshot err', err);
-      });
+        generateInitialChartData();
+        startChartAnimation();
+      }, err => console.error('markets snapshot err', err));
     }
 
-    // listen to user doc & history (unchanged)
+    /* ---------------- DETERMINISTIC PRICE HELPERS ---------------- */
+    function hashStringToInt(s){
+      let h = 2166136261 >>> 0;
+      for (let i=0;i<s.length;i++){
+        h ^= s.charCodeAt(i);
+        h = Math.imul(h, 16777619) >>> 0;
+      }
+      return h >>> 0;
+    }
+    function randDeterministic(seedInt, timeBucket){
+      const x = Math.sin((seedInt ^ timeBucket) * 0.00000137) * 100000;
+      return x - Math.floor(x);
+    }
+    function deterministicPrice(marketId, timestampMs){
+      const market = markets[marketId];
+      const base = (market && typeof market.price !== 'undefined') ? Number(market.price) : (lastPrice || 1);
+      const interval = 2500;
+      const bucket = Math.floor(timestampMs / interval);
+      const seedInt = market && market.seed ? Number(market.seed) : hashStringToInt(marketId || 'DEFAULT');
+      const r = randDeterministic(seedInt, bucket);
+      const volFraction = (market && market.volatilityFraction) ? Number(market.volatilityFraction) : 0.002;
+      const amplitude = Math.max(0.0001, base * volFraction);
+      const sine = Math.sin((bucket % 3600) / 180 * Math.PI);
+      const noise = (r - 0.5) * 2;
+      const offset = amplitude * (0.6 * sine + 0.4 * noise);
+      return Math.max(0.0000001, base + offset);
+    }
+
+    /* ---------------- CHART / DETERMINISTIC ANIMATION ---------------- */
+    let chartData = [];
+    let animationId = null;
+    let currentMarket = null;
+    let lastPrice = 1.2;
+    const TICK_INTERVAL = 2500; // ms per deterministic tick
+    // generate deterministic history
+    function generateInitialChartData() {
+      chartData = [];
+      const now = Date.now();
+      const marketId = currentMarket || Object.keys(markets)[0] || 'DEFAULT/PRICE';
+      for (let i = 100; i >= 0; i--) {
+        const t = now - (i * TICK_INTERVAL);
+        const price = deterministicPrice(marketId, t);
+        chartData.push({ timestamp: t, price });
+      }
+      lastPrice = chartData[chartData.length - 1].price;
+      draw();
+      updateDisplayedPrice();
+    }
+
+    function draw() {
+      if (!ctx) return;
+      const canvas = chartCanvas;
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      if (!chartData.length) return;
+
+      const prices = chartData.map(d => d.price);
+      const minP = Math.min(...prices);
+      const maxP = Math.max(...prices);
+      const height = canvas.height, width = canvas.width;
+      // bg
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0,0,width,height);
+      // grid
+      ctx.strokeStyle = '#eee';
+      for (let i=0;i<=5;i++){
+        const y = (height / 5) * i;
+        ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(width,y); ctx.stroke();
+      }
+      // line
+      ctx.strokeStyle = '#1e88e5'; ctx.lineWidth = 2; ctx.beginPath();
+      const range = (maxP - minP) || (maxP * 0.001) || 1;
+      for (let i=0;i<chartData.length;i++){
+        const x = (i / (chartData.length - 1)) * width;
+        const normalized = (chartData[i].price - minP) / range;
+        const y = height - (normalized * height);
+        if (i === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+      // price labels (left)
+      ctx.fillStyle = '#666'; ctx.font = '12px sans-serif';
+      for (let i=0;i<=5;i++){
+        const price = minP + (range * (5 - i) / 5);
+        const y = (height / 5) * i + 14;
+        ctx.fillText(price.toFixed(2), 8, y);
+      }
+    }
+
+    // animation keeps chartData synced to deterministic buckets
+    let lastBucketAppended = null;
+    function startChartAnimation(){
+      if (animationId) cancelAnimationFrame(animationId);
+      function step(){
+        const now = Date.now();
+        const marketId = currentMarket || Object.keys(markets)[0] || 'DEFAULT/PRICE';
+        const currentBucket = Math.floor(now / TICK_INTERVAL);
+
+        if (lastBucketAppended === null) {
+          lastBucketAppended = Math.floor(chartData[chartData.length - 1].timestamp / TICK_INTERVAL);
+        }
+
+        // append buckets until caught up to currentBucket
+        while (lastBucketAppended < currentBucket) {
+          lastBucketAppended++;
+          const nextT = lastBucketAppended * TICK_INTERVAL;
+          const nextPrice = deterministicPrice(marketId, nextT);
+          chartData.shift();
+          chartData.push({ timestamp: nextT, price: nextPrice });
+          lastPrice = nextPrice;
+        }
+
+        // draw and update displayed price
+        draw();
+        updateDisplayedPrice();
+
+        animationId = requestAnimationFrame(step);
+      }
+      step();
+    }
+
+    function updateDisplayedPrice(){
+      const marketId = currentMarket || Object.keys(markets)[0] || 'DEFAULT/PRICE';
+      const cur = deterministicPrice(marketId, Date.now());
+      if (priceEl) {
+        priceEl.textContent = Number(cur).toFixed(4);
+        priceEl.classList.add('price-flash');
+        setTimeout(()=>priceEl.classList.remove('price-flash'),300);
+      }
+    }
+
+    /* ---------------- ORDERBOOK / UI helpers ---------------- */
+    function generateOrderBook() {
+      const currentPrice = Number(deterministicPrice(currentMarket || Object.keys(markets)[0], Date.now())) || 0;
+      const sells = document.getElementById('orderBookSells');
+      const buys = document.getElementById('orderBookBuys');
+      // If elements not present ignore (some pages might not have them)
+      if (!sells || !buys) return;
+      sells.innerHTML = ''; buys.innerHTML = '';
+      for (let i = 5; i >= 1; i--) {
+        const price = currentPrice * (1 + (i * 0.001));
+        const amount = (Math.random() * 10).toFixed(4);
+        const total = (price * amount).toFixed(2);
+        const row = document.createElement('tr');
+        row.innerHTML = `<td class="sell-order">$${price.toFixed(2)}</td><td>${amount}</td><td>$${total}</td>`;
+        sells.appendChild(row);
+      }
+      for (let i = 1; i <= 5; i++) {
+        const price = currentPrice * (1 - (i * 0.001));
+        const amount = (Math.random() * 10).toFixed(4);
+        const total = (price * amount).toFixed(2);
+        const row = document.createElement('tr');
+        row.innerHTML = `<td class="buy-order">$${price.toFixed(2)}</td><td>${amount}</td><td>$${total}</td>`;
+        buys.appendChild(row);
+      }
+    }
+
+    /* ---------------- LISTEN USER DOC & HISTORY ---------------- */
     function listenToUser(uid){
       userDocRef(uid).onSnapshot(doc=>{
         if(!doc.exists) return;
@@ -337,7 +468,7 @@
         });
       });
 
-      // listen to user's own requests to update status UI
+      // user's requests status
       requestsRef().where('uid','==',uid).orderBy('createdAt','desc').limit(20)
         .onSnapshot(snap=>{
           let latestDeposit = null, latestWithdraw = null;
@@ -361,8 +492,7 @@
         });
     }
 
-    // admin panel / adminConfirmRequest / adminRejectRequest (unchanged)...
-    // (copying earlier functions for brevity — they remain as in previous file)
+    /* ---------------- ADMIN PANEL (same as before) ---------------- */
     function enableAdminPanel(){
       adminPanel.style.display = 'block';
       requestsRef().orderBy('createdAt','desc').limit(200).onSnapshot(snap=>{
@@ -461,11 +591,10 @@
       }
     }
 
-    // Auth: anonymous sign-in; on auth change -> init listeners + admin panel check
+    /* ---------------- AUTH & INIT ---------------- */
     auth.onAuthStateChanged(user=>{
       if(user){
         currentUser = user;
-        // ensure user doc
         userDocRef(user.uid).get().then(doc=>{
           if(!doc.exists){
             userDocRef(user.uid).set({ balance:0, createdAt: firebase.firestore.FieldValue.serverTimestamp() }).then(()=> listenToUser(user.uid));
@@ -474,7 +603,7 @@
           }
         }).catch(e=>console.error(e));
 
-        // subscribe to markets so symbolSelect gets real markets
+        // subscribe markets (realtime)
         subscribeMarkets();
 
         // Admin panel only for ADMIN_UID
@@ -488,84 +617,70 @@
       }
     });
 
-    // ===== trading sim (short) but now taking initial price from markets[currentMarket] if available
-    function genHistory(base, count=50){ const tf=+tfSelect.value; const now=Date.now(); let b=base||1, arr=[]; for(let i=count;i>0;i--){ const t = now - i*tf*60000; const variation = (Math.random()*0.02-0.01) * b; const close = b + variation; const open = b; const high = Math.max(open,close)*(1+Math.random()*0.005); const low  = Math.min(open,close)*(1-Math.random()*0.005); arr.push({ time:t, open, high, low, close }); b = close; } return arr; }
-    let candles=[], lastPrice=1.2, tradeDur = +durSelect.value, candlesCache = {}, markers = [];
-    function loadChart(){
-      currSymbol.textContent = symbolSelect.selectedOptions[0]?.text || symbolSelect.value || '–';
-      currDur.textContent = tradeDur = +durSelect.value;
-
-      // pick base price from Firestore markets if available
-      const selected = symbolSelect.value;
-      let basePrice = lastPrice || 1;
-      if (selected && markets[selected] && typeof markets[selected].price !== 'undefined') {
-        basePrice = Number(markets[selected].price);
-      }
-
-      const k = selected + '_' + tfSelect.value;
-      if(!candlesCache[k]){
-        candlesCache[k] = genHistory(basePrice);
-      }
-      candles = candlesCache[k];
-      lastPrice = candles[candles.length-1].close;
-      markers=[];
-      priceEl.textContent = lastPrice.toFixed(4);
-      draw();
-      startTicks();
-    }
-
-    let tickInterval;
-    function startTicks(){ clearInterval(tickInterval); tickInterval = setInterval(()=>{
-      // Prefer live market price if Firestore provides updates for selected market
-      const selected = symbolSelect.value;
-      if (selected && markets[selected] && typeof markets[selected].price !== 'undefined'){
-        // update lastPrice gradually toward market price to keep chart smooth
-        const marketPrice = Number(markets[selected].price);
-        const delta = (marketPrice - lastPrice) * 0.3; // smoothing factor
-        lastPrice = lastPrice + delta;
-      } else {
-        const change = lastPrice*(Math.random()*0.010-0.005);
-        lastPrice += change;
-      }
-
-      candles.push({
-        time:Date.now(),
-        open:candles[candles.length-1].close,
-        high:Math.max(candles[candles.length-2].close,lastPrice),
-        low:Math.min(candles[candles.length-2].close,lastPrice),
-        close:lastPrice
-      });
-      if(candles.length>50) candles.shift();
-      priceEl.textContent = lastPrice.toFixed(4);
-      draw();
-    },2500); }
-
-    function draw(){ chartCanvas.width = chartCanvas.clientWidth; chartCanvas.height = chartCanvas.clientHeight; ctx.clearRect(0,0,chartCanvas.width,chartCanvas.height); if(!candles.length) return; const allPrices = candles.flatMap(c=>[c.high,c.low]); const maxP = Math.max(...allPrices); const minP = Math.min(...allPrices); const upColor = getComputedStyle(document.documentElement).getPropertyValue('--up-color').trim(); const downColor = getComputedStyle(document.documentElement).getPropertyValue('--down-color').trim(); const w = chartCanvas.width / candles.length * 0.8; candles.forEach((c,i)=>{ const x = i*(chartCanvas.width / candles.length) + (chartCanvas.width / candles.length - w)/2; const yO = ((maxP - c.open)/(maxP - minP || 1))*chartCanvas.height; const yC = ((maxP - c.close)/(maxP - minP || 1))*chartCanvas.height; const yH = ((maxP - c.high)/(maxP - minP || 1))*chartCanvas.height; const yL = ((maxP - c.low)/(maxP - minP || 1))*chartCanvas.height; ctx.strokeStyle = '#000'; ctx.beginPath(); ctx.moveTo(x+w/2,yH); ctx.lineTo(x+w/2,yL); ctx.stroke(); ctx.fillStyle = c.close >= c.open ? upColor : downColor; ctx.fillRect(x, Math.min(yO,yC), w, Math.max(1, Math.abs(yC-yO))); }); markers.forEach(m=>{ const i = candles.findIndex(c=>c.time===m.time); if(i<0) return; const x = i*(chartCanvas.width/candles.length)+(chartCanvas.width/candles.length)/2; const y = ((maxP-m.price)/(maxP-minP || 1))*chartCanvas.height + (m.type==='Buy'?-12:12); ctx.fillStyle = m.type==='Buy'?'var(--up-color)':'var(--down-color)'; ctx.font='12px sans-serif'; ctx.textAlign='center'; ctx.fillText(m.type, x, y); }); }
-
+    /* ---------------- TRADING / PLACE TRADE ---------------- */
     function placeTrade(type){
       const bet = parseFloat(betAmount.value);
       if(!bet || bet <= 14900) return alert('Minimal transaksi Rp.15.000');
       if(bet > balance) return alert('Saldo tidak cukup');
       const entryPrice = lastPrice, entryTime = Date.now();
-      markers.push({ time: entryTime, price: entryPrice, type });
-      draw();
-      let t = tradeDur;
+      // markers for chart (non-persistent)
+      // push marker object if needed
+      let t = tradeDur = +durSelect.value;
       activeTrade.textContent = `${type} @ ${entryPrice.toFixed(4)} | Sisa waktu: ${t}s`;
-      const iv = setInterval(()=>{ t--; activeTrade.textContent = `${type} @ ${entryPrice.toFixed(4)} | Sisa waktu: ${t}s`; if(t<=0){ clearInterval(iv); const exitPrice = lastPrice; const isBuy = type.toUpperCase()==='BELI' || type.toLowerCase()==='call'; const isSell = type.toUpperCase()==='JUAL' || type.toLowerCase()==='put'; const win = (isBuy && exitPrice>entryPrice) || (isSell && exitPrice<entryPrice); let text,color; if(win){ const profit = bet * 0.7; balance += profit; text = `Tutup Keuntungan +${profit.toFixed(2)} Rp (Exit @ ${exitPrice.toFixed(4)})`; color='green'; if(currentUser){ writeBalanceToFirestore(currentUser.uid, balance).catch(()=>{}); addHistoryToFirestore(currentUser.uid,{ type:'trade', side:type, entryPrice:entryPrice.toFixed(4), exitPrice:exitPrice.toFixed(4), amount:bet, result:'win', text}).catch(()=>{}); } } else { balance -= bet; text = `Tutup Kerugian -${bet.toFixed(2)} Rp (Exit @ ${exitPrice.toFixed(4)})`; color='red'; if(currentUser){ writeBalanceToFirestore(currentUser.uid, balance).catch(()=>{}); addHistoryToFirestore(currentUser.uid,{ type:'trade', side:type, entryPrice:entryPrice.toFixed(4), exitPrice:exitPrice.toFixed(4), amount:bet, result:'lose', text}).catch(()=>{}); } } balanceEl.textContent = balance.toFixed(2); resultEl.textContent = text; activeTrade.textContent = ''; if(!currentUser){ const html = `<li style="color:${color};">${new Date().toLocaleTimeString()} — ${type} @ ${entryPrice.toFixed(4)} → Exit @ ${exitPrice.toFixed(4)} — ${text}</li>`; tradeHistory.insertAdjacentHTML('afterbegin', html); } betAmount.value=''; } },1000); }
+      const iv = setInterval(()=>{ t--; activeTrade.textContent = `${type} @ ${entryPrice.toFixed(4)} | Sisa waktu: ${t}s`; if(t<=0){ clearInterval(iv);
+        const exitPrice = lastPrice;
+        const isBuy = type.toUpperCase()==='BELI' || type.toLowerCase()==='call';
+        const isSell = type.toUpperCase()==='JUAL' || type.toLowerCase()==='put';
+        const win = (isBuy && exitPrice>entryPrice) || (isSell && exitPrice<entryPrice);
+        let text,color;
+        if(win){
+          const profit = bet * 0.7;
+          balance += profit;
+          text = `Tutup Keuntungan +${profit.toFixed(2)} Rp (Exit @ ${exitPrice.toFixed(4)})`;
+          color='green';
+          if(currentUser){
+            writeBalanceToFirestore(currentUser.uid, balance).catch(()=>{});
+            addHistoryToFirestore(currentUser.uid,{ type:'trade', side:type, entryPrice:entryPrice.toFixed(4), exitPrice:exitPrice.toFixed(4), amount:bet, result:'win', text}).catch(()=>{});
+          }
+        } else {
+          balance -= bet;
+          text = `Tutup Kerugian -${bet.toFixed(2)} Rp (Exit @ ${exitPrice.toFixed(4)})`;
+          color='red';
+          if(currentUser){
+            writeBalanceToFirestore(currentUser.uid, balance).catch(()=>{});
+            addHistoryToFirestore(currentUser.uid,{ type:'trade', side:type, entryPrice:entryPrice.toFixed(4), exitPrice:exitPrice.toFixed(4), amount:bet, result:'lose', text}).catch(()=>{});
+          }
+        }
+        balanceEl.textContent = balance.toFixed(2);
+        resultEl.textContent = text;
+        activeTrade.textContent = '';
+        // local history UI
+        const html = `<li style="color:${color};">${new Date().toLocaleTimeString()} — ${type} @ ${entryPrice.toFixed(4)} → Exit @ ${exitPrice.toFixed(4)} — ${text}</li>`;
+        tradeHistory.insertAdjacentHTML('afterbegin', html);
+        betAmount.value = '';
+      } }, 1000);
+    }
 
-    // events
-    symbolSelect.addEventListener('change', loadChart);
-    tfSelect.addEventListener('change', loadChart);
+    /* ---------------- EVENTS ---------------- */
+    symbolSelect.addEventListener('change', ()=>{
+      currentMarket = symbolSelect.value;
+      currSymbol.textContent = symbolSelect.selectedOptions[0]?.text || currentMarket;
+      generateInitialChartData();
+      startChartAnimation();
+      generateOrderBook();
+    });
+    tfSelect.addEventListener('change', ()=>{ generateInitialChartData(); });
     durSelect.addEventListener('change', ()=>{ currDur.textContent = tradeDur = +durSelect.value; });
+
     btnUp.addEventListener('click', ()=>placeTrade('BELI'));
     btnDown.addEventListener('click', ()=>placeTrade('JUAL'));
 
-    // deposit flow (same as before)...
+    /* ---------------- DEPOSIT / WITHDRAW (as before) ---------------- */
     let depositCountdown = 15, depositTimer = null, currentFinalPayload='', currentNominal=0;
     btnDeposit.addEventListener('click', ()=>{ document.getElementById('depositAmount').value=''; document.getElementById('depositAccount').value=''; document.getElementById('depositMethod').selectedIndex=0; qrcodeContainer.style.display='none'; depositModal.style.display='block'; myRequestStatusEl.innerText='-'; });
 
-    depositClose.addEventListener('click', ()=> depositModal.style.display='none');
-    window.addEventListener('click', e => { if(e.target === depositModal) depositModal.style.display='none'; });
+    depositClose.addEventListener('click', ()=> depositModal.style.display = 'none');
+    window.addEventListener('click', e => { if(e.target === depositModal) depositModal.style.display = 'none'; });
 
     depositPay.addEventListener('click', async ()=>{
       const amt = parseFloat(document.getElementById('depositAmount').value);
@@ -574,13 +689,11 @@
       if(!amt || amt < 1000) return alert('Minimal Rp 1.000');
       if(!acc) return alert('Masukkan no. rekening');
 
-      // fees: 0.8% + 850
       const feePercent = amt * 0.008;
       const fixedFee = 850;
       const totalPay = Math.round(amt + feePercent + fixedFee);
       const amountStr = formatRupiahTwoDecimals(totalPay);
 
-      // prepare payload without CRC
       let base = DEFAULT_BASE_PAYLOAD.trim();
       let payloadNoCRC;
       if(base.slice(-8, -4) === '6304') payloadNoCRC = base.slice(0, -8) + '6304';
@@ -590,7 +703,6 @@
       const crc = crc16ccitt(withAmount630);
       const finalPayload = withAmount630 + crc;
 
-      // show UI
       nominalLabel.innerText = `Rp ${amt.toLocaleString('id-ID')}`;
       feePercentLabel.innerText = `Rp ${Math.round(feePercent).toLocaleString('id-ID')} (0.8%)`;
       fixedFeeLabel.innerText = fixedFee.toLocaleString('id-ID');
@@ -608,7 +720,6 @@
       clearInterval(depositTimer);
       depositTimer = setInterval(()=>{ depositCountdown--; depositTimerEl.textContent = depositCountdown; if(depositCountdown <= 0){ clearInterval(depositTimer); } },1000);
 
-      // create request document (status: pending)
       try{
         const req = {
           uid: currentUser ? currentUser.uid : null,
@@ -634,7 +745,6 @@
 
     copyPayloadBtn.addEventListener('click', ()=>{ if(!currentFinalPayload) return; navigator.clipboard?.writeText(currentFinalPayload).then(()=> alert('Payload disalin ke clipboard.')); });
 
-    // user marks paid
     markPaidBtn.addEventListener('click', async ()=>{
       if(!currentRequestDocId) return alert('Tidak ada request aktif.');
       try{
@@ -673,19 +783,27 @@
       }
     });
 
-    // init
-    // generate default candles so UI has something until markets arrive
+    /* ---------------- INIT UI ---------------- */
     function init(){
-      // if no markets yet, create a default placeholder so loadChart works
+      // placeholder until markets loaded
       if(!Object.keys(markets).length){
-        lastPrice = 1.2345;
+        currentMarket = null;
+        chartData = [];
         const defaultKey = 'DEFAULT/PRICE';
-        candlesCache[defaultKey + '_1'] = genHistory(lastPrice);
-        symbolSelect.innerHTML = '<option value="">Memuat markets...</option>';
+        const now = Date.now();
+        for (let i = 100; i >= 0; i--) {
+          chartData.push({ timestamp: now - i * TICK_INTERVAL, price: lastPrice });
+        }
+        draw();
       }
-      loadChart();
     }
     init();
+
+    // expose some useful functions for console/testing
+    window.deterministicPrice = deterministicPrice;
+    window.generateInitialChartData = generateInitialChartData;
+    window.startChartAnimation = startChartAnimation;
+    window.subscribeMarkets = subscribeMarkets;
   </script>
 </body>
 </html>
