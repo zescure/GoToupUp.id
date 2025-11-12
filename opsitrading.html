@@ -140,18 +140,18 @@
           </select>
           <div class="muted-small">Durasi trade: <span id="currDur">60</span>s</div>
         </div>
-        <div class="muted-small">Volatility & Probabilistic market — admin dapat ubah payout & volatility</div>
+        <div class="muted-small">perdagangan modern dan dapatkan keuntungan takterbatas</div>
       </div>
 
       <div class="big-controls">
         <div class="big-left">
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <div style="flex:1;min-width:150px">
-              <div class="muted-small">Waktu kedaluwarsa (hh:mm:ss)</div>
+              <div class="muted-small">Waktu kedaluwarsa</div>
               <input id="durationInput" class="input-box" type="text" value="00:01:00">
             </div>
             <div style="width:180px;min-width:120px">
-              <div class="muted-small">Investasi (Rp)</div>
+              <div class="muted-small">Nominal (Rp)</div>
               <input id="betAmount" class="input-box" type="number" min="14900" value="14000">
             </div>
           </div>
@@ -159,11 +159,11 @@
           <div style="display:flex;gap:12px;align-items:center;margin-top:10px;">
             <div class="muted-small">Pembayaran:</div>
             <div id="paymentLabel" style="font-weight:800">— Rp</div>
-            <div style="margin-left:12px;color:var(--muted);font-size:13px" id="payoutInfo">Jika benar: —</div>
+            <div style="margin-left:12px;color:var(--muted);font-size:13px" id="payoutInfo">Keuntungan —</div>
           </div>
 
           <div class="tabs">
-            <div class="tab active" id="tabOpenTrades">Open Trades</div>
+            <div class="tab active" id="tabOpenTrades">Trade Terbuka</div>
             <div class="tab" id="tabTradeHistory">Trade History</div>
             <div class="tab" id="tabRequests">Deposit/Withdraw</div>
           </div>
@@ -187,10 +187,10 @@
                 <div style="font-size:12px;color:var(--muted)">Minimal Rp 15.000</div>
               </div>
               <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
-                <div class="price-row"><div class="muted-small">Investasi</div><div id="summaryBet">Rp 14,000</div></div>
+                <div class="price-row"><div class="muted-small">Nominal Trade</div><div id="summaryBet">Rp 14,000</div></div>
                 <div class="price-row"><div class="muted-small">Probabilitas / Payout</div><div id="summaryPayout">—%</div></div>
-                <div class="price-row"><div class="muted-small">Potensi Bayar</div><div id="summaryPotential">— Rp</div></div>
-                <div class="price-row"><div class="muted-small">Saldo</div><div id="summaryBalance">Rp 0</div></div>
+                <div class="price-row"><div class="muted-small">Potensi Keuntungan</div><div id="summaryPotential">— Rp</div></div>
+                <div class="price-row"><div class="muted-small">Saldo Terakhir</div><div id="summaryBalance">Rp 0</div></div>
               </div>
             </div>
 
@@ -199,7 +199,7 @@
                 <div style="font-weight:800">Deposit / Withdraw</div>
                 <button id="openDeposit2" class="deposit-btn" style="padding:6px 10px;font-size:13px">Deposit</button>
               </div>
-              <div style="margin-top:8px;color:var(--muted);font-size:13px">Status request & admin konfirmasi muncul di sini</div>
+              <div style="margin-top:8px;color:var(--muted);font-size:13px">Status request</div>
               <div style="margin-top:8px" id="miniRequests"></div>
             </div>
 
@@ -218,14 +218,14 @@
 
     <div class="side-card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="font-weight:800">Account</div>
+        <div style="font-weight:800">Akun</div>
         <div style="color:var(--muted)">UID: <span id="uidLabel">-</span></div>
       </div>
 
       <div style="background:rgba(255,255,255,0.02);padding:12px;border-radius:8px;margin-bottom:12px;">
         <div style="font-size:13px;color:var(--muted)">Saldo Real</div>
         <div style="font-weight:800;font-size:20px;margin-top:6px">Rp <span id="balanceMain">0.00</span></div>
-        <div style="margin-top:8px;color:var(--muted)">Riwayat deposit & withdraw terpisah</div>
+        <div style="margin-top:8px;color:var(--muted)">Riwayat deposit & withdraw </div>
       </div>
 
       <div style="font-weight:800;margin-bottom:8px">Deposit / Withdraw Requests</div>
@@ -555,7 +555,7 @@ function updateMarketUI(){
   pairSub.textContent = `${m.name || ''} • ${currentMarketId}`;
   payoutLabel.textContent = (m.payoutPercent || 70) + '%';
   summaryPayout.textContent = (m.payoutPercent || 70) + '%';
-  payoutInfo.textContent = `Jika benar: bayar ${m.payoutPercent || 70}% dari taruhan`;
+  payoutInfo.textContent = `untung ${m.payoutPercent || 70}% dari taruhan`;
   updateSummary();
 }
 
@@ -596,7 +596,7 @@ function createOpenTradeElement(tr){
   wrapper.innerHTML = `
     <div class="left">
       <div style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.market} • ${tr.side}</div>
-      <div class="meta entry-exit">Entry: <strong class="entryPrice">${entryFormatted}</strong> • Exit: <strong class="exitPrice">${expectedExitFormatted}</strong></div>
+      <div class="meta entry-exit">Entry: <strong class="entryPrice">${entryFormatted}</strong> • Rata": <strong class="exitPrice">${expectedExitFormatted}</strong></div>
       <div class="meta">Investasi: Rp ${Number(tr.amount).toLocaleString()}</div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
@@ -675,10 +675,10 @@ function executeTrade(side){
     let text;
     if(isWin){
       balance += payout;
-      text = `Menang +Rp ${Math.round(payout).toLocaleString('id-ID')}`;
+      text = `Untung +Rp ${Math.round(payout).toLocaleString('id-ID')}`;
     } else {
       balance -= bet;
-      text = `Kalah -Rp ${Math.round(bet).toLocaleString('id-ID')}`;
+      text = `Rugi -Rp ${Math.round(bet).toLocaleString('id-ID')}`;
     }
 
     // update DB + history
@@ -692,7 +692,7 @@ function executeTrade(side){
           t.set(uref, { balance: newBal, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
         });
         await db.collection('users').doc(currentUser.uid).collection('history').add({
-          type: 'trade', side, entryPrice, exitPrice, amount: bet, result: isWin ? 'win':'lose', text, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          type: 'trade', side, entryPrice, exitPrice, amount: bet, result: isWin ? 'untung':'rugi', text, createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         await db.collection('users').doc(currentUser.uid).collection('openTrades').doc(tradeId).delete().catch(()=>{});
       }catch(e){ console.error(e); }
