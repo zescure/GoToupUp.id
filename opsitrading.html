@@ -23,7 +23,6 @@
   .pair-info{display:flex;gap:12px;align-items:center;min-width:0}
   .pair-title{font-weight:800;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .payout-pill{background:rgba(255,255,255,0.03);padding:6px 10px;border-radius:8px;font-weight:700;color:#fff;white-space:nowrap}
-  /* responsive canvas sizing handled in JS; set a flexible CSS fallback */
   canvas#chartCanvas{width:100%;display:block;border-radius:8px;background:linear-gradient(180deg,#07101a,#081627);min-height:220px}
   .chart-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap}
   .time-select{background:var(--glass);border:1px solid rgba(255,255,255,0.04);padding:6px;border-radius:8px;color:var(--muted);min-width:80px}
@@ -69,7 +68,6 @@
   .entry-exit{font-size:13px;color:var(--muted)}
   .trade-closed { opacity: 0.6; border-style: dashed; }
 
-  /* responsive */
   @media (max-width:1000px){
     .container{grid-template-columns:1fr;}
     .big-right{flex-basis:100%}
@@ -91,6 +89,8 @@
     padding:6px 10px;border-radius:8px;font-weight:800;border:1px solid rgba(255,255,255,0.04);
     backdrop-filter: blur(4px)
   }
+  /* small helper for locked market label */
+  .market-locked { color: #ffb020; font-weight:800; margin-left:8px; font-size:13px; }
 </style>
 </head>
 <body>
@@ -100,7 +100,11 @@
       <div style="color:var(--muted);font-size:13px">UTC+7 • <span id="clock">--:--:--</span></div>
     </div>
     <div style="display:flex;gap:12px;align-items:center">
-      <button class="deposit-btn" id="openDeposit">+</button>
+      <select id="accountModeSelect" style="padding:8px;border-radius:8px;background:#06101a;color:#fff;border:1px solid rgba(255,255,255,0.04)">
+        <option value="live">Live</option>
+        <option value="demo">Demo</option>
+      </select>
+      <button class="deposit-btn" id="openDeposit">Deposit</button>
       <div class="balance-pill">Saldo: <span id="balance" style="margin-left:8px">0.00</span></div>
     </div>
   </div>
@@ -112,7 +116,7 @@
           <div style="width:48px;height:48px;border-radius:8px;background:linear-gradient(180deg,#0b1220,#06101a);display:flex;align-items:center;justify-content:center;font-weight:800">🔷</div>
           <div style="min-width:0">
             <div class="pair-title" id="pairTitle">Memuat market...</div>
-            <div class="muted-small" id="pairSub">—</div>
+            <div class="muted-small" id="pairSub">— <span id="lockedLabel"></span></div>
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
@@ -242,7 +246,7 @@
     </div>
   </div>
 
-  <!-- Deposit Modal (tetap ada jika butuh, tapi tombol utama buka page eksternal) -->
+  <!-- Deposit Modal -->
   <div id="depositModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:2000;align-items:center;justify-content:center;">
     <div style="background:#07121a;padding:16px;border-radius:12px;width:420px;color:#e6eef6;">
       <div style="display:flex;justify-content:space-between;align-items:center">
@@ -286,8 +290,6 @@ const firebaseConfig = {
   appId: "1:358065954807:web:66619211fea82a4b2518f2"
 };
 const ADMIN_UID = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52';
-
-// === UPDATE: buka halaman deposit ini saat klik Deposit ===
 const DEPOSIT_URL = 'https://zestore.netlify.app/depositop1';
 /* ========================================== */
 
@@ -304,6 +306,7 @@ const TICK_INTERVAL = 2500;
 
 const pairTitle = document.getElementById('pairTitle');
 const pairSub = document.getElementById('pairSub');
+const lockedLabel = document.getElementById('lockedLabel');
 const payoutLabel = document.getElementById('payoutLabel');
 const currentPriceLarge = document.getElementById('currentPriceLarge');
 const priceMarker = document.getElementById('priceMarker');
@@ -353,22 +356,13 @@ const qrcodeDyn = document.getElementById('qrcodeDyn');
 const finalPayloadEl = document.getElementById('finalPayload');
 const markPaidBtn = document.getElementById('markPaidBtn');
 const bigRightEl = document.getElementById('bigRight');
+const accountModeSelect = document.getElementById('accountModeSelect');
 
 const DEFAULT_BASE_PAYLOAD = "00020101021126610014COM.GO-JEK.WWW01189360091433055874630210G3055874630303UMI51440014ID.CO.QRIS.WWW0215ID10254231099470303UMI5204481453033602ID5925ZkgamingstoreGoTo, Toko H6007TANGSEL61051522062070703A0163040657";
 
-/* ===== deterministic helpers ===== */
-function hashStringToInt(s){
-  let h = 2166136261 >>> 0;
-  for (let i=0;i<s.length;i++){
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619) >>> 0;
-  }
-  return h >>> 0;
-}
-function randDeterministic(seedInt, timeBucket){
-  const x = Math.sin((seedInt ^ timeBucket) * 0.00000137) * 100000;
-  return x - Math.floor(x);
-}
+/* ===== deterministic helpers (unchanged) ===== */
+function hashStringToInt(s){ let h = 2166136261 >>> 0; for (let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h >>> 0; }
+function randDeterministic(seedInt, timeBucket){ const x = Math.sin((seedInt ^ timeBucket) * 0.00000137) * 100000; return x - Math.floor(x); }
 function deterministicPrice(marketId, timestampMs){
   const market = markets[marketId];
   const base = (market && typeof market.price !== 'undefined') ? Number(market.price) : 100;
@@ -384,7 +378,7 @@ function deterministicPrice(marketId, timestampMs){
   return Math.max(0.0000001, base + offset);
 }
 
-/* ===== chart setup ===== */
+/* ===== chart setup (unchanged) ===== */
 const chartCanvas = document.getElementById('chartCanvas');
 const ctx = chartCanvas.getContext('2d');
 let chartData = [];
@@ -392,18 +386,8 @@ let animationId = null;
 let lastBucketAppended = null;
 let lastPrice = 1;
 
-// responsive canvas sizing
-function resizeCanvas(){
-  // set canvas CSS height proportional to viewport (avoid fixed px) but cap for large screens
-  const targetHeight = Math.min(window.innerHeight * 0.45, 420); // 45vh or max 420px
-  chartCanvas.style.height = targetHeight + 'px';
-  // recompute size for devicePixelRatio
-  const rect = chartCanvas.getBoundingClientRect();
-  chartCanvas.width = Math.max(300, Math.floor(rect.width * devicePixelRatio));
-  chartCanvas.height = Math.max(150, Math.floor(rect.height * devicePixelRatio));
-  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
-  drawChart();
-}
+/* responsive canvas */
+function resizeCanvas(){ const targetHeight = Math.min(window.innerHeight * 0.45, 420); chartCanvas.style.height = targetHeight + 'px'; const rect = chartCanvas.getBoundingClientRect(); chartCanvas.width = Math.max(300, Math.floor(rect.width * devicePixelRatio)); chartCanvas.height = Math.max(150, Math.floor(rect.height * devicePixelRatio)); ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); drawChart(); }
 window.addEventListener('resize', ()=>{ try{ resizeCanvas(); }catch(e){} });
 
 function generateInitialChartData(){
@@ -428,24 +412,15 @@ function drawChart(){
   const height = canvas.height / devicePixelRatio;
   ctx.clearRect(0,0,width,height);
   if(!chartData.length) return;
-  // background
-  ctx.fillStyle = '#07121a';
-  ctx.fillRect(0,0,width,height);
-  // grid lines
-  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
-  ctx.lineWidth = 1;
+  ctx.fillStyle = '#07121a'; ctx.fillRect(0,0,width,height);
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)'; ctx.lineWidth = 1;
   const gridCount = 5;
-  for(let i=0;i<gridCount;i++){
-    ctx.beginPath(); ctx.moveTo(0,(height/gridCount)*i); ctx.lineTo(width,(height/gridCount)*i); ctx.stroke();
-  }
-  // line
+  for(let i=0;i<gridCount;i++){ ctx.beginPath(); ctx.moveTo(0,(height/gridCount)*i); ctx.lineTo(width,(height/gridCount)*i); ctx.stroke(); }
   const padding = 12;
   const prices = chartData.map(d=>d.price);
   const minP = Math.min(...prices), maxP = Math.max(...prices);
   const range = (maxP - minP) || (maxP*0.001) || 1;
-  ctx.strokeStyle = '#2dd4bf';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
+  ctx.strokeStyle = '#2dd4bf'; ctx.lineWidth = 2; ctx.beginPath();
   for(let i=0;i<chartData.length;i++){
     const x = padding + (i/(chartData.length-1))*(width - padding*2);
     const normalized = (chartData[i].price - minP)/range;
@@ -453,14 +428,11 @@ function drawChart(){
     if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
   }
   ctx.stroke();
-  // latest point
   const lastIndex = chartData.length - 1;
   const last = chartData[lastIndex];
   const lastX = padding + (lastIndex/(chartData.length-1))*(width - padding*2);
   const lastY = height - ((last.price - minP)/range)*(height - padding*2) - padding;
-  ctx.fillStyle = '#0f1724';
-  ctx.beginPath(); ctx.arc(lastX, lastY, 6, 0, Math.PI*2); ctx.fill();
-  // small halo
+  ctx.fillStyle = '#0f1724'; ctx.beginPath(); ctx.arc(lastX, lastY, 6, 0, Math.PI*2); ctx.fill();
   ctx.beginPath(); ctx.arc(lastX, lastY, 10, 0, Math.PI*2); ctx.strokeStyle = 'rgba(45,212,191,0.12)'; ctx.lineWidth=2; ctx.stroke();
 }
 
@@ -482,19 +454,14 @@ function startChartAnimation(){
     }
     drawChart();
     updateDisplayedPrice();
-    // panel movement visual: small translate based on price direction vs prevPrice
     try{
       const cur = deterministicPrice(currentMarketId || Object.keys(markets)[0], Date.now());
       const delta = cur - prevPrice;
       const move = delta > 0 ? -6 : (delta < 0 ? 6 : 0);
       bigRightEl.style.transform = `translateY(${move}px)`;
-      if(delta > 0){
-        bigRightEl.style.boxShadow = '0 8px 24px rgba(34,197,94,0.06)';
-      } else if(delta < 0){
-        bigRightEl.style.boxShadow = '0 8px 24px rgba(239,68,68,0.04)';
-      } else {
-        bigRightEl.style.boxShadow = 'none';
-      }
+      if(delta > 0) bigRightEl.style.boxShadow = '0 8px 24px rgba(34,197,94,0.06)';
+      else if(delta < 0) bigRightEl.style.boxShadow = '0 8px 24px rgba(239,68,68,0.04)';
+      else bigRightEl.style.boxShadow = 'none';
       prevPrice = cur;
     }catch(e){}
     animationId = requestAnimationFrame(step);
@@ -505,10 +472,9 @@ function updateDisplayedPrice(){
   const cur = deterministicPrice(currentMarketId || Object.keys(markets)[0], Date.now());
   currentPriceLarge.textContent = Number(cur).toFixed(2);
   priceMarker.textContent = Number(cur).toFixed(2);
-  // set price marker color briefly to indicate up/down
 }
 
-/* ===== fetch/subscribe markets from firestore ===== */
+/* ===== fetch/subscribe markets from firestore + reflect locked state ===== */
 let marketsUnsub = null;
 function subscribeMarketsRealtime(){
   if(marketsUnsub) marketsUnsub();
@@ -537,10 +503,11 @@ function subscribeMarketsRealtime(){
     updateMarketUI();
     generateInitialChartData();
     startChartAnimation();
+    renderAdminMarkets();
   }, err=>console.error(err));
 }
 
-/* ===== UI update when market changes ===== */
+/* ===== UI update when market changes (shows locked status) ===== */
 function updateMarketUI(){
   const m = markets[currentMarketId];
   if(!m){
@@ -549,6 +516,7 @@ function updateMarketUI(){
     payoutLabel.textContent = '-%';
     summaryPayout.textContent = '-%';
     summaryPotential.textContent = '- Rp';
+    lockedLabel.textContent = '';
     return;
   }
   pairTitle.textContent = `${m.symbol || currentMarketId}`;
@@ -556,14 +524,63 @@ function updateMarketUI(){
   payoutLabel.textContent = (m.payoutPercent || 70) + '%';
   summaryPayout.textContent = (m.payoutPercent || 70) + '%';
   payoutInfo.textContent = `untung ${m.payoutPercent || 70}% dari taruhan`;
+  lockedLabel.textContent = m.locked ? 'MARKET TUTUP' : '';
+  if(m.locked){
+    lockedLabel.className = 'market-locked';
+  } else {
+    lockedLabel.className = '';
+  }
   updateSummary();
 }
 
-/* ===== summary & UI helpers ===== */
+/* ===== account mode (Live / Demo) ===== */
+let accountMode = 'live'; // 'live' or 'demo'
+let demoBalance = 100000; // initial demo balance (local only)
+
+function getActiveBalance(){
+  return accountMode === 'demo' ? demoBalance : balance;
+}
+function setActiveBalance(v){
+  if(accountMode === 'demo') { demoBalance = Number(v); }
+  else { balance = Number(v); }
+  updateBalanceDisplays();
+}
+function updateBalanceDisplays(){
+  const val = getActiveBalance();
+  balanceEl.textContent = Number(val).toFixed(2);
+  balanceTop.textContent = Number(val).toFixed(2);
+  balanceMain.textContent = Number(val).toFixed(2);
+  summaryBalance.innerText = `Rp ${Number(val).toLocaleString('id-ID')}`;
+  // deposit button label change
+  if(accountMode === 'demo'){
+    openDeposit.textContent = 'Refresh';
+    openDeposit.title = 'Refresh saldo demo';
+    openDeposit2.textContent = 'Refresh';
+  } else {
+    openDeposit.textContent = 'Deposit';
+    openDeposit.title = 'Deposit ke akun Live';
+    openDeposit2.textContent = 'Deposit';
+  }
+}
+
+/* account switch handler */
+accountModeSelect.addEventListener('change', ()=>{
+  accountMode = accountModeSelect.value;
+  updateBalanceDisplays();
+  // hide deposit requests if demo
+  if(accountMode === 'demo'){
+    sideRequestsList.innerHTML = ''; // demo no requests
+  } else {
+    // re-render requests for live user
+    if(currentUser) renderMiniRequests();
+  }
+});
+
+/* ===== summary & UI helpers (unchanged except summaryBalance usage) ===== */
 function updateSummary(){
   const bet = Number(betAmountInput.value || 0);
   summaryBet.innerText = `Rp ${Number(bet).toLocaleString('id-ID')}`;
-  summaryBalance.innerText = `Rp ${Number(balance).toLocaleString('id-ID')}`;
+  summaryBalance.innerText = `Rp ${Number(getActiveBalance()).toLocaleString('id-ID')}`;
   const m = markets[currentMarketId];
   const payout = (m && m.payoutPercent) ? Number(m.payoutPercent) : 70;
   summaryPayout.innerText = `${payout}%`;
@@ -579,7 +596,7 @@ function formatSecondsMMSS(s){
   return String(mm).padStart(2,'0') + ':' + String(ss).padStart(2,'0');
 }
 
-/* ===== trade logic with enhanced UI (border, countdown, entry/exit) ===== */
+/* ===== trade logic with immediate deduction and market lock handling ===== */
 let openTrades = []; // {id, uid, market, side, amount, entryPrice, expiryTs, payoutPercent, uiInterval}
 function createOpenTradeElement(tr){
   const wrapper = document.createElement('div');
@@ -587,7 +604,6 @@ function createOpenTradeElement(tr){
   wrapper.id = 'open_' + tr.id;
 
   const entryFormatted = Number(tr.entryPrice).toFixed(2);
-  // initial calculated expected exit (it will be updated as countdown approaches)
   const expectedExit = deterministicPrice(tr.market, tr.expiryTs + 1);
   const expectedExitFormatted = Number(expectedExit).toFixed(2);
   const remainingMs = Math.max(0, tr.expiryTs - Date.now());
@@ -596,7 +612,7 @@ function createOpenTradeElement(tr){
   wrapper.innerHTML = `
     <div class="left">
       <div style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.market} • ${tr.side}</div>
-      <div class="meta entry-exit">Entry: <strong class="entryPrice">${entryFormatted}</strong> • Rata": <strong class="exitPrice">${expectedExitFormatted}</strong></div>
+      <div class="meta entry-exit">Entry: <strong class="entryPrice">${entryFormatted}</strong> • Exit: <strong class="exitPrice">${expectedExitFormatted}</strong></div>
       <div class="meta">Investasi: Rp ${Number(tr.amount).toLocaleString()}</div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
@@ -610,7 +626,6 @@ function addOpenTradeUI(tr){
   const el = createOpenTradeElement(tr);
   listOpenTrades.prepend(el);
 
-  // store interval to update countdown and exit price
   const countdownEl = el.querySelector('.countdown');
   const exitPriceEl = el.querySelector('.exitPrice');
 
@@ -619,7 +634,6 @@ function addOpenTradeUI(tr){
     const remainingMs = Math.max(0, tr.expiryTs - now);
     const sec = Math.ceil(remainingMs/1000);
     countdownEl.textContent = formatSecondsMMSS(sec);
-    // update expected exit price live (deterministic)
     const expectedExit = deterministicPrice(tr.market, tr.expiryTs + 1);
     exitPriceEl.textContent = Number(expectedExit).toFixed(2);
     if(remainingMs <= 0){
@@ -646,75 +660,143 @@ function markTradeClosedUI(tr, isWin, exitPrice){
   res.style.marginTop = '6px';
   res.innerHTML = `<div style="font-weight:800;color:${isWin? 'var(--green)':'var(--red)'}">${isWin ? 'Win' : 'Lose'}</div>`;
   left.appendChild(res);
-  // remove after a short delay so user can see result
   setTimeout(()=> { try{ el.remove(); } catch(e){} }, 6000);
 }
 
+/* executeTrade now:
+   - check market locked
+   - check sufficient balance for the active account (demo/local or live/firestore)
+   - deduct immediately (local demo variable or Firestore transaction)
+   - create open trade (local + firestore for live)
+   - resolve after duration: if win -> add stake+profit back; if lose -> no refund
+*/
 function executeTrade(side){
   const bet = Number(betAmountInput.value || 0);
   if(!bet || bet < 15000) return alert('Minimal transaksi Rp 15.000');
-  if(bet > balance) return alert('Saldo tidak cukup');
-  if(!currentUser) return alert('Belum login');
   const m = markets[currentMarketId];
+  if(m && m.locked){
+    // market locked by admin
+    alert('Market tutup — perdagangan gagal.');
+    // record attempt in user's history (optional)
+    if(currentUser && accountMode === 'live'){
+      db.collection('users').doc(currentUser.uid).collection('history').add({
+        type: 'trade_attempt', side, market: currentMarketId, amount: bet, result: 'market_tutup', createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(()=>{});
+    }
+    return;
+  }
+  // check balance per account mode
+  const activeBal = getActiveBalance();
+  if(bet > activeBal) return alert('Saldo tidak cukup');
+
+  if(!currentUser) return alert('Belum login');
+
   const entryPrice = deterministicPrice(currentMarketId, Date.now());
   const dur = parseDurationToSeconds(durationInput.value || '00:01:00');
   const expiryTs = Date.now() + (dur*1000);
   const payoutPercent = (m && m.payoutPercent) ? Number(m.payoutPercent) : 70;
   const tradeId = 't_' + Date.now() + '_' + Math.floor(Math.random()*9999);
   const tr = { id: tradeId, uid: currentUser ? currentUser.uid : null, market: currentMarketId, side, amount: bet, entryPrice, expiryTs, payoutPercent };
-  openTrades.push(tr);
-  addOpenTradeUI(tr);
-  if(currentUser){
-    db.collection('users').doc(currentUser.uid).collection('openTrades').doc(tradeId).set({...tr, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
+
+  // immediate deduction & DB write (for live)
+  if(accountMode === 'demo'){
+    // local demo balance
+    demoBalance = Math.max(0, demoBalance - bet);
+    updateBalanceDisplays();
+    openTrades.push(tr);
+    addOpenTradeUI(tr);
+    // demo: do not write openTrades to Firestore
+  } else {
+    // live: attempt to atomically deduct bet
+    db.runTransaction(async (t)=>{
+      const uref = db.collection('users').doc(currentUser.uid);
+      const ud = await t.get(uref);
+      if(!ud.exists) throw 'no user';
+      const prev = (ud.data().balance) ? Number(ud.data().balance) : 0;
+      if(prev < bet) throw 'insufficient';
+      const newBal = prev - bet;
+      t.set(uref, { balance: newBal, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
+      // record openTrade doc
+      const optRef = db.collection('users').doc(currentUser.uid).collection('openTrades').doc(tradeId);
+      t.set(optRef, { ...tr, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    }).then(()=>{
+      // update local UI balance after successful transaction
+      // read from DB snapshot will update balance via listenToUser; but we update local var too for instant UX
+      balance = Math.max(0, balance - bet);
+      updateBalanceDisplays();
+      openTrades.push(tr);
+      addOpenTradeUI(tr);
+    }).catch(err=>{
+      console.error(err);
+      alert('Gagal membuka trade: ' + (err === 'insufficient' ? 'saldo tidak cukup' : err));
+      return;
+    });
   }
-  const intervalResolve = setTimeout(async ()=>{
+
+  // schedule resolution
+  const resolveTimeout = setTimeout(async ()=>{
     const exitPrice = deterministicPrice(currentMarketId, expiryTs + 1);
     const isBuy = (side.toLowerCase() === 'naik' || side.toLowerCase() === 'call');
     const isWin = (isBuy && exitPrice > entryPrice) || (!isBuy && exitPrice < entryPrice);
-    const payout = (payoutPercent/100) * bet;
+    const profit = Math.round((payoutPercent/100) * bet);
+    const refundOnWin = bet + profit; // return stake + profit
     let text;
     if(isWin){
-      balance += payout;
-      text = `Untung +Rp ${Math.round(payout).toLocaleString('id-ID')}`;
+      text = `Untung +Rp ${profit.toLocaleString('id-ID')} (plus pengembalian stake Rp ${bet.toLocaleString('id-ID')})`;
     } else {
-      balance -= bet;
-      text = `Rugi -Rp ${Math.round(bet).toLocaleString('id-ID')}`;
+      text = `Rugi -Rp ${bet.toLocaleString('id-ID')}`;
     }
 
-    // update DB + history
-    if(currentUser){
+    // apply results: for live -> if win, credit refundOnWin via transaction. For demo -> adjust demoBalance
+    if(accountMode === 'demo'){
+      if(isWin){
+        demoBalance = demoBalance + refundOnWin; // stake was already deducted earlier
+      }
+      updateBalanceDisplays();
+      // no DB writes for demo (but we still show history locally)
       try{
-        await db.runTransaction(async (t)=>{
-          const uref = db.collection('users').doc(currentUser.uid);
-          const udoc = await t.get(uref);
-          const prev = (udoc.exists && udoc.data().balance) ? Number(udoc.data().balance) : 0;
-          const newBal = isWin ? prev + payout : prev - bet;
-          t.set(uref, { balance: newBal, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
-        });
+        const localHist = { type: 'trade', side, entryPrice, exitPrice, amount: bet, result: isWin ? 'untung' : 'rugi', text, createdAt: new Date() };
+        // add to UI history
+        const li = document.createElement('div'); li.className='history-item';
+        li.innerHTML = `<div>${new Date().toLocaleTimeString()} — ${currentMarketId} — ${side}</div><div style="color:${isWin?'#22c55e':'#fb7185'}">${text}</div>`;
+        listTrades.prepend(li); sideTradeList.prepend(li.cloneNode(true));
+      }catch(e){}
+    } else {
+      // live: credit payout if win and remove openTrade doc
+      try{
+        if(isWin){
+          await db.runTransaction(async (t)=>{
+            const uref = db.collection('users').doc(currentUser.uid);
+            const userDoc = await t.get(uref);
+            const prev = (userDoc.exists && userDoc.data().balance) ? Number(userDoc.data().balance) : 0;
+            const newBal = prev + refundOnWin;
+            t.set(uref, { balance: newBal, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
+          });
+        }
+        // add history entry & delete openTrades doc
         await db.collection('users').doc(currentUser.uid).collection('history').add({
-          type: 'trade', side, entryPrice, exitPrice, amount: bet, result: isWin ? 'untung':'rugi', text, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          type: 'trade', side, entryPrice, exitPrice, amount: bet, result: isWin ? 'untung' : 'rugi', text, createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         await db.collection('users').doc(currentUser.uid).collection('openTrades').doc(tradeId).delete().catch(()=>{});
-      }catch(e){ console.error(e); }
+      }catch(e){ console.error('result apply error', e); }
+      // rely on onSnapshot to update displayed balance; also update local var for UX
+      if(isWin){
+        balance = (balance || 0) + refundOnWin;
+      } else {
+        // bet already deducted earlier; nothing to change
+      }
+      updateBalanceDisplays();
+      const li = document.createElement('div'); li.className='history-item';
+      li.innerHTML = `<div>${new Date().toLocaleTimeString()} — ${currentMarketId} — ${side}</div><div style="color:${isWin?'#22c55e':'#fb7185'}">${text}</div>`;
+      listTrades.prepend(li); sideTradeList.prepend(li.cloneNode(true));
     }
 
-    // UI updates
-    balanceEl.textContent = balance.toFixed(2);
-    balanceTop.textContent = balance.toFixed(2);
-    balanceMain.textContent = balance.toFixed(2);
-
-    // show closed state before removal
+    // UI closed state and cleanup
     markTradeClosedUI(tr, isWin, exitPrice);
-
-    const li = document.createElement('div'); li.className='history-item';
-    li.innerHTML = `<div>${new Date().toLocaleTimeString()} — ${currentMarketId} — ${side}</div><div style="color:${isWin?'#22c55e':'#fb7185'}">${text}</div>`;
-    listTrades.prepend(li);
-    sideTradeList.prepend(li.cloneNode(true));
-
-    // cleanup
     openTrades = openTrades.filter(x=>x.id !== tradeId);
-    clearTimeout(intervalResolve);
+    clearTimeout(resolveTimeout);
   }, dur*1000);
+
   updateSummary();
 }
 
@@ -749,6 +831,7 @@ function insertAmountTag(payload630, amountStr) {
 }
 function formatRupiahTwoDecimals(rp){ return rp.toFixed(2); }
 
+/* depositFlow (unchanged) */
 let currentRequestDocId = null;
 depositPay.addEventListener('click', async ()=>{
   const amt = Number(depositAmount.value || 0);
@@ -803,41 +886,52 @@ markPaidBtn.addEventListener('click', async ()=>{
 depositClose.addEventListener('click', ()=> depositModal.style.display = 'none');
 depositCancel.addEventListener('click', ()=> depositModal.style.display = 'none');
 
-/* === IMPORTANT: make Deposit buttons open external page (as requested) === */
+/* === Deposit button behavior depends on account mode === */
 function openDepositPage(){
+  if(accountMode === 'demo'){
+    // refresh demo balance
+    demoBalance = 100000 + Math.floor(Math.random()*50000); // quick refill random-ish
+    updateBalanceDisplays();
+    alert('Saldo demo diperbarui: Rp ' + Number(demoBalance).toLocaleString('id-ID'));
+    return;
+  }
+  // live -> open deposit page
   if(DEPOSIT_URL && DEPOSIT_URL.length){
     window.open(DEPOSIT_URL, '_blank');
     return;
   }
-  // fallback: show modal if no external URL set
   depositModal.style.display = 'flex';
 }
 openDeposit.addEventListener('click', openDepositPage);
 openDeposit2.addEventListener('click', openDepositPage);
 
-/* ===== listen to user doc & requests and history ===== */
+/* ===== listen to user doc & requests and history (adjusted to show deposit/withdraw only on live) ===== */
 function listenToUser(uid){
   db.collection('users').doc(uid).onSnapshot(doc=>{
     if(!doc.exists) return;
     const d = doc.data();
     balance = d.balance || 0;
-    balanceEl.textContent = Number(balance).toFixed(2);
-    balanceTop.textContent = Number(balance).toFixed(2);
-    balanceMain.textContent = Number(balance).toFixed(2);
+    // update only if live; if current mode is demo we keep demoBalance
+    if(accountMode === 'live') updateBalanceDisplays();
     uidLabel.textContent = uid;
     updateSummary();
   });
+
+  // trade history
   db.collection('users').doc(uid).collection('history').orderBy('createdAt','desc').limit(50).onSnapshot(snap=>{
     listTrades.innerHTML = '';
     sideTradeList.innerHTML = '';
     snap.forEach(s=>{
       const it = s.data();
       const li = document.createElement('div'); li.className='history-item';
-      li.innerHTML = `<div>${new Date(it.createdAt.toDate()).toLocaleTimeString()} — ${it.type}</div><div style="color:${it.result==='win'?'#22c55e':'#fb7185'}">${it.text||''}</div>`;
+      const time = it.createdAt && it.createdAt.toDate ? new Date(it.createdAt.toDate()).toLocaleTimeString() : new Date().toLocaleTimeString();
+      li.innerHTML = `<div>${time} — ${it.type}</div><div style="color:${it.result==='untung' || it.result==='win'?'#22c55e':'#fb7185'}">${it.text||''}</div>`;
       listTrades.appendChild(li);
       sideTradeList.appendChild(li.cloneNode(true));
     });
   });
+
+  // requests (deposit/withdraw) - only meaningful for live; but we still read DB
   db.collection('requests').where('uid','==',uid).orderBy('createdAt','desc').limit(50).onSnapshot(snap=>{
     sideRequestsList.innerHTML = '';
     listRequests.innerHTML = '';
@@ -850,10 +944,12 @@ function listenToUser(uid){
       sideRequestsList.appendChild(div.cloneNode(true));
       listRequests.appendChild(div);
     });
+    // if in demo mode then hide sideRequestsList
+    if(accountMode === 'demo') sideRequestsList.innerHTML = '';
   });
 }
 
-/* ===== admin panel & request processing ===== */
+/* ===== admin panel & request processing + lock/unlock market feature ===== */
 function enableAdminUI(){
   adminInline.style.display = 'block';
   adminPanel.style.display = 'block';
@@ -941,6 +1037,7 @@ function renderAdminMarkets(){
       <input type="number" step="0.0001" placeholder="vol" value="${m.volatilityFraction||0.002}" data-id="${id}" class="vol-input">
       <input type="number" step="1" placeholder="payout" value="${m.payoutPercent||70}" data-id="${id}" class="pay-input">
       <button class="save-btn" data-id="${id}">Save</button>
+      <button class="lock-btn" data-id="${id}" style="padding:6px 10px;border-radius:8px;margin-left:6px">${m.locked ? 'Unlock' : 'Lock'}</button>
     `;
     adminMarketsContainer.appendChild(row);
   });
@@ -953,6 +1050,17 @@ function renderAdminMarkets(){
         await db.collection('markets').doc(id).set({ volatilityFraction: Number(vol), payoutPercent: Number(pay) }, { merge:true });
         alert('Saved');
       }catch(e){ console.error(e); alert('Save failed'); }
+    };
+  });
+  adminMarketsContainer.querySelectorAll('.lock-btn').forEach(btn=>{
+    btn.onclick = async ()=>{
+      const id = btn.dataset.id;
+      const m = markets[id] || {};
+      const newLocked = !m.locked;
+      try{
+        await db.collection('markets').doc(id).set({ locked: newLocked }, { merge:true });
+        alert((newLocked ? 'Market dikunci' : 'Market dibuka') + `: ${id}`);
+      }catch(e){ console.error(e); alert('Gagal update lock'); }
     };
   });
 }
@@ -998,7 +1106,12 @@ tabRequests.addEventListener('click', ()=>{ tabOpenTrades.classList.remove('acti
 
 /* mini rendering of requests for side */
 function renderMiniRequests(){
-  db.collection('requests').where('uid','==', currentUser ? currentUser.uid : '').orderBy('createdAt','desc').limit(6).get().then(snap=>{
+  if(!currentUser) return;
+  if(accountMode === 'demo'){
+    document.getElementById('miniRequests').innerHTML = '<div style="color:var(--muted)">Demo: tidak ada request</div>';
+    return;
+  }
+  db.collection('requests').where('uid','==', currentUser.uid).orderBy('createdAt','desc').limit(6).get().then(snap=>{
     document.getElementById('miniRequests').innerHTML = '';
     snap.forEach(s=>{
       const r = s.data();
@@ -1016,7 +1129,7 @@ updateSummary();
 resizeCanvas();
 generateInitialChartData();
 startChartAnimation();
-// subscribeMarketsRealtime() will be called after auth (to avoid duplicate calls)
+// subscribeMarketsRealtime() will be called after auth
 
 </script>
 </body>
