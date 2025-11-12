@@ -50,25 +50,38 @@
   .market-edit input{padding:6px;border-radius:6px;background:#06101a;border:1px solid rgba(255,255,255,0.03);color:#fff}
   .save-btn{padding:6px 10px;border-radius:8px;background:#0ea5a4;border:none;color:#012;cursor:pointer}
 
-  /* small screens: stack and fluid widths */
+  /* open trade styling: border + countdown etc */
+  .open-trade {
+    border: 1px solid rgba(45,212,191,0.12);
+    background: linear-gradient(180deg, rgba(45,212,191,0.02), rgba(45,212,191,0.01));
+    border-radius:8px;
+    padding:10px;
+    margin-bottom:8px;
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    align-items:center;
+  }
+  .open-trade .left{min-width:0}
+  .open-trade .meta{font-size:13px;color:var(--muted)}
+  .open-trade .prices{display:flex;flex-direction:column;gap:4px;font-weight:700;text-align:right}
+  .countdown{font-weight:800;color:#fff;background:rgba(0,0,0,0.2);padding:6px 10px;border-radius:8px}
+  .entry-exit{font-size:13px;color:var(--muted)}
+  .trade-closed { opacity: 0.6; border-style: dashed; }
+
+  /* responsive */
   @media (max-width:1000px){
-    .container{grid-template-columns:1fr; padding:10px}
+    .container{grid-template-columns:1fr;}
     .big-right{flex-basis:100%}
     .side-card{order:2}
     .main-card{order:1}
-    .topbar{padding:12px}
     .pair-title{font-size:16px}
   }
   @media (max-width:520px){
-    .topbar{padding:10px}
-    .badge-live{padding:6px 8px;font-size:13px}
-    .deposit-btn{padding:8px 10px;font-size:14px}
-    .pair-title{font-size:15px}
     .btn-up,.btn-down{font-size:16px;padding:12px}
     .history-item{font-size:12px;padding:6px}
   }
 
-  /* price marker on chart container */
   .chart-wrap{position:relative}
   .price-marker{
     position:absolute;
@@ -274,8 +287,8 @@ const firebaseConfig = {
 };
 const ADMIN_UID = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52';
 
-// === EDIT THIS: URL yang mau dibuka saat klik Deposit ===
-const DEPOSIT_URL = 'https://your-deposit-page.example.com';
+// === UPDATE: buka halaman deposit ini saat klik Deposit ===
+const DEPOSIT_URL = 'https://zestore.netlify.app/depositop1';
 /* ========================================== */
 
 firebase.initializeApp(firebaseConfig);
@@ -559,18 +572,82 @@ function updateSummary(){
   paymentLabel.innerText = `— Rp ${potential.toLocaleString('id-ID')}`;
 }
 
-/* ===== trade logic ===== */
-let openTrades = [];
+/* ===== helpers ===== */
+function formatSecondsMMSS(s){
+  if(typeof s !== 'number' || s < 0) s = 0;
+  const mm = Math.floor(s/60); const ss = s % 60;
+  return String(mm).padStart(2,'0') + ':' + String(ss).padStart(2,'0');
+}
+
+/* ===== trade logic with enhanced UI (border, countdown, entry/exit) ===== */
+let openTrades = []; // {id, uid, market, side, amount, entryPrice, expiryTs, payoutPercent, uiInterval}
+function createOpenTradeElement(tr){
+  const wrapper = document.createElement('div');
+  wrapper.className = 'open-trade';
+  wrapper.id = 'open_' + tr.id;
+
+  const entryFormatted = Number(tr.entryPrice).toFixed(2);
+  // initial calculated expected exit (it will be updated as countdown approaches)
+  const expectedExit = deterministicPrice(tr.market, tr.expiryTs + 1);
+  const expectedExitFormatted = Number(expectedExit).toFixed(2);
+  const remainingMs = Math.max(0, tr.expiryTs - Date.now());
+  const remainingSec = Math.ceil(remainingMs / 1000);
+
+  wrapper.innerHTML = `
+    <div class="left">
+      <div style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.market} • ${tr.side}</div>
+      <div class="meta entry-exit">Entry: <strong class="entryPrice">${entryFormatted}</strong> • Exit: <strong class="exitPrice">${expectedExitFormatted}</strong></div>
+      <div class="meta">Investasi: Rp ${Number(tr.amount).toLocaleString()}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+      <div class="countdown" data-expiry="${tr.expiryTs}">${formatSecondsMMSS(remainingSec)}</div>
+      <div class="meta" style="color:var(--muted);font-size:12px">ID: ${tr.id}</div>
+    </div>
+  `;
+  return wrapper;
+}
 function addOpenTradeUI(tr){
-  const el = document.createElement('div');
-  el.className = 'history-item';
-  el.id = 'open_' + tr.id;
-  el.innerHTML = `<div style="min-width:0;max-width:70%">${tr.market} • ${tr.side}</div><div>Rp ${Number(tr.amount).toLocaleString()} • Exit ${new Date(tr.expiryTs).toLocaleTimeString()}</div>`;
+  const el = createOpenTradeElement(tr);
   listOpenTrades.prepend(el);
+
+  // store interval to update countdown and exit price
+  const countdownEl = el.querySelector('.countdown');
+  const exitPriceEl = el.querySelector('.exitPrice');
+
+  tr.uiInterval = setInterval(()=>{
+    const now = Date.now();
+    const remainingMs = Math.max(0, tr.expiryTs - now);
+    const sec = Math.ceil(remainingMs/1000);
+    countdownEl.textContent = formatSecondsMMSS(sec);
+    // update expected exit price live (deterministic)
+    const expectedExit = deterministicPrice(tr.market, tr.expiryTs + 1);
+    exitPriceEl.textContent = Number(expectedExit).toFixed(2);
+    if(remainingMs <= 0){
+      clearInterval(tr.uiInterval);
+    }
+  }, 500);
 }
 function removeOpenTradeUI(id){
   const el = document.getElementById('open_' + id);
   if(el) el.remove();
+}
+function markTradeClosedUI(tr, isWin, exitPrice){
+  const el = document.getElementById('open_' + tr.id);
+  if(!el) return;
+  el.classList.add('trade-closed');
+  const entryEl = el.querySelector('.entryPrice');
+  const exitEl = el.querySelector('.exitPrice');
+  const countdown = el.querySelector('.countdown');
+  if(entryEl) entryEl.textContent = Number(tr.entryPrice).toFixed(2);
+  if(exitEl) exitEl.textContent = Number(exitPrice).toFixed(2);
+  if(countdown) countdown.textContent = isWin ? 'MENANG' : 'KALAH';
+  const left = el.querySelector('.left');
+  const res = document.createElement('div');
+  res.style.marginTop = '6px';
+  res.innerHTML = `<div style="font-weight:800;color:${isWin? 'var(--green)':'var(--red)'}">${isWin ? 'Win' : 'Lose'}</div>`;
+  left.appendChild(res);
+  // remove after a short delay so user can see result
+  setTimeout(()=> { try{ el.remove(); } catch(e){} }, 6000);
 }
 
 function executeTrade(side){
@@ -603,6 +680,8 @@ function executeTrade(side){
       balance -= bet;
       text = `Kalah -Rp ${Math.round(bet).toLocaleString('id-ID')}`;
     }
+
+    // update DB + history
     if(currentUser){
       try{
         await db.runTransaction(async (t)=>{
@@ -618,20 +697,28 @@ function executeTrade(side){
         await db.collection('users').doc(currentUser.uid).collection('openTrades').doc(tradeId).delete().catch(()=>{});
       }catch(e){ console.error(e); }
     }
+
+    // UI updates
     balanceEl.textContent = balance.toFixed(2);
     balanceTop.textContent = balance.toFixed(2);
     balanceMain.textContent = balance.toFixed(2);
-    openTrades = openTrades.filter(x=>x.id !== tradeId);
-    removeOpenTradeUI(tradeId);
+
+    // show closed state before removal
+    markTradeClosedUI(tr, isWin, exitPrice);
+
     const li = document.createElement('div'); li.className='history-item';
     li.innerHTML = `<div>${new Date().toLocaleTimeString()} — ${currentMarketId} — ${side}</div><div style="color:${isWin?'#22c55e':'#fb7185'}">${text}</div>`;
     listTrades.prepend(li);
     sideTradeList.prepend(li.cloneNode(true));
+
+    // cleanup
+    openTrades = openTrades.filter(x=>x.id !== tradeId);
     clearTimeout(intervalResolve);
   }, dur*1000);
   updateSummary();
 }
 
+/* parse hh:mm:ss or mm:ss */
 function parseDurationToSeconds(s){
   const parts = s.split(':').map(p=>Number(p));
   if(parts.length===3) return parts[0]*3600 + parts[1]*60 + parts[2];
@@ -751,7 +838,7 @@ function listenToUser(uid){
       sideTradeList.appendChild(li.cloneNode(true));
     });
   });
-  db.collection('requests').where('uid','==',uid).orderBy('createdAt','desc').limit(20).onSnapshot(snap=>{
+  db.collection('requests').where('uid','==',uid).orderBy('createdAt','desc').limit(50).onSnapshot(snap=>{
     sideRequestsList.innerHTML = '';
     listRequests.innerHTML = '';
     snap.forEach(s=>{
