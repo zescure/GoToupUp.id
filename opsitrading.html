@@ -96,10 +96,10 @@
   <div class="topbar">
     <div class="left-top">
       <!-- badge-live is now clickable to toggle Live/Demo. No balance shown here. -->
-      <div class="badge-live" id="badgeLive" title="Klik untuk ganti Live / Demo">
+      <div class="badge-live" id="badgeLive" title="">
         <span id="badgeModeLabel">LIVE</span>
-        <span style="opacity:.85;color:#fff;font-weight:700;margin-left:8px;font-size:13px">•</span>
-        <span style="font-size:12px;color:var(--muted);margin-left:8px">klik untuk ganti</span>
+        <span style="opacity:.85;color:#fff;font-weight:700;margin-left:8px;font-size:13px"></span>
+        <span style="font-size:12px;color:var(--muted);margin-left:8px"></span>
         <!-- hidden balanceTop kept for JS compatibility (not shown) -->
         <span id="balanceTop" style="display:none">0.00</span>
       </div>
@@ -304,7 +304,7 @@ let currentUser = null;
 let isAdmin = false;
 let markets = {};
 let currentMarketId = null;
-const TICK_INTERVAL = 2500;
+const TICK_INTERVAL = 4500;
 
 const pairTitle = document.getElementById('pairTitle');
 const pairSub = document.getElementById('pairSub');
