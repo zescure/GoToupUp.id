@@ -415,7 +415,7 @@ function generateInitialChartData(){
   chartData = [];
   const now = Date.now();
   const marketId = currentMarketId || Object.keys(markets)[0] || 'DEFAULT/PRICE';
-  for (let i = 250; i >= 0; i--) {
+  for (let i = 700; i >= 0; i--) {
     const t = now - (i * TICK_INTERVAL);
     const price = deterministicPrice(marketId, t);
     chartData.push({ timestamp: t, price });
