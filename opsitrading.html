@@ -214,11 +214,9 @@
                 <div id="adminMarketsContainer"></div>
               </div>
             </div>
-
           </div>
         </div>
       </div>
-
     </div>
 
     <div class="side-card">
@@ -697,6 +695,7 @@ function markTradeClosedUI(tr, isWin, exitPrice){
   setTimeout(()=> { try{ el.remove(); } catch(e){} }, 6000);
 }
 
+/* === REPLACED executeTrade FUNCTION (full version) === */
 function executeTrade(side){
   const bet = Number(betAmountInput.value || 0);
   if(!bet || bet < 15000) return alert('Minimal transaksi Rp 15.000');
@@ -751,14 +750,22 @@ function executeTrade(side){
 
   const resolveTimeout = setTimeout(async ()=>{
     const exitPrice = deterministicPrice(currentMarketId, expiryTs + 1);
+
+    // === Perubahan penting: bandingkan dengan pembulatan 2 desimal.
+    // Jika exitRounded == entryRounded -> dianggap KALAH.
+    const exitRounded = Math.round(Number(exitPrice) * 100) / 100;
+    const entryRounded = Math.round(Number(entryPrice) * 100) / 100;
+
     const isBuy = (side.toLowerCase() === 'naik' || side.toLowerCase() === 'call');
-    const isWin = (isBuy && exitPrice > entryPrice) || (!isBuy && exitPrice < entryPrice);
+    const isWin = isBuy ? (exitRounded > entryRounded) : (exitRounded < entryRounded);
+
     const profit = Math.round((payoutPercent/100) * bet);
     const refundOnWin = bet + profit;
     let text;
     if(isWin){
       text = `Untung +Rp ${profit.toLocaleString('id-ID')} (plus pengembalian stake Rp ${bet.toLocaleString('id-ID')})`;
     } else {
+      // exit == entry juga akan masuk sini -> KALAH (rugi)
       text = `Rugi -Rp ${bet.toLocaleString('id-ID')}`;
     }
 
@@ -793,6 +800,7 @@ function executeTrade(side){
       listTrades.prepend(li); sideTradeList.prepend(li.cloneNode(true));
     }
 
+    // tampilkan exitPrice asli (UI akan toFixed(2) ketika rendering)
     markTradeClosedUI(tr, isWin, exitPrice);
     openTrades = openTrades.filter(x=>x.id !== tradeId);
     clearTimeout(resolveTimeout);
@@ -800,6 +808,7 @@ function executeTrade(side){
 
   updateSummary();
 }
+/* === end executeTrade replacement === */
 
 /* parse hh:mm:ss or mm:ss */
 function parseDurationToSeconds(s){
@@ -1115,7 +1124,6 @@ function renderMiniRequests(){
     });
   }).catch(()=>{});
 }
-
 /* clock */
 setInterval(()=>{ const d = new Date(); document.getElementById('clock').innerText = d.toLocaleTimeString(); },1000);
 
@@ -1125,7 +1133,6 @@ resizeCanvas();
 generateInitialChartData();
 startChartAnimation();
 // subscribeMarketsRealtime() will be called after auth (to avoid duplicate calls)
-
 </script>
 </body>
 </html>
