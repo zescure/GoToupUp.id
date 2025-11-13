@@ -770,7 +770,9 @@ function executeTrade(side){
   }
   const activeBal = getActiveBalance();
   if(bet > activeBal) return alert('Saldo tidak cukup');
-  if(!currentUser) return alert('Belum login');
+
+  // allow demo to trade without login; require login only for live
+  if(accountMode === 'live' && !currentUser) return alert('Belum login');
 
   const entryPrice = deterministicPrice(currentMarketId, Date.now());
   const dur = parseDurationToSeconds(durationInput.value || '00:01:00');
@@ -829,21 +831,13 @@ function resolveDemoTrade(tr){
   let isWin = false;
   if(exitPrice > tr.entryPrice) isWin = isBuy;
   else if(exitPrice < tr.entryPrice) isWin = !isBuy;
-  else isWin = false; // equal case handled below
+  else isWin = false; // equal => considered lose (per latest rule)
+
   const payoutPercent = tr.payoutPercent || 70;
   const bet = Number(tr.amount || 0);
   const profit = Math.round((payoutPercent/100) * bet);
-  // new rule: if exitPrice == entryPrice => return only profit percentage, stake lost
-  if(exitPrice === tr.entryPrice){
-    // return only profit
-    demoBalance = demoBalance + profit;
-    // net = -bet + profit (since stake already deducted)
-    const text = `Exit sama dengan entry — hanya dikembalikan profit Rp ${profit.toLocaleString('id-ID')}`;
-    const li = document.createElement('div'); li.className='history-item';
-    li.innerHTML = `<div>${new Date().toLocaleTimeString()} — ${tr.market} — ${tr.side}</div><div style="color:#fb7185">${text}</div>`;
-    listTrades.prepend(li); sideTradeList.prepend(li.cloneNode(true));
-    markTradeClosedUI(tr, false, exitPrice);
-  } else if(isWin){
+
+  if(isWin){
     // win: return stake + profit
     demoBalance = demoBalance + bet + profit;
     const text = `Menang +Rp ${profit.toLocaleString('id-ID')} (plus pengembalian stake Rp ${bet.toLocaleString('id-ID')})`;
@@ -852,7 +846,7 @@ function resolveDemoTrade(tr){
     listTrades.prepend(li); sideTradeList.prepend(li.cloneNode(true));
     markTradeClosedUI(tr, true, exitPrice);
   } else {
-    // lose: nothing returned
+    // lose (includes tie/entry==exit): nothing returned
     const text = `Kalah -Rp ${bet.toLocaleString('id-ID')}`;
     const li = document.createElement('div'); li.className='history-item';
     li.innerHTML = `<div>${new Date().toLocaleTimeString()} — ${tr.market} — ${tr.side}</div><div style="color:#fb7185">${text}</div>`;
@@ -866,7 +860,7 @@ function resolveDemoTrade(tr){
 }
 
 /* Live resolution: read the openTrades doc, if still exists resolve (transactionally) then delete doc.
-   Implement tie rule: exit==entry => return only profit (not stake).
+   New rule: tie (exit==entry) = loss (no return)
 */
 async function resolveLiveTrade(tradeId){
   if(!currentUser) return;
@@ -884,7 +878,8 @@ async function resolveLiveTrade(tradeId){
     let isWin = false;
     if(exitPrice > tr.entryPrice) isWin = isBuy;
     else if(exitPrice < tr.entryPrice) isWin = !isBuy;
-    else isWin = false; // tie case handled separately
+    else isWin = false; // tie considered lose
+
     const payoutPercent = tr.payoutPercent || 70;
     const bet = Number(tr.amount || 0);
     const profit = Math.round((payoutPercent/100) * bet);
@@ -896,16 +891,12 @@ async function resolveLiveTrade(tradeId){
       const prev = (udoc.exists && udoc.data().balance) ? Number(udoc.data().balance) : 0;
       let newBal = prev;
       let text;
-      if(exitPrice === tr.entryPrice){
-        // tie: return only profit (stake already deducted at trade open)
-        newBal = prev + profit;
-        text = `Exit sama dengan entry — hanya dikembalikan profit Rp ${profit.toLocaleString('id-ID')}`;
-      } else if(isWin){
+      if(isWin){
         // return stake + profit
         newBal = prev + bet + profit;
         text = `Menang +Rp ${profit.toLocaleString('id-ID')} (plus pengembalian stake Rp ${bet.toLocaleString('id-ID')})`;
       } else {
-        // lose: nothing returned
+        // lose (includes tie): nothing returned (stake was deducted at open)
         newBal = prev;
         text = `Kalah -Rp ${bet.toLocaleString('id-ID')}`;
       }
@@ -915,22 +906,19 @@ async function resolveLiveTrade(tradeId){
       const histRef = db.collection('users').doc(currentUser.uid).collection('history').doc();
       t.set(histRef, {
         type: 'trade', side: tr.side, entryPrice: tr.entryPrice, exitPrice, amount: bet,
-        result: (exitPrice === tr.entryPrice) ? 'tie_profitOnly' : (isWin ? 'untung' : 'rugi'),
+        result: (isWin ? 'untung' : 'rugi'),
         text, createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       // delete openTrade doc to indicate resolved
       t.delete(docRef);
     });
     // local UI updates
-    // mark closed immediately
-    markTradeClosedUI(tr, isWin && exitPrice !== tr.entryPrice, exitPrice);
+    markTradeClosedUI(tr, isWin, exitPrice);
     // reflect client-side balance (listenToUser will update from snapshot too)
-    if(exitPrice === tr.entryPrice){
-      balance = (balance || 0) + profit;
-    } else if(isWin){
+    if(isWin){
       balance = (balance || 0) + bet + profit;
     } else {
-      // lose -> no change (stake already deducted)
+      // lose -> no change (stake already deducted earlier)
     }
     updateBalanceDisplays();
     // ensure we remove from local openTrades array and clear timer
