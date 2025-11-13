@@ -3,19 +3,17 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Deposit QRIS — King Zezy</title>
+<title>Deposit & Withdraw — King Zezy</title>
 <style>
   :root{
     --bg:#07121a; --card:#0b1722; --muted:#98a0ad; --accent:#2dd4bf;
-    --glass: rgba(255,255,255,0.03);
   }
   html,body{height:100%;margin:0;background:linear-gradient(180deg,#07101a,#081627);color:#e6eef6;font-family:Inter,system-ui,Roboto,Arial}
   .wrap{max-width:1200px;margin:12px auto;padding:12px;box-sizing:border-box}
   header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px;flex-wrap:wrap}
   h1{margin:0;font-size:18px}
-  .container{display:grid;grid-template-columns:1fr 340px;gap:14px}
+  .container{display:grid;grid-template-columns:1fr 380px;gap:14px}
   .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,0.6)}
-  /* controls */
   .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
   .btn{background:var(--accent);border:none;color:#012;padding:10px 14px;border-radius:10px;font-weight:800;cursor:pointer}
   .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.05);color:var(--muted);font-weight:700}
@@ -36,15 +34,13 @@
   .badge.rejected{background:rgba(239,68,68,0.06);color:#fb7185}
   .muted-label{font-size:13px;color:var(--muted)}
   .admin-panel{margin-top:12px}
-  .admin-list{max-height:300px;overflow:auto;margin-top:8px;border-top:1px solid rgba(255,255,255,0.03)}
+  .admin-list{max-height:340px;overflow:auto;margin-top:8px;border-top:1px solid rgba(255,255,255,0.03)}
   .admin-item{padding:8px;border-bottom:1px solid rgba(255,255,255,0.02);display:flex;justify-content:space-between;gap:10px}
-  /* responsive */
   @media (max-width:1000px){
     .container{grid-template-columns:1fr; padding:0}
     aside{order:2}
     main{order:1}
   }
-  /* small */
   @media (max-width:420px){
     .hist-right{min-width:120px;font-size:12px}
     .card{padding:10px}
@@ -56,8 +52,8 @@
   <div class="wrap">
   <header>
     <div>
-      <h1>Deposit QRIS — King Zezy</h1>
-      <div class="small">Hanya QRIS. QR tampil setelah klik Generate / Update.</div>
+      <h1>Deposit & Penarikan — King Zezy</h1>
+      <div class="small">Semua request dicatat di koleksi <code>requests</code>. Admin bisa lihat & proses.</div>
     </div>
     <div class="small" id="uidInfo">UID: —</div>
   </header>
@@ -72,28 +68,24 @@
           <div class="small" id="accountBalance">Saldo: Rp 0</div>
         </div>
 
-        <!-- Deposit panel -->
+        <!-- Deposit -->
         <div id="depositPanel">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div><strong>Deposit (QRIS)</strong></div>
-            <div class="small">Minimal Rp 1.000 • Fee: 0.8% + Rp850</div>
+            <div class="small">Minimal Rp 1.000 • Fee 0.8% + Rp 850</div>
           </div>
-
           <label for="nominal">Nominal (Rp)</label>
           <input id="nominal" type="number" min="1000" step="100" value="10000" />
-
           <div class="row" style="margin-top:10px">
             <button id="generateBtn" class="btn">Generate / Update</button>
             <button id="saveRequestBtn" class="btn ghost">Simpan Request</button>
           </div>
-
           <div id="breakdown" class="small" style="margin-top:10px"></div>
 
-          <!-- QR area hidden until generated -->
           <div id="qArea" class="q-area" style="display:none">
             <div id="qWrap" class="qr-box" style="width:260px;height:260px"></div>
             <div style="flex:1">
-              <div class="small">Payload QRIS final (termasuk CRC tag 63)</div>
+              <div class="small">Payload QRIS final</div>
               <pre id="finalPayload" class="payload">—</pre>
               <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
                 <button id="copyPayload" class="btn ghost">Copy Payload</button>
@@ -103,32 +95,27 @@
           </div>
         </div>
 
-        <!-- Withdraw panel -->
+        <!-- Withdraw -->
         <div id="withdrawPanel" style="display:none">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div><strong>Permintaan Penarikan</strong></div>
-            <div class="small">Minimal penarikan Rp 50.000</div>
+            <div class="small">Minimal Rp 50.000</div>
           </div>
-
           <label for="withdrawAmount">Nominal (Rp)</label>
           <input id="withdrawAmount" type="number" min="50000" step="1000" value="50000">
-
           <label for="bankName">Nama Bank</label>
           <input id="bankName" type="text" placeholder="BCA / BNI / Mandiri">
-
           <label for="bankAccount">No. Rekening</label>
           <input id="bankAccount" type="text" placeholder="1234567890">
-
           <label for="bankHolder">Atas Nama</label>
           <input id="bankHolder" type="text" placeholder="Nama pemilik rekening">
-
           <div style="display:flex;gap:8px;margin-top:10px">
             <button id="submitWithdraw" class="btn">Ajukan Penarikan</button>
             <button id="cancelWithdraw" class="btn ghost">Batal</button>
           </div>
         </div>
 
-        <!-- Unified History (semua disatukan) -->
+        <!-- Unified History -->
         <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center">
           <div style="font-weight:800">Riwayat Transaksi (Gabungan)</div>
           <div class="small">Semua deposit & penarikan akun ini (realtime)</div>
@@ -166,14 +153,15 @@
           <button id="signoutBtn" class="btn ghost">Sign out</button>
         </div>
 
-        <!-- Admin panel (hanya terlihat kalau UID cocok ADMIN_UID) -->
+        <!-- Admin panel -->
         <div id="adminPanel" class="admin-panel" style="display:none">
-          <div style="font-weight:800;margin-top:12px">Admin — Cek Pending Penarikan</div>
-          <div class="small" style="margin-top:6px">Lihat semua request withdraw dengan status <strong>pending</strong>. Bisa filter berdasarkan UID.</div>
-          <label style="margin-top:8px">Filter UID (kosong = semua)</label>
+          <div style="font-weight:800;margin-top:12px">Admin — Semua Request</div>
+          <div class="small" style="margin-top:6px">Lihat semua request (deposit & withdraw). Proses Approve/Reject langsung.</div>
+          <label style="margin-top:8px">Filter UID (opsional)</label>
           <input id="adminUidFilter" placeholder="Masukkan UID user untuk filter (opsional)" />
           <div style="display:flex;gap:8px;margin-top:8px">
             <button id="adminRefresh" class="btn ghost">Refresh</button>
+            <button id="exportCsv" class="btn ghost">Export CSV</button>
           </div>
           <div id="adminList" class="admin-list"></div>
         </div>
@@ -183,9 +171,8 @@
       <div class="card" style="margin-top:12px">
         <div style="font-weight:800">Catatan</div>
         <div class="small" style="margin-top:8px">
-          - QRIS hanya muncul setelah klik <strong>Generate / Update</strong>.<br>
-          - Klik <strong>Simpan Request</strong> untuk menyimpan permintaan deposit ke Firestore (status: pending).<br>
-          - Riwayat ditampilkan realtime dari koleksi <code>requests</code> (deposit & withdraw digabung).
+          - Semua transaksi disimpan di koleksi <code>requests</code> dengan field lengkap.<br>
+          - Admin (UID sesuai konstanta) dapat melihat & proses request. Jangan lupa atur security rules sesuai kebutuhan.
         </div>
       </div>
     </aside>
@@ -208,7 +195,7 @@ const firebaseConfig = {
   messagingSenderId: "358065954807",
   appId: "1:358065954807:web:66619211fea82a4b2518f2"
 };
-// set uid admin di sini (sama seperti yang kamu punya)
+// ganti ADMIN_UID kalau perlu
 const ADMIN_UID = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52';
 /* ================================= */
 firebase.initializeApp(firebaseConfig);
@@ -261,8 +248,12 @@ const adminPanel = document.getElementById('adminPanel');
 const adminUidFilter = document.getElementById('adminUidFilter');
 const adminRefresh = document.getElementById('adminRefresh');
 const adminList = document.getElementById('adminList');
+const exportCsvBtn = document.getElementById('exportCsv');
 
-/* ====== QRIS helpers (sama seperti sebelumnya) ====== */
+/* ====== helpers ====== */
+function formatRp(n){ return Number(n).toLocaleString('id-ID'); }
+
+/* QR helpers (same as sebelumnya) */
 function parseTLV(s){
   let i=0, out=[];
   while(i<s.length){
@@ -307,47 +298,23 @@ function setAmountInPayloadCore(corePayload, amountStr){
 
 /* ====== app state ====== */
 let currentUser = null;
-let lastGenerated = null; // {finalPayload, amountShown, total}
+let lastGenerated = null;
 let lastQRElement = null;
 let requestsUnsub = null;
 let userDocUnsub = null;
 let adminRequestsUnsub = null;
-
-/* default core payload (editable) */
 const defaultCorePayload = "00020101021126610014COM.GO-JEK.WWW01189360091433055874630210G3055874630303UMI51440014ID.CO.QRIS.WWW0215ID10254231099470303UMI5204481453033605802ID5925ZkgamingstoreGoTo, Toko H6007TANGSEL61051522062070703A016304";
 
 /* ====== UI behaviors ====== */
-function showDeposit(){
-  depositPanel.style.display = '';
-  withdrawPanel.style.display = 'none';
-  btnShowDeposit.classList.add('btn'); btnShowDeposit.classList.remove('ghost');
-  btnShowWithdraw.classList.add('ghost'); btnShowWithdraw.classList.remove('btn');
-}
-function showWithdraw(){
-  withdrawPanel.style.display = '';
-  depositPanel.style.display = 'none';
-  btnShowWithdraw.classList.add('btn'); btnShowWithdraw.classList.remove('ghost');
-  btnShowDeposit.classList.add('ghost'); btnShowDeposit.classList.remove('btn');
-}
+function showDeposit(){ depositPanel.style.display=''; withdrawPanel.style.display='none'; btnShowDeposit.classList.add('btn'); btnShowDeposit.classList.remove('ghost'); btnShowWithdraw.classList.add('ghost'); btnShowWithdraw.classList.remove('btn'); }
+function showWithdraw(){ withdrawPanel.style.display=''; depositPanel.style.display='none'; btnShowWithdraw.classList.add('btn'); btnShowWithdraw.classList.remove('ghost'); btnShowDeposit.classList.add('ghost'); btnShowDeposit.classList.remove('btn'); }
 btnShowDeposit.addEventListener('click', showDeposit);
 btnShowWithdraw.addEventListener('click', showWithdraw);
 
-/* responsive QR: compute size based on qWrap size */
-function getQRSize(){
-  const cw = qWrap.clientWidth || 260;
-  // keep margins, min 140, max 420
-  return Math.max(140, Math.min(420, Math.floor(cw - 24)));
-}
+/* QR responsive */
+function getQRSize(){ const cw = qWrap.clientWidth || 260; return Math.max(140, Math.min(420, Math.floor(cw - 24))); }
+function calcFees(nominal){ const feeQris = Math.round(nominal * 0.008); const qrisTotal = nominal + feeQris + 850; return { feeQris, qrisTotal }; }
 
-/* fee calcs */
-function formatRp(n){ return Number(n).toLocaleString('id-ID'); }
-function calcFees(nominal){
-  const feeQris = Math.round(nominal * 0.008);
-  const qrisTotal = nominal + feeQris + 850;
-  return { feeQris, qrisTotal };
-}
-
-/* Generate QR payload and render */
 function generateAndShow(){
   const nominal = Number(nominalEl.value || 0);
   if(!nominal || nominal < 1000) return alert('Minimal Rp 1.000');
@@ -365,53 +332,22 @@ function generateAndShow(){
   breakdownEl.innerHTML = `<strong>QRIS</strong><br>
     Nominal: Rp ${formatRp(nominal)}<br>
     Fee 0.8%: Rp ${formatRp(feeQris)} + biaya tetap Rp 850<br>
-    Total ditagihkan: Rp ${formatRp(qrisTotal)} (ditampilkan di QR sebagai ${amountStr})`;
+    Total ditagihkan: Rp ${formatRp(qrisTotal)} (QR: ${amountStr})`;
 
   qArea.style.display = '';
   qWrap.innerHTML = '';
   const size = getQRSize();
   new QRCode(qWrap, { text: finalPayload, width: size, height: size, correctLevel: QRCode.CorrectLevel.H });
-  // store last QR element (canvas or img)
   lastQRElement = qWrap.querySelector('canvas') || qWrap.querySelector('img');
   finalPayloadEl.textContent = finalPayload;
 }
-
-/* ResizeObserver for QR: regenerate with correct size when qWrap changes */
-let qrResizeObserver = null;
-function initQRResizeObserver(){
-  if(typeof ResizeObserver === 'undefined') return window.addEventListener('resize', ()=>{ if(lastGenerated) generateAndShow(); });
-  if(qrResizeObserver) qrResizeObserver.disconnect();
-  qrResizeObserver = new ResizeObserver(entries=>{
-    if(entries && entries.length){
-      // small debounce: regenerate if payload exists
-      if(lastGenerated){
-        // regenerate after short tick to allow stable width
-        clearTimeout(qrResizeObserver._t);
-        qrResizeObserver._t = setTimeout(()=>generateAndShow(), 120);
-      }
-    }
-  });
-  qrResizeObserver.observe(qWrap);
-}
-
-/* Event listeners */
 generateBtn.addEventListener('click', generateAndShow);
-copyPayloadBtn.addEventListener('click', ()=>{
-  if(!lastGenerated) return alert('Belum ada payload');
-  navigator.clipboard.writeText(lastGenerated.finalPayload).then(()=> alert('Payload disalin ke clipboard'));
-});
-downloadQRBtn.addEventListener('click', ()=>{
-  if(!lastQRElement) return alert('QR belum siap');
-  if(lastQRElement.tagName === 'IMG'){
-    const a = document.createElement('a'); a.href = lastQRElement.src; a.download = 'qris.png'; a.click(); return;
-  }
-  try{
-    const url = lastQRElement.toDataURL('image/png');
-    const a = document.createElement('a'); a.href = url; a.download = 'qris.png'; a.click();
-  }catch(e){ alert('Gagal download: ' + e); }
-});
+window.addEventListener('resize', ()=>{ if(lastGenerated) generateAndShow(); });
 
-/* ====== Save deposit request to Firestore ====== */
+copyPayloadBtn.addEventListener('click', ()=>{ if(!lastGenerated) return alert('Belum ada payload'); navigator.clipboard.writeText(lastGenerated.finalPayload).then(()=> alert('Payload disalin ke clipboard')); });
+downloadQRBtn.addEventListener('click', ()=>{ if(!lastQRElement) return alert('QR belum siap'); if(lastQRElement.tagName === 'IMG'){ const a=document.createElement('a'); a.href=lastQRElement.src; a.download='qris.png'; a.click(); return;} try{ const url=lastQRElement.toDataURL('image/png'); const a=document.createElement('a'); a.href=url; a.download='qris.png'; a.click(); }catch(e){ alert('Gagal download: '+e); } });
+
+/* ====== Save deposit request (lengkap) ====== */
 saveRequestBtn.addEventListener('click', async ()=>{
   if(!currentUser) return alert('Belum login');
   if(!lastGenerated) return alert('Klik Generate / Update terlebih dahulu untuk membuat QRIS');
@@ -419,6 +355,8 @@ saveRequestBtn.addEventListener('click', async ()=>{
   if(!nominal || nominal < 1000) return alert('Minimal Rp 1.000');
   const doc = {
     uid: currentUser.uid,
+    email: currentUser.email || null,
+    name: currentUser.displayName || null,
     type: 'deposit',
     nominal: nominal,
     totalPay: lastGenerated.total || nominal,
@@ -429,13 +367,15 @@ saveRequestBtn.addEventListener('click', async ()=>{
   };
   try{
     const ref = await db.collection('requests').add(doc);
+    console.log('DEBUG: deposit request saved id=', ref.id);
     alert('Request deposit tersimpan (id: ' + ref.id + '). Tunggu konfirmasi admin.');
   }catch(e){
-    console.error(e); alert('Gagal menyimpan request: ' + e);
+    console.error('ERROR save deposit request', e);
+    alert('Gagal menyimpan request: ' + e);
   }
 });
 
-/* ====== Withdraw handling ====== */
+/* ====== Withdraw handling (lengkap) ====== */
 submitWithdraw.addEventListener('click', async ()=>{
   if(!currentUser) return alert('Belum login');
   const amt = Number(withdrawAmount.value || 0);
@@ -443,6 +383,8 @@ submitWithdraw.addEventListener('click', async ()=>{
   if(!bankName.value || !bankAccount.value || !bankHolder.value) return alert('Lengkapi info bank');
   const req = {
     uid: currentUser.uid,
+    email: currentUser.email || null,
+    name: currentUser.displayName || null,
     type: 'withdraw',
     nominal: amt,
     bankName: bankName.value,
@@ -452,123 +394,234 @@ submitWithdraw.addEventListener('click', async ()=>{
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
   try{
-    await db.collection('requests').add(req);
+    const ref = await db.collection('requests').add(req);
+    console.log('DEBUG: withdraw request saved id=', ref.id);
     alert('Request penarikan dibuat. Tunggu konfirmasi admin.');
     withdrawAmount.value = 50000; bankName.value=''; bankAccount.value=''; bankHolder.value='';
     showDeposit();
-  }catch(e){ console.error(e); alert('Gagal membuat request: ' + e); }
+  }catch(e){ console.error('ERROR save withdraw', e); alert('Gagal membuat request: ' + e); }
 });
 cancelWithdraw.addEventListener('click', showDeposit);
 
-/* ====== History tabs (unified) ====== */
+/* ====== Tabs ====== */
 tabAll.addEventListener('click', ()=>{ historyAll.style.display='block'; historyDeposit.style.display='none'; historyWithdraw.style.display='none'; tabAll.classList.add('btn'); tabDep.classList.add('ghost'); tabWdr.classList.add('ghost'); });
 tabDep.addEventListener('click', ()=>{ historyAll.style.display='none'; historyDeposit.style.display='block'; historyWithdraw.style.display='none'; tabDep.classList.add('btn'); tabAll.classList.add('ghost'); tabWdr.classList.add('ghost'); });
 tabWdr.addEventListener('click', ()=>{ historyAll.style.display='none'; historyDeposit.style.display='none'; historyWithdraw.style.display='block'; tabWdr.classList.add('btn'); tabDep.classList.add('ghost'); tabAll.classList.add('ghost'); });
 
-/* ====== Rendering helpers ====== */
+/* ====== Render helpers ====== */
 function renderRequestItem(r, id){
   const status = r.status || 'pending';
   const cls = status === 'confirmed' ? 'confirmed' : status === 'rejected' ? 'rejected' : 'pending';
   const div = document.createElement('div'); div.className = 'hist-item';
   const left = document.createElement('div'); left.className = 'hist-left';
   const right = document.createElement('div'); right.className = 'hist-right';
-
-  // left: main info
   const when = r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().toLocaleString() : (r.createdAt || '-');
+
   if(r.type === 'deposit'){
     left.innerHTML = `<div style="font-weight:700">DEPOSIT • Rp ${Number(r.totalPay || r.nominal || 0).toLocaleString()}</div>
       <div class="small">${r.method || 'qris'} • ${when}</div>
+      <div class="small">UID: ${r.uid || '-'} • ${r.email || '-'}</div>
       <div class="small">id: ${id}</div>`;
   } else if(r.type === 'withdraw'){
     left.innerHTML = `<div style="font-weight:700">PENARIKAN • Rp ${Number(r.nominal||0).toLocaleString()}</div>
-      <div class="small">${r.bankName || '-'} • ${r.bankAccount || '-'} • ${r.bankHolder || '-'}</div>
+      <div class="small">${r.bankName || '-'} • ${r.bankAccount || '-'}</div>
+      <div class="small">Atas nama: ${r.bankHolder || '-'}</div>
       <div class="small">${when}</div>
-      <div class="small">UID: ${r.uid || '-'}</div>
+      <div class="small">UID: ${r.uid || '-'} • ${r.email || '-'}</div>
       <div class="small">id: ${id}</div>`;
   } else {
     left.innerHTML = `<div style="font-weight:700">${(r.type||'').toUpperCase()} • Rp ${Number(r.nominal||r.totalPay||0).toLocaleString()}</div>
-      <div class="small">${r.method || ''} • ${when}</div>
-      <div class="small">id: ${id}</div>`;
+      <div class="small">${when}</div><div class="small">id: ${id}</div>`;
   }
 
   right.innerHTML = `<div><span class="badge ${cls}">${status}</span></div>`;
-
   div.appendChild(left); div.appendChild(right);
   return div;
 }
 
-/* ====== Realtime subscriptions for user ====== */
-function subscribeUserRequests(uid){
-  if(requestsUnsub) requestsUnsub();
-  requestsUnsub = db.collection('requests').where('uid','==',uid).orderBy('createdAt','desc').onSnapshot(snap=>{
-    historyAll.innerHTML = ''; historyDeposit.innerHTML = ''; historyWithdraw.innerHTML = '';
-    snap.forEach(doc=>{
-      const r = doc.data(); const id = doc.id;
-      const node = renderRequestItem(r,id);
-      historyAll.appendChild(node.cloneNode(true));
-      if(r.type === 'deposit') historyDeposit.appendChild(node.cloneNode(true));
-      if(r.type === 'withdraw') historyWithdraw.appendChild(node.cloneNode(true));
-    });
-  }, err=>console.error(err));
-}
-
-/* subscribe user doc (profile, balance) */
-function subscribeUserDoc(uid){
-  if(userDocUnsub) userDocUnsub();
-  userDocUnsub = db.collection('users').doc(uid).onSnapshot(doc=>{
-    if(!doc.exists) return;
-    const d = doc.data();
-    nameField.textContent = d.name || '-';
-    phoneField.textContent = d.phone || '-';
-    balField.textContent = 'Rp ' + (d.balance ? Number(d.balance).toLocaleString() : '0');
-    createdAt.textContent = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate().toLocaleDateString() : '-';
-    accountBalance.textContent = 'Saldo: ' + (d.balance ? 'Rp ' + Number(d.balance).toLocaleString() : 'Rp 0');
+/* ====== Robust subscriptions + fallbacks ====== */
+function clearHistories(){ historyAll.innerHTML=''; historyDeposit.innerHTML=''; historyWithdraw.innerHTML=''; }
+function simpleRenderRequests(docs){
+  clearHistories();
+  docs.forEach(item=>{
+    const node = renderRequestItem(item.data, item.id);
+    historyAll.appendChild(node.cloneNode(true));
+    if(item.data.type === 'deposit') historyDeposit.appendChild(node.cloneNode(true));
+    if(item.data.type === 'withdraw') historyWithdraw.appendChild(node.cloneNode(true));
   });
 }
 
-/* ====== Admin: subscribe pending withdraws ====== */
-async function subscribeAdminPending(uidFilter){
-  // cleanup previous
-  if(adminRequestsUnsub) adminRequestsUnsub();
-  let q = db.collection('requests').where('type','==','withdraw').where('status','==','pending').orderBy('createdAt','desc');
-  if(uidFilter && uidFilter.trim()) q = q.where('uid','==', uidFilter.trim());
-  adminRequestsUnsub = q.onSnapshot(async snap=>{
-    adminList.innerHTML = '';
-    if(snap.empty){ adminList.innerHTML = '<div class="small" style="padding:8px">Tidak ada pending withdraw.</div>'; return; }
-    // iterate
-    const docs = [];
-    snap.forEach(doc=>docs.push({ id: doc.id, data: doc.data() }));
-    // render
-    for(const item of docs){
-      const r = item.data;
-      const id = item.id;
-      const el = document.createElement('div'); el.className = 'admin-item';
-      const left = document.createElement('div'); left.style.flex='1';
-      const right = document.createElement('div'); right.style.minWidth='140px'; right.style.textAlign='right';
-      const when = r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().toLocaleString() : '-';
-      left.innerHTML = `<div style="font-weight:700">Rp ${Number(r.nominal||0).toLocaleString()}</div>
-        <div class="small">${r.bankName || '-'} • ${r.bankAccount || '-'}</div>
-        <div class="small">Atas nama: ${r.bankHolder || '-'}</div>
-        <div class="small">UID: ${r.uid || '-'}</div>
-        <div class="small">id: ${id}</div>`;
-      right.innerHTML = `<div class="small">${when}</div>
-        <div style="margin-top:6px"><button class="btn ghost" data-id="${id}" data-uid="${r.uid||''}" onclick="copyAdminInfo(event)">Copy</button></div>`;
-      el.appendChild(left); el.appendChild(right);
-      adminList.appendChild(el);
-    }
-  }, err=>{ console.error('admin sub err', err); adminList.innerHTML = '<div class="small" style="padding:8px">Error fetch admin data.</div>'; });
+function subscribeUserRequests(uid){
+  console.log('DEBUG: subscribeUserRequests', uid);
+  if(requestsUnsub){ try{ requestsUnsub(); }catch(e){console.warn('unsubscribe err',e);} requestsUnsub = null; }
+  try{
+    const q = db.collection('requests').where('uid','==',uid).orderBy('createdAt','desc');
+    requestsUnsub = q.onSnapshot(snap=>{
+      console.log('DEBUG user onSnapshot size=', snap.size);
+      const docs=[];
+      snap.forEach(doc=>docs.push({id: doc.id, data: doc.data()}));
+      if(docs.length===0) historyAll.innerHTML='<div class="small" style="padding:8px">Belum ada request untuk akun ini.</div>';
+      simpleRenderRequests(docs);
+    }, err=>{
+      console.error('DEBUG user onSnapshot err', err);
+      fallbackFetchRequestsForUid(uid);
+    });
+  }catch(e){
+    console.error('DEBUG subscribeUserRequests exception', e);
+    fallbackFetchRequestsForUid(uid);
+  }
 }
 
-/* helper for admin button action (copy withdraw info) */
-window.copyAdminInfo = function(e){
-  const btn = e.currentTarget;
-  const parent = btn.closest('.admin-item');
-  if(!parent) return;
-  const txt = parent.innerText.replace(/\n+/g,'\n');
-  navigator.clipboard.writeText(txt).then(()=> alert('Info penarikan disalin ke clipboard'));
+function fallbackFetchRequestsForUid(uid){
+  console.log('DEBUG: fallbackFetchRequestsForUid', uid);
+  clearHistories();
+  db.collection('requests').where('uid','==',uid).orderBy('createdAt','desc').limit(500).get()
+    .then(snap=>{
+      console.log('DEBUG fallback get size=', snap.size);
+      const docs=[];
+      snap.forEach(doc=>docs.push({id: doc.id, data: doc.data()}));
+      if(docs.length===0){
+        // try global
+        fallbackFetchAllRequests();
+      } else simpleRenderRequests(docs);
+    })
+    .catch(err=>{
+      console.error('DEBUG fallback get err', err);
+      fallbackFetchAllRequests();
+    });
+}
+
+function fallbackFetchAllRequests(){
+  console.log('DEBUG: fallbackFetchAllRequests');
+  db.collection('requests').orderBy('createdAt','desc').limit(500).get()
+    .then(snap=>{
+      console.log('DEBUG fallback all size=', snap.size);
+      const docs=[];
+      snap.forEach(doc=>docs.push({id: doc.id, data: doc.data()}));
+      if(docs.length===0) historyAll.innerHTML='<div class="small" style="padding:8px">Tidak ada data transaksi atau tidak bisa diakses (cek rules).</div>';
+      else simpleRenderRequests(docs);
+    })
+    .catch(err=>{
+      console.error('DEBUG fallback all err', err);
+      db.collection('requests').limit(500).get().then(snap2=>{
+        const docs=[];
+        snap2.forEach(doc=>docs.push({id: doc.id, data: doc.data()}));
+        if(docs.length===0) historyAll.innerHTML='<div class="small" style="padding:8px">Tidak ada data transaksi (final fallback).</div>';
+        else simpleRenderRequests(docs);
+      }).catch(e2=>{
+        console.error('DEBUG final fallback err', e2);
+        historyAll.innerHTML='<div class="small" style="padding:8px">Gagal fetch requests: lihat console.</div>';
+      });
+    });
+}
+
+/* ====== Admin subscription (lihat semua, proses) ====== */
+function subscribeAdminAll(uidFilter){
+  console.log('DEBUG: subscribeAdminAll filter=', uidFilter);
+  if(adminRequestsUnsub){ try{ adminRequestsUnsub(); }catch(e){console.warn('admin unsubscribe err',e);} adminRequestsUnsub=null; }
+  try{
+    let q = db.collection('requests').orderBy('createdAt','desc').limit(500);
+    if(uidFilter && uidFilter.trim()) q = db.collection('requests').where('uid','==',uidFilter.trim()).orderBy('createdAt','desc').limit(500);
+    adminRequestsUnsub = q.onSnapshot(snap=>{
+      console.log('DEBUG admin onSnapshot size=', snap.size);
+      adminList.innerHTML = '';
+      if(snap.empty){ adminList.innerHTML = '<div class="small" style="padding:8px">Tidak ada request.</div>'; return; }
+      snap.forEach(doc=>{
+        const r = doc.data(); const id = doc.id;
+        const el = document.createElement('div'); el.className = 'admin-item';
+        const left = document.createElement('div'); left.style.flex='1';
+        const right = document.createElement('div'); right.style.minWidth='180px'; right.style.textAlign='right';
+        const when = r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().toLocaleString() : '-';
+        left.innerHTML = `<div style="font-weight:700">${r.type==='withdraw'?'PENARIKAN':'DEPOSIT'} • Rp ${Number(r.type==='withdraw'?r.nominal:r.totalPay||r.nominal||0).toLocaleString()}</div>
+          <div class="small">${r.type==='withdraw'? (r.bankName+' • '+r.bankAccount) : (r.method||'')}</div>
+          <div class="small">UID: ${r.uid || '-'} • ${r.email || '-'}</div>
+          <div class="small">id: ${id}</div>
+          <div class="small">${when}</div>`;
+        right.innerHTML = `<div class="small">Status: <strong>${r.status||'pending'}</strong></div>
+          <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:6px">
+            <button class="btn ghost" data-id="${id}" onclick="copyAdminItem(event)">Copy</button>
+            <button class="btn" data-id="${id}" onclick="adminApprove(event)">Approve</button>
+            <button class="btn ghost" data-id="${id}" onclick="adminReject(event)">Reject</button>
+          </div>`;
+        el.appendChild(left); el.appendChild(right);
+        adminList.appendChild(el);
+      });
+    }, err=>{
+      console.error('DEBUG admin onSnapshot err', err);
+      adminList.innerHTML = '<div class="small" style="padding:8px">Gagal subscribe admin: lihat console</div>';
+    });
+  }catch(e){
+    console.error('DEBUG subscribeAdminAll exception', e);
+    adminList.innerHTML = '<div class="small" style="padding:8px">Gagal subscribe admin: lihat console</div>';
+  }
+}
+
+/* admin helpers: copy & process */
+window.copyAdminItem = function(e){
+  const id = e.currentTarget.getAttribute('data-id');
+  const el = e.currentTarget.closest('.admin-item');
+  if(!el) return;
+  navigator.clipboard.writeText(el.innerText.replace(/\n+/g,'\n')).then(()=> alert('Info disalin'));
 };
 
-/* ====== auth & initialization ====== */
+window.adminApprove = async function(e){
+  const id = e.currentTarget.getAttribute('data-id');
+  if(!confirm('Yakin approve request id: ' + id + ' ?')) return;
+  try{
+    await db.collection('requests').doc(id).update({ status: 'confirmed', processedBy: currentUser.uid, processedAt: firebase.firestore.FieldValue.serverTimestamp(), note: 'approved by admin' });
+    alert('Request approved.');
+  }catch(err){ console.error('approve err', err); alert('Gagal approve: '+err); }
+};
+
+window.adminReject = async function(e){
+  const id = e.currentTarget.getAttribute('data-id');
+  const reason = prompt('Alasan reject (opsional):','');
+  if(!confirm('Yakin reject request id: ' + id + ' ?')) return;
+  try{
+    await db.collection('requests').doc(id).update({ status: 'rejected', processedBy: currentUser.uid, processedAt: firebase.firestore.FieldValue.serverTimestamp(), note: reason || 'rejected by admin' });
+    alert('Request rejected.');
+  }catch(err){ console.error('reject err', err); alert('Gagal reject: '+err); }
+};
+
+/* export CSV (admin) */
+exportCsvBtn.addEventListener('click', async ()=>{
+  const uidFilter = adminUidFilter.value && adminUidFilter.value.trim();
+  try{
+    let q = db.collection('requests').orderBy('createdAt','desc').limit(1000);
+    if(uidFilter) q = db.collection('requests').where('uid','==', uidFilter).orderBy('createdAt','desc').limit(1000);
+    const snap = await q.get();
+    if(snap.empty) return alert('Tidak ada data untuk diexport.');
+    const rows = [];
+    snap.forEach(doc=>{
+      const d = doc.data();
+      rows.push({
+        id: doc.id,
+        uid: d.uid || '',
+        email: d.email || '',
+        name: d.name || '',
+        type: d.type || '',
+        nominal: d.nominal || '',
+        totalPay: d.totalPay || '',
+        method: d.method || '',
+        bankName: d.bankName || '',
+        bankAccount: d.bankAccount || '',
+        bankHolder: d.bankHolder || '',
+        status: d.status || '',
+        note: d.note || '',
+        createdAt: d.createdAt && d.createdAt.toDate ? d.createdAt.toDate().toISOString() : ''
+      });
+    });
+    // build CSV
+    const headers = Object.keys(rows[0]);
+    const csv = [headers.join(',')].concat(rows.map(r=>headers.map(h=>`"${String(r[h]||'').replace(/"/g,'""')}"`).join(','))).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'requests_export.csv'; a.click();
+    URL.revokeObjectURL(url);
+  }catch(e){ console.error('export csv err', e); alert('Gagal export: '+e); }
+});
+
+/* ====== Auth & subscriptions ====== */
 auth.onAuthStateChanged(async user=>{
   if(user){
     currentUser = user;
@@ -582,32 +635,42 @@ auth.onAuthStateChanged(async user=>{
     subscribeUserRequests(user.uid);
     subscribeUserDoc(user.uid);
     showDeposit();
-    initQRResizeObserver();
 
-    // admin panel toggle: show if current uid == ADMIN_UID
+    // admin view
     if(user.uid === ADMIN_UID){
       adminPanel.style.display = '';
-      // default subscribe all pending withdraws
-      subscribeAdminPending('');
+      subscribeAdminAll('');
     } else {
       adminPanel.style.display = 'none';
-      if(adminRequestsUnsub) { adminRequestsUnsub(); adminRequestsUnsub = null; }
+      if(adminRequestsUnsub){ try{ adminRequestsUnsub(); }catch(e){} adminRequestsUnsub = null; }
     }
   } else {
-    // anonymous sign-in
-    auth.signInAnonymously().catch(e=>console.error(e));
+    // sign in anonymously
+    auth.signInAnonymously().catch(e=>console.error('auth anon err', e));
   }
 });
+
+function subscribeUserDoc(uid){
+  if(userDocUnsub) try{ userDocUnsub(); }catch(e){ }
+  userDocUnsub = db.collection('users').doc(uid).onSnapshot(doc=>{
+    if(!doc.exists) return;
+    const d = doc.data();
+    nameField.textContent = d.name || '-';
+    phoneField.textContent = d.phone || '-';
+    balField.textContent = 'Rp ' + (d.balance ? Number(d.balance).toLocaleString() : '0');
+    createdAt.textContent = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate().toLocaleDateString() : '-';
+    accountBalance.textContent = 'Saldo: ' + (d.balance ? 'Rp ' + Number(d.balance).toLocaleString() : 'Rp 0');
+  }, err=>console.error('userDoc sub err', err));
+}
 
 /* refresh & signout */
 refreshBtn.addEventListener('click', ()=>{ if(currentUser) subscribeUserRequests(currentUser.uid); });
 signoutBtn.addEventListener('click', ()=>{ auth.signOut().then(()=>alert('Signed out')).catch(e=>alert('Sign out error: '+e)); });
 
-/* admin filter actions */
-adminRefresh.addEventListener('click', ()=>{ const uid = adminUidFilter.value || ''; subscribeAdminPending(uid); });
+/* admin refresh */
+adminRefresh.addEventListener('click', ()=>{ const uid = adminUidFilter.value || ''; subscribeAdminAll(uid); });
 
-/* ensure regenerate QR on orientation/resize handled by ResizeObserver (init earlier) */
-/* UX: start with deposit visible */
+/* UX start */
 showDeposit();
 
 </script>
