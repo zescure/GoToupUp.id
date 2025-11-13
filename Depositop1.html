@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Deposit & Withdraw — King Zezy</title>
+<title>Deposit & Withdraw — razorbil trade</title>
 <style>
   :root{
     --bg:#07121a; --card:#0b1722; --muted:#98a0ad; --accent:#2dd4bf;
@@ -52,10 +52,10 @@
   <div class="wrap">
   <header>
     <div>
-      <h1>Deposit & Penarikan — King Zezy</h1>
-      <div class="small">Semua request dicatat di koleksi <code>requests</code>. Admin bisa lihat & proses.</div>
+      <h1>Deposit & Penarikan — RAZORBIL TRADE</h1>
+      <div class="small">Semua Penarikan diproses <code>Kilat</code> 3 menit selesai</div>
     </div>
-    <div class="small" id="uidInfo">UID: —</div>
+    <div class="small" id="uidInfo">ID Akun: —</div>
   </header>
 
   <div class="container">
@@ -72,20 +72,20 @@
         <div id="depositPanel">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div><strong>Deposit (QRIS)</strong></div>
-            <div class="small">Minimal Rp 1.000 • Fee 0.8% + Rp 850</div>
+            <div class="small">Minimal Rp 10.000 •</div>
           </div>
           <label for="nominal">Nominal (Rp)</label>
-          <input id="nominal" type="number" min="1000" step="100" value="10000" />
+          <input id="nominal" type="number" min="10000" step="100" value="0" />
           <div class="row" style="margin-top:10px">
-            <button id="generateBtn" class="btn">Generate / Update</button>
-            <button id="saveRequestBtn" class="btn ghost">Simpan Request</button>
+            <button id="generateBtn" class="btn">Top Up Saldo</button>
+            <button id="saveRequestBtn" class="btn ghost">Selesaikan Pembayaran</button>
           </div>
           <div id="breakdown" class="small" style="margin-top:10px"></div>
 
           <div id="qArea" class="q-area" style="display:none">
             <div id="qWrap" class="qr-box" style="width:260px;height:260px"></div>
             <div style="flex:1">
-              <div class="small">Payload QRIS final</div>
+              <div class="small">Payload QRIS Anda</div>
               <pre id="finalPayload" class="payload">—</pre>
               <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
                 <button id="copyPayload" class="btn ghost">Copy Payload</button>
@@ -99,12 +99,12 @@
         <div id="withdrawPanel" style="display:none">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div><strong>Permintaan Penarikan</strong></div>
-            <div class="small">Minimal Rp 50.000</div>
+            <div class="small">Minimal Rp 350.000</div>
           </div>
           <label for="withdrawAmount">Nominal (Rp)</label>
-          <input id="withdrawAmount" type="number" min="50000" step="1000" value="50000">
+          <input id="withdrawAmount" type="number" min="350000" step="1000" value="0">
           <label for="bankName">Nama Bank</label>
-          <input id="bankName" type="text" placeholder="BCA / BNI / Mandiri">
+          <input id="bankName" type="text" placeholder="BCA / BNI / Mandiri / Dana / Gopay / Dll">
           <label for="bankAccount">No. Rekening</label>
           <input id="bankAccount" type="text" placeholder="1234567890">
           <label for="bankHolder">Atas Nama</label>
@@ -117,8 +117,8 @@
 
         <!-- Unified History -->
         <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center">
-          <div style="font-weight:800">Riwayat Transaksi (Gabungan)</div>
-          <div class="small">Semua deposit & penarikan akun ini (realtime)</div>
+          <div style="font-weight:800">Riwayat Transaksi</div>
+          <div class="small">Semua deposit & penarikan akun ini</div>
         </div>
         <div style="display:flex;gap:8px;margin-top:8px">
           <button id="tabAll" class="btn">Semua</button>
@@ -171,8 +171,8 @@
       <div class="card" style="margin-top:12px">
         <div style="font-weight:800">Catatan</div>
         <div class="small" style="margin-top:8px">
-          - Semua transaksi disimpan di koleksi <code>requests</code> dengan field lengkap.<br>
-          - Admin (UID sesuai konstanta) dapat melihat & proses request. Jangan lupa atur security rules sesuai kebutuhan.
+          - Semua transaksi diproses cepat <code>dan</code> Jika Mengalami Pending Silahkan Chat CS<br>
+          - jika sudah deposit segera selesaikan pembayaran dan melakukan refresh halaman
         </div>
       </div>
     </aside>
@@ -313,7 +313,7 @@ btnShowWithdraw.addEventListener('click', showWithdraw);
 
 /* QR responsive */
 function getQRSize(){ const cw = qWrap.clientWidth || 260; return Math.max(140, Math.min(420, Math.floor(cw - 24))); }
-function calcFees(nominal){ const feeQris = Math.round(nominal * 0.008); const qrisTotal = nominal + feeQris + 850; return { feeQris, qrisTotal }; }
+function calcFees(nominal){ const feeQris = Math.round(nominal * 0.008); const qrisTotal = nominal + feeQris + 8500; return { feeQris, qrisTotal }; }
 
 function generateAndShow(){
   const nominal = Number(nominalEl.value || 0);
@@ -331,7 +331,7 @@ function generateAndShow(){
 
   breakdownEl.innerHTML = `<strong>QRIS</strong><br>
     Nominal: Rp ${formatRp(nominal)}<br>
-    Fee 0.8%: Rp ${formatRp(feeQris)} + biaya tetap Rp 850<br>
+    Fee 0.8%: Rp ${formatRp(feeQris)} + biaya tetap Rp 8500<br>
     Total ditagihkan: Rp ${formatRp(qrisTotal)} (QR: ${amountStr})`;
 
   qArea.style.display = '';
@@ -350,7 +350,7 @@ downloadQRBtn.addEventListener('click', ()=>{ if(!lastQRElement) return alert('Q
 /* ====== Save deposit request (lengkap) ====== */
 saveRequestBtn.addEventListener('click', async ()=>{
   if(!currentUser) return alert('Belum login');
-  if(!lastGenerated) return alert('Klik Generate / Update terlebih dahulu untuk membuat QRIS');
+  if(!lastGenerated) return alert('Klik Top Up Terlebih Dahulu Untuk Memunculkan QRIS');
   const nominal = Number(nominalEl.value || 0);
   if(!nominal || nominal < 1000) return alert('Minimal Rp 1.000');
   const doc = {
@@ -367,8 +367,8 @@ saveRequestBtn.addEventListener('click', async ()=>{
   };
   try{
     const ref = await db.collection('requests').add(doc);
-    console.log('DEBUG: deposit request saved id=', ref.id);
-    alert('Request deposit tersimpan (id: ' + ref.id + '). Tunggu konfirmasi admin.');
+    console.log('DEBUG: deposit request Diproses id=', ref.id);
+    alert('Request deposit menunggu Validasi (id: ' + ref.id + '). Tunggu Sampai Saldo Bertambah.');
   }catch(e){
     console.error('ERROR save deposit request', e);
     alert('Gagal menyimpan request: ' + e);
@@ -379,7 +379,7 @@ saveRequestBtn.addEventListener('click', async ()=>{
 submitWithdraw.addEventListener('click', async ()=>{
   if(!currentUser) return alert('Belum login');
   const amt = Number(withdrawAmount.value || 0);
-  if(!amt || amt < 50000) return alert('Minimal penarikan Rp 50.000');
+  if(!amt || amt < 350000) return alert('Minimal penarikan Rp 350.000');
   if(!bankName.value || !bankAccount.value || !bankHolder.value) return alert('Lengkapi info bank');
   const req = {
     uid: currentUser.uid,
@@ -395,8 +395,8 @@ submitWithdraw.addEventListener('click', async ()=>{
   };
   try{
     const ref = await db.collection('requests').add(req);
-    console.log('DEBUG: withdraw request saved id=', ref.id);
-    alert('Request penarikan dibuat. Tunggu konfirmasi admin.');
+    console.log('DEBUG: withdraw request Disimpan id=', ref.id);
+    alert('Request penarikan dibuat. Tunggu Sampai Saldo Diproses.');
     withdrawAmount.value = 50000; bankName.value=''; bankAccount.value=''; bankHolder.value='';
     showDeposit();
   }catch(e){ console.error('ERROR save withdraw', e); alert('Gagal membuat request: ' + e); }
