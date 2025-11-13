@@ -10,41 +10,54 @@
     --glass: rgba(255,255,255,0.03);
   }
   html,body{height:100%;margin:0;background:linear-gradient(180deg,#07101a,#081627);color:#e6eef6;font-family:Inter,system-ui,Roboto,Arial}
-  .container{max-width:1000px;margin:12px auto;padding:12px;display:grid;grid-template-columns:1fr 340px;gap:14px}
-  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px}
+  .wrap{max-width:1200px;margin:12px auto;padding:12px;box-sizing:border-box}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px;flex-wrap:wrap}
   h1{margin:0;font-size:18px}
+  .container{display:grid;grid-template-columns:1fr 340px;gap:14px}
   .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,0.6)}
   /* controls */
   .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
   .btn{background:var(--accent);border:none;color:#012;padding:10px 14px;border-radius:10px;font-weight:800;cursor:pointer}
   .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.05);color:var(--muted);font-weight:700}
   label{display:block;color:var(--muted);font-size:13px;margin-top:8px}
-  input,select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;margin-top:6px}
+  input,select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;margin-top:6px;box-sizing:border-box}
   .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .small{font-size:13px;color:var(--muted)}
   .q-area{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-top:12px}
   .qr-box{background:#fff;padding:12px;border-radius:8px;display:flex;align-items:center;justify-content:center}
   .payload{background:#07121a;border:1px solid rgba(255,255,255,0.03);padding:8px;border-radius:8px;color:var(--muted);font-size:12px;word-break:break-all}
-  .history{max-height:360px;overflow:auto;margin-top:10px}
-  .hist-item{display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid rgba(255,255,255,0.02);font-size:13px}
+  .history{max-height:420px;overflow:auto;margin-top:10px}
+  .hist-item{display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid rgba(255,255,255,0.02);font-size:13px;gap:10px}
+  .hist-left{flex:1}
+  .hist-right{min-width:160px;text-align:right}
   .badge{padding:6px 8px;border-radius:8px;font-weight:700;font-size:12px}
   .badge.pending{background:rgba(255,193,7,0.08);color:#ffb020}
   .badge.confirmed{background:rgba(34,197,94,0.08);color:#22c55e}
   .badge.rejected{background:rgba(239,68,68,0.06);color:#fb7185}
-  /* responsive */
-  @media (max-width:980px){
-    .container{grid-template-columns:1fr; padding:12px}
-  }
-  /* side */
-  aside .info-row{display:flex;justify-content:space-between;gap:8px;align-items:center}
   .muted-label{font-size:13px;color:var(--muted)}
+  .admin-panel{margin-top:12px}
+  .admin-list{max-height:300px;overflow:auto;margin-top:8px;border-top:1px solid rgba(255,255,255,0.03)}
+  .admin-item{padding:8px;border-bottom:1px solid rgba(255,255,255,0.02);display:flex;justify-content:space-between;gap:10px}
+  /* responsive */
+  @media (max-width:1000px){
+    .container{grid-template-columns:1fr; padding:0}
+    aside{order:2}
+    main{order:1}
+  }
+  /* small */
+  @media (max-width:420px){
+    .hist-right{min-width:120px;font-size:12px}
+    .card{padding:10px}
+    .btn{padding:8px 10px}
+  }
 </style>
 </head>
 <body>
-  <header style="max-width:1000px;margin:0 auto;padding:12px 12px 0 12px">
+  <div class="wrap">
+  <header>
     <div>
       <h1>Deposit QRIS — King Zezy</h1>
-      <div class="small">Hanya QRIS SCAN. QR tampil setelah klik Generate / Update.</div>
+      <div class="small">Hanya QRIS. QR tampil setelah klik Generate / Update.</div>
     </div>
     <div class="small" id="uidInfo">UID: —</div>
   </header>
@@ -90,7 +103,7 @@
           </div>
         </div>
 
-        <!-- Withdraw panel (hidden by default) -->
+        <!-- Withdraw panel -->
         <div id="withdrawPanel" style="display:none">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div><strong>Permintaan Penarikan</strong></div>
@@ -115,9 +128,9 @@
           </div>
         </div>
 
-        <!-- History (both deposit & withdraw recorded and shown) -->
+        <!-- Unified History (semua disatukan) -->
         <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center">
-          <div style="font-weight:800">Riwayat Transaksi</div>
+          <div style="font-weight:800">Riwayat Transaksi (Gabungan)</div>
           <div class="small">Semua deposit & penarikan akun ini (realtime)</div>
         </div>
         <div style="display:flex;gap:8px;margin-top:8px">
@@ -152,6 +165,19 @@
           <button id="refreshBtn" class="btn ghost">Refresh</button>
           <button id="signoutBtn" class="btn ghost">Sign out</button>
         </div>
+
+        <!-- Admin panel (hanya terlihat kalau UID cocok ADMIN_UID) -->
+        <div id="adminPanel" class="admin-panel" style="display:none">
+          <div style="font-weight:800;margin-top:12px">Admin — Cek Pending Penarikan</div>
+          <div class="small" style="margin-top:6px">Lihat semua request withdraw dengan status <strong>pending</strong>. Bisa filter berdasarkan UID.</div>
+          <label style="margin-top:8px">Filter UID (kosong = semua)</label>
+          <input id="adminUidFilter" placeholder="Masukkan UID user untuk filter (opsional)" />
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button id="adminRefresh" class="btn ghost">Refresh</button>
+          </div>
+          <div id="adminList" class="admin-list"></div>
+        </div>
+
       </div>
 
       <div class="card" style="margin-top:12px">
@@ -159,10 +185,11 @@
         <div class="small" style="margin-top:8px">
           - QRIS hanya muncul setelah klik <strong>Generate / Update</strong>.<br>
           - Klik <strong>Simpan Request</strong> untuk menyimpan permintaan deposit ke Firestore (status: pending).<br>
-          - Riwayat ditampilkan realtime dari koleksi <code>requests</code>.
+          - Riwayat ditampilkan realtime dari koleksi <code>requests</code> (deposit & withdraw digabung).
         </div>
       </div>
     </aside>
+  </div>
   </div>
 
   <!-- libs -->
@@ -181,6 +208,7 @@ const firebaseConfig = {
   messagingSenderId: "358065954807",
   appId: "1:358065954807:web:66619211fea82a4b2518f2"
 };
+// set uid admin di sini (sama seperti yang kamu punya)
 const ADMIN_UID = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52';
 /* ================================= */
 firebase.initializeApp(firebaseConfig);
@@ -229,7 +257,12 @@ const tabWdr = document.getElementById('tabWithdraw');
 const refreshBtn = document.getElementById('refreshBtn');
 const signoutBtn = document.getElementById('signoutBtn');
 
-/* ====== QRIS helpers ====== */
+const adminPanel = document.getElementById('adminPanel');
+const adminUidFilter = document.getElementById('adminUidFilter');
+const adminRefresh = document.getElementById('adminRefresh');
+const adminList = document.getElementById('adminList');
+
+/* ====== QRIS helpers (sama seperti sebelumnya) ====== */
 function parseTLV(s){
   let i=0, out=[];
   while(i<s.length){
@@ -268,7 +301,6 @@ function setAmountInPayloadCore(corePayload, amountStr){
     else filtered.push({tag:'54', value:amountStr});
     return buildTLV(filtered);
   }catch(e){
-    // fallback: append 54 tag naive
     return corePayload + ('54' + String(amountStr.length).padStart(2,'0') + amountStr);
   }
 }
@@ -277,8 +309,11 @@ function setAmountInPayloadCore(corePayload, amountStr){
 let currentUser = null;
 let lastGenerated = null; // {finalPayload, amountShown, total}
 let lastQRElement = null;
+let requestsUnsub = null;
+let userDocUnsub = null;
+let adminRequestsUnsub = null;
 
-/* default core payload (editable in code if perlu) */
+/* default core payload (editable) */
 const defaultCorePayload = "00020101021126610014COM.GO-JEK.WWW01189360091433055874630210G3055874630303UMI51440014ID.CO.QRIS.WWW0215ID10254231099470303UMI5204481453033605802ID5925ZkgamingstoreGoTo, Toko H6007TANGSEL61051522062070703A016304";
 
 /* ====== UI behaviors ====== */
@@ -297,12 +332,11 @@ function showWithdraw(){
 btnShowDeposit.addEventListener('click', showDeposit);
 btnShowWithdraw.addEventListener('click', showWithdraw);
 
-/* responsive QR size */
+/* responsive QR: compute size based on qWrap size */
 function getQRSize(){
-  // make QR ~ min(60% of width, 320)
-  const containerW = qWrap.clientWidth || 260;
-  const s = Math.min(Math.max(180, Math.floor(containerW)), 380);
-  return s;
+  const cw = qWrap.clientWidth || 260;
+  // keep margins, min 140, max 420
+  return Math.max(140, Math.min(420, Math.floor(cw - 24)));
 }
 
 /* fee calcs */
@@ -313,13 +347,12 @@ function calcFees(nominal){
   return { feeQris, qrisTotal };
 }
 
-/* Generate QR payload (only QRIS) */
+/* Generate QR payload and render */
 function generateAndShow(){
   const nominal = Number(nominalEl.value || 0);
   if(!nominal || nominal < 1000) return alert('Minimal Rp 1.000');
   const { feeQris, qrisTotal } = calcFees(nominal);
-  const amountStr = (qrisTotal.toFixed ? qrisTotal.toFixed(2) : (qrisTotal + '.00')).toString();
-  // build final payload
+  const amountStr = (Number(qrisTotal).toFixed(2)).toString();
   let base = defaultCorePayload;
   if(base.slice(-8,-4) === '6304') base = base.slice(0,-8);
   const core = setAmountInPayloadCore(base, amountStr);
@@ -329,25 +362,56 @@ function generateAndShow(){
   const finalPayload = with6304 + crcHex;
   lastGenerated = { finalPayload, amountShown: amountStr, total: qrisTotal };
 
-  // show breakdown
   breakdownEl.innerHTML = `<strong>QRIS</strong><br>
     Nominal: Rp ${formatRp(nominal)}<br>
     Fee 0.8%: Rp ${formatRp(feeQris)} + biaya tetap Rp 850<br>
     Total ditagihkan: Rp ${formatRp(qrisTotal)} (ditampilkan di QR sebagai ${amountStr})`;
 
-  // render QR
   qArea.style.display = '';
   qWrap.innerHTML = '';
-  const size = Math.min(getQRSize(), 380);
-  // create QR, remove previous if any
+  const size = getQRSize();
   new QRCode(qWrap, { text: finalPayload, width: size, height: size, correctLevel: QRCode.CorrectLevel.H });
+  // store last QR element (canvas or img)
   lastQRElement = qWrap.querySelector('canvas') || qWrap.querySelector('img');
   finalPayloadEl.textContent = finalPayload;
 }
 
-generateBtn.addEventListener('click', generateAndShow);
+/* ResizeObserver for QR: regenerate with correct size when qWrap changes */
+let qrResizeObserver = null;
+function initQRResizeObserver(){
+  if(typeof ResizeObserver === 'undefined') return window.addEventListener('resize', ()=>{ if(lastGenerated) generateAndShow(); });
+  if(qrResizeObserver) qrResizeObserver.disconnect();
+  qrResizeObserver = new ResizeObserver(entries=>{
+    if(entries && entries.length){
+      // small debounce: regenerate if payload exists
+      if(lastGenerated){
+        // regenerate after short tick to allow stable width
+        clearTimeout(qrResizeObserver._t);
+        qrResizeObserver._t = setTimeout(()=>generateAndShow(), 120);
+      }
+    }
+  });
+  qrResizeObserver.observe(qWrap);
+}
 
-/* Save deposit request to Firestore */
+/* Event listeners */
+generateBtn.addEventListener('click', generateAndShow);
+copyPayloadBtn.addEventListener('click', ()=>{
+  if(!lastGenerated) return alert('Belum ada payload');
+  navigator.clipboard.writeText(lastGenerated.finalPayload).then(()=> alert('Payload disalin ke clipboard'));
+});
+downloadQRBtn.addEventListener('click', ()=>{
+  if(!lastQRElement) return alert('QR belum siap');
+  if(lastQRElement.tagName === 'IMG'){
+    const a = document.createElement('a'); a.href = lastQRElement.src; a.download = 'qris.png'; a.click(); return;
+  }
+  try{
+    const url = lastQRElement.toDataURL('image/png');
+    const a = document.createElement('a'); a.href = url; a.download = 'qris.png'; a.click();
+  }catch(e){ alert('Gagal download: ' + e); }
+});
+
+/* ====== Save deposit request to Firestore ====== */
 saveRequestBtn.addEventListener('click', async ()=>{
   if(!currentUser) return alert('Belum login');
   if(!lastGenerated) return alert('Klik Generate / Update terlebih dahulu untuk membuat QRIS');
@@ -368,25 +432,6 @@ saveRequestBtn.addEventListener('click', async ()=>{
     alert('Request deposit tersimpan (id: ' + ref.id + '). Tunggu konfirmasi admin.');
   }catch(e){
     console.error(e); alert('Gagal menyimpan request: ' + e);
-  }
-});
-
-/* Copy payload & download QR */
-copyPayloadBtn.addEventListener('click', ()=>{
-  if(!lastGenerated) return alert('Belum ada payload');
-  navigator.clipboard.writeText(lastGenerated.finalPayload).then(()=> alert('Payload disalin ke clipboard'));
-});
-downloadQRBtn.addEventListener('click', ()=>{
-  if(!lastQRElement) return alert('QR belum siap');
-  if(lastQRElement.tagName === 'IMG'){
-    const a = document.createElement('a'); a.href = lastQRElement.src; a.download = 'qris.png'; a.click(); return;
-  }
-  // canvas
-  try{
-    const url = lastQRElement.toDataURL('image/png');
-    const a = document.createElement('a'); a.href = url; a.download = 'qris.png'; a.click();
-  }catch(e){
-    alert('Gagal download: ' + e);
   }
 });
 
@@ -415,27 +460,44 @@ submitWithdraw.addEventListener('click', async ()=>{
 });
 cancelWithdraw.addEventListener('click', showDeposit);
 
-/* ====== History tabs ====== */
+/* ====== History tabs (unified) ====== */
 tabAll.addEventListener('click', ()=>{ historyAll.style.display='block'; historyDeposit.style.display='none'; historyWithdraw.style.display='none'; tabAll.classList.add('btn'); tabDep.classList.add('ghost'); tabWdr.classList.add('ghost'); });
 tabDep.addEventListener('click', ()=>{ historyAll.style.display='none'; historyDeposit.style.display='block'; historyWithdraw.style.display='none'; tabDep.classList.add('btn'); tabAll.classList.add('ghost'); tabWdr.classList.add('ghost'); });
 tabWdr.addEventListener('click', ()=>{ historyAll.style.display='none'; historyDeposit.style.display='none'; historyWithdraw.style.display='block'; tabWdr.classList.add('btn'); tabDep.classList.add('ghost'); tabAll.classList.add('ghost'); });
 
-/* ====== Auth & realtime listeners ====== */
-let requestsUnsub = null;
-let userDocUnsub = null;
-
+/* ====== Rendering helpers ====== */
 function renderRequestItem(r, id){
   const status = r.status || 'pending';
   const cls = status === 'confirmed' ? 'confirmed' : status === 'rejected' ? 'rejected' : 'pending';
   const div = document.createElement('div'); div.className = 'hist-item';
-  const left = document.createElement('div');
-  left.innerHTML = `<div style="font-weight:700">${(r.type||'').toUpperCase()} • Rp ${Number(r.nominal||r.totalPay||0).toLocaleString()}</div><div class="small">${r.method||r.bankName||''} • ${r.createdAt ? (r.createdAt.toDate ? r.createdAt.toDate().toLocaleString() : r.createdAt) : '-'}</div>`;
-  const right = document.createElement('div');
-  right.innerHTML = `<div><span class="badge ${cls}">${status}</span></div><div class="small" style="margin-top:6px">id: ${id}</div>`;
+  const left = document.createElement('div'); left.className = 'hist-left';
+  const right = document.createElement('div'); right.className = 'hist-right';
+
+  // left: main info
+  const when = r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().toLocaleString() : (r.createdAt || '-');
+  if(r.type === 'deposit'){
+    left.innerHTML = `<div style="font-weight:700">DEPOSIT • Rp ${Number(r.totalPay || r.nominal || 0).toLocaleString()}</div>
+      <div class="small">${r.method || 'qris'} • ${when}</div>
+      <div class="small">id: ${id}</div>`;
+  } else if(r.type === 'withdraw'){
+    left.innerHTML = `<div style="font-weight:700">PENARIKAN • Rp ${Number(r.nominal||0).toLocaleString()}</div>
+      <div class="small">${r.bankName || '-'} • ${r.bankAccount || '-'} • ${r.bankHolder || '-'}</div>
+      <div class="small">${when}</div>
+      <div class="small">UID: ${r.uid || '-'}</div>
+      <div class="small">id: ${id}</div>`;
+  } else {
+    left.innerHTML = `<div style="font-weight:700">${(r.type||'').toUpperCase()} • Rp ${Number(r.nominal||r.totalPay||0).toLocaleString()}</div>
+      <div class="small">${r.method || ''} • ${when}</div>
+      <div class="small">id: ${id}</div>`;
+  }
+
+  right.innerHTML = `<div><span class="badge ${cls}">${status}</span></div>`;
+
   div.appendChild(left); div.appendChild(right);
   return div;
 }
 
+/* ====== Realtime subscriptions for user ====== */
 function subscribeUserRequests(uid){
   if(requestsUnsub) requestsUnsub();
   requestsUnsub = db.collection('requests').where('uid','==',uid).orderBy('createdAt','desc').onSnapshot(snap=>{
@@ -450,6 +512,7 @@ function subscribeUserRequests(uid){
   }, err=>console.error(err));
 }
 
+/* subscribe user doc (profile, balance) */
 function subscribeUserDoc(uid){
   if(userDocUnsub) userDocUnsub();
   userDocUnsub = db.collection('users').doc(uid).onSnapshot(doc=>{
@@ -463,7 +526,49 @@ function subscribeUserDoc(uid){
   });
 }
 
-/* auth */
+/* ====== Admin: subscribe pending withdraws ====== */
+async function subscribeAdminPending(uidFilter){
+  // cleanup previous
+  if(adminRequestsUnsub) adminRequestsUnsub();
+  let q = db.collection('requests').where('type','==','withdraw').where('status','==','pending').orderBy('createdAt','desc');
+  if(uidFilter && uidFilter.trim()) q = q.where('uid','==', uidFilter.trim());
+  adminRequestsUnsub = q.onSnapshot(async snap=>{
+    adminList.innerHTML = '';
+    if(snap.empty){ adminList.innerHTML = '<div class="small" style="padding:8px">Tidak ada pending withdraw.</div>'; return; }
+    // iterate
+    const docs = [];
+    snap.forEach(doc=>docs.push({ id: doc.id, data: doc.data() }));
+    // render
+    for(const item of docs){
+      const r = item.data;
+      const id = item.id;
+      const el = document.createElement('div'); el.className = 'admin-item';
+      const left = document.createElement('div'); left.style.flex='1';
+      const right = document.createElement('div'); right.style.minWidth='140px'; right.style.textAlign='right';
+      const when = r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().toLocaleString() : '-';
+      left.innerHTML = `<div style="font-weight:700">Rp ${Number(r.nominal||0).toLocaleString()}</div>
+        <div class="small">${r.bankName || '-'} • ${r.bankAccount || '-'}</div>
+        <div class="small">Atas nama: ${r.bankHolder || '-'}</div>
+        <div class="small">UID: ${r.uid || '-'}</div>
+        <div class="small">id: ${id}</div>`;
+      right.innerHTML = `<div class="small">${when}</div>
+        <div style="margin-top:6px"><button class="btn ghost" data-id="${id}" data-uid="${r.uid||''}" onclick="copyAdminInfo(event)">Copy</button></div>`;
+      el.appendChild(left); el.appendChild(right);
+      adminList.appendChild(el);
+    }
+  }, err=>{ console.error('admin sub err', err); adminList.innerHTML = '<div class="small" style="padding:8px">Error fetch admin data.</div>'; });
+}
+
+/* helper for admin button action (copy withdraw info) */
+window.copyAdminInfo = function(e){
+  const btn = e.currentTarget;
+  const parent = btn.closest('.admin-item');
+  if(!parent) return;
+  const txt = parent.innerText.replace(/\n+/g,'\n');
+  navigator.clipboard.writeText(txt).then(()=> alert('Info penarikan disalin ke clipboard'));
+};
+
+/* ====== auth & initialization ====== */
 auth.onAuthStateChanged(async user=>{
   if(user){
     currentUser = user;
@@ -477,6 +582,17 @@ auth.onAuthStateChanged(async user=>{
     subscribeUserRequests(user.uid);
     subscribeUserDoc(user.uid);
     showDeposit();
+    initQRResizeObserver();
+
+    // admin panel toggle: show if current uid == ADMIN_UID
+    if(user.uid === ADMIN_UID){
+      adminPanel.style.display = '';
+      // default subscribe all pending withdraws
+      subscribeAdminPending('');
+    } else {
+      adminPanel.style.display = 'none';
+      if(adminRequestsUnsub) { adminRequestsUnsub(); adminRequestsUnsub = null; }
+    }
   } else {
     // anonymous sign-in
     auth.signInAnonymously().catch(e=>console.error(e));
@@ -487,9 +603,10 @@ auth.onAuthStateChanged(async user=>{
 refreshBtn.addEventListener('click', ()=>{ if(currentUser) subscribeUserRequests(currentUser.uid); });
 signoutBtn.addEventListener('click', ()=>{ auth.signOut().then(()=>alert('Signed out')).catch(e=>alert('Sign out error: '+e)); });
 
-/* ensure QR container resizes nicely on orientation change */
-window.addEventListener('resize', ()=>{ if(lastGenerated) generateAndShow(); });
+/* admin filter actions */
+adminRefresh.addEventListener('click', ()=>{ const uid = adminUidFilter.value || ''; subscribeAdminPending(uid); });
 
+/* ensure regenerate QR on orientation/resize handled by ResizeObserver (init earlier) */
 /* UX: start with deposit visible */
 showDeposit();
 
