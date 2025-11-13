@@ -303,7 +303,7 @@ let currentUser = null;
 let isAdmin = false;
 let markets = {};
 let currentMarketId = null;
-const TICK_INTERVAL = 500;
+const TICK_INTERVAL = 100;
 
 const pairTitle = document.getElementById('pairTitle');
 const pairSub = document.getElementById('pairSub');
@@ -397,7 +397,7 @@ const ctx = chartCanvas.getContext('2d');
 let chartData = [];
 let animationId = null;
 let lastBucketAppended = null;
-let lastPrice = 4;
+let lastPrice = 8;
 
 // responsive canvas sizing
 function resizeCanvas(){
