@@ -96,10 +96,8 @@
 <body>
   <div class="topbar">
     <div class="left-top">
-      <!-- badge-live now acts as account toggle (click to switch Live <-> Demo). No balance shown here. -->
       <div class="badge-live" id="badgeLive">LIVE</div>
       <div style="color:var(--muted);font-size:13px">UTC+7 • <span id="clock">--:--:--</span></div>
-      <!-- keep a hidden span with id balanceTop so existing JS that references it won't crash, but it's hidden -->
       <span id="balanceTop" style="display:none">0.00</span>
     </div>
     <div style="display:flex;gap:12px;align-items:center">
@@ -299,7 +297,7 @@ const db = firebase.firestore();
 /* ====== GLOBAL STATE & UI EL ====== */
 let currentUser = null;
 let isAdmin = false;
-let markets = {};
+let markets = {};            // will be filled from CoinGecko top-10
 let currentMarketId = null;
 
 /* Chart timing & history */
@@ -365,14 +363,11 @@ const DEFAULT_BASE_PAYLOAD = "00020101021126610014COM.GO-JEK.WWW0118936009143305
 
 /* ===== CoinGecko integration settings ===== */
 const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
-const CG_VS_CURRENCY = 'usd'; // ubah ke 'idr' kalau mau harga dalam Rupiah
-const COIN_LIST_CACHE_KEY = 'cg_coins_list_v1';
-const COIN_LIST_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 jam
-const PRICE_CACHE_KEY = 'cg_last_prices_v1';
+let CG_VS_CURRENCY = 'usd'; // <-- ubah jadi 'idr' kalau mau tampil Rupiah
 const PRICE_POLL_INTERVAL = 5000; // 5s between polls (batched)
 let lastPriceMap = {}; // cgId -> { price, ts, change24h }
 
-/* ===== deterministic helpers (keperluan fallback & visual) ===== */
+/* ===== deterministic fallback helpers ===== */
 function hashStringToInt(s){
   let h = 2166136261 >>> 0;
   for (let i=0;i<s.length;i++){
@@ -420,54 +415,49 @@ function resizeCanvas(){
 }
 window.addEventListener('resize', ()=>{ try{ resizeCanvas(); }catch(e){} });
 
-/* ===== CoinGecko helpers ===== */
-async function fetchCoinListIfNeeded(){
+/* ===== CoinGecko helpers: fetch top-10 markets & poll prices ===== */
+async function fetchTop10CoinGeckoMarkets(){
   try{
-    const raw = localStorage.getItem(COIN_LIST_CACHE_KEY);
-    if(raw){
-      const parsed = JSON.parse(raw);
-      if(parsed.t && (Date.now() - parsed.t) < COIN_LIST_CACHE_TTL_MS){
-        return parsed.data;
-      }
+    const url = `${COINGECKO_BASE}/coins/markets?vs_currency=${CG_VS_CURRENCY}&order=market_cap_desc&per_page=10&page=1&sparkline=false&price_change_percentage=24h`;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('cg top10 failed ' + res.status);
+    const data = await res.json(); // array of coins
+    // rebuild markets
+    markets = {};
+    data.forEach(coin=>{
+      // key by SYMBOL/ID so it's readable
+      const key = (coin.symbol||'').toUpperCase() + '/' + coin.id;
+      markets[key] = {
+        cgId: coin.id,
+        symbol: (coin.symbol||'').toUpperCase(),
+        name: coin.name || coin.id,
+        price: coin.current_price || 0,
+        volatilityFraction: 0.004, // default visual jitter
+        payoutPercent: 70,
+        locked: false
+      };
+    });
+    // update UI select
+    symbolSelectTop.innerHTML = '';
+    Object.keys(markets).forEach(k=>{
+      const m = markets[k];
+      const opt = document.createElement('option');
+      opt.value = k;
+      opt.text = `${m.symbol} — ${m.name}`;
+      symbolSelectTop.appendChild(opt);
+    });
+    if(Object.keys(markets).length){
+      currentMarketId = symbolSelectTop.value || Object.keys(markets)[0];
     }
-  }catch(e){ /* ignore */ }
-
-  try{
-    const res = await fetch(`${COINGECKO_BASE}/coins/list`);
-    if(!res.ok) throw new Error('cg list failed');
-    const data = await res.json(); // [{id,symbol,name},...]
-    localStorage.setItem(COIN_LIST_CACHE_KEY, JSON.stringify({ t: Date.now(), data }));
-    return data;
+    updateMarketUI();
+    generateInitialChartData();
+    startChartAnimation();
   }catch(e){
-    console.warn('fetchCoinListIfNeeded err', e);
-    try{
-      const cached = JSON.parse(localStorage.getItem(COIN_LIST_CACHE_KEY) || '{}').data || [];
-      return cached;
-    }catch(er){ return []; }
+    console.error('fetchTop10CoinGeckoMarkets err', e);
+    // fallback: leave markets empty, can still run deterministic markets
   }
 }
 
-// find best CoinGecko ID by symbol (case-insensitive). Returns null if not found.
-async function findCoinGeckoId(symbol){
-  if(!symbol) return null;
-  const normalized = symbol.replace(/\s+|\/|-/g,'').toLowerCase(); // strip slashes, spaces
-  const list = await fetchCoinListIfNeeded();
-  // try exact symbol match first
-  for(const c of list){
-    if(c.symbol && c.symbol.toLowerCase() === normalized) return c.id;
-  }
-  // fallback: try match on name contains
-  for(const c of list){
-    if((c.name||'').toLowerCase().includes(symbol.toLowerCase())) return c.id;
-  }
-  // as final fallback, try symbol variants
-  for(const c of list){
-    if((c.symbol||'').toLowerCase().startsWith(normalized) || (c.id||'').toLowerCase().includes(normalized)) return c.id;
-  }
-  return null;
-}
-
-// batch price fetch for all markets that have cgId
 let cgPollTimer = null;
 async function pollCoinGeckoPrices(){
   if(cgPollTimer) clearTimeout(cgPollTimer);
@@ -476,11 +466,9 @@ async function pollCoinGeckoPrices(){
     cgPollTimer = setTimeout(pollCoinGeckoPrices, PRICE_POLL_INTERVAL);
     return;
   }
-  // batch into comma-separated
   const uniq = Array.from(new Set(ids));
   const batch = uniq.join(',');
   try{
-    // use simple/price (many coins per call)
     const url = `${COINGECKO_BASE}/simple/price?ids=${encodeURIComponent(batch)}&vs_currencies=${CG_VS_CURRENCY}&include_24hr_change=true`;
     const res = await fetch(url);
     if(!res.ok) throw new Error('price fetch err ' + res.status);
@@ -492,13 +480,11 @@ async function pollCoinGeckoPrices(){
         ts: Date.now()
       };
     });
-    // persist minimal cache to localStorage so page reload has warm start
-    localStorage.setItem(PRICE_CACHE_KEY, JSON.stringify({ t: Date.now(), data: lastPriceMap }));
+    localStorage.setItem('cg_price_cache_v1', JSON.stringify({ t: Date.now(), data: lastPriceMap }));
   }catch(e){
     console.warn('pollCoinGeckoPrices err', e);
-    // try to use last cached
     try{
-      const raw = localStorage.getItem(PRICE_CACHE_KEY);
+      const raw = localStorage.getItem('cg_price_cache_v1');
       if(raw){
         const parsed = JSON.parse(raw);
         if(parsed.data) lastPriceMap = parsed.data;
@@ -509,18 +495,17 @@ async function pollCoinGeckoPrices(){
   }
 }
 
-// get most recent price for a marketId. If market has cgId and lastPriceMap available -> use it.
-// fallback to deterministicPrice.
 function getMarketLivePrice(marketId){
   const m = markets[marketId];
   if(m && m.cgId && lastPriceMap[m.cgId] && typeof lastPriceMap[m.cgId].price !== 'undefined'){
     return lastPriceMap[m.cgId].price;
   }
-  // fallback: deterministic
+  // fallback to stored price from initial fetch
+  if(m && typeof m.price !== 'undefined') return m.price;
+  // final fallback deterministic
   return deterministicPrice(marketId, Date.now());
 }
 
-// when resolving a trade at expiry, fetch latest price once (prefer CG fresh fetch)
 async function fetchLatestPriceForMarket(marketId){
   const m = markets[marketId];
   if(m && m.cgId){
@@ -532,13 +517,12 @@ async function fetchLatestPriceForMarket(marketId){
         const price = Number(j[m.cgId] && j[m.cgId][CG_VS_CURRENCY] ? j[m.cgId][CG_VS_CURRENCY] : NaN);
         if(!isNaN(price)){
           lastPriceMap[m.cgId] = { price, ts: Date.now() };
-          localStorage.setItem(PRICE_CACHE_KEY, JSON.stringify({ t: Date.now(), data: lastPriceMap }));
+          localStorage.setItem('cg_price_cache_v1', JSON.stringify({ t: Date.now(), data: lastPriceMap }));
           return price;
         }
       }
     }catch(e){ console.warn('fetchLatestPriceForMarket err', e); }
   }
-  // final fallback to deterministic
   return deterministicPrice(marketId, Date.now());
 }
 
@@ -548,18 +532,17 @@ function generateInitialChartData(){
   const now = Date.now();
   const marketId = currentMarketId || Object.keys(markets)[0] || 'DEFAULT/PRICE';
   const currentMinuteStart = Math.floor(now / MIN_TICK_MS) * MIN_TICK_MS;
-  // if we have a recent lastPriceMap value, seed around that with small jitter for past minutes,
-  // otherwise fallback deterministic anchors
   const m = markets[marketId];
   let seedPrice = null;
-  if(m && m.cgId && lastPriceMap[m.cgId] && (Date.now() - lastPriceMap[m.cgId].ts < 60_000 * 60)){ // within 1 hour
+  if(m && m.cgId && lastPriceMap[m.cgId] && (Date.now() - lastPriceMap[m.cgId].ts < 60_000 * 60)){
     seedPrice = lastPriceMap[m.cgId].price;
+  } else if(m && typeof m.price !== 'undefined'){
+    seedPrice = m.price;
   }
   for (let i = HISTORY_MINUTES - 1; i >= 0; i--) {
     const ts = currentMinuteStart - (i * MIN_TICK_MS);
     let price;
     if(seedPrice !== null){
-      // create gentle jitter backward so chart looks realistic
       const jitter = (Math.sin((i+1) * 0.7) * 0.003 + (Math.random()-0.5)*0.002) * seedPrice;
       price = Math.max(0.0000001, seedPrice + jitter);
     } else {
@@ -583,12 +566,10 @@ function drawChart(){
   ctx.clearRect(0,0,width,height);
   if(!chartData.length) return;
 
-  // background
   ctx.fillStyle = '#07121a';
   ctx.fillRect(0,0,width,height);
 
   const padding = 12;
-  // horizontal grid
   ctx.strokeStyle = 'rgba(255,255,255,0.03)';
   ctx.lineWidth = 1;
   const gridCount = 5;
@@ -600,16 +581,13 @@ function drawChart(){
   const marketId = currentMarketId || Object.keys(markets)[0] || 'DEFAULT/PRICE';
   const livePrice = getMarketLivePrice(marketId);
 
-  // display array = anchors + live point
   const displayData = chartData.slice();
   displayData.push({ timestamp: now, price: livePrice });
 
-  // timestamps mapping
   const minTs = displayData[0].timestamp;
   const maxTs = displayData[displayData.length-1].timestamp;
   const tsRange = Math.max(1, maxTs - minTs);
 
-  // vertical minute ticks and labels
   ctx.font = '11px Inter, Arial, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
@@ -617,13 +595,11 @@ function drawChart(){
   const startMinute = Math.floor(minTs / MIN_TICK_MS) * MIN_TICK_MS;
   for(let t = startMinute; t <= maxTs; t += MIN_TICK_MS){
     const xTick = padding + ((t - minTs) / tsRange) * (width - padding*2);
-    // vertical line
     ctx.beginPath();
     ctx.moveTo(xTick, padding);
     ctx.lineTo(xTick, height - padding);
     ctx.strokeStyle = 'rgba(255,255,255,0.03)';
     ctx.stroke();
-    // label
     try {
       const d = new Date(t);
       const label = d.toLocaleTimeString();
@@ -631,12 +607,10 @@ function drawChart(){
     } catch(e){}
   }
 
-  // price scaling
   const prices = displayData.map(d=>d.price);
   const minP = Math.min(...prices), maxP = Math.max(...prices);
   const range = (maxP - minP) || (Math.abs(maxP)*0.001) || 1;
 
-  // price line
   ctx.beginPath();
   ctx.lineWidth = 2;
   ctx.strokeStyle = '#2dd4bf';
@@ -649,7 +623,6 @@ function drawChart(){
   }
   ctx.stroke();
 
-  // last point highlight
   const last = displayData[displayData.length-1];
   const lastX = padding + ((last.timestamp - minTs) / tsRange) * (width - padding*2);
   const lastY = height - ((last.price - minP)/range)*(height - padding*2) - padding;
@@ -658,7 +631,7 @@ function drawChart(){
   ctx.beginPath(); ctx.arc(lastX, lastY, 10, 0, Math.PI*2); ctx.strokeStyle = 'rgba(45,212,191,0.12)'; ctx.lineWidth=2; ctx.stroke();
 }
 
-/* animation loop */
+/* animation */
 function startChartAnimation(){
   if(animationId) cancelAnimationFrame(animationId);
   let prevPrice = lastPrice;
@@ -669,14 +642,12 @@ function startChartAnimation(){
     if(lastMinuteAppended === null && chartData.length) lastMinuteAppended = Math.floor(chartData[chartData.length-1].timestamp / MIN_TICK_MS);
     if(lastMinuteAppended === null) lastMinuteAppended = currentMinuteBucket - 1;
 
-    // if we've moved into one or more new minutes, append anchor(s)
     while(lastMinuteAppended < currentMinuteBucket){
       lastMinuteAppended++;
       const minuteTs = lastMinuteAppended * MIN_TICK_MS;
-      // use live price if available, otherwise deterministic
       let minutePrice;
       const m = markets[marketId];
-      if(m && m.cgId && lastPriceMap[m.cgId]) minutePrice = lastPriceMap[m.cgId].price * (1 + (Math.random()-0.5)*0.002); // slight noise
+      if(m && m.cgId && lastPriceMap[m.cgId]) minutePrice = lastPriceMap[m.cgId].price * (1 + (Math.random()-0.5)*0.002);
       else minutePrice = deterministicPrice(marketId, minuteTs);
       chartData.push({ timestamp: minuteTs, price: minutePrice });
       if(chartData.length > HISTORY_MINUTES) chartData.shift();
@@ -686,7 +657,6 @@ function startChartAnimation(){
     drawChart();
     updateDisplayedPrice();
 
-    // small UI transform to hint movement
     try{
       const cur = getMarketLivePrice(currentMarketId || Object.keys(markets)[0]);
       const delta = cur - prevPrice;
@@ -704,86 +674,12 @@ function startChartAnimation(){
 
 function updateDisplayedPrice(){
   const cur = getMarketLivePrice(currentMarketId || Object.keys(markets)[0]);
-  // show 2 decimals for fiat, for very small tokens use 6 decimals
   if(cur >= 0.01) currentPriceLarge.textContent = Number(cur).toFixed(2);
   else currentPriceLarge.textContent = Number(cur).toFixed(6);
   priceMarker.textContent = currentPriceLarge.textContent;
 }
 
-/* ===== fetch/subscribe markets from firestore + annotate with CoinGecko ids ===== */
-let marketsUnsub = null;
-async function subscribeMarketsRealtime(){
-  if(marketsUnsub) marketsUnsub();
-  marketsUnsub = db.collection('markets').orderBy('__name__').onSnapshot(async snap=>{
-    markets = {};
-    symbolSelectTop.innerHTML = '';
-    snap.forEach(doc=>{
-      markets[doc.id] = doc.data();
-    });
-
-    // try map each market symbol to coinGecko id (async)
-    await annotateMarketsWithCoinGeckoIds();
-
-    const keys = Object.keys(markets);
-    if(keys.length === 0){
-      symbolSelectTop.innerHTML = '<option value="">No markets</option>';
-      pairTitle.textContent = 'No markets';
-      return;
-    }
-    keys.forEach(k=>{
-      const opt = document.createElement('option');
-      opt.value = k;
-      const m = markets[k];
-      opt.text = `${(m.symbol||k)} ${(m.cgId)? '• cg:'+m.cgId : ''} ${k}`;
-      symbolSelectTop.appendChild(opt);
-    });
-    if(currentMarketId && markets[currentMarketId]) symbolSelectTop.value = currentMarketId;
-    else symbolSelectTop.selectedIndex = 0;
-    currentMarketId = symbolSelectTop.value;
-    updateMarketUI();
-    // load last price cache if any
-    try{
-      const raw = localStorage.getItem(PRICE_CACHE_KEY);
-      if(raw){
-        const parsed = JSON.parse(raw);
-        if(parsed.data) lastPriceMap = parsed.data;
-      }
-    }catch(e){}
-    // start polling CG and chart
-    pollCoinGeckoPrices();
-    generateInitialChartData();
-    startChartAnimation();
-    renderAdminMarkets();
-  }, err=>console.error(err));
-}
-
-/* annotate markets with coinGecko ids where possible */
-async function annotateMarketsWithCoinGeckoIds(){
-  const coinList = await fetchCoinListIfNeeded();
-  const coinIndex = {};
-  coinList.forEach(c=>{
-    if(c.symbol) coinIndex[c.symbol.toLowerCase()] = c.id;
-  });
-  for(const id of Object.keys(markets)){
-    const m = markets[id];
-    if(!m) continue;
-    // skip if already provided by admin as cgId
-    if(m.cgId) continue;
-    const symbol = (m.symbol || id || '').replace(/\s+|\/|-/g,'').toLowerCase();
-    let found = coinIndex[symbol] || null;
-    if(!found){
-      // brute search in coinList first match of symbol or name
-      found = await findCoinGeckoId(m.symbol || id);
-    }
-    if(found){
-      markets[id].cgId = found;
-    } else {
-      markets[id].cgId = null;
-    }
-  }
-}
-
-/* update UI when market selection changes */
+/* ===== markets UI update (now from CoinGecko top-10) ===== */
 function updateMarketUI(){
   const m = markets[currentMarketId];
   if(!m){
@@ -982,7 +878,6 @@ function addOpenTradeUI(tr){
     const remainingMs = Math.max(0, tr.expiryTs - now);
     const sec = Math.ceil(remainingMs/1000);
     countdownEl.textContent = formatSecondsMMSS(sec);
-    // update exitPrice with current estimation
     const expectedExit = getMarketLivePrice(tr.market);
     exitPriceEl.textContent = (expectedExit >= 0.01) ? Number(expectedExit).toFixed(2) : Number(expectedExit).toFixed(6);
     if(remainingMs <= 0){
@@ -1030,7 +925,7 @@ function executeTrade(side){
   if(bet > activeBal) return alert('Saldo tidak cukup');
   if(!currentUser) return alert('Belum login');
 
-  // use live price as entry
+  // entry price uses latest available
   const entryPrice = getMarketLivePrice(currentMarketId);
   const dur = parseDurationToSeconds(durationInput.value || '00:01:00');
   const expiryTs = Date.now() + (dur*1000);
@@ -1047,7 +942,6 @@ function executeTrade(side){
     saveDemoOpenTrades();
     updateBalanceDisplays();
   } else {
-    // live: create openTrades doc in transaction and deduct stake
     db.runTransaction(async (t)=>{
       const uref = db.collection('users').doc(currentUser.uid);
       const ud = await t.get(uref);
@@ -1074,23 +968,22 @@ function executeTrade(side){
   updateSummary();
 }
 
-/* Demo resolution: tie is loss (no return), win returns stake + profit, lose returns nothing */
+/* Demo resolution */
 async function resolveDemoTrade(tr){
   const found = openTrades.find(x=>x.id === tr.id && x._mode === 'demo');
   if(!found) return;
-  // get live exit price if possible
   const exitPrice = await fetchLatestPriceForMarket(tr.market);
   const isBuy = (tr.side.toLowerCase() === 'naik' || tr.side.toLowerCase() === 'call');
   let isWin = false;
   if(exitPrice > tr.entryPrice) isWin = isBuy;
   else if(exitPrice < tr.entryPrice) isWin = !isBuy;
-  else isWin = false; // tie -> lose (explicit)
+  else isWin = false;
   const payoutPercent = tr.payoutPercent || 70;
   const bet = Number(tr.amount || 0);
   const profit = Math.round((payoutPercent/100) * bet);
 
   if(isWin){
-    demoBalance = demoBalance + bet + profit; // return stake + profit
+    demoBalance = demoBalance + bet + profit;
     const text = `Menang +Rp ${profit.toLocaleString('id-ID')} (plus pengembalian stake Rp ${bet.toLocaleString('id-ID')})`;
     const li = document.createElement('div'); li.className='history-item';
     li.innerHTML = `<div>${new Date().toLocaleTimeString()} — ${tr.market} — ${tr.side}</div><div style="color:#22c55e">${text}</div>`;
@@ -1104,26 +997,25 @@ async function resolveDemoTrade(tr){
     markTradeClosedUI(tr, false, exitPrice);
   }
 
-  // cleanup
   removeDemoOpenTradeById(tr.id);
   if(demoTradeTimers[tr.id]){ clearTimeout(demoTradeTimers[tr.id]); delete demoTradeTimers[tr.id]; }
   updateBalanceDisplays();
 }
 
-/* Live resolution: tie is loss (no return) */
+/* Live resolution */
 async function resolveLiveTrade(tradeId){
   if(!currentUser) return;
   const docRef = db.collection('users').doc(currentUser.uid).collection('openTrades').doc(tradeId);
   try{
     const doc = await docRef.get();
-    if(!doc.exists) return; // already resolved
+    if(!doc.exists) return;
     const tr = { id: doc.id, ...doc.data() };
     const exitPrice = await fetchLatestPriceForMarket(tr.market);
     const isBuy = (tr.side.toLowerCase() === 'naik' || tr.side.toLowerCase() === 'call');
     let isWin = false;
     if(exitPrice > tr.entryPrice) isWin = isBuy;
     else if(exitPrice < tr.entryPrice) isWin = !isBuy;
-    else isWin = false; // tie => lose
+    else isWin = false;
     const payoutPercent = tr.payoutPercent || 70;
     const bet = Number(tr.amount || 0);
     const profit = Math.round((payoutPercent/100) * bet);
@@ -1151,7 +1043,6 @@ async function resolveLiveTrade(tradeId){
       t.delete(docRef);
     });
 
-    // local UI update
     markTradeClosedUI(tr, isWin, exitPrice);
     if(isWin) balance = (balance || 0) + refundOnWin;
     updateBalanceDisplays();
@@ -1165,7 +1056,7 @@ async function resolveLiveTrade(tradeId){
   }
 }
 
-/* ===== deposit QRIS helpers (unchanged) ===== */
+/* deposit helpers (unchanged) */
 function crc16ccitt(str) {
   let crc = 0xFFFF;
   for (let i = 0; i < str.length; i++) {
@@ -1188,7 +1079,6 @@ function insertAmountTag(payload630, amountStr) {
 }
 function formatRupiahTwoDecimals(rp){ return rp.toFixed(2); }
 
-/* depositFlow */
 let currentRequestDocId = null;
 depositPay.addEventListener('click', async ()=>{
   const amt = Number(depositAmount.value || 0);
@@ -1243,7 +1133,6 @@ markPaidBtn.addEventListener('click', async ()=>{
 depositClose.addEventListener('click', ()=> depositModal.style.display = 'none');
 depositCancel.addEventListener('click', ()=> depositModal.style.display = 'none');
 
-/* Deposit button behavior depends on account mode */
 function openDepositPage(){
   if(accountMode === 'demo'){
     demoBalance = 100000 + Math.floor(Math.random()*50000);
@@ -1299,11 +1188,10 @@ function listenToUser(uid){
     if(accountMode === 'demo') sideRequestsList.innerHTML = '';
   });
 
-  // subscribe to live openTrades for persistence across refresh
   subscribeUserOpenTrades(uid);
 }
 
-/* admin UI and request processing (buttons shown only on pending) */
+/* admin UI (keperluan edit payout/lock) */
 function enableAdminUI(){
   adminInline.style.display = 'block';
   adminPanel.style.display = 'block';
@@ -1315,7 +1203,6 @@ function enableAdminUI(){
       const status = r.status || 'pending';
       const item = document.createElement('div'); item.className='req-item';
       item.style.display='flex'; item.style.gap='12px'; item.style.padding='8px 0';
-      // only render action buttons if pending
       let actionsHtml = '';
       if(status === 'pending'){
         actionsHtml = `<div><button class="btn-confirm" data-id="${id}">Confirm</button><button class="btn-reject" data-id="${id}">Reject</button></div>`;
@@ -1335,7 +1222,6 @@ function enableAdminUI(){
       `;
       requestsList.appendChild(item);
     });
-    // bind to visible buttons
     document.querySelectorAll('.btn-confirm').forEach(b=>{
       b.onclick = ()=> adminConfirmRequest(b.dataset.id);
     });
@@ -1389,7 +1275,9 @@ async function adminRejectRequest(requestId){
   }catch(e){ console.error(e); alert('Gagal menolak'); }
 }
 
-/* admin markets render + edit */
+/* admin markets UI: allow overriding payout/volatility/lock in Firestore by market key
+   (this part is optional persistence — if admin edits, we store override doc in 'markets' keyed by marketKey)
+*/
 function renderAdminMarkets(){
   adminMarketsContainer.innerHTML = '';
   Object.keys(markets).forEach(id=>{
@@ -1410,9 +1298,12 @@ function renderAdminMarkets(){
       const id = btn.dataset.id;
       const vol = adminMarketsContainer.querySelector(`.vol-input[data-id="${id}"]`).value;
       const pay = adminMarketsContainer.querySelector(`.pay-input[data-id="${id}"]`).value;
+      // save override to Firestore under collection 'markets' doc id = encodeURIComponent(id)
       try{
-        await db.collection('markets').doc(id).set({ volatilityFraction: Number(vol), payoutPercent: Number(pay) }, { merge:true });
-        alert('Saved');
+        await db.collection('markets').doc(encodeURIComponent(id)).set({ volatilityFraction: Number(vol), payoutPercent: Number(pay) }, { merge:true });
+        // also update local memory
+        if(markets[id]) { markets[id].volatilityFraction = Number(vol); markets[id].payoutPercent = Number(pay); updateMarketUI(); }
+        alert('Saved (override stored)');
       }catch(e){ console.error(e); alert('Save failed'); }
     };
   });
@@ -1422,7 +1313,8 @@ function renderAdminMarkets(){
       const m = markets[id] || {};
       const newLocked = !m.locked;
       try{
-        await db.collection('markets').doc(id).set({ locked: newLocked }, { merge:true });
+        await db.collection('markets').doc(encodeURIComponent(id)).set({ locked: newLocked }, { merge:true });
+        if(markets[id]) { markets[id].locked = newLocked; updateMarketUI(); }
         alert((newLocked ? 'Market dikunci' : 'Market dibuka') + `: ${id}`);
       }catch(e){ console.error(e); alert('Gagal update lock'); }
     };
@@ -1441,10 +1333,25 @@ auth.onAuthStateChanged(async (user)=>{
       await uref.set({ balance: 0, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
     }
     listenToUser(user.uid);
-    subscribeMarketsRealtime();
     isAdmin = (user.uid === ADMIN_UID);
     if(isAdmin){ enableAdminUI(); }
-    // load demo open trades if demo mode
+    // start: fetch top10 markets from CoinGecko + poll prices
+    await fetchTop10CoinGeckoMarkets();
+    pollCoinGeckoPrices();
+    // load overrides from Firestore 'markets' collection (if any)
+    db.collection('markets').get().then(snap=>{
+      snap.forEach(doc=>{
+        const id = decodeURIComponent(doc.id);
+        if(markets[id]){
+          const od = doc.data();
+          if(typeof od.volatilityFraction !== 'undefined') markets[id].volatilityFraction = od.volatilityFraction;
+          if(typeof od.payoutPercent !== 'undefined') markets[id].payoutPercent = od.payoutPercent;
+          if(typeof od.locked !== 'undefined') markets[id].locked = od.locked;
+        }
+      });
+      updateMarketUI();
+      renderAdminMarkets();
+    }).catch(()=>{});
     if(accountMode === 'demo') loadDemoOpenTrades();
   } else {
     auth.signInAnonymously().catch(e=>console.error(e));
@@ -1494,6 +1401,9 @@ updateSummary();
 resizeCanvas();
 generateInitialChartData();
 startChartAnimation();
+
+// start polling even before auth (in case markets fetched)
+pollCoinGeckoPrices();
 
 </script>
 </body>
