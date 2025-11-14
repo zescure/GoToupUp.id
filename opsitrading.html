@@ -119,9 +119,10 @@
         <div style="display:flex;gap:8px;align-items:center">
           <div class="payout-pill" id="payoutLabel">—%</div>
           <select id="symbolSelectTop" class="time-select"></select>
-          <div style="width:120px;text-align:right;">
+          <div style="width:180px;text-align:right;">
             <div style="font-size:12px;color:var(--muted)">Harga sekarang</div>
             <div style="font-weight:800;font-size:18px" id="currentPriceLarge">-</div>
+            <div style="font-size:12px;color:var(--muted)" id="priceSmallHint"></div>
           </div>
         </div>
       </div>
@@ -363,9 +364,23 @@ const DEFAULT_BASE_PAYLOAD = "00020101021126610014COM.GO-JEK.WWW0118936009143305
 
 /* ===== CoinGecko integration settings ===== */
 const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
-let CG_VS_CURRENCY = 'usd'; // <-- ubah jadi 'idr' kalau mau tampil Rupiah
+let CG_VS_CURRENCY = 'idr'; // <- DIUBAH KE IDR
 const PRICE_POLL_INTERVAL = 5000; // 5s between polls (batched)
 let lastPriceMap = {}; // cgId -> { price, ts, change24h }
+
+/* ===== helper: consistent price formatting ===== */
+function formatPrice(v){
+  if(typeof v !== 'number' || !isFinite(v)) return '-';
+  if(CG_VS_CURRENCY === 'idr'){
+    // show 0 decimal for >= 1 IDR, else 2 decimals for tiny prices
+    if(Math.abs(v) >= 1) return new Intl.NumberFormat('id-ID', { style:'currency', currency:'IDR', maximumFractionDigits:0 }).format(v);
+    return new Intl.NumberFormat('id-ID', { style:'currency', currency:'IDR', maximumFractionDigits:2 }).format(v);
+  } else {
+    // default USD formatting (2 decimals if >=0.01 else show 6)
+    if(Math.abs(v) >= 0.01) return Number(v).toFixed(2);
+    return Number(v).toFixed(6);
+  }
+}
 
 /* ===== deterministic fallback helpers ===== */
 function hashStringToInt(s){
@@ -425,7 +440,6 @@ async function fetchTop10CoinGeckoMarkets(){
     // rebuild markets
     markets = {};
     data.forEach(coin=>{
-      // key by SYMBOL/ID so it's readable
       const key = (coin.symbol||'').toUpperCase() + '/' + coin.id;
       markets[key] = {
         cgId: coin.id,
@@ -472,11 +486,11 @@ async function pollCoinGeckoPrices(){
     const url = `${COINGECKO_BASE}/simple/price?ids=${encodeURIComponent(batch)}&vs_currencies=${CG_VS_CURRENCY}&include_24hr_change=true`;
     const res = await fetch(url);
     if(!res.ok) throw new Error('price fetch err ' + res.status);
-    const data = await res.json(); // { id: { usd: 123, usd_24h_change: x }, ... }
+    const data = await res.json(); // { id: { idr: 123, idr_24h_change: x }, ... }
     Object.keys(data).forEach(id=>{
       lastPriceMap[id] = {
         price: Number(data[id][CG_VS_CURRENCY]) || 0,
-        change24h: Number(data[id][CG_VS_CURRENCY + '_24h_change'] || data[id].usd_24h_change || 0),
+        change24h: Number(data[id][CG_VS_CURRENCY + '_24h_change'] || 0),
         ts: Date.now()
       };
     });
@@ -500,9 +514,7 @@ function getMarketLivePrice(marketId){
   if(m && m.cgId && lastPriceMap[m.cgId] && typeof lastPriceMap[m.cgId].price !== 'undefined'){
     return lastPriceMap[m.cgId].price;
   }
-  // fallback to stored price from initial fetch
   if(m && typeof m.price !== 'undefined') return m.price;
-  // final fallback deterministic
   return deterministicPrice(marketId, Date.now());
 }
 
@@ -674,9 +686,10 @@ function startChartAnimation(){
 
 function updateDisplayedPrice(){
   const cur = getMarketLivePrice(currentMarketId || Object.keys(markets)[0]);
-  if(cur >= 0.01) currentPriceLarge.textContent = Number(cur).toFixed(2);
-  else currentPriceLarge.textContent = Number(cur).toFixed(6);
-  priceMarker.textContent = currentPriceLarge.textContent;
+  currentPriceLarge.textContent = formatPrice(cur);
+  priceMarker.textContent = formatPrice(cur);
+  const small = document.getElementById('priceSmallHint');
+  if(small) small.textContent = CG_VS_CURRENCY.toUpperCase();
 }
 
 /* ===== markets UI update (now from CoinGecko top-10) ===== */
@@ -846,9 +859,9 @@ function createOpenTradeElement(tr){
   wrapper.className = 'open-trade';
   wrapper.id = 'open_' + tr.id;
 
-  const entryFormatted = Number(tr.entryPrice).toFixed(2);
+  const entryFormatted = formatPrice(Number(tr.entryPrice));
   const expectedExit = getMarketLivePrice(tr.market);
-  const expectedExitFormatted = Number(expectedExit).toFixed(2);
+  const expectedExitFormatted = formatPrice(Number(expectedExit));
   const remainingMs = Math.max(0, tr.expiryTs - Date.now());
   const remainingSec = Math.ceil(remainingMs / 1000);
 
@@ -879,7 +892,7 @@ function addOpenTradeUI(tr){
     const sec = Math.ceil(remainingMs/1000);
     countdownEl.textContent = formatSecondsMMSS(sec);
     const expectedExit = getMarketLivePrice(tr.market);
-    exitPriceEl.textContent = (expectedExit >= 0.01) ? Number(expectedExit).toFixed(2) : Number(expectedExit).toFixed(6);
+    exitPriceEl.textContent = formatPrice(Number(expectedExit));
     if(remainingMs <= 0){
       clearInterval(tr._uiInterval);
     }
@@ -896,8 +909,8 @@ function markTradeClosedUI(tr, isWin, exitPrice){
   const entryEl = el.querySelector('.entryPrice');
   const exitEl = el.querySelector('.exitPrice');
   const countdown = el.querySelector('.countdown');
-  if(entryEl) entryEl.textContent = Number(tr.entryPrice).toFixed(2);
-  if(exitEl) exitEl.textContent = Number(exitPrice).toFixed(2);
+  if(entryEl) entryEl.textContent = formatPrice(Number(tr.entryPrice));
+  if(exitEl) exitEl.textContent = formatPrice(Number(exitPrice));
   if(countdown) countdown.textContent = isWin ? 'MENANG' : 'KALAH';
   const left = el.querySelector('.left');
   const res = document.createElement('div');
@@ -1275,9 +1288,7 @@ async function adminRejectRequest(requestId){
   }catch(e){ console.error(e); alert('Gagal menolak'); }
 }
 
-/* admin markets UI: allow overriding payout/volatility/lock in Firestore by market key
-   (this part is optional persistence — if admin edits, we store override doc in 'markets' keyed by marketKey)
-*/
+/* admin markets UI: allow overriding payout/volatility/lock in Firestore by market key */
 function renderAdminMarkets(){
   adminMarketsContainer.innerHTML = '';
   Object.keys(markets).forEach(id=>{
@@ -1298,10 +1309,8 @@ function renderAdminMarkets(){
       const id = btn.dataset.id;
       const vol = adminMarketsContainer.querySelector(`.vol-input[data-id="${id}"]`).value;
       const pay = adminMarketsContainer.querySelector(`.pay-input[data-id="${id}"]`).value;
-      // save override to Firestore under collection 'markets' doc id = encodeURIComponent(id)
       try{
         await db.collection('markets').doc(encodeURIComponent(id)).set({ volatilityFraction: Number(vol), payoutPercent: Number(pay) }, { merge:true });
-        // also update local memory
         if(markets[id]) { markets[id].volatilityFraction = Number(vol); markets[id].payoutPercent = Number(pay); updateMarketUI(); }
         alert('Saved (override stored)');
       }catch(e){ console.error(e); alert('Save failed'); }
