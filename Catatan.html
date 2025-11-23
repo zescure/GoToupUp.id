@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Zezy Finance + Nutrition (All-in-one)</title>
+  <style>
+    :root{
+      --bg:#0f1720;
+      --panel:#0b1220;
+      --muted:#99a0ad;
+      --accent:#6ad1ff;
+      --good:#2bd98b;
+      --bad:#ff7a7a;
+      --card:#0f1726;
+      color-scheme: dark;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter, system-ui, Arial;
+      background:linear-gradient(180deg,#071021 0%, #071528 100%);
+      color:#e6eef6;
+      min-height:100vh;
+    }
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:14px 18px;
+      border-bottom:1px solid rgba(255,255,255,0.04);
+      background:rgba(0,0,0,0.2);
+    }
+    .brand{font-weight:700; font-size:14px}
+    .greeting{opacity:0.9}
+
+    .container{
+      max-width:1100px;
+      margin:18px auto;
+      padding:0 12px 100px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:14px;
+    }
+
+    .panel{
+      background:var(--panel);
+      border-radius:10px;
+      padding:14px;
+      box-shadow: 0 4px 16px rgba(2,6,23,0.6);
+      border:1px solid rgba(255,255,255,0.03);
+    }
+
+    .summary-row{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .summary-row > div{
+      flex:1 1 200px;
+      background:rgba(255,255,255,0.02);
+      padding:10px;
+      border-radius:8px;
+    }
+    .label{font-size:12px; color:var(--muted)}
+    .big{font-size:20px; margin-top:6px; font-weight:700}
+
+    .form-row{display:flex; flex-direction:column; gap:6px; margin-bottom:10px}
+    .form-row input, .form-row select, .form-row button{
+      padding:8px 10px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.04);
+      background:rgba(255,255,255,0.02);
+      color:inherit;
+    }
+    .form-row .nutri-grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px,1fr));
+      gap:8px;
+    }
+    .hint{font-size:12px; color:var(--muted); margin-top:6px}
+
+    .buttons{display:flex; gap:8px}
+    .primary{background:var(--accent); color:#022635; border:none; padding:10px 14px; border-radius:8px; font-weight:700; cursor:pointer}
+    .muted{background:transparent;border:1px solid rgba(255,255,255,0.04); padding:8px 10px;border-radius:8px;color:var(--muted); cursor:pointer}
+    .small{padding:6px 8px; font-size:13px; border-radius:8px; cursor:pointer}
+
+    .nutri-summary{display:grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap:10px}
+    .nutri-card{background:rgba(255,255,255,0.02); padding:10px; border-radius:8px}
+
+    .history-list{margin-top:10px; max-height:360px; overflow:auto; display:grid; gap:8px}
+    .history-item{display:flex; justify-content:space-between; padding:10px; border-radius:8px; background:rgba(255,255,255,0.02); align-items:center; gap:8px}
+    .meta{font-size:12px; color:var(--muted)}
+
+    .alert{background:linear-gradient(90deg, #4b1222, #92121f); padding:10px; border-radius:8px; color:#ffdcdc; margin-top:8px}
+    .praise{background:linear-gradient(90deg, #0b2d1b, #1f6a3f); padding:10px; border-radius:8px; color:#dff5e8; margin-top:8px}
+    .hidden{display:none}
+
+    .footer{position:fixed; left:0; right:0; bottom:0; padding:10px 18px; background:rgba(0,0,0,0.2); text-align:center; color:var(--muted)}
+    @media (min-width:900px){
+      .container{grid-template-columns: 1fr 420px;}
+      #entryPanel{grid-row: span 2}
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Zezy Finance + Nutrition</div>
+    <div class="greeting">hallo king zezy 👑</div>
+  </header>
+
+  <main class="container">
+    <section class="panel" id="summaryPanel">
+      <h2>Ringkasan</h2>
+      <div class="summary-row">
+        <div>
+          <div class="label">Penghasilan Bulanan (avg)</div>
+          <div id="avgIncome" class="big">-</div>
+        </div>
+        <div>
+          <div class="label">Sisa Bulan Ini</div>
+          <div id="remainingBalance" class="big">-</div>
+        </div>
+        <div>
+          <div class="label">Pengeluaran Hari Ini</div>
+          <div id="todayTotal" class="big">-</div>
+        </div>
+      </div>
+
+      <div id="alertBox" class="alert hidden"></div>
+      <div id="praiseBox" class="praise hidden"></div>
+    </section>
+
+    <section class="panel" id="entryPanel">
+      <h2>Tambah Catatan</h2>
+      <form id="entryForm">
+        <div class="form-row">
+          <label>Jenis</label>
+          <select id="entryType">
+            <option value="expense">Pengeluaran</option>
+            <option value="income">Pemasukan</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label>Kategori</label>
+          <select id="categorySelect"></select>
+          <div style="display:flex;gap:8px;margin-top:6px;">
+            <input id="newCategoryInput" placeholder="Tambah kategori baru (opsional)" />
+            <button type="button" id="addCategoryBtn" class="small">Tambah</button>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>Nominal (Rp)</label>
+          <input id="amountInput" type="number" min="0" required />
+        </div>
+
+        <div class="form-row" id="jajanExtra" style="display:none;">
+          <label>Detail Nutrisi (wajib untuk kategori Jajan)</label>
+          <div class="nutri-grid">
+            <div><input id="serving" placeholder="Takaran saji (mis. 50 g / 200 ml)" /></div>
+            <div><input id="energy" type="number" placeholder="Energi total (kcal)" /></div>
+            <div><input id="energyFat" type="number" placeholder="Energi lemak (kcal)" /></div>
+            <div><input id="fat" type="number" placeholder="Lemak total (g)" /></div>
+            <div><input id="saturatedFat" type="number" placeholder="Lemak jenuh (g)" /></div>
+            <div><input id="protein" type="number" placeholder="Protein (g)" /></div>
+            <div><input id="carbs" type="number" placeholder="Karbohidrat (g)" /></div>
+            <div><input id="sugar" type="number" placeholder="Gula (g)" /></div>
+            <div><input id="sodium" type="number" placeholder="Garam / natrium (mg)" /></div>
+          </div>
+          <small class="hint">Isi angka dalam gram (g) atau mg sesuai placeholder. Jika tidak tahu, isi 0.</small>
+        </div>
+
+        <div class="form-row">
+          <label>Catatan (opsional)</label>
+          <input id="noteInput" placeholder="Misal: beli di warung A" />
+        </div>
+
+        <div class="form-row buttons">
+          <button id="saveBtn" class="primary">Simpan</button>
+          <button id="clearBtn" type="button" class="muted">Reset Form</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel" id="nutritionPanel">
+      <h2>Ringkasan Nutrisi Hari Ini</h2>
+      <div id="nutritionSummary" class="nutri-summary"></div>
+    </section>
+
+    <section class="panel" id="historyPanel">
+      <h2>Historis & Batas Aman</h2>
+      <div class="history-controls" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+        <label>Filter</label>
+        <select id="historyRange">
+          <option value="today">Hari Ini</option>
+          <option value="thisMonth">Bulan Ini</option>
+          <option value="all">Semua</option>
+        </select>
+
+        <label style="margin-left:8px">Income Setting (Rp/bln)</label>
+        <input id="monthlyIncomeInput" type="number" placeholder="Masukkan penghasilan bulanan Anda" style="width:160px" />
+        <button id="saveIncomeBtn" class="small">Simpan</button>
+      </div>
+
+      <div id="historyList" class="history-list"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <small>Made for Zezy — sederhana, jelas, dan hemat energi otak.</small>
+  </footer>
+
+  <!-- app logic (module) -->
+  <script type="module">
+    // Firebase imports (CDN)
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+    // ---------- Firebase config (pakai config yang lo berikan) ----------
+    const firebaseConfig = {
+      apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
+      authDomain: "zeepaylater-93a94.firebaseapp.com",
+      projectId: "zeepaylater-93a94",
+      storageBucket: "zeepaylater-93a94.appspot.com",
+      messagingSenderId: "358065954807",
+      appId: "1:358065954807:web:66619211fea82a4b2518f2"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    async function signIn() {
+      try {
+        await signInAnonymously(auth);
+        console.log('Signed in anonymously');
+      } catch (e) {
+        console.error('Auth error', e);
+      }
+    }
+
+    // ---------- UI elements ----------
+    const entryForm = document.getElementById('entryForm');
+    const entryType = document.getElementById('entryType');
+    const categorySelect = document.getElementById('categorySelect');
+    const newCategoryInput = document.getElementById('newCategoryInput');
+    const addCategoryBtn = document.getElementById('addCategoryBtn');
+    const amountInput = document.getElementById('amountInput');
+    const jajanExtra = document.getElementById('jajanExtra');
+    const noteInput = document.getElementById('noteInput');
+    const saveBtn = document.getElementById('saveBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    const serving = document.getElementById('serving');
+    const energy = document.getElementById('energy');
+    const energyFat = document.getElementById('energyFat');
+    const fat = document.getElementById('fat');
+    const saturatedFat = document.getElementById('saturatedFat');
+    const protein = document.getElementById('protein');
+    const carbs = document.getElementById('carbs');
+    const sugar = document.getElementById('sugar');
+    const sodium = document.getElementById('sodium');
+
+    const avgIncomeEl = document.getElementById('avgIncome');
+    const remainingBalanceEl = document.getElementById('remainingBalance');
+    const todayTotalEl = document.getElementById('todayTotal');
+    const alertBox = document.getElementById('alertBox');
+    const praiseBox = document.getElementById('praiseBox');
+
+    const historyList = document.getElementById('historyList');
+    const historyRange = document.getElementById('historyRange');
+
+    const monthlyIncomeInput = document.getElementById('monthlyIncomeInput');
+    const saveIncomeBtn = document.getElementById('saveIncomeBtn');
+
+    const nutritionSummary = document.getElementById('nutritionSummary');
+
+    // ---------- state ----------
+    let categories = ['Pengeluaran jajan', 'Pengeluaran transfer', 'Pengeluaran cash'];
+    let settings = { monthlyIncome: 0 };
+
+    // ---------- init ----------
+    await signIn();
+    initUI();
+    startRealtimeListeners();
+
+    function initUI(){
+      populateCategories();
+      checkJajanVisibility();
+    }
+
+    function populateCategories(){
+      categorySelect.innerHTML = '';
+      categories.forEach(c=>{
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        categorySelect.appendChild(opt);
+      });
+    }
+
+    addCategoryBtn.addEventListener('click', ()=>{
+      const v = (newCategoryInput.value || '').trim();
+      if(!v) return;
+      if(!categories.includes(v)){
+        categories.push(v);
+        populateCategories();
+        categorySelect.value = v;
+        newCategoryInput.value = '';
+      }
+    });
+
+    categorySelect.addEventListener('change', checkJajanVisibility);
+    entryType.addEventListener('change', checkJajanVisibility);
+
+    function checkJajanVisibility(){
+      const cat = categorySelect.value || '';
+      const isJajan = cat.toLowerCase().includes('jajan');
+      const isExpense = entryType.value === 'expense';
+      jajanExtra.style.display = (isJajan && isExpense) ? 'block' : 'none';
+    }
+
+    // ---------- helpers ----------
+    function money(v){ return typeof v === 'number' ? 'Rp ' + v.toLocaleString('id-ID') : v; }
+    function formatDateTime(iso){
+      const d = new Date(iso);
+      return d.toLocaleString('id-ID');
+    }
+    function resetForm(){
+      entryForm.reset();
+      jajanExtra.style.display = 'none';
+      newCategoryInput.value = '';
+      serving.value=energy.value=energyFat.value=fat.value=saturatedFat.value=protein.value=carbs.value=sugar.value=sodium.value='';
+    }
+    function showToast(msg){ alert(msg); }
+
+    // ---------- save entry ----------
+    entryForm.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      saveBtn.disabled = true;
+
+      const type = entryType.value;
+      const category = categorySelect.value;
+      const amount = Number(amountInput.value) || 0;
+      const note = noteInput.value || '';
+
+      const isJajan = category.toLowerCase().includes('jajan') && type === 'expense';
+      let nutrition = null;
+      if(isJajan){
+        nutrition = {
+          serving: serving.value || '',
+          energy: Number(energy.value) || 0,
+          energyFat: Number(energyFat.value) || 0,
+          fat: Number(fat.value) || 0,
+          saturatedFat: Number(saturatedFat.value) || 0,
+          protein: Number(protein.value) || 0,
+          carbs: Number(carbs.value) || 0,
+          sugar: Number(sugar.value) || 0,
+          sodium: Number(sodium.value) || 0
+        };
+        const some = ['energy','fat','protein','carbs','sugar','sodium'].some(k=>nutrition[k] && nutrition[k] > 0);
+        if(!some){
+          alert('Untuk kategori Jajan isi setidaknya salah satu nilai nutrisi (mis. energi, lemak, protein, karbohidrat).');
+          saveBtn.disabled = false;
+          return;
+        }
+      }
+
+      try{
+        await addDoc(collection(db, 'entries'), {
+          type, category, amount, note,
+          nutrition,
+          createdAt: serverTimestamp()
+        });
+        resetForm();
+      } catch(err){
+        console.error('save error', err);
+        alert('Gagal menyimpan. Cek console.');
+      } finally {
+        saveBtn.disabled = false;
+      }
+    });
+
+    clearBtn.addEventListener('click', resetForm);
+
+    // ---------- settings (monthly income) ----------
+    saveIncomeBtn.addEventListener('click', async ()=>{
+      const v = Number(monthlyIncomeInput.value) || 0;
+      settings.monthlyIncome = v;
+      try{
+        await setDoc(doc(db,'meta','user_settings'), settings, {merge:true});
+        showToast('Penghasilan disimpan');
+      }catch(e){
+        console.error(e);
+        alert('Gagal menyimpan penghasilan');
+      }
+    });
+
+    // ---------- realtime listeners ----------
+    function startRealtimeListeners(){
+      const q = query(collection(db,'entries'), orderBy('createdAt','desc'));
+      onSnapshot(q, snapshot=>{
+        const docs = [];
+        snapshot.forEach(d=>{
+          const data = d.data();
+          // createdAt may be a Timestamp or null initially
+          let createdAtIso = new Date().toISOString();
+          if(data.createdAt && typeof data.createdAt.toDate === 'function'){
+            createdAtIso = data.createdAt.toDate().toISOString();
+          }
+          docs.push({...data, id: d.id, createdAt: createdAtIso});
+        });
+
+        window.__allEntries = docs;
+        // render + compute
+        renderHistory(docs);
+        computeTotals(docs);
+      });
+
+      // settings listener
+      const settingsDoc = doc(db,'meta','user_settings');
+      onSnapshot(settingsDoc, snap=>{
+        if(snap.exists()){
+          const dd = snap.data();
+          settings = {...settings, ...dd};
+          if(settings.monthlyIncome) monthlyIncomeInput.value = settings.monthlyIncome;
+        }
+      }, err => {
+        // ignore
+      });
+    }
+
+    // ---------- compute totals & nutrition ----------
+    function computeTotals(entries){
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      let todayTotal = 0;
+      let monthTotal = 0;
+      let incomeRecords = [];
+      let todayNutritionAgg = { energy:0, fat:0, saturatedFat:0, protein:0, carbs:0, sugar:0, sodium:0 };
+
+      entries.forEach(e=>{
+        const created = new Date(e.createdAt);
+        if(created >= startOfToday && e.type === 'expense') todayTotal += Number(e.amount||0);
+        if(created >= startOfMonth && e.type === 'expense') monthTotal += Number(e.amount||0);
+        if(e.type === 'income') incomeRecords.push(e);
+
+        if(e.type === 'expense' && e.category && e.category.toLowerCase().includes('jajan') && e.nutrition){
+          const n = e.nutrition;
+          todayNutritionAgg.energy += Number(n.energy||0);
+          todayNutritionAgg.fat += Number(n.fat||0);
+          todayNutritionAgg.saturatedFat += Number(n.saturatedFat||0);
+          todayNutritionAgg.protein += Number(n.protein||0);
+          todayNutritionAgg.carbs += Number(n.carbs||0);
+          todayNutritionAgg.sugar += Number(n.sugar||0);
+          todayNutritionAgg.sodium += Number(n.sodium||0);
+        }
+      });
+
+      let avgMonthlyIncome = settings.monthlyIncome || 0;
+      if(avgMonthlyIncome === 0 && incomeRecords.length>0){
+        // heuristic: incomes in last 90 days -> monthly
+        const ninety = new Date(); ninety.setDate(ninety.getDate() - 90);
+        const recent = incomeRecords.filter(i=> new Date(i.createdAt) >= ninety );
+        const total = recent.reduce((s,i)=> s + Number(i.amount||0), 0);
+        avgMonthlyIncome = Math.round((total / 90) * 30) || 0;
+      }
+
+      const safeDaily = avgMonthlyIncome ? Math.round((avgMonthlyIncome * 0.6) / 30) : 0;
+
+      avgIncomeEl.textContent = avgMonthlyIncome ? money(avgMonthlyIncome) : 'Belum diset';
+      todayTotalEl.textContent = money(todayTotal);
+      remainingBalanceEl.textContent = avgMonthlyIncome ? money(Math.max(0, avgMonthlyIncome - monthTotal)) : '-';
+
+      renderNutritionSummary(todayNutritionAgg);
+
+      if(safeDaily && todayTotal > safeDaily){
+        alertBox.classList.remove('hidden');
+        alertBox.textContent = `Peringatan: Pengeluaran hari ini ${money(todayTotal)} melebihi batas harian aman ${money(safeDaily)} berdasarkan pemasukan. Coba hemat 2 hari ke depan.`;
+      } else {
+        alertBox.classList.add('hidden');
+      }
+
+      if(avgMonthlyIncome && (monthTotal <= Math.min(200000, Math.round(avgMonthlyIncome*0.2)))){
+        praiseBox.classList.remove('hidden');
+        const saved3 = (avgMonthlyIncome - monthTotal) * 3;
+        praiseBox.innerHTML = `Apresiasi: Bulan ini pengeluaran hanya ${money(monthTotal)}. Jika lo mengulangi pola ini selama 3 bulan, potensi tabungan sampai ${money(saved3)}. Dampak positif jangka panjang jelas kelihatan.`;
+      } else {
+        praiseBox.classList.add('hidden');
+      }
+    }
+
+    function renderNutritionSummary(agg){
+      nutritionSummary.innerHTML = '';
+      const recDaily = {
+        energy:2000, fat:70, saturatedFat:20, protein:50, carbs:275, sugar:30, sodium:2000 // mg
+      };
+
+      const keys = [
+        {k:'energy', label:'Energi (kcal)'},
+        {k:'fat', label:'Lemak total (g)'},
+        {k:'saturatedFat', label:'Lemak jenuh (g)'},
+        {k:'protein', label:'Protein (g)'},
+        {k:'carbs', label:'Karbohidrat (g)'},
+        {k:'sugar', label:'Gula (g)'},
+        {k:'sodium', label:'Garam / Natrium (mg)'}
+      ];
+
+      keys.forEach(item=>{
+        const val = Math.round((agg[item.k] || 0) * 100) / 100;
+        const rec = recDaily[item.k] || null;
+        const pct = rec ? Math.round((val / rec) * 100) : null;
+
+        const div = document.createElement('div');
+        div.className = 'nutri-card';
+        div.innerHTML = `<div style="font-weight:700">${item.label}</div>
+                         <div style="margin-top:6px">${val} ${item.k==='sodium' ? 'mg' : (item.k==='energy' ? 'kcal' : 'g')}</div>
+                         ${rec ? `<div class="meta">Persentase dari rekomendasi harian: ${pct}%</div>` : ''}`;
+        if(rec && pct > 100){
+          div.style.border = '1px solid rgba(255,100,100,0.25)';
+        }
+        nutritionSummary.appendChild(div);
+      });
+
+      const exceeded = keys.filter(k=> (agg[k.k] || 0) > (recDaily[k.k] || Infinity)).map(k=>k.label);
+      if(exceeded.length){
+        const warn = document.createElement('div');
+        warn.className = 'alert';
+        warn.textContent = `Catatan nutrisi: hari ini kelebihan - ${exceeded.join(', ')}. Pertimbangkan untuk kurangi item yang mengandung tersebut.`;
+        nutritionSummary.appendChild(warn);
+      }
+    }
+
+    // ---------- render history ----------
+    function renderHistory(entries){
+      historyList.innerHTML = '';
+      let filtered = entries;
+      const range = historyRange.value;
+
+      if(range === 'today'){
+        const start = new Date(); start.setHours(0,0,0,0);
+        filtered = entries.filter(e=> new Date(e.createdAt) >= start);
+      } else if(range === 'thisMonth'){
+        const start = new Date(); start.setDate(1); start.setHours(0,0,0,0);
+        filtered = entries.filter(e=> new Date(e.createdAt) >= start);
+      }
+
+      if(filtered.length === 0){
+        historyList.innerHTML = `<div class="meta">Belum ada catatan pada periode ini.</div>`;
+        return;
+      }
+
+      filtered.forEach(e=>{
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        const left = document.createElement('div');
+        left.innerHTML = `<div><strong>${e.type === 'expense' ? '-' : '+'} ${money(Number(e.amount||0))}</strong> — ${e.category}</div>
+                          <div class="meta">${formatDateTime(e.createdAt)} ${e.note ? ' • ' + e.note : ''}</div>`;
+
+        const right = document.createElement('div');
+        right.style.textAlign = 'right';
+        const btn = document.createElement('button');
+        btn.className = 'small';
+        btn.textContent = 'Detail';
+        btn.addEventListener('click', ()=> showDetails(e.id));
+        right.appendChild(btn);
+
+        div.appendChild(left);
+        div.appendChild(right);
+        historyList.appendChild(div);
+
+        window.__entries = window.__entries || {};
+        window.__entries[e.id] = e;
+      });
+    }
+
+    historyRange.addEventListener('change', ()=>{
+      if(window.__allEntries) renderHistory(window.__allEntries);
+    });
+
+    window.showDetails = function(id){
+      const e = window.__entries && window.__entries[id];
+      if(!e) return alert('Data tidak ditemukan');
+      let txt = `${e.type === 'expense' ? 'Pengeluaran' : 'Pemasukan'} • ${e.category}\nNominal: ${money(Number(e.amount||0))}\nWaktu: ${formatDateTime(e.createdAt)}\nCatatan: ${e.note || '-'}`;
+      if(e.nutrition){
+        txt += '\n\n-- Nutrisi --\n';
+        Object.entries(e.nutrition).forEach(([k,v])=>{
+          txt += `${k}: ${v}\n`;
+        });
+      }
+      alert(txt);
+    };
+  </script>
+</body>
+</html>
