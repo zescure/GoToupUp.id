@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Zezy Finance + Nutrition (Light Theme)</title>
+  <title>Zezy Finance + Nutrition (Light Theme) - Fixed</title>
   <style>
     :root{
       /* light theme */
@@ -211,7 +211,8 @@
         </select>
 
         <label style="margin-left:8px">Income Setting (Rp/bln)</label>
-        <input id="monthlyIncomeInput" type="number" placeholder="Masukkan penghasilan bulanan Anda" style="width:160px" />
+        <!-- tipe diubah ke text supaya user bisa isi dengan format titik / Rp -->
+        <input id="monthlyIncomeInput" type="text" placeholder="Masukkan penghasilan bulanan Anda" style="width:160px" />
         <button id="saveIncomeBtn" class="small">Simpan</button>
       </div>
 
@@ -348,6 +349,15 @@
     }
     function showToast(msg){ alert(msg); }
 
+    // helper: parse input seperti "1.800.000" atau "Rp 1.800.000" jadi angka murni
+    function parseMoneyInput(str){
+      if(typeof str === 'number') return Math.round(str) || 0;
+      if(!str) return 0;
+      // hapus semua karakter kecuali digit dan minus
+      const digits = String(str).replace(/[^\d-]/g, '');
+      return digits ? Number(digits) : 0;
+    }
+
     // ---------- save entry ----------
     entryForm.addEventListener('submit', async (e)=>{
       e.preventDefault();
@@ -399,11 +409,13 @@
 
     // ---------- settings (monthly income) ----------
     saveIncomeBtn.addEventListener('click', async ()=>{
-      const v = Number(monthlyIncomeInput.value) || 0;
+      const v = parseMoneyInput(monthlyIncomeInput.value);
       settings.monthlyIncome = v;
       try{
         await setDoc(doc(db,'meta','user_settings'), settings, {merge:true});
-        showToast('Penghasilan disimpan');
+        // tampilkan formatted value di input
+        monthlyIncomeInput.value = v ? v.toLocaleString('id-ID') : '';
+        showToast('Penghasilan disimpan: ' + money(v));
       }catch(e){
         console.error(e);
         alert('Gagal menyimpan penghasilan');
@@ -436,8 +448,15 @@
       onSnapshot(settingsDoc, snap=>{
         if(snap.exists()){
           const dd = snap.data();
+          // enforce numeric
+          dd.monthlyIncome = Number(dd.monthlyIncome) || 0;
           settings = {...settings, ...dd};
-          if(settings.monthlyIncome) monthlyIncomeInput.value = settings.monthlyIncome;
+          if(settings.monthlyIncome) {
+            // show formatted number in input but keep actual numeric in settings
+            monthlyIncomeInput.value = settings.monthlyIncome.toLocaleString('id-ID');
+          } else {
+            monthlyIncomeInput.value = '';
+          }
         }
       }, err => {
         // ignore
@@ -483,7 +502,7 @@
         monthlyIncome = Math.round((total / 90) * 30) || 0;
       }
 
-      const safeDaily = monthlyIncome ? Math.round((monthlyIncome * 0.6) / 30) : 0;
+      const safeDaily = monthlyIncome ? Math.max(0, Math.round((monthlyIncome * 0.6) / 30)) : 0;
 
       avgIncomeEl.textContent = monthlyIncome ? money(monthlyIncome) : 'Belum diset';
       todayTotalEl.textContent = money(todayTotal);
