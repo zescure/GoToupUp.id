@@ -125,7 +125,7 @@
       <h2>Ringkasan</h2>
       <div class="summary-row">
         <div>
-          <div class="label">Penghasilan Bulanan (avg)</div>
+          <div class="label">Penghasilan Bulanan</div>
           <div id="avgIncome" class="big">-</div>
         </div>
         <div>
@@ -473,20 +473,21 @@
         }
       });
 
-      let avgMonthlyIncome = settings.monthlyIncome || 0;
-      if(avgMonthlyIncome === 0 && incomeRecords.length>0){
-        // heuristic: incomes in last 90 days -> monthly
+      // treat monthly income from settings as FLAT monthly income when provided
+      let monthlyIncome = settings.monthlyIncome || 0;
+      if(monthlyIncome === 0 && incomeRecords.length>0){
+        // fallback heuristic: incomes in last 90 days -> monthly
         const ninety = new Date(); ninety.setDate(ninety.getDate() - 90);
         const recent = incomeRecords.filter(i=> new Date(i.createdAt) >= ninety );
         const total = recent.reduce((s,i)=> s + Number(i.amount||0), 0);
-        avgMonthlyIncome = Math.round((total / 90) * 30) || 0;
+        monthlyIncome = Math.round((total / 90) * 30) || 0;
       }
 
-      const safeDaily = avgMonthlyIncome ? Math.round((avgMonthlyIncome * 0.6) / 30) : 0;
+      const safeDaily = monthlyIncome ? Math.round((monthlyIncome * 0.6) / 30) : 0;
 
-      avgIncomeEl.textContent = avgMonthlyIncome ? money(avgMonthlyIncome) : 'Belum diset';
+      avgIncomeEl.textContent = monthlyIncome ? money(monthlyIncome) : 'Belum diset';
       todayTotalEl.textContent = money(todayTotal);
-      remainingBalanceEl.textContent = avgMonthlyIncome ? money(Math.max(0, avgMonthlyIncome - monthTotal)) : '-';
+      remainingBalanceEl.textContent = monthlyIncome ? money(Math.max(0, monthlyIncome - monthTotal)) : '-';
 
       renderNutritionSummary(todayNutritionAgg);
 
@@ -497,9 +498,9 @@
         alertBox.classList.add('hidden');
       }
 
-      if(avgMonthlyIncome && (monthTotal <= Math.min(200000, Math.round(avgMonthlyIncome*0.2)))){
+      if(monthlyIncome && (monthTotal <= Math.min(200000, Math.round(monthlyIncome*0.2)))){
         praiseBox.classList.remove('hidden');
-        const saved3 = (avgMonthlyIncome - monthTotal) * 3;
+        const saved3 = (monthlyIncome - monthTotal) * 3;
         praiseBox.innerHTML = `Apresiasi: Bulan ini pengeluaran hanya ${money(monthTotal)}. Jika lo mengulangi pola ini selama 3 bulan, potensi tabungan sampai ${money(saved3)}. Dampak positif jangka panjang jelas kelihatan.`;
       } else {
         praiseBox.classList.add('hidden');
