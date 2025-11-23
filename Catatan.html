@@ -3,24 +3,27 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Zezy Finance + Nutrition (All-in-one)</title>
+  <title>Zezy Finance + Nutrition (Light Theme)</title>
   <style>
     :root{
-      --bg:#0f1720;
-      --panel:#0b1220;
-      --muted:#99a0ad;
-      --accent:#6ad1ff;
-      --good:#2bd98b;
-      --bad:#ff7a7a;
-      --card:#0f1726;
-      color-scheme: dark;
+      /* light theme */
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --muted: #58606a;
+      --accent: #0077cc;
+      --good: #107a4a;
+      --bad: #c85050;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #0b1530;
+      color-scheme: light;
     }
     *{box-sizing:border-box}
     body{
       margin:0;
       font-family:Inter, system-ui, Arial;
-      background:linear-gradient(180deg,#071021 0%, #071528 100%);
-      color:#e6eef6;
+      background: linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
+      color:var(--text);
       min-height:100vh;
     }
     .topbar{
@@ -28,11 +31,12 @@
       justify-content:space-between;
       align-items:center;
       padding:14px 18px;
-      border-bottom:1px solid rgba(255,255,255,0.04);
-      background:rgba(0,0,0,0.2);
+      border-bottom:1px solid var(--border);
+      background: rgba(255,255,255,0.8);
+      backdrop-filter: blur(6px);
     }
     .brand{font-weight:700; font-size:14px}
-    .greeting{opacity:0.9}
+    .greeting{opacity:0.95; font-weight:600}
 
     .container{
       max-width:1100px;
@@ -47,8 +51,8 @@
       background:var(--panel);
       border-radius:10px;
       padding:14px;
-      box-shadow: 0 4px 16px rgba(2,6,23,0.6);
-      border:1px solid rgba(255,255,255,0.03);
+      box-shadow: 0 6px 18px rgba(12,24,56,0.06);
+      border:1px solid var(--border);
     }
 
     .summary-row{
@@ -58,9 +62,10 @@
     }
     .summary-row > div{
       flex:1 1 200px;
-      background:rgba(255,255,255,0.02);
-      padding:10px;
+      background:linear-gradient(180deg, #fff 0%, #fbfdff 100%);
+      padding:12px;
       border-radius:8px;
+      border:1px solid rgba(2,6,23,0.03);
     }
     .label{font-size:12px; color:var(--muted)}
     .big{font-size:20px; margin-top:6px; font-weight:700}
@@ -69,9 +74,10 @@
     .form-row input, .form-row select, .form-row button{
       padding:8px 10px;
       border-radius:8px;
-      border:1px solid rgba(255,255,255,0.04);
-      background:rgba(255,255,255,0.02);
-      color:inherit;
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--text);
+      font-size:14px;
     }
     .form-row .nutri-grid{
       display:grid;
@@ -81,26 +87,31 @@
     .hint{font-size:12px; color:var(--muted); margin-top:6px}
 
     .buttons{display:flex; gap:8px}
-    .primary{background:var(--accent); color:#022635; border:none; padding:10px 14px; border-radius:8px; font-weight:700; cursor:pointer}
-    .muted{background:transparent;border:1px solid rgba(255,255,255,0.04); padding:8px 10px;border-radius:8px;color:var(--muted); cursor:pointer}
+    .primary{background:var(--accent); color:#fff; border:none; padding:10px 14px; border-radius:8px; font-weight:700; cursor:pointer}
+    .muted{background:transparent;border:1px solid var(--border); padding:8px 10px;border-radius:8px;color:var(--muted); cursor:pointer}
     .small{padding:6px 8px; font-size:13px; border-radius:8px; cursor:pointer}
 
     .nutri-summary{display:grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap:10px}
-    .nutri-card{background:rgba(255,255,255,0.02); padding:10px; border-radius:8px}
+    .nutri-card{background:linear-gradient(180deg,#ffffff,#fbfdff); padding:10px; border-radius:8px; border:1px solid var(--border)}
 
     .history-list{margin-top:10px; max-height:360px; overflow:auto; display:grid; gap:8px}
-    .history-item{display:flex; justify-content:space-between; padding:10px; border-radius:8px; background:rgba(255,255,255,0.02); align-items:center; gap:8px}
+    .history-item{display:flex; justify-content:space-between; padding:10px; border-radius:8px; background:linear-gradient(180deg,#fff,#fbfeff); align-items:center; gap:8px; border:1px solid var(--border)}
     .meta{font-size:12px; color:var(--muted)}
 
-    .alert{background:linear-gradient(90deg, #4b1222, #92121f); padding:10px; border-radius:8px; color:#ffdcdc; margin-top:8px}
-    .praise{background:linear-gradient(90deg, #0b2d1b, #1f6a3f); padding:10px; border-radius:8px; color:#dff5e8; margin-top:8px}
+    .alert{background:linear-gradient(90deg, #fff1f1, #ffdede); padding:10px; border-radius:8px; color:var(--text); margin-top:8px; border:1px solid rgba(200,80,80,0.15)}
+    .praise{background:linear-gradient(90deg, #ecfff3, #deffea); padding:10px; border-radius:8px; color:var(--text); margin-top:8px; border:1px solid rgba(16,122,74,0.12)}
     .hidden{display:none}
 
-    .footer{position:fixed; left:0; right:0; bottom:0; padding:10px 18px; background:rgba(0,0,0,0.2); text-align:center; color:var(--muted)}
+    .footer{position:fixed; left:0; right:0; bottom:0; padding:10px 18px; background:rgba(255,255,255,0.9); text-align:center; color:var(--muted); border-top:1px solid var(--border)}
     @media (min-width:900px){
       .container{grid-template-columns: 1fr 420px;}
       #entryPanel{grid-row: span 2}
     }
+
+    /* small tweaks for inputs on light theme */
+    input::placeholder { color: #9aa3ad; }
+    button.small { background: #f1f5f9; border:1px solid var(--border); }
+    .primary:hover { filter:brightness(0.95); }
   </style>
 </head>
 <body>
@@ -522,7 +533,7 @@
                          <div style="margin-top:6px">${val} ${item.k==='sodium' ? 'mg' : (item.k==='energy' ? 'kcal' : 'g')}</div>
                          ${rec ? `<div class="meta">Persentase dari rekomendasi harian: ${pct}%</div>` : ''}`;
         if(rec && pct > 100){
-          div.style.border = '1px solid rgba(255,100,100,0.25)';
+          div.style.border = '1px solid rgba(200,80,80,0.18)';
         }
         nutritionSummary.appendChild(div);
       });
@@ -595,6 +606,7 @@
       }
       alert(txt);
     };
+
   </script>
 </body>
 </html>
