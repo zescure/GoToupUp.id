@@ -3,10 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Zezy Finance + Nutrition (Light Theme) - Fixed</title>
+  <title>Zezy Finance + Nutrition (Light Theme) - Income Categories</title>
   <style>
     :root{
-      /* light theme */
       --bg: #f5f7fb;
       --panel: #ffffff;
       --muted: #58606a;
@@ -26,89 +25,33 @@
       color:var(--text);
       min-height:100vh;
     }
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      padding:14px 18px;
-      border-bottom:1px solid var(--border);
-      background: rgba(255,255,255,0.8);
-      backdrop-filter: blur(6px);
-    }
+    .topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);background: rgba(255,255,255,0.8);backdrop-filter: blur(6px);}
     .brand{font-weight:700; font-size:14px}
     .greeting{opacity:0.95; font-weight:600}
-
-    .container{
-      max-width:1100px;
-      margin:18px auto;
-      padding:0 12px 100px;
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:14px;
-    }
-
-    .panel{
-      background:var(--panel);
-      border-radius:10px;
-      padding:14px;
-      box-shadow: 0 6px 18px rgba(12,24,56,0.06);
-      border:1px solid var(--border);
-    }
-
-    .summary-row{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-    .summary-row > div{
-      flex:1 1 200px;
-      background:linear-gradient(180deg, #fff 0%, #fbfdff 100%);
-      padding:12px;
-      border-radius:8px;
-      border:1px solid rgba(2,6,23,0.03);
-    }
+    .container{max-width:1100px;margin:18px auto;padding:0 12px 100px;display:grid;grid-template-columns: 1fr;gap:14px;}
+    .panel{background:var(--panel);border-radius:10px;padding:14px;box-shadow: 0 6px 18px rgba(12,24,56,0.06);border:1px solid var(--border);}
+    .summary-row{display:flex;gap:12px;flex-wrap:wrap;}
+    .summary-row > div{flex:1 1 200px;background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);padding:12px;border-radius:8px;border:1px solid rgba(2,6,23,0.03);}
     .label{font-size:12px; color:var(--muted)}
     .big{font-size:20px; margin-top:6px; font-weight:700}
-
     .form-row{display:flex; flex-direction:column; gap:6px; margin-bottom:10px}
-    .form-row input, .form-row select, .form-row button{
-      padding:8px 10px;
-      border-radius:8px;
-      border:1px solid var(--border);
-      background:#fff;
-      color:var(--text);
-      font-size:14px;
-    }
-    .form-row .nutri-grid{
-      display:grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px,1fr));
-      gap:8px;
-    }
+    .form-row input, .form-row select, .form-row button{padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:14px;}
+    .form-row .nutri-grid{display:grid;grid-template-columns: repeat(auto-fit, minmax(160px,1fr));gap:8px;}
     .hint{font-size:12px; color:var(--muted); margin-top:6px}
-
     .buttons{display:flex; gap:8px}
     .primary{background:var(--accent); color:#fff; border:none; padding:10px 14px; border-radius:8px; font-weight:700; cursor:pointer}
     .muted{background:transparent;border:1px solid var(--border); padding:8px 10px;border-radius:8px;color:var(--muted); cursor:pointer}
     .small{padding:6px 8px; font-size:13px; border-radius:8px; cursor:pointer}
-
     .nutri-summary{display:grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap:10px}
     .nutri-card{background:linear-gradient(180deg,#ffffff,#fbfdff); padding:10px; border-radius:8px; border:1px solid var(--border)}
-
     .history-list{margin-top:10px; max-height:360px; overflow:auto; display:grid; gap:8px}
     .history-item{display:flex; justify-content:space-between; padding:10px; border-radius:8px; background:linear-gradient(180deg,#fff,#fbfeff); align-items:center; gap:8px; border:1px solid var(--border)}
     .meta{font-size:12px; color:var(--muted)}
-
     .alert{background:linear-gradient(90deg, #fff1f1, #ffdede); padding:10px; border-radius:8px; color:var(--text); margin-top:8px; border:1px solid rgba(200,80,80,0.15)}
     .praise{background:linear-gradient(90deg, #ecfff3, #deffea); padding:10px; border-radius:8px; color:var(--text); margin-top:8px; border:1px solid rgba(16,122,74,0.12)}
     .hidden{display:none}
-
     .footer{position:fixed; left:0; right:0; bottom:0; padding:10px 18px; background:rgba(255,255,255,0.9); text-align:center; color:var(--muted); border-top:1px solid var(--border)}
-    @media (min-width:900px){
-      .container{grid-template-columns: 1fr 420px;}
-      #entryPanel{grid-row: span 2}
-    }
-
-    /* small tweaks for inputs on light theme */
+    @media (min-width:900px){ .container{grid-template-columns: 1fr 420px;} #entryPanel{grid-row: span 2} }
     input::placeholder { color: #9aa3ad; }
     button.small { background: #f1f5f9; border:1px solid var(--border); }
     .primary:hover { filter:brightness(0.95); }
@@ -211,7 +154,6 @@
         </select>
 
         <label style="margin-left:8px">Income Setting (Rp/bln)</label>
-        <!-- tipe diubah ke text supaya user bisa isi dengan format titik / Rp -->
         <input id="monthlyIncomeInput" type="text" placeholder="Masukkan penghasilan bulanan Anda" style="width:160px" />
         <button id="saveIncomeBtn" class="small">Simpan</button>
       </div>
@@ -224,14 +166,11 @@
     <small>Made for Zezy — sederhana, jelas, dan hemat energi otak.</small>
   </footer>
 
-  <!-- app logic (module) -->
   <script type="module">
-    // Firebase imports (CDN)
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
     import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-    // ---------- Firebase config (pakai config yang lo berikan) ----------
     const firebaseConfig = {
       apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
       authDomain: "zeepaylater-93a94.firebaseapp.com",
@@ -245,16 +184,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    async function signIn() {
-      try {
-        await signInAnonymously(auth);
-        console.log('Signed in anonymously');
-      } catch (e) {
-        console.error('Auth error', e);
-      }
-    }
-
-    // ---------- UI elements ----------
+    // UI elements
     const entryForm = document.getElementById('entryForm');
     const entryType = document.getElementById('entryType');
     const categorySelect = document.getElementById('categorySelect');
@@ -290,12 +220,21 @@
 
     const nutritionSummary = document.getElementById('nutritionSummary');
 
-    // ---------- state ----------
-    let categories = ['Pengeluaran jajan', 'Pengeluaran transfer', 'Pengeluaran cash'];
+    // categories split by type
+    let expenseCategories = ['Pengeluaran jajan', 'Pengeluaran transfer', 'Pengeluaran cash'];
+    let incomeCategories = ['Gaji', 'Bonus', 'Lembur'];
     let settings = { monthlyIncome: 0 };
 
-    // ---------- init ----------
+    // sign in anonymously
+    async function signIn(){
+      try {
+        await signInAnonymously(auth);
+      } catch(e){
+        console.error('auth err', e);
+      }
+    }
     await signIn();
+
     initUI();
     startRealtimeListeners();
 
@@ -305,28 +244,34 @@
     }
 
     function populateCategories(){
+      const list = (entryType.value === 'income') ? incomeCategories : expenseCategories;
       categorySelect.innerHTML = '';
-      categories.forEach(c=>{
+      list.forEach(c=>{
         const opt = document.createElement('option');
         opt.value = c;
         opt.textContent = c;
         categorySelect.appendChild(opt);
       });
+      if(list.length) categorySelect.value = list[0];
     }
 
     addCategoryBtn.addEventListener('click', ()=>{
       const v = (newCategoryInput.value || '').trim();
       if(!v) return;
-      if(!categories.includes(v)){
-        categories.push(v);
-        populateCategories();
-        categorySelect.value = v;
-        newCategoryInput.value = '';
+      if(entryType.value === 'income'){
+        if(!incomeCategories.includes(v)) incomeCategories.push(v);
+      } else {
+        if(!expenseCategories.includes(v)) expenseCategories.push(v);
       }
+      populateCategories();
+      categorySelect.value = v;
+      newCategoryInput.value = '';
     });
 
-    categorySelect.addEventListener('change', checkJajanVisibility);
-    entryType.addEventListener('change', checkJajanVisibility);
+    entryType.addEventListener('change', ()=>{
+      populateCategories();
+      checkJajanVisibility();
+    });
 
     function checkJajanVisibility(){
       const cat = categorySelect.value || '';
@@ -335,30 +280,25 @@
       jajanExtra.style.display = (isJajan && isExpense) ? 'block' : 'none';
     }
 
-    // ---------- helpers ----------
     function money(v){ return typeof v === 'number' ? 'Rp ' + v.toLocaleString('id-ID') : v; }
-    function formatDateTime(iso){
-      const d = new Date(iso);
-      return d.toLocaleString('id-ID');
-    }
+    function formatDateTime(iso){ const d = new Date(iso); return d.toLocaleString('id-ID'); }
     function resetForm(){
       entryForm.reset();
       jajanExtra.style.display = 'none';
       newCategoryInput.value = '';
       serving.value=energy.value=energyFat.value=fat.value=saturatedFat.value=protein.value=carbs.value=sugar.value=sodium.value='';
+      populateCategories();
     }
     function showToast(msg){ alert(msg); }
 
-    // helper: parse input seperti "1.800.000" atau "Rp 1.800.000" jadi angka murni
     function parseMoneyInput(str){
       if(typeof str === 'number') return Math.round(str) || 0;
       if(!str) return 0;
-      // hapus semua karakter kecuali digit dan minus
       const digits = String(str).replace(/[^\d-]/g, '');
       return digits ? Number(digits) : 0;
     }
 
-    // ---------- save entry ----------
+    // save entry
     entryForm.addEventListener('submit', async (e)=>{
       e.preventDefault();
       saveBtn.disabled = true;
@@ -407,13 +347,13 @@
 
     clearBtn.addEventListener('click', resetForm);
 
-    // ---------- settings (monthly income) ----------
+    // settings (monthly income)
+    const settingsDocRef = doc(db,'meta','user_settings');
     saveIncomeBtn.addEventListener('click', async ()=>{
       const v = parseMoneyInput(monthlyIncomeInput.value);
       settings.monthlyIncome = v;
       try{
-        await setDoc(doc(db,'meta','user_settings'), settings, {merge:true});
-        // tampilkan formatted value di input
+        await setDoc(settingsDocRef, settings, {merge:true});
         monthlyIncomeInput.value = v ? v.toLocaleString('id-ID') : '';
         showToast('Penghasilan disimpan: ' + money(v));
       }catch(e){
@@ -422,14 +362,13 @@
       }
     });
 
-    // ---------- realtime listeners ----------
+    // realtime listeners
     function startRealtimeListeners(){
       const q = query(collection(db,'entries'), orderBy('createdAt','desc'));
       onSnapshot(q, snapshot=>{
         const docs = [];
         snapshot.forEach(d=>{
           const data = d.data();
-          // createdAt may be a Timestamp or null initially
           let createdAtIso = new Date().toISOString();
           if(data.createdAt && typeof data.createdAt.toDate === 'function'){
             createdAtIso = data.createdAt.toDate().toISOString();
@@ -438,32 +377,22 @@
         });
 
         window.__allEntries = docs;
-        // render + compute
         renderHistory(docs);
         computeTotals(docs);
       });
 
-      // settings listener
-      const settingsDoc = doc(db,'meta','user_settings');
-      onSnapshot(settingsDoc, snap=>{
+      onSnapshot(settingsDocRef, snap=>{
         if(snap.exists()){
           const dd = snap.data();
-          // enforce numeric
           dd.monthlyIncome = Number(dd.monthlyIncome) || 0;
           settings = {...settings, ...dd};
-          if(settings.monthlyIncome) {
-            // show formatted number in input but keep actual numeric in settings
-            monthlyIncomeInput.value = settings.monthlyIncome.toLocaleString('id-ID');
-          } else {
-            monthlyIncomeInput.value = '';
-          }
+          if(settings.monthlyIncome) monthlyIncomeInput.value = settings.monthlyIncome.toLocaleString('id-ID');
+          else monthlyIncomeInput.value = '';
         }
-      }, err => {
-        // ignore
-      });
+      }, err => {});
     }
 
-    // ---------- compute totals & nutrition ----------
+    // -------------- computeTotals (UPDATED) --------------
     function computeTotals(entries){
       const now = new Date();
       const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -474,6 +403,7 @@
       let incomeRecords = [];
       let todayNutritionAgg = { energy:0, fat:0, saturatedFat:0, protein:0, carbs:0, sugar:0, sodium:0 };
 
+      // aggregate
       entries.forEach(e=>{
         const created = new Date(e.createdAt);
         if(created >= startOfToday && e.type === 'expense') todayTotal += Number(e.amount||0);
@@ -492,24 +422,36 @@
         }
       });
 
-      // treat monthly income from settings as FLAT monthly income when provided
-      let monthlyIncome = settings.monthlyIncome || 0;
-      if(monthlyIncome === 0 && incomeRecords.length>0){
-        // fallback heuristic: incomes in last 90 days -> monthly
+      // base monthly income (flat) or fallback heuristic
+      let monthlyIncomeBase = settings.monthlyIncome || 0;
+      if(monthlyIncomeBase === 0 && incomeRecords.length > 0){
+        // fallback heuristic: use recent income history to estimate monthly base
         const ninety = new Date(); ninety.setDate(ninety.getDate() - 90);
         const recent = incomeRecords.filter(i=> new Date(i.createdAt) >= ninety );
-        const total = recent.reduce((s,i)=> s + Number(i.amount||0), 0);
-        monthlyIncome = Math.round((total / 90) * 30) || 0;
+        const totalRecent = recent.reduce((s,i)=> s + Number(i.amount||0), 0);
+        monthlyIncomeBase = Math.round((totalRecent / 90) * 30) || 0;
       }
 
-      const safeDaily = monthlyIncome ? Math.max(0, Math.round((monthlyIncome * 0.6) / 30)) : 0;
+      // **NEW**: sum all income entries that occurred in the current month
+      const monthlyIncomeFromEntries = incomeRecords
+        .filter(i => new Date(i.createdAt) >= startOfMonth)
+        .reduce((s,i) => s + Number(i.amount||0), 0);
 
-      avgIncomeEl.textContent = monthlyIncome ? money(monthlyIncome) : 'Belum diset';
+      // total monthly income = base (settings) + added incomes this month
+      const monthlyIncomeTotal = Math.max(0, monthlyIncomeBase + monthlyIncomeFromEntries);
+
+      // safe daily based on total monthly income
+      const safeDaily = monthlyIncomeTotal ? Math.max(0, Math.round((monthlyIncomeTotal * 0.6) / 30)) : 0;
+
+      // render summary using monthlyIncomeTotal
+      avgIncomeEl.textContent = monthlyIncomeTotal ? money(monthlyIncomeTotal) : 'Belum diset';
       todayTotalEl.textContent = money(todayTotal);
-      remainingBalanceEl.textContent = monthlyIncome ? money(Math.max(0, monthlyIncome - monthTotal)) : '-';
+      remainingBalanceEl.textContent = monthlyIncomeTotal ? money(Math.max(0, monthlyIncomeTotal - monthTotal)) : '-';
 
+      // nutrition
       renderNutritionSummary(todayNutritionAgg);
 
+      // alerts & praise (use monthlyIncomeTotal)
       if(safeDaily && todayTotal > safeDaily){
         alertBox.classList.remove('hidden');
         alertBox.textContent = `Peringatan: Pengeluaran hari ini ${money(todayTotal)} melebihi batas harian aman ${money(safeDaily)} berdasarkan pemasukan. Coba hemat 2 hari ke depan.`;
@@ -517,21 +459,19 @@
         alertBox.classList.add('hidden');
       }
 
-      if(monthlyIncome && (monthTotal <= Math.min(200000, Math.round(monthlyIncome*0.2)))){
+      if(monthlyIncomeTotal && (monthTotal <= Math.min(200000, Math.round(monthlyIncomeTotal*0.2)))){
         praiseBox.classList.remove('hidden');
-        const saved3 = (monthlyIncome - monthTotal) * 3;
+        const saved3 = (monthlyIncomeTotal - monthTotal) * 3;
         praiseBox.innerHTML = `Apresiasi: Bulan ini pengeluaran hanya ${money(monthTotal)}. Jika lo mengulangi pola ini selama 3 bulan, potensi tabungan sampai ${money(saved3)}. Dampak positif jangka panjang jelas kelihatan.`;
       } else {
         praiseBox.classList.add('hidden');
       }
     }
+    // -------------- end computeTotals --------------
 
     function renderNutritionSummary(agg){
       nutritionSummary.innerHTML = '';
-      const recDaily = {
-        energy:2000, fat:70, saturatedFat:20, protein:50, carbs:275, sugar:30, sodium:2000 // mg
-      };
-
+      const recDaily = { energy:2000, fat:70, saturatedFat:20, protein:50, carbs:275, sugar:30, sodium:2000 };
       const keys = [
         {k:'energy', label:'Energi (kcal)'},
         {k:'fat', label:'Lemak total (g)'},
@@ -541,20 +481,16 @@
         {k:'sugar', label:'Gula (g)'},
         {k:'sodium', label:'Garam / Natrium (mg)'}
       ];
-
       keys.forEach(item=>{
         const val = Math.round((agg[item.k] || 0) * 100) / 100;
         const rec = recDaily[item.k] || null;
         const pct = rec ? Math.round((val / rec) * 100) : null;
-
         const div = document.createElement('div');
         div.className = 'nutri-card';
         div.innerHTML = `<div style="font-weight:700">${item.label}</div>
                          <div style="margin-top:6px">${val} ${item.k==='sodium' ? 'mg' : (item.k==='energy' ? 'kcal' : 'g')}</div>
                          ${rec ? `<div class="meta">Persentase dari rekomendasi harian: ${pct}%</div>` : ''}`;
-        if(rec && pct > 100){
-          div.style.border = '1px solid rgba(200,80,80,0.18)';
-        }
+        if(rec && pct > 100) div.style.border = '1px solid rgba(200,80,80,0.18)';
         nutritionSummary.appendChild(div);
       });
 
@@ -567,66 +503,37 @@
       }
     }
 
-    // ---------- render history ----------
     function renderHistory(entries){
       historyList.innerHTML = '';
       let filtered = entries;
       const range = historyRange.value;
-
-      if(range === 'today'){
-        const start = new Date(); start.setHours(0,0,0,0);
-        filtered = entries.filter(e=> new Date(e.createdAt) >= start);
-      } else if(range === 'thisMonth'){
-        const start = new Date(); start.setDate(1); start.setHours(0,0,0,0);
-        filtered = entries.filter(e=> new Date(e.createdAt) >= start);
-      }
-
-      if(filtered.length === 0){
-        historyList.innerHTML = `<div class="meta">Belum ada catatan pada periode ini.</div>`;
-        return;
-      }
-
+      if(range === 'today'){ const start = new Date(); start.setHours(0,0,0,0); filtered = entries.filter(e=> new Date(e.createdAt) >= start); }
+      else if(range === 'thisMonth'){ const start = new Date(); start.setDate(1); start.setHours(0,0,0,0); filtered = entries.filter(e=> new Date(e.createdAt) >= start); }
+      if(filtered.length === 0){ historyList.innerHTML = `<div class="meta">Belum ada catatan pada periode ini.</div>`; return; }
       filtered.forEach(e=>{
         const div = document.createElement('div');
         div.className = 'history-item';
         const left = document.createElement('div');
         left.innerHTML = `<div><strong>${e.type === 'expense' ? '-' : '+'} ${money(Number(e.amount||0))}</strong> — ${e.category}</div>
                           <div class="meta">${formatDateTime(e.createdAt)} ${e.note ? ' • ' + e.note : ''}</div>`;
-
-        const right = document.createElement('div');
-        right.style.textAlign = 'right';
-        const btn = document.createElement('button');
-        btn.className = 'small';
-        btn.textContent = 'Detail';
+        const right = document.createElement('div'); right.style.textAlign = 'right';
+        const btn = document.createElement('button'); btn.className = 'small'; btn.textContent = 'Detail';
         btn.addEventListener('click', ()=> showDetails(e.id));
         right.appendChild(btn);
-
-        div.appendChild(left);
-        div.appendChild(right);
-        historyList.appendChild(div);
-
-        window.__entries = window.__entries || {};
-        window.__entries[e.id] = e;
+        div.appendChild(left); div.appendChild(right); historyList.appendChild(div);
+        window.__entries = window.__entries || {}; window.__entries[e.id] = e;
       });
     }
 
-    historyRange.addEventListener('change', ()=>{
-      if(window.__allEntries) renderHistory(window.__allEntries);
-    });
+    historyRange.addEventListener('change', ()=>{ if(window.__allEntries) renderHistory(window.__allEntries); });
 
     window.showDetails = function(id){
       const e = window.__entries && window.__entries[id];
       if(!e) return alert('Data tidak ditemukan');
       let txt = `${e.type === 'expense' ? 'Pengeluaran' : 'Pemasukan'} • ${e.category}\nNominal: ${money(Number(e.amount||0))}\nWaktu: ${formatDateTime(e.createdAt)}\nCatatan: ${e.note || '-'}`;
-      if(e.nutrition){
-        txt += '\n\n-- Nutrisi --\n';
-        Object.entries(e.nutrition).forEach(([k,v])=>{
-          txt += `${k}: ${v}\n`;
-        });
-      }
+      if(e.nutrition){ txt += '\n\n-- Nutrisi --\n'; Object.entries(e.nutrition).forEach(([k,v])=>{ txt += `${k}: ${v}\n`; }); }
       alert(txt);
     };
-
   </script>
 </body>
 </html>
