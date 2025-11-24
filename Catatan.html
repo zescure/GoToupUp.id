@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Zezy Finance + Nutrition — fixed categories</title>
+  <title>Zezy Finance + Nutrition — Nutrisi Historis</title>
   <style>
     :root{
       --bg:#f5f7fb; --panel:#fff; --muted:#58606a; --accent:#0077cc;
@@ -14,10 +14,10 @@
     body{margin:0;font-family:Inter, system-ui, Arial;background:linear-gradient(180deg,#fff 0%,var(--bg)100%);color:var(--text);min-height:100vh}
     .topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.8);backdrop-filter:blur(6px)}
     .brand{font-weight:700;font-size:14px} .greeting{opacity:.95;font-weight:600}
-    .container{max-width:1100px;margin:18px auto;padding:0 12px 100px;display:grid;grid-template-columns:1fr;gap:14px}
+    .container{max-width:1200px;margin:18px auto;padding:0 12px 120px;display:grid;grid-template-columns:1fr;gap:14px}
     .panel{background:var(--panel);border-radius:10px;padding:14px;box-shadow:0 6px 18px rgba(12,24,56,0.06);border:1px solid var(--border)}
     .summary-row{display:flex;gap:12px;flex-wrap:wrap}
-    .summary-row>div{flex:1 1 200px;background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);padding:12px;border-radius:8px;border:1px solid rgba(2,6,23,0.03)}
+    .summary-row>div{flex:1 1 220px;background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);padding:12px;border-radius:8px;border:1px solid rgba(2,6,23,0.03)}
     .label{font-size:12px;color:var(--muted)} .big{font-size:20px;margin-top:6px;font-weight:700}
     .form-row{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
     input,select,button{padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:14px}
@@ -36,8 +36,9 @@
     .praise{background:linear-gradient(90deg,#ecfff3,#deffea);padding:10px;border-radius:8px;color:var(--text);margin-top:8px;border:1px solid rgba(16,122,74,0.12)}
     .hidden{display:none}
     .footer{position:fixed;left:0;right:0;bottom:0;padding:10px 18px;background:rgba(255,255,255,0.9);text-align:center;color:var(--muted);border-top:1px solid var(--border)}
-    @media(min-width:900px){.container{grid-template-columns:1fr 420px}#entryPanel{grid-row:span 2}}
+    @media(min-width:1000px){.container{grid-template-columns:1fr 420px} #entryPanel{grid-row:span 2}}
     input::placeholder{color:#9aa3ad} button.small{background:#f1f5f9;border:1px solid var(--border)} .primary:hover{filter:brightness(.95)}
+    .flex-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   </style>
 </head>
 <body>
@@ -102,7 +103,30 @@
       </form>
     </section>
 
-    <section class="panel" id="nutritionPanel"><h2>Ringkasan Nutrisi Hari Ini</h2><div id="nutritionSummary" class="nutri-summary"></div></section>
+    <section class="panel" id="nutritionPanel">
+      <h2>Ringkasan Nutrisi Hari Ini</h2>
+      <div id="nutritionSummary" class="nutri-summary"></div>
+    </section>
+
+    <!-- NEW: Nutrition History Panel -->
+    <section class="panel" id="nutritionHistoryPanel">
+      <h2>Historis Nutrisi (Kustom)</h2>
+      <div class="flex-row" style="margin-bottom:8px;">
+        <label>Pilih:</label>
+        <select id="nutriRangeSelect">
+          <option value="2daysAgo">2 hari lalu</option>
+          <option value="7daysAgo">7 hari lalu</option>
+          <option value="last7days">7 hari terakhir</option>
+          <option value="custom">Custom tanggal</option>
+        </select>
+
+        <input id="nutriCustomDate" type="date" style="width:170px;" class="hidden" />
+        <button id="nutriLoadBtn" class="small">Tampilkan</button>
+      </div>
+
+      <div id="nutriHistorySummary" class="nutri-summary" style="margin-bottom:8px;"></div>
+      <div id="nutriHistoryList" class="history-list"></div>
+    </section>
 
     <section class="panel" id="historyPanel">
       <h2>Historis & Batas Aman</h2>
@@ -173,6 +197,13 @@
 
     const nutritionSummary = document.getElementById('nutritionSummary');
 
+    // nutrition history UI
+    const nutriRangeSelect = document.getElementById('nutriRangeSelect');
+    const nutriCustomDate = document.getElementById('nutriCustomDate');
+    const nutriLoadBtn = document.getElementById('nutriLoadBtn');
+    const nutriHistorySummary = document.getElementById('nutriHistorySummary');
+    const nutriHistoryList = document.getElementById('nutriHistoryList');
+
     // categories
     let expenseCategories = ['Pengeluaran jajan','Pengeluaran transfer','Pengeluaran cash'];
     let incomeCategories = ['Gaji','Bonus','Lembur'];
@@ -182,7 +213,7 @@
     async function signIn(){ try { await signInAnonymously(auth); } catch(e){ console.error('auth err', e); } }
     await signIn();
 
-    // robust category setter
+    // categories setter
     function setCategoriesForType(type){
       const list = (type === 'income') ? incomeCategories : expenseCategories;
       categorySelect.innerHTML = '';
@@ -192,24 +223,14 @@
         opt.textContent = c;
         categorySelect.appendChild(opt);
       });
-      // ensure selection resets to first option (prevents leftover selection)
       if(list.length) categorySelect.value = list[0];
-      // update jajan visibility + placeholder for newCategoryInput
       jajanExtra.style.display = ((type === 'expense') && (categorySelect.value||'').toLowerCase().includes('jajan')) ? 'block' : 'none';
       newCategoryInput.placeholder = type === 'income' ? 'Tambah kategori baru (untuk Pemasukan)' : 'Tambah kategori baru (untuk Pengeluaran)';
     }
 
-    function initUI(){
-      // ensure category list matches current entryType on load
-      setCategoriesForType(entryType.value);
-    }
+    function initUI(){ setCategoriesForType(entryType.value); }
 
-    // wire events
-    entryType.addEventListener('change', ()=> {
-      setCategoriesForType(entryType.value);
-    });
-
-    // if user manually changes category, update jajan visibility
+    entryType.addEventListener('change', ()=> setCategoriesForType(entryType.value));
     categorySelect.addEventListener('change', ()=> {
       const cat = (categorySelect.value || '').toLowerCase();
       jajanExtra.style.display = (entryType.value === 'expense' && cat.includes('jajan')) ? 'block' : 'none';
@@ -234,7 +255,7 @@
       entryForm.reset();
       newCategoryInput.value = '';
       serving.value = energy.value = energyFat.value = fat.value = saturatedFat.value = protein.value = carbs.value = sugar.value = sodium.value = '';
-      setCategoriesForType(entryType.value); // important: reset categories to match current type
+      setCategoriesForType(entryType.value);
     }
     function showToast(msg){ alert(msg); }
 
@@ -306,6 +327,9 @@
         window.__allEntries = docs;
         renderHistory(docs);
         computeTotals(docs);
+        // update nutrition history default view (don't override if user opened custom)
+        // default: show '2 hari lalu' summary
+        // but only if nutriRangeSelect.value === default
       });
 
       onSnapshot(settingsDocRef, snap=>{
@@ -318,17 +342,23 @@
       });
     }
 
+    // compute totals & fix: include date filter for nutrition (so it resets per day)
     function computeTotals(entries){
       const now = new Date();
-      const startOfToday = new Date(now.getFullYear(),now.getMonth(),now.getDate());
-      const startOfMonth = new Date(now.getFullYear(),now.getMonth(),1);
-      let todayTotal = 0, monthTotal = 0, incomeRecords = [], todayNutritionAgg = {energy:0,fat:0,saturatedFat:0,protein:0,carbs:0,sugar:0,sodium:0};
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      let todayTotal = 0, monthTotal = 0, incomeRecords = [];
+      let todayNutritionAgg = {energy:0,fat:0,saturatedFat:0,protein:0,carbs:0,sugar:0,sodium:0};
+
       entries.forEach(e=>{
         const created = new Date(e.createdAt);
         if(created >= startOfToday && e.type === 'expense') todayTotal += Number(e.amount||0);
         if(created >= startOfMonth && e.type === 'expense') monthTotal += Number(e.amount||0);
         if(e.type === 'income') incomeRecords.push(e);
-        if(e.type === 'expense' && e.category && e.category.toLowerCase().includes('jajan') && e.nutrition){
+
+        // FIX: hanya aggregate nutrisi untuk entry yang terjadi HARI INI
+        if(created >= startOfToday && e.type === 'expense' && e.category && e.category.toLowerCase().includes('jajan') && e.nutrition){
           const n = e.nutrition;
           todayNutritionAgg.energy += Number(n.energy||0);
           todayNutritionAgg.fat += Number(n.fat||0);
@@ -340,6 +370,7 @@
         }
       });
 
+      // monthly income calculation (base + incomes recorded this month)
       let monthlyIncomeBase = settings.monthlyIncome || 0;
       if(monthlyIncomeBase === 0 && incomeRecords.length > 0){
         const ninety = new Date(); ninety.setDate(ninety.getDate()-90);
@@ -360,8 +391,10 @@
 
       renderNutritionSummary(todayNutritionAgg);
 
-      if(safeDaily && todayTotal > safeDaily){ alertBox.classList.remove('hidden'); alertBox.textContent = `Peringatan: Pengeluaran hari ini ${money(todayTotal)} melebihi batas harian aman ${money(safeDaily)} berdasarkan pemasukan. Coba hemat 2 hari ke depan.`; }
-      else alertBox.classList.add('hidden');
+      if(safeDaily && todayTotal > safeDaily){
+        alertBox.classList.remove('hidden');
+        alertBox.textContent = `Peringatan: Pengeluaran hari ini ${money(todayTotal)} melebihi batas harian aman ${money(safeDaily)} berdasarkan pemasukan. Coba hemat 2 hari ke depan.`;
+      } else alertBox.classList.add('hidden');
 
       if(monthlyIncomeTotal && (monthTotal <= Math.min(200000, Math.round(monthlyIncomeTotal*0.2)))){
         praiseBox.classList.remove('hidden');
@@ -388,6 +421,98 @@
       if(exceeded.length){ const warn = document.createElement('div'); warn.className='alert'; warn.textContent = `Catatan nutrisi: hari ini kelebihan - ${exceeded.join(', ')}.`; nutritionSummary.appendChild(warn); }
     }
 
+    // ---------- Nutrition history functions ----------
+    function computeNutritionForRange(entries, startDate, endDate){
+      // startDate inclusive, endDate exclusive
+      const agg = {energy:0,fat:0,saturatedFat:0,protein:0,carbs:0,sugar:0,sodium:0};
+      const items = [];
+      entries.forEach(e=>{
+        const created = new Date(e.createdAt);
+        if(created >= startDate && created < endDate && e.type === 'expense' && e.category && e.category.toLowerCase().includes('jajan') && e.nutrition){
+          const n = e.nutrition;
+          agg.energy += Number(n.energy||0);
+          agg.fat += Number(n.fat||0);
+          agg.saturatedFat += Number(n.saturatedFat||0);
+          agg.protein += Number(n.protein||0);
+          agg.carbs += Number(n.carbs||0);
+          agg.sugar += Number(n.sugar||0);
+          agg.sodium += Number(n.sodium||0);
+          items.push({...e, createdAtObj: created});
+        }
+      });
+      return {agg, items};
+    }
+
+    function renderNutritionHistorySummary(agg){
+      nutriHistorySummary.innerHTML = '';
+      const recDaily = {energy:2000,fat:70,saturatedFat:20,protein:50,carbs:275,sugar:30,sodium:2000};
+      const keys = [{k:'energy',label:'Energi (kcal)'},{k:'fat',label:'Lemak total (g)'},{k:'saturatedFat',label:'Lemak jenuh (g)'},
+        {k:'protein',label:'Protein (g)'},{k:'carbs',label:'Karbohidrat (g)'},{k:'sugar',label:'Gula (g)'},{k:'sodium',label:'Garam / Natrium (mg)'}];
+      keys.forEach(item=>{
+        const val = Math.round((agg[item.k]||0)*100)/100;
+        const div = document.createElement('div'); div.className='nutri-card';
+        div.innerHTML = `<div style="font-weight:700">${item.label}</div><div style="margin-top:6px">${val} ${item.k==='sodium'?'mg':(item.k==='energy'?'kcal':'g')}</div>`;
+        nutriHistorySummary.appendChild(div);
+      });
+    }
+
+    function renderNutritionHistoryList(items){
+      nutriHistoryList.innerHTML = '';
+      if(items.length === 0){ nutriHistoryList.innerHTML = `<div class="meta">Tidak ada catatan jajan pada periode itu.</div>`; return; }
+      // sort by createdAt desc
+      items.sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt));
+      items.forEach(e=>{
+        const div = document.createElement('div'); div.className='history-item';
+        const left = document.createElement('div');
+        left.innerHTML = `<div><strong>${money(Number(e.amount||0))}</strong> — ${e.category}</div>
+                          <div class="meta">${formatDateTime(e.createdAt)} ${e.note ? ' • ' + e.note : ''}</div>`;
+        const right = document.createElement('div'); right.style.textAlign='right';
+        const btn = document.createElement('button'); btn.className='small'; btn.textContent='Detail';
+        btn.addEventListener('click', ()=> {
+          let txt = `Jajan • ${e.category}\nNominal: ${money(Number(e.amount||0))}\nWaktu: ${formatDateTime(e.createdAt)}\nCatatan: ${e.note || '-'}\n\n-- Nutrisi --\n`;
+          Object.entries(e.nutrition || {}).forEach(([k,v])=> txt += `${k}: ${v}\n`);
+          alert(txt);
+        });
+        right.appendChild(btn); div.appendChild(left); div.appendChild(right); nutriHistoryList.appendChild(div);
+      });
+    }
+
+    // map selection to dates and run compute+render
+    function loadNutritionHistory(){
+      if(!window.__allEntries) return;
+      const sel = nutriRangeSelect.value;
+      const today = new Date(); today.setHours(0,0,0,0);
+      let start, end;
+      if(sel === '2daysAgo'){
+        start = new Date(today); start.setDate(start.getDate() - 2);
+        end = new Date(start); end.setDate(start.getDate() + 1);
+      } else if(sel === '7daysAgo'){
+        start = new Date(today); start.setDate(start.getDate() - 7);
+        end = new Date(start); end.setDate(start.getDate() + 1);
+      } else if(sel === 'last7days'){
+        start = new Date(today); start.setDate(start.getDate() - 6); // last 7 days including today
+        end = new Date(today); end.setDate(end.getDate() + 1);
+      } else if(sel === 'custom'){
+        if(!nutriCustomDate.value){ alert('Pilih tanggal custom dulu.'); return; }
+        start = new Date(nutriCustomDate.value); start.setHours(0,0,0,0);
+        end = new Date(start); end.setDate(start.getDate() + 1);
+      } else {
+        // fallback: today
+        start = new Date(today); end = new Date(today); end.setDate(end.getDate()+1);
+      }
+      const {agg, items} = computeNutritionForRange(window.__allEntries, start, end);
+      renderNutritionHistorySummary(agg);
+      renderNutritionHistoryList(items);
+    }
+
+    // wire nutrition history UI
+    nutriRangeSelect.addEventListener('change', ()=>{
+      if(nutriRangeSelect.value === 'custom') nutriCustomDate.classList.remove('hidden');
+      else nutriCustomDate.classList.add('hidden');
+    });
+    nutriLoadBtn.addEventListener('click', loadNutritionHistory);
+
+    // history + rendering
     function renderHistory(entries){
       historyList.innerHTML = '';
       let filtered = entries;
@@ -420,6 +545,9 @@
     // start
     initUI();
     startRealtimeListeners();
+
+    // default load: show 2 hari lalu nutrition summary (non-blocking)
+    setTimeout(()=>{ if(nutriRangeSelect.value === '2daysAgo') loadNutritionHistory(); }, 1200);
   </script>
 </body>
 </html>
