@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Zezy Finance + Nutrition — Nutrisi Historis + Wishlist</title>
+  <style>
+    :root{
+      --bg:#f5f7fb; --panel:#fff; --muted:#58606a; --accent:#0077cc;
+      --border:#e2e8f0; --text:#0b1530;
+      color-scheme: light;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter, system-ui, Arial;background:linear-gradient(180deg,#fff 0%,var(--bg)100%);color:var(--text);min-height:100vh}
+    .topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.8);backdrop-filter:blur(6px)}
+    .brand{font-weight:700;font-size:14px} .greeting{opacity:.95;font-weight:600}
+    .container{max-width:1200px;margin:18px auto;padding:0 12px 120px;display:grid;grid-template-columns:1fr;gap:14px}
+    .panel{background:var(--panel);border-radius:10px;padding:14px;box-shadow:0 6px 18px rgba(12,24,56,0.06);border:1px solid var(--border)}
+    .summary-row{display:flex;gap:12px;flex-wrap:wrap}
+    .summary-row>div{flex:1 1 220px;background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);padding:12px;border-radius:8px;border:1px solid rgba(2,6,23,0.03)}
+    .label{font-size:12px;color:var(--muted)} .big{font-size:20px;margin-top:6px;font-weight:700}
+    .form-row{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+    input,select,button{padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:14px}
+    .nutri-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}
+    .hint{font-size:12px;color:var(--muted);margin-top:6px}
+    .buttons{display:flex;gap:8px}
+    .primary{background:var(--accent);color:#fff;border:none;padding:10px 14px;border-radius:8px;font-weight:700;cursor:pointer}
+    .muted{background:transparent;border:1px solid var(--border);padding:8px 10px;border-radius:8px;color:var(--muted);cursor:pointer}
+    .small{padding:6px 8px;font-size:13px;border-radius:8px;cursor:pointer}
+    .nutri-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+    .nutri-card{background:linear-gradient(180deg,#ffffff,#fbfdff);padding:10px;border-radius:8px;border:1px solid var(--border)}
+    .history-list{margin-top:10px;max-height:360px;overflow:auto;display:grid;gap:8px}
+    .history-item{display:flex;justify-content:space-between;padding:10px;border-radius:8px;background:linear-gradient(180deg,#fff,#fbfeff);align-items:center;gap:8px;border:1px solid var(--border)}
+    .meta{font-size:12px;color:var(--muted)}
+    .alert{background:linear-gradient(90deg,#fff1f1,#ffdede);padding:10px;border-radius:8px;color:var(--text);margin-top:8px;border:1px solid rgba(200,80,80,0.15)}
+    .praise{background:linear-gradient(90deg,#ecfff3,#deffea);padding:10px;border-radius:8px;color:var(--text);margin-top:8px;border:1px solid rgba(16,122,74,0.12)}
+    .hidden{display:none}
+    .footer{position:fixed;left:0;right:0;bottom:0;padding:10px 18px;background:rgba(255,255,255,0.9);text-align:center;color:var(--muted);border-top:1px solid var(--border)}
+    @media(min-width:1000px){.container{grid-template-columns:1fr 420px} #entryPanel{grid-row:span 2}}
+    input::placeholder{color:#9aa3ad} button.small{background:#f1f5f9;border:1px solid var(--border)} .primary:hover{filter:brightness(.95)}
+    .flex-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    /* wishlist styles */
+    .wishlist-list .wish-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;background:#fff;border:1px solid var(--border)}
+    .badge{font-size:12px;padding:4px 8px;border-radius:999px;background:#f1f5f9;color:var(--muted);border:1px solid var(--border)}
+    .status-bought{background:linear-gradient(90deg,#ecfff3,#deffea);border:1px solid rgba(16,122,74,0.12)}
+    .status-cancel{background:linear-gradient(90deg,#fff7ec,#ffe8d2);border:1px solid rgba(220,120,30,0.12)}
+    .muted-ghost{background:transparent;border:none;color:var(--muted);cursor:pointer}
+  </style>
+</head>
+<body>
+  <header class="topbar"><div class="brand">Zezy Finance + Nutrition</div><div class="greeting">hallo king zezy 👑</div></header>
+
+  <main class="container">
+    <section class="panel" id="summaryPanel">
+      <h2>Ringkasan</h2>
+      <div class="summary-row">
+        <div><div class="label">Penghasilan Bulanan</div><div id="avgIncome" class="big">-</div></div>
+        <div><div class="label">Sisa Bulan Ini</div><div id="remainingBalance" class="big">-</div></div>
+        <div><div class="label">Pengeluaran Hari Ini</div><div id="todayTotal" class="big">-</div></div>
+      </div>
+      <div id="alertBox" class="alert hidden"></div>
+      <div id="praiseBox" class="praise hidden"></div>
+    </section>
+
+    <section class="panel" id="entryPanel">
+      <h2>Tambah Catatan</h2>
+      <form id="entryForm">
+        <div class="form-row">
+          <label>Jenis</label>
+          <select id="entryType">
+            <option value="expense">Pengeluaran</option>
+            <option value="income">Pemasukan</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label>Kategori</label>
+          <select id="categorySelect"></select>
+          <div style="display:flex;gap:8px;margin-top:6px;">
+            <input id="newCategoryInput" placeholder="Tambah kategori baru (opsional)" />
+            <button type="button" id="addCategoryBtn" class="small">Tambah</button>
+          </div>
+        </div>
+
+        <div class="form-row"><label>Nominal (Rp)</label><input id="amountInput" type="number" min="0" required /></div>
+
+        <div class="form-row" id="jajanExtra" style="display:none;">
+          <label>Detail Nutrisi (wajib untuk kategori Jajan)</label>
+          <div class="nutri-grid">
+            <div><input id="serving" placeholder="Takaran saji (mis. 50 g / 200 ml)" /></div>
+            <div><input id="energy" type="number" placeholder="Energi total (kcal)" /></div>
+            <div><input id="energyFat" type="number" placeholder="Energi lemak (kcal)" /></div>
+            <div><input id="fat" type="number" placeholder="Lemak total (g)" /></div>
+            <div><input id="saturatedFat" type="number" placeholder="Lemak jenuh (g)" /></div>
+            <div><input id="protein" type="number" placeholder="Protein (g)" /></div>
+            <div><input id="carbs" type="number" placeholder="Karbohidrat (g)" /></div>
+            <div><input id="sugar" type="number" placeholder="Gula (g)" /></div>
+            <div><input id="sodium" type="number" placeholder="Garam / natrium (mg)" /></div>
+          </div>
+          <small class="hint">Isi angka dalam gram (g) atau mg sesuai placeholder. Jika tidak tahu, isi 0.</small>
+        </div>
+
+        <div class="form-row"><label>Catatan (opsional)</label><input id="noteInput" placeholder="Misal: beli di warung A" /></div>
+
+        <div class="form-row buttons">
+          <button id="saveBtn" class="primary">Simpan</button>
+          <button id="clearBtn" type="button" class="muted">Reset Form</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel" id="nutritionPanel">
+      <h2>Ringkasan Nutrisi Hari Ini</h2>
+      <div id="nutritionSummary" class="nutri-summary"></div>
+    </section>
+
+    <!-- NEW: Nutrition History Panel -->
+    <section class="panel" id="nutritionHistoryPanel">
+      <h2>Historis Nutrisi (Kustom)</h2>
+      <div class="flex-row" style="margin-bottom:8px;">
+        <label>Pilih:</label>
+        <select id="nutriRangeSelect">
+          <option value="2daysAgo">2 hari lalu</option>
+          <option value="7daysAgo">7 hari lalu</option>
+          <option value="last7days">7 hari terakhir</option>
+          <option value="custom">Custom tanggal</option>
+        </select>
+
+        <input id="nutriCustomDate" type="date" style="width:170px;" class="hidden" />
+        <button id="nutriLoadBtn" class="small">Tampilkan</button>
+      </div>
+
+      <div id="nutriHistorySummary" class="nutri-summary" style="margin-bottom:8px;"></div>
+      <div id="nutriHistoryList" class="history-list"></div>
+    </section>
+
+    <section class="panel" id="historyPanel">
+      <h2>Historis & Batas Aman</h2>
+      <div class="history-controls" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+        <label>Filter</label>
+        <select id="historyRange"><option value="today">Hari Ini</option><option value="thisMonth">Bulan Ini</option><option value="all">Semua</option></select>
+
+        <label style="margin-left:8px">Income Setting (Rp/bln)</label>
+        <input id="monthlyIncomeInput" type="text" placeholder="Masukkan penghasilan bulanan Anda" style="width:160px" />
+        <button id="saveIncomeBtn" class="small">Simpan</button>
+      </div>
+      <div id="historyList" class="history-list"></div>
+    </section>
+
+    <!-- NEW: Wishlist Panel -->
+    <section class="panel" id="wishlistPanel">
+      <h2>Wish List — Beli tiap gajian</h2>
+      <div class="form-row">
+        <input id="wishTitle" placeholder="Nama barang (mis. Skincare A)" />
+      </div>
+      <div class="form-row" style="display:flex;gap:8px;">
+        <input id="wishPrice" type="number" placeholder="Estimasi harga (Rp)" style="flex:1" />
+        <input id="wishNote" placeholder="Catatan (opsional)" style="flex:2" />
+      </div>
+      <div class="form-row flex-row">
+        <label><input id="wishPayday" type="checkbox" /> Beli saat gajian</label>
+        <button id="addWishBtn" class="primary small">Tambah Wish</button>
+        <select id="wishFilter" class="small" style="margin-left:auto;">
+          <option value="all">Tampilkan: Semua</option>
+          <option value="pending">Pending</option>
+          <option value="payday">Hanya saat gajian</option>
+          <option value="bought">Sudah terbeli</option>
+          <option value="cancelled">Gajadi beli</option>
+        </select>
+      </div>
+
+      <div id="wishlistList" class="history-list wishlist-list" style="margin-top:10px;"></div>
+      <div class="hint" style="margin-top:8px">Klik <strong>Terbeli</strong> saat lo beneran udah beli. Klik <strong>Gajadi Beli</strong> kalau lo memutuskan nggak jadi beli.</div>
+    </section>
+
+  </main>
+
+  <footer class="footer"><small>Made for Zezy — sederhana, jelas, dan hemat energi otak.</small></footer>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc, updateDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
+      authDomain: "zeepaylater-93a94.firebaseapp.com",
+      projectId: "zeepaylater-93a94",
+      storageBucket: "zeepaylater-93a94.appspot.com",
+      messagingSenderId: "358065954807",
+      appId: "1:358065954807:web:66619211fea82a4b2518f2"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // UI elements (existing)
+    const entryForm = document.getElementById('entryForm');
+    const entryType = document.getElementById('entryType');
+    const categorySelect = document.getElementById('categorySelect');
+    const newCategoryInput = document.getElementById('newCategoryInput');
+    const addCategoryBtn = document.getElementById('addCategoryBtn');
+    const amountInput = document.getElementById('amountInput');
+    const jajanExtra = document.getElementById('jajanExtra');
+    const noteInput = document.getElementById('noteInput');
+    const saveBtn = document.getElementById('saveBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    const serving = document.getElementById('serving');
+    const energy = document.getElementById('energy');
+    const energyFat = document.getElementById('energyFat');
+    const fat = document.getElementById('fat');
+    const saturatedFat = document.getElementById('saturatedFat');
+    const protein = document.getElementById('protein');
+    const carbs = document.getElementById('carbs');
+    const sugar = document.getElementById('sugar');
+    const sodium = document.getElementById('sodium');
+
+    const avgIncomeEl = document.getElementById('avgIncome');
+    const remainingBalanceEl = document.getElementById('remainingBalance');
+    const todayTotalEl = document.getElementById('todayTotal');
+    const alertBox = document.getElementById('alertBox');
+    const praiseBox = document.getElementById('praiseBox');
+
+    const historyList = document.getElementById('historyList');
+    const historyRange = document.getElementById('historyRange');
+
+    const monthlyIncomeInput = document.getElementById('monthlyIncomeInput');
+    const saveIncomeBtn = document.getElementById('saveIncomeBtn');
+
+    const nutritionSummary = document.getElementById('nutritionSummary');
+
+    // nutrition history UI
+    const nutriRangeSelect = document.getElementById('nutriRangeSelect');
+    const nutriCustomDate = document.getElementById('nutriCustomDate');
+    const nutriLoadBtn = document.getElementById('nutriLoadBtn');
+    const nutriHistorySummary = document.getElementById('nutriHistorySummary');
+    const nutriHistoryList = document.getElementById('nutriHistoryList');
+
+    // wishlist UI
+    const wishTitle = document.getElementById('wishTitle');
+    const wishPrice = document.getElementById('wishPrice');
+    const wishNote = document.getElementById('wishNote');
+    const wishPayday = document.getElementById('wishPayday');
+    const addWishBtn = document.getElementById('addWishBtn');
+    const wishlistList = document.getElementById('wishlistList');
+    const wishFilter = document.getElementById('wishFilter');
+
+    // categories
+    let expenseCategories = ['Pengeluaran jajan','Pengeluaran transfer','Pengeluaran cash'];
+    let incomeCategories = ['Gaji','Bonus','Lembur'];
+    let settings = { monthlyIncome: 0 };
+
+    // sign-in
+    async function signIn(){ try { await signInAnonymously(auth); } catch(e){ console.error('auth err', e); } }
+    await signIn();
+
+    // categories setter
+    function setCategoriesForType(type){
+      const list = (type === 'income') ? incomeCategories : expenseCategories;
+      categorySelect.innerHTML = '';
+      list.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        categorySelect.appendChild(opt);
+      });
+      if(list.length) categorySelect.value = list[0];
+      jajanExtra.style.display = ((type === 'expense') && (categorySelect.value||'').toLowerCase().includes('jajan')) ? 'block' : 'none';
+      newCategoryInput.placeholder = type === 'income' ? 'Tambah kategori baru (untuk Pemasukan)' : 'Tambah kategori baru (untuk Pengeluaran)';
+    }
+
+    function initUI(){ setCategoriesForType(entryType.value); }
+
+    entryType.addEventListener('change', ()=> setCategoriesForType(entryType.value));
+    categorySelect.addEventListener('change', ()=> {
+      const cat = (categorySelect.value || '').toLowerCase();
+      jajanExtra.style.display = (entryType.value === 'expense' && cat.includes('jajan')) ? 'block' : 'none';
+    });
+
+    addCategoryBtn.addEventListener('click', ()=>{
+      const v = (newCategoryInput.value || '').trim();
+      if(!v) return;
+      if(entryType.value === 'income'){
+        if(!incomeCategories.includes(v)) incomeCategories.push(v);
+      } else {
+        if(!expenseCategories.includes(v)) expenseCategories.push(v);
+      }
+      setCategoriesForType(entryType.value);
+      categorySelect.value = v;
+      newCategoryInput.value = '';
+    });
+
+    function money(v){ return typeof v === 'number' ? 'Rp ' + v.toLocaleString('id-ID') : v; }
+    function formatDateTime(iso){ const d = new Date(iso); return d.toLocaleString('id-ID'); }
+    function resetForm(){
+      entryForm.reset();
+      newCategoryInput.value = '';
+      serving.value = energy.value = energyFat.value = fat.value = saturatedFat.value = protein.value = carbs.value = sugar.value = sodium.value = '';
+      setCategoriesForType(entryType.value);
+    }
+    function showToast(msg){ alert(msg); }
+
+    function parseMoneyInput(str){
+      if(typeof str === 'number') return Math.round(str) || 0;
+      if(!str) return 0;
+      const digits = String(str).replace(/[^\d-]/g, '');
+      return digits ? Number(digits) : 0;
+    }
+
+    // save entry (existing)
+    entryForm.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      saveBtn.disabled = true;
+      const type = entryType.value;
+      const category = categorySelect.value;
+      const amount = Number(amountInput.value) || 0;
+      const note = noteInput.value || '';
+      const isJajan = category.toLowerCase().includes('jajan') && type === 'expense';
+      let nutrition = null;
+      if(isJajan){
+        nutrition = {
+          serving: serving.value || '',
+          energy: Number(energy.value) || 0,
+          energyFat: Number(energyFat.value) || 0,
+          fat: Number(fat.value) || 0,
+          saturatedFat: Number(saturatedFat.value) || 0,
+          protein: Number(protein.value) || 0,
+          carbs: Number(carbs.value) || 0,
+          sugar: Number(sugar.value) || 0,
+          sodium: Number(sodium.value) || 0
+        };
+        const some = ['energy','fat','protein','carbs','sugar','sodium'].some(k=>nutrition[k] && nutrition[k] > 0);
+        if(!some){ alert('Untuk kategori Jajan isi setidaknya salah satu nilai nutrisi.'); saveBtn.disabled = false; return; }
+      }
+      try{
+        await addDoc(collection(db,'entries'), { type, category, amount, note, nutrition, createdAt: serverTimestamp() });
+        resetForm();
+      } catch(err){
+        console.error('save error', err); alert('Gagal menyimpan. Cek console.'); 
+      } finally { saveBtn.disabled = false; }
+    });
+
+    clearBtn.addEventListener('click', resetForm);
+
+    // wishlist actions
+    addWishBtn.addEventListener('click', async ()=>{
+      const title = (wishTitle.value || '').trim();
+      const price = Number(wishPrice.value) || 0;
+      const note = (wishNote.value || '').trim();
+      const buyOnPayday = !!wishPayday.checked;
+      if(!title){ alert('Isi nama barang dulu.'); return; }
+      addWishBtn.disabled = true;
+      try{
+        await addDoc(collection(db,'wishlist'), { title, price, note, buyOnPayday, status: 'pending', createdAt: serverTimestamp() });
+        wishTitle.value = ''; wishPrice.value = ''; wishNote.value = ''; wishPayday.checked = false;
+      }catch(e){ console.error(e); alert('Gagal tambah wishlist'); }
+      addWishBtn.disabled = false;
+    });
+
+    // realtime listeners & compute + wishlist listener
+    function startRealtimeListeners(){
+      const q = query(collection(db,'entries'), orderBy('createdAt','desc'));
+      onSnapshot(q, snapshot=>{
+        const docs = [];
+        snapshot.forEach(d=>{
+          const data = d.data();
+          let createdAtIso = new Date().toISOString();
+          if(data.createdAt && typeof data.createdAt.toDate === 'function') createdAtIso = data.createdAt.toDate().toISOString();
+          docs.push({...data, id: d.id, createdAt: createdAtIso});
+        });
+        window.__allEntries = docs;
+        renderHistory(docs);
+        computeTotals(docs);
+      });
+
+      onSnapshot(collection(db,'wishlist'), snapshot => {
+        const list = [];
+        snapshot.forEach(d=>{
+          const data = d.data();
+          let createdAtIso = new Date().toISOString();
+          if(data.createdAt && typeof data.createdAt.toDate === 'function') createdAtIso = data.createdAt.toDate().toISOString();
+          list.push({...data, id: d.id, createdAt: createdAtIso});
+        });
+        window.__wishlist = list;
+        renderWishlist(list);
+      });
+
+      const settingsDocRef = doc(db,'meta','user_settings');
+      onSnapshot(settingsDocRef, snap=>{
+        if(snap.exists()){
+          const dd = snap.data();
+          dd.monthlyIncome = Number(dd.monthlyIncome) || 0;
+          settings = {...settings, ...dd};
+          if(settings.monthlyIncome) monthlyIncomeInput.value = settings.monthlyIncome.toLocaleString('id-ID'); else monthlyIncomeInput.value = '';
+        }
+      });
+    }
+
+    // wishlist render & helpers
+    function renderWishlist(items){
+      wishlistList.innerHTML = '';
+      if(!items || items.length === 0){
+        wishlistList.innerHTML = `<div class="meta">Wish list kosong. Tambah barang yang mau dibeli tiap gajian biar nggak lupa.</div>`;
+        return;
+      }
+      // filter
+      const f = wishFilter.value;
+      let filtered = items.slice();
+      if(f === 'pending') filtered = filtered.filter(i=>i.status === 'pending');
+      else if(f === 'payday') filtered = filtered.filter(i=>i.buyOnPayday && i.status === 'pending');
+      else if(f === 'bought') filtered = filtered.filter(i=>i.status === 'bought');
+      else if(f === 'cancelled') filtered = filtered.filter(i=>i.status === 'cancelled');
+
+      // sort pending first, then createdAt desc
+      filtered.sort((a,b)=>{
+        if(a.status !== b.status) return a.status === 'pending' ? -1 : 1;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+
+      filtered.forEach(item => {
+        const div = document.createElement('div'); div.className = 'wish-item history-item';
+        const left = document.createElement('div');
+        left.innerHTML = `<div><strong>${item.title}</strong> ${item.price ? ' — ' + money(item.price) : ''}</div>
+                          <div class="meta">${item.note ? item.note + ' • ' : ''}${formatDateTime(item.createdAt)}</div>`;
+        const right = document.createElement('div'); right.style.textAlign='right';
+        // status badge
+        const badge = document.createElement('span'); badge.className='badge';
+        if(item.status === 'bought'){ badge.textContent = 'Terbeli'; badge.classList.add('status-bought'); }
+        else if(item.status === 'cancelled'){ badge.textContent = 'Gajadi beli'; badge.classList.add('status-cancel'); }
+        else if(item.buyOnPayday){ badge.textContent = 'Saat Gajian'; }
+        else { badge.textContent = 'Pending'; }
+
+        // action buttons
+        const btnWrap = document.createElement('div'); btnWrap.style.display='flex'; btnWrap.style.gap='6px'; btnWrap.style.justifyContent='flex-end';
+        const boughtBtn = document.createElement('button'); boughtBtn.className='small primary'; boughtBtn.textContent='Terbeli';
+        const cancelBtn = document.createElement('button'); cancelBtn.className='small muted'; cancelBtn.textContent='Gajadi Beli';
+        const delBtn = document.createElement('button'); delBtn.className='small muted-ghost'; delBtn.textContent='Hapus';
+
+        // disable buttons if already final
+        if(item.status !== 'pending'){ boughtBtn.disabled = true; cancelBtn.disabled = true; }
+
+        // handlers with confirmation
+        boughtBtn.addEventListener('click', async ()=>{
+          const ok = confirm('Apakah anda yakin dengan pilihan ini?');
+          if(!ok) return;
+          try{
+            await updateDoc(doc(db,'wishlist', item.id), { status: 'bought', boughtAt: serverTimestamp() });
+          }catch(e){ console.error(e); alert('Gagal update status terbeli'); }
+        });
+        cancelBtn.addEventListener('click', async ()=>{
+          const ok = confirm('Apakah anda yakin dengan pilihan ini?');
+          if(!ok) return;
+          try{
+            await updateDoc(doc(db,'wishlist', item.id), { status: 'cancelled', cancelledAt: serverTimestamp() });
+          }catch(e){ console.error(e); alert('Gagal update status gajadi beli'); }
+        });
+        delBtn.addEventListener('click', async ()=>{
+          const ok = confirm('Hapus item ini dari wishlist?'); if(!ok) return;
+          try{ await deleteDoc(doc(db,'wishlist', item.id)); } catch(e){ console.error(e); alert('Gagal hapus wish'); }
+        });
+
+        btnWrap.appendChild(boughtBtn); btnWrap.appendChild(cancelBtn); btnWrap.appendChild(delBtn);
+        right.appendChild(badge); right.appendChild(document.createElement('br')); right.appendChild(btnWrap);
+        div.appendChild(left); div.appendChild(right);
+        wishlistList.appendChild(div);
+      });
+
+      if(filtered.length === 0) wishlistList.innerHTML = `<div class="meta">Tidak ada item sesuai filter.</div>`;
+    }
+
+    wishFilter.addEventListener('change', ()=> { if(window.__wishlist) renderWishlist(window.__wishlist); });
+
+    // compute totals & nutrition functions (same as before, slightly refactored)
+    function computeTotals(entries){
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      let todayTotal = 0, monthTotal = 0, incomeRecords = [];
+      let todayNutritionAgg = {energy:0,fat:0,saturatedFat:0,protein:0,carbs:0,sugar:0,sodium:0};
+
+      entries.forEach(e=>{
+        const created = new Date(e.createdAt);
+        if(created >= startOfToday && e.type === 'expense') todayTotal += Number(e.amount||0);
+        if(created >= startOfMonth && e.type === 'expense') monthTotal += Number(e.amount||0);
+        if(e.type === 'income') incomeRecords.push(e);
+
+        if(created >= startOfToday && e.type === 'expense' && e.category && e.category.toLowerCase().includes('jajan') && e.nutrition){
+          const n = e.nutrition;
+          todayNutritionAgg.energy += Number(n.energy||0);
+          todayNutritionAgg.fat += Number(n.fat||0);
+          todayNutritionAgg.saturatedFat += Number(n.saturatedFat||0);
+          todayNutritionAgg.protein += Number(n.protein||0);
+          todayNutritionAgg.carbs += Number(n.carbs||0);
+          todayNutritionAgg.sugar += Number(n.sugar||0);
+          todayNutritionAgg.sodium += Number(n.sodium||0);
+        }
+      });
+
+      let monthlyIncomeBase = settings.monthlyIncome || 0;
+      if(monthlyIncomeBase === 0 && incomeRecords.length > 0){
+        const ninety = new Date(); ninety.setDate(ninety.getDate()-90);
+        const recent = incomeRecords.filter(i=> new Date(i.createdAt) >= ninety);
+        const totalRecent = recent.reduce((s,i)=> s + Number(i.amount||0), 0);
+        monthlyIncomeBase = Math.round((totalRecent / 90) * 30) || 0;
+      }
+
+      const monthlyIncomeFromEntries = incomeRecords.filter(i => new Date(i.createdAt) >= startOfMonth)
+        .reduce((s,i) => s + Number(i.amount||0), 0);
+
+      const monthlyIncomeTotal = Math.max(0, monthlyIncomeBase + monthlyIncomeFromEntries);
+      const safeDaily = monthlyIncomeTotal ? Math.max(0, Math.round((monthlyIncomeTotal * 0.6) / 30)) : 0;
+
+      avgIncomeEl.textContent = monthlyIncomeTotal ? money(monthlyIncomeTotal) : 'Belum diset';
+      todayTotalEl.textContent = money(todayTotal);
+      remainingBalanceEl.textContent = monthlyIncomeTotal ? money(Math.max(0, monthlyIncomeTotal - monthTotal)) : '-';
+
+      renderNutritionSummary(todayNutritionAgg);
+
+      if(safeDaily && todayTotal > safeDaily){
+        alertBox.classList.remove('hidden');
+        alertBox.textContent = `Peringatan: Pengeluaran hari ini ${money(todayTotal)} melebihi batas harian aman ${money(safeDaily)} berdasarkan pemasukan. Coba hemat 2 hari ke depan.`;
+      } else alertBox.classList.add('hidden');
+
+      if(monthlyIncomeTotal && (monthTotal <= Math.min(200000, Math.round(monthlyIncomeTotal*0.2)))){
+        praiseBox.classList.remove('hidden');
+        const saved3 = (monthlyIncomeTotal - monthTotal) * 3;
+        praiseBox.innerHTML = `Apresiasi: Bulan ini pengeluaran hanya ${money(monthTotal)}. Jika lo mengulangi pola ini selama 3 bulan, potensi tabungan sampai ${money(saved3)}.`;
+      } else praiseBox.classList.add('hidden');
+    }
+
+    function renderNutritionSummary(agg){
+      nutritionSummary.innerHTML = '';
+      const recDaily = {energy:2000,fat:70,saturatedFat:20,protein:50,carbs:275,sugar:30,sodium:2000};
+      const keys = [{k:'energy',label:'Energi (kcal)'},{k:'fat',label:'Lemak total (g)'},{k:'saturatedFat',label:'Lemak jenuh (g)'},
+        {k:'protein',label:'Protein (g)'},{k:'carbs',label:'Karbohidrat (g)'},{k:'sugar',label:'Gula (g)'},{k:'sodium',label:'Garam / Natrium (mg)'}];
+      keys.forEach(item=>{
+        const val = Math.round((agg[item.k]||0)*100)/100;
+        const rec = recDaily[item.k]||null;
+        const pct = rec ? Math.round((val/rec)*100) : null;
+        const div = document.createElement('div'); div.className = 'nutri-card';
+        div.innerHTML = `<div style="font-weight:700">${item.label}</div><div style="margin-top:6px">${val} ${item.k==='sodium'?'mg':(item.k==='energy'?'kcal':'g')}</div>${rec?`<div class="meta">Persentase dari rekomendasi harian: ${pct}%</div>`:''}`;
+        if(rec && pct > 100) div.style.border = '1px solid rgba(200,80,80,0.18)';
+        nutritionSummary.appendChild(div);
+      });
+      const exceeded = keys.filter(k=> (agg[k.k]||0) > (recDaily[k.k]||Infinity)).map(k=>k.label);
+      if(exceeded.length){ const warn = document.createElement('div'); warn.className='alert'; warn.textContent = `Catatan nutrisi: hari ini kelebihan - ${exceeded.join(', ')}.`; nutritionSummary.appendChild(warn); }
+    }
+
+    // ---------- Nutrition history functions ----------
+    function computeNutritionForRange(entries, startDate, endDate){
+      const agg = {energy:0,fat:0,saturatedFat:0,protein:0,carbs:0,sugar:0,sodium:0};
+      const items = [];
+      entries.forEach(e=>{
+        const created = new Date(e.createdAt);
+        if(created >= startDate && created < endDate && e.type === 'expense' && e.category && e.category.toLowerCase().includes('jajan') && e.nutrition){
+          const n = e.nutrition;
+          agg.energy += Number(n.energy||0);
+          agg.fat += Number(n.fat||0);
+          agg.saturatedFat += Number(n.saturatedFat||0);
+          agg.protein += Number(n.protein||0);
+          agg.carbs += Number(n.carbs||0);
+          agg.sugar += Number(n.sugar||0);
+          agg.sodium += Number(n.sodium||0);
+          items.push({...e, createdAtObj: created});
+        }
+      });
+      return {agg, items};
+    }
+
+    function renderNutritionHistorySummary(agg){
+      nutriHistorySummary.innerHTML = '';
+      const recDaily = {energy:2500,fat:70,saturatedFat:20,protein:75,carbs:310,sugar:30,sodium:2000};
+      const keys = [{k:'energy',label:'Energi (kcal)'},{k:'fat',label:'Lemak total (g)'},{k:'saturatedFat',label:'Lemak jenuh (g)'},
+        {k:'protein',label:'Protein (g)'},{k:'carbs',label:'Karbohidrat (g)'},{k:'sugar',label:'Gula (g)'},{k:'sodium',label:'Garam / Natrium (mg)'}];
+      keys.forEach(item=>{
+        const val = Math.round((agg[item.k]||0)*100)/100;
+        const div = document.createElement('div'); div.className='nutri-card';
+        div.innerHTML = `<div style="font-weight:700">${item.label}</div><div style="margin-top:6px">${val} ${item.k==='sodium'?'mg':(item.k==='energy'?'kcal':'g')}</div>`;
+        nutriHistorySummary.appendChild(div);
+      });
+    }
+
+    function renderNutritionHistoryList(items){
+      nutriHistoryList.innerHTML = '';
+      if(items.length === 0){ nutriHistoryList.innerHTML = `<div class="meta">Tidak ada catatan jajan pada periode itu.</div>`; return; }
+      items.sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt));
+      items.forEach(e=>{
+        const div = document.createElement('div'); div.className='history-item';
+        const left = document.createElement('div');
+        left.innerHTML = `<div><strong>${money(Number(e.amount||0))}</strong> — ${e.category}</div>
+                          <div class="meta">${formatDateTime(e.createdAt)} ${e.note ? ' • ' + e.note : ''}</div>`;
+        const right = document.createElement('div'); right.style.textAlign='right';
+        const btn = document.createElement('button'); btn.className='small'; btn.textContent='Detail';
+        btn.addEventListener('click', ()=> {
+          let txt = `Jajan • ${e.category}\nNominal: ${money(Number(e.amount||0))}\nWaktu: ${formatDateTime(e.createdAt)}\nCatatan: ${e.note || '-'}\n\n-- Nutrisi --\n`;
+          Object.entries(e.nutrition || {}).forEach(([k,v])=> txt += `${k}: ${v}\n`);
+          alert(txt);
+        });
+        right.appendChild(btn); div.appendChild(left); div.appendChild(right); nutriHistoryList.appendChild(div);
+      });
+    }
+
+    // map selection to dates and run compute+render
+    function loadNutritionHistory(){
+      if(!window.__allEntries) return;
+      const sel = nutriRangeSelect.value;
+      const today = new Date(); today.setHours(0,0,0,0);
+      let start, end;
+      if(sel === '2daysAgo'){
+        start = new Date(today); start.setDate(start.getDate() - 2);
+        end = new Date(start); end.setDate(start.getDate() + 1);
+      } else if(sel === '7daysAgo'){
+        start = new Date(today); start.setDate(start.getDate() - 7);
+        end = new Date(start); end.setDate(start.getDate() + 1);
+      } else if(sel === 'last7days'){
+        start = new Date(today); start.setDate(start.getDate() - 6);
+        end = new Date(today); end.setDate(end.getDate() + 1);
+      } else if(sel === 'custom'){
+        if(!nutriCustomDate.value){ alert('Pilih tanggal custom dulu.'); return; }
+        start = new Date(nutriCustomDate.value); start.setHours(0,0,0,0);
+        end = new Date(start); end.setDate(start.getDate() + 1);
+      } else {
+        start = new Date(today); end = new Date(today); end.setDate(end.getDate()+1);
+      }
+      const {agg, items} = computeNutritionForRange(window.__allEntries, start, end);
+      renderNutritionHistorySummary(agg);
+      renderNutritionHistoryList(items);
+    }
+
+    nutriRangeSelect.addEventListener('change', ()=>{
+      if(nutriRangeSelect.value === 'custom') nutriCustomDate.classList.remove('hidden');
+      else nutriCustomDate.classList.add('hidden');
+    });
+    nutriLoadBtn.addEventListener('click', loadNutritionHistory);
+
+    // history + rendering
+    function renderHistory(entries){
+      historyList.innerHTML = '';
+      let filtered = entries;
+      const range = historyRange.value;
+      if(range === 'today'){ const start=new Date(); start.setHours(0,0,0,0); filtered = entries.filter(e=> new Date(e.createdAt) >= start); }
+      else if(range === 'thisMonth'){ const start=new Date(); start.setDate(1); start.setHours(0,0,0,0); filtered = entries.filter(e=> new Date(e.createdAt) >= start); }
+      if(filtered.length === 0){ historyList.innerHTML = `<div class="meta">Belum ada catatan pada periode ini.</div>`; return; }
+      filtered.forEach(e=>{
+        const div = document.createElement('div'); div.className='history-item';
+        const left = document.createElement('div');
+        left.innerHTML = `<div><strong>${e.type==='expense'?'-':'+'} ${money(Number(e.amount||0))}</strong> — ${e.category}</div><div class="meta">${formatDateTime(e.createdAt)} ${e.note? ' • '+e.note : ''}</div>`;
+        const right = document.createElement('div'); right.style.textAlign='right';
+        const btn = document.createElement('button'); btn.className='small'; btn.textContent='Detail';
+        btn.addEventListener('click', ()=> showDetails(e.id));
+        right.appendChild(btn); div.appendChild(left); div.appendChild(right); historyList.appendChild(div);
+        window.__entries = window.__entries || {}; window.__entries[e.id] = e;
+      });
+    }
+
+    historyRange.addEventListener('change', ()=> { if(window.__allEntries) renderHistory(window.__allEntries); });
+
+    window.showDetails = function(id){
+      const e = window.__entries && window.__entries[id];
+      if(!e) return alert('Data tidak ditemukan');
+      let txt = `${e.type === 'expense' ? 'Pengeluaran' : 'Pemasukan'} • ${e.category}\nNominal: ${money(Number(e.amount||0))}\nWaktu: ${formatDateTime(e.createdAt)}\nCatatan: ${e.note || '-'}`;
+      if(e.nutrition){ txt += '\n\n-- Nutrisi --\n'; Object.entries(e.nutrition).forEach(([k,v])=>{ txt += `${k}: ${v}\n`; }); }
+      alert(txt);
+    };
+
+    // settings (monthly income)
+    const settingsDocRef = doc(db,'meta','user_settings');
+    saveIncomeBtn.addEventListener('click', async ()=>{
+      const v = parseMoneyInput(monthlyIncomeInput.value);
+      settings.monthlyIncome = v;
+      try{
+        await setDoc(settingsDocRef, settings, {merge:true});
+        monthlyIncomeInput.value = v ? v.toLocaleString('id-ID') : '';
+        showToast('Penghasilan disimpan: ' + money(v));
+      }catch(e){ console.error(e); alert('Gagal menyimpan penghasilan'); }
+    });
+
+    // start
+    initUI();
+    startRealtimeListeners();
+
+    // default load: show 2 hari lalu nutrition summary (non-blocking)
+    setTimeout(()=>{ if(nutriRangeSelect.value === '2daysAgo') loadNutritionHistory(); }, 1200);
+
+  </script>
+</body>
+</html>
