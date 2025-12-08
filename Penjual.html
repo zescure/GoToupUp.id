@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="id">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Seller — PasarKreatif</title>
+<style>
+  body{font-family:Inter,Arial;background:#f6f7fb;padding:20px}
+  .card{background:#fff;padding:18px;border-radius:8px;max-width:700px;margin:20px auto;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+  input,textarea,select{width:100%;padding:10px;margin-top:8px;border:1px solid #ddd;border-radius:8px}
+  .btn{padding:10px 14px;border-radius:8px;border:none;background:#0b6;color:#fff;cursor:pointer;margin-top:8px}
+</style>
+</head>
+<body>
+  <div class="card">
+    <h2>Halaman Kreator — Jual Kerajinan Lokal</h2>
+    <div id="user-area"></div>
+
+    <div id="auth-forms">
+      <input id="email" placeholder="email" />
+      <input id="password" type="password" placeholder="password" />
+      <div style="display:flex;gap:8px">
+        <button id="login" class="btn">Login</button>
+        <button id="register" class="btn" style="background:#555">Register</button>
+      </div>
+    </div>
+
+    <hr/>
+
+    <form id="product-form">
+      <input id="title" placeholder="Nama produk" required />
+      <input id="price" type="number" placeholder="Harga (angka)" required />
+      <input id="stock" type="number" placeholder="Stok" value="1" required />
+      <select id="category"><option value="">-- Pilih kategori --</option><option>Kalung</option><option>Gelang</option><option>Home Decor</option><option>Kerajinan Kayu</option></select>
+      <textarea id="desc" placeholder="Deskripsi" rows="4"></textarea>
+      <input id="image" type="file" accept="image/*" />
+      <button class="btn" type="submit">Upload & Publikasikan</button>
+    </form>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+  import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
+    authDomain: "zeepaylater-93a94.firebaseapp.com",
+    projectId: "zeepaylater-93a94",
+    storageBucket: "zeepaylater-93a94.appspot.com",
+    messagingSenderId: "358065954807",
+    appId: "1:358065954807:web:66619211fea82a4b2518f2"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const storage = getStorage(app);
+
+  const loginBtn = document.getElementById('login');
+  const registerBtn = document.getElementById('register');
+  const emailIn = document.getElementById('email');
+  const passIn = document.getElementById('password');
+  const userArea = document.getElementById('user-area');
+  const form = document.getElementById('product-form');
+
+  loginBtn.onclick = async ()=> {
+    try{ await signInWithEmailAndPassword(auth, emailIn.value, passIn.value); }
+    catch(e){ alert('Login error: '+e.message); }
+  };
+  registerBtn.onclick = async ()=> {
+    try{ await createUserWithEmailAndPassword(auth, emailIn.value, passIn.value); }
+    catch(e){ alert('Register error: '+e.message); }
+  };
+
+  onAuthStateChanged(auth, u=>{
+    if(u){ userArea.innerHTML = `<div>Hi ${u.email} <button id="logout" class="btn" style="background:#f33">Logout</button></div>`; document.getElementById('logout').onclick = ()=> signOut(auth); }
+    else userArea.innerHTML = '<div style="color:#666">Belum login</div>';
+  });
+
+  form.onsubmit = async (e)=>{
+    e.preventDefault();
+    const title = document.getElementById('title').value.trim();
+    const price = Number(document.getElementById('price').value);
+    const stock = Number(document.getElementById('stock').value || 1);
+    const category = document.getElementById('category').value;
+    const desc = document.getElementById('desc').value;
+    const fileEl = document.getElementById('image');
+    if(!title||!price||!fileEl.files.length){ alert('Isi nama, harga, dan pilih gambar'); return; }
+    const file = fileEl.files[0];
+    try{
+      // upload image
+      const path = `products/${Date.now()}_${file.name}`;
+      const r = storageRef(storage, path);
+      await uploadBytes(r, file);
+      const url = await getDownloadURL(r);
+      // add product doc
+      const docRef = await addDoc(collection(db,'products'), {
+        title, price, stock, category, description: desc, imageUrl: url, createdAt: serverTimestamp()
+      });
+      alert('Produk dipublikasikan: ' + docRef.id);
+      window.location.href = 'buyer.html';
+    }catch(err){ console.error(err); alert('Gagal upload: '+err.message); }
+  };
+</script>
+</body>
+</html>
