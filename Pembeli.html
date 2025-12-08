@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Marketplace Lokal — Buyer</title>
+  <style>
+    /* Simple modern layout */
+    :root{font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+    body{margin:0;background:#f6f7fb;color:#111;}
+    header{background:#0b6; padding:12px 18px; color:#fff; display:flex;align-items:center;gap:12px;}
+    .brand{font-weight:700}
+    nav{margin-left:auto; display:flex; gap:8px; align-items:center;}
+    .btn{background:#fff;color:#0b6;border-radius:6px;padding:8px 12px;cursor:pointer;border:none}
+    .container{max-width:1100px;margin:20px auto;padding:0 12px;}
+    .controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+    input[type=search]{padding:8px;border-radius:8px;border:1px solid #ddd;min-width:200px;}
+    select{padding:8px;border-radius:8px;border:1px solid #ddd;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+    .card{background:#fff;border-radius:8px;padding:10px;box-shadow:0 1px 4px rgba(0,0,0,.06);display:flex;flex-direction:column}
+    .card img{height:160px;object-fit:cover;border-radius:6px}
+    .title{font-weight:600;margin:8px 0 6px}
+    .price{color:#0b6;font-weight:700}
+    .meta{font-size:13px;color:#666;margin-top:6px}
+    .cart-bubble{background:#ff3b3b;color:#fff;padding:4px 8px;border-radius:999px;font-weight:700;font-size:13px}
+    /* modal */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.4);z-index:50}
+    .modal .box{background:#fff;padding:18px;border-radius:10px;max-width:760px;width:95%;display:flex;gap:12px}
+    .modal img{max-width:320px;border-radius:8px}
+    footer{margin:30px 0;color:#777;text-align:center}
+    @media(max-width:700px){ .modal .box{flex-direction:column} .card img{height:140px} }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">PasarKreatif</div>
+    <div style="opacity:.9">— Aksesoris & Kerajinan Lokal</div>
+    <nav>
+      <div id="auth-area">
+        <button class="btn" id="btn-login">Login</button>
+        <button class="btn" id="btn-register">Register</button>
+      </div>
+      <button class="btn" id="btn-to-seller">Jual Barang</button>
+      <button class="btn" id="btn-cart">Cart <span id="cart-count" class="cart-bubble" style="margin-left:8px;display:none">0</span></button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="controls">
+      <input id="search" type="search" placeholder="Cari produk, misal 'kalung batik'..." />
+      <select id="category">
+        <option value="">Semua Kategori</option>
+      </select>
+      <select id="sort">
+        <option value="new">Terbaru</option>
+        <option value="price_asc">Harga naik</option>
+        <option value="price_desc">Harga turun</option>
+      </select>
+      <div style="margin-left:auto">Menampilkan <span id="count">0</span> produk</div>
+    </div>
+
+    <div id="grid" class="grid"></div>
+
+    <div style="text-align:center;margin-top:14px">
+      <button class="btn" id="load-more">Muat lebih banyak</button>
+    </div>
+
+    <footer>PasarKreatif — dibuat dengan ❤️ untuk kerajinan lokal</footer>
+  </main>
+
+  <!-- Product modal -->
+  <div id="modal" class="modal">
+    <div class="box">
+      <img id="modal-img" src="" alt="product image"/>
+      <div style="flex:1">
+        <h2 id="modal-title"></h2>
+        <div id="modal-price" style="font-weight:700;color:#0b6;margin-bottom:8px"></div>
+        <div id="modal-desc" class="meta"></div>
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+          <input id="qty" type="number" min="1" value="1" style="width:80px;padding:8px;border-radius:6px;border:1px solid #ddd"/>
+          <button class="btn" id="modal-add">Tambah ke cart</button>
+          <button class="btn" id="modal-buy">Beli sekarang</button>
+        </div>
+        <div style="margin-top:12px;font-size:13px;color:#666">Kategori: <span id="modal-cat"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Simple login/register modal -->
+  <div id="auth-modal" class="modal">
+    <div class="box" style="max-width:420px;">
+      <div style="width:100%">
+        <h3 id="auth-title">Login</h3>
+        <input id="auth-email" type="email" placeholder="email" style="width:100%;padding:8px;margin-top:8px;border-radius:6px;border:1px solid #ddd"/>
+        <input id="auth-pass" type="password" placeholder="password" style="width:100%;padding:8px;margin-top:8px;border-radius:6px;border:1px solid #ddd"/>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn" id="auth-submit">Masuk</button>
+          <button class="btn" id="auth-close">Tutup</button>
+        </div>
+        <div style="margin-top:8px;font-size:13px;color:#666">Atau: <button id="signout" class="btn" style="display:none">Logout</button></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // === Firebase imports (modular v9) ===
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, startAfter, getDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+    import { getStorage, ref as storageRef, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
+
+    // === PAKAI firebaseConfig LU DI SINI ===
+    const firebaseConfig = {
+      apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
+      authDomain: "zeepaylater-93a94.firebaseapp.com",
+      projectId: "zeepaylater-93a94",
+      storageBucket: "zeepaylater-93a94.appspot.com",
+      messagingSenderId: "358065954807",
+      appId: "1:358065954807:web:66619211fea82a4b2518f2"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    // DOM
+    const grid = document.getElementById('grid');
+    const search = document.getElementById('search');
+    const categorySelect = document.getElementById('category');
+    const sortSel = document.getElementById('sort');
+    const countEl = document.getElementById('count');
+    const loadMoreBtn = document.getElementById('load-more');
+    const cartCountEl = document.getElementById('cart-count');
+
+    const modal = document.getElementById('modal');
+    const modalImg = document.getElementById('modal-img');
+    const modalTitle = document.getElementById('modal-title');
+    const modalPrice = document.getElementById('modal-price');
+    const modalDesc = document.getElementById('modal-desc');
+    const modalCat = document.getElementById('modal-cat');
+    const qtyInput = document.getElementById('qty');
+    const modalAdd = document.getElementById('modal-add');
+    const modalBuy = document.getElementById('modal-buy');
+
+    const authArea = document.getElementById('auth-area');
+    const btnLogin = document.getElementById('btn-login');
+    const btnRegister = document.getElementById('btn-register');
+    const btnToSeller = document.getElementById('btn-to-seller');
+    const btnCart = document.getElementById('btn-cart');
+    const authModal = document.getElementById('auth-modal');
+    const authTitle = document.getElementById('auth-title');
+    const authEmail = document.getElementById('auth-email');
+    const authPass = document.getElementById('auth-pass');
+    const authSubmit = document.getElementById('auth-submit');
+    const authClose = document.getElementById('auth-close');
+    const signoutBtn = document.getElementById('signout');
+
+    let lastVisible = null;
+    let pageSize = 12;
+    let productsCache = []; // local cache for quick filter
+    let currentUser = null;
+    let selectedProduct = null;
+
+    // Cart helper (localStorage)
+    function getCart(){ try{ return JSON.parse(localStorage.getItem('pk_cart')||'[]') }catch(e){return []} }
+    function setCart(c){ localStorage.setItem('pk_cart', JSON.stringify(c)); updateCartUI(); }
+    function updateCartUI(){ const c = getCart(); if(c.length>0){ cartCountEl.style.display='inline-block'; cartCountEl.textContent = c.reduce((s,i)=>s+i.qty,0); } else cartCountEl.style.display='none'; }
+
+    // Load categories from products (unique)
+    async function loadProducts(reset=true){
+      if(reset){ grid.innerHTML=''; productsCache=[]; lastVisible=null; }
+      // Simple query: order by createdAt desc
+      let q = query(collection(db, 'products'), orderBy('createdAt','desc'), limit(pageSize));
+      if(lastVisible) {
+        // client-side pagination alternative: we loaded all? For simplicity, we won't use startAfter here to avoid complexity.
+      }
+      const snap = await getDocs(q);
+      snap.forEach(docSnap=>{
+        const p = { id: docSnap.id, ...docSnap.data() };
+        productsCache.push(p);
+      });
+      renderProducts(productsCache);
+      populateCategories(productsCache);
+      countEl.textContent = productsCache.length;
+    }
+
+    function renderProducts(list){
+      grid.innerHTML='';
+      if(list.length===0){ grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#666">Belum ada produk</div>'; return; }
+      list.forEach(p=>{
+        const el = document.createElement('div');
+        el.className='card';
+        el.innerHTML = `
+          <img src="${p.imageUrl || 'https://via.placeholder.com/400x300?text=No+Image'}" alt="">
+          <div class="title">${escapeHtml(p.title)}</div>
+          <div class="price">Rp ${formatRp(p.price)}</div>
+          <div class="meta">${escapeHtml(p.short || p.description?.slice(0,80) || '')}</div>
+          <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+            <button class="btn view-btn" data-id="${p.id}">Lihat</button>
+            <div style="font-size:12px;color:#666">Stok: ${p.stock || 1}</div>
+          </div>
+        `;
+        grid.appendChild(el);
+      });
+      // attach handlers
+      document.querySelectorAll('.view-btn').forEach(b=>{
+        b.onclick = (e)=>{
+          const id = e.target.dataset.id;
+          const prod = productsCache.find(x=>x.id===id);
+          openModal(prod);
+        }
+      });
+    }
+
+    function openModal(p){
+      selectedProduct = p;
+      modalImg.src = p.imageUrl || 'https://via.placeholder.com/400x300?text=No+Image';
+      modalTitle.textContent = p.title;
+      modalPrice.textContent = 'Rp ' + formatRp(p.price);
+      modalDesc.textContent = p.description || '';
+      modalCat.textContent = p.category || '-';
+      qtyInput.value = 1;
+      modal.style.display = 'flex';
+    }
+    modal.onclick = (e)=>{ if(e.target===modal) modal.style.display='none'; }
+
+    modalAdd.onclick = ()=>{
+      if(!selectedProduct) return;
+      const qty = Math.max(1, parseInt(qtyInput.value||1));
+      const cart = getCart();
+      const idx = cart.findIndex(it=>it.id===selectedProduct.id);
+      if(idx>=0){ cart[idx].qty += qty; } else cart.push({ id:selectedProduct.id, title:selectedProduct.title, price:selectedProduct.price, imageUrl:selectedProduct.imageUrl, qty });
+      setCart(cart);
+      modal.style.display='none';
+      alert('Berhasil ditambahkan ke cart');
+    }
+
+    modalBuy.onclick = async ()=>{
+      if(!selectedProduct) return;
+      const qty = Math.max(1, parseInt(qtyInput.value||1));
+      // check auth
+      if(!currentUser){ showAuthModal('login'); return; }
+      // create minimal order doc
+      try{
+        const order = {
+          buyerUid: currentUser.uid,
+          buyerEmail: currentUser.email,
+          items: [{ productId:selectedProduct.id, title:selectedProduct.title, price:selectedProduct.price, qty }],
+          total: selectedProduct.price * qty,
+          createdAt: serverTimestamp()
+        };
+        const docRef = await addDoc(collection(db,'orders'), order);
+        modal.style.display='none';
+        alert('Order dibuat. ID: ' + docRef.id);
+      }catch(err){
+        console.error(err); alert('Gagal buat order: '+err.message);
+      }
+    }
+
+    // Search/filter
+    search.addEventListener('input', ()=> applyFilters());
+    categorySelect.addEventListener('change', ()=> applyFilters());
+    sortSel.addEventListener('change', ()=> applyFilters());
+
+    function applyFilters(){
+      const q = search.value.trim().toLowerCase();
+      const cat = categorySelect.value;
+      let list = productsCache.slice();
+      if(q) list = list.filter(p => (p.title||'').toLowerCase().includes(q) || (p.description||'').toLowerCase().includes(q));
+      if(cat) list = list.filter(p => p.category === cat);
+      const sort = sortSel.value;
+      if(sort==='price_asc') list.sort((a,b)=>a.price - b.price);
+      if(sort==='price_desc') list.sort((a,b)=>b.price - a.price);
+      if(sort==='new') list.sort((a,b)=> (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      renderProducts(list);
+      countEl.textContent = list.length;
+    }
+
+    function populateCategories(list){
+      const cats = Array.from(new Set(list.map(p=>p.category).filter(Boolean)));
+      categorySelect.innerHTML = '<option value="">Semua Kategori</option>' + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+    }
+
+    // Simple login/register
+    btnLogin.onclick = ()=> showAuthModal('login');
+    btnRegister.onclick = ()=> showAuthModal('register');
+    btnToSeller.onclick = ()=> window.location.href = 'seller.html'; // link ke seller
+    btnCart.onclick = ()=> {
+      const cart = getCart();
+      if(cart.length===0){ alert('Cart kosong'); return; }
+      // Simple cart view prompt
+      const lines = cart.map(i=>`${i.title} x${i.qty} — Rp ${formatRp(i.price*i.qty)}`).join('\n');
+      if(confirm(lines + '\n\nCheckout sekarang?')) {
+        if(!currentUser){ showAuthModal('login'); return; }
+        // create order from cart
+        createOrderFromCart();
+      }
+    };
+
+    async function createOrderFromCart(){
+      const cart = getCart();
+      if(cart.length===0) return alert('Cart kosong');
+      try{
+        const order = {
+          buyerUid: currentUser.uid,
+          buyerEmail: currentUser.email,
+          items: cart.map(i=>({ productId:i.id, title:i.title, price:i.price, qty:i.qty })),
+          total: cart.reduce((s,i)=>s + (i.price * i.qty), 0),
+          createdAt: serverTimestamp()
+        };
+        const od = await addDoc(collection(db,'orders'), order);
+        localStorage.removeItem('pk_cart');
+        updateCartUI();
+        alert('Checkout sukses. ID order: ' + od.id);
+      }catch(err){ console.error(err); alert('Gagal checkout: '+err.message); }
+    }
+
+    function showAuthModal(mode='login'){
+      authModal.style.display='flex';
+      authTitle.textContent = mode==='login' ? 'Login' : 'Register';
+      authSubmit.textContent = mode==='login' ? 'Masuk' : 'Daftar';
+      authSubmit.dataset.mode = mode;
+    }
+    authClose.onclick = ()=> authModal.style.display='none';
+
+    authSubmit.onclick = async ()=>{
+      const mode = authSubmit.dataset.mode || 'login';
+      const email = authEmail.value.trim(); const pass = authPass.value;
+      if(!email || !pass){ alert('Isi email & password'); return; }
+      try{
+        if(mode==='login'){
+          await signInWithEmailAndPassword(auth, email, pass);
+          authModal.style.display='none';
+        }else{
+          await createUserWithEmailAndPassword(auth, email, pass);
+          authModal.style.display='none';
+        }
+      }catch(err){ alert('Auth error: ' + err.message); }
+    }
+
+    signoutBtn.onclick = async ()=>{ await signOut(auth); }
+
+    // Auth state listener
+    onAuthStateChanged(auth, user=>{
+      currentUser = user;
+      if(user){
+        authArea.innerHTML = `<div style="display:flex;align-items:center;gap:8px">Hi, ${user.email} <button id="logoutBtn" class="btn">Logout</button></div>`;
+        document.getElementById('logoutBtn').onclick = ()=> signOut(auth);
+      }else{
+        authArea.innerHTML = `<button class="btn" id="btn-login">Login</button><button class="btn" id="btn-register">Register</button>`;
+        document.getElementById('btn-login').onclick = ()=> showAuthModal('login');
+        document.getElementById('btn-register').onclick = ()=> showAuthModal('register');
+      }
+    });
+
+    // Utilities
+    function formatRp(n){ try{ return Number(n).toLocaleString('id-ID'); }catch(e){return n} }
+    function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];}); }
+
+    // initial
+    updateCartUI();
+    loadProducts();
+
+  </script>
+</body>
+</html>
