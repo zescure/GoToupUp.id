@@ -1,0 +1,473 @@
+<!-- dashboard-demo.html -->
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Funded Trading Dashboard — Single File Demo</title>
+  <style>
+    /* ====== styles (same theme as earlier) ====== */
+    :root{
+      --bg:#0f1724;--card:#0b1220;--muted:#94a3b8;--accent:#7c3aed;
+      --success:#16a34a;--danger:#ef4444;--glass: rgba(255,255,255,0.03);
+      color-scheme: dark;
+    }
+    *{box-sizing:border-box;font-family:Inter,system-ui,Roboto,Arial;}
+    body{margin:0;background:linear-gradient(180deg,#07112a,#021121);color:#e6eef8;min-height:100vh;padding:28px;}
+    .wrap{max-width:1100px;margin:0 auto;}
+    .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+    .logo{display:flex;align-items:center;gap:12px}
+    .logo .mark{width:48px;height:48px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#0ea5e9);display:flex;align-items:center;justify-content:center;font-weight:700}
+    .card{background:var(--card);padding:16px;border-radius:10px;margin-bottom:12px;border:1px solid rgba(255,255,255,0.03)}
+    .row{display:flex;gap:8px;align-items:center}
+    .btn{background:linear-gradient(90deg,var(--accent),#0ea5e9);border:none;color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06)}
+    .input{background:var(--glass);border:1px solid rgba(255,255,255,0.03);padding:8px;border-radius:8px;color:inherit}
+    .muted{color:var(--muted);font-size:13px}
+    .small{font-size:13px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:1fr 340px;gap:16px}
+    .table{width:100%;border-collapse:collapse;margin-top:12px}
+    .table th{color:var(--muted);text-align:left;padding:8px 6px}
+    .table td{padding:8px 6px;border-top:1px dashed rgba(255,255,255,0.02)}
+    .pill{padding:6px 10px;border-radius:999px;font-weight:700;font-size:12px}
+    .pending{background:rgba(250,204,21,0.08);color:#f59e0b}
+    .paid{background:rgba(16,185,129,0.08);color:var(--success)}
+    pre{background:#071023;padding:10px;border-radius:8px;overflow:auto}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div class="logo">
+        <div class="mark">FT</div>
+        <div>
+          <div style="font-weight:800">Funded Trading Dashboard — Demo</div>
+          <div class="muted small">Single-file prototype — replace firebase config</div>
+        </div>
+      </div>
+      <div id="auth-area" class="row"></div>
+    </div>
+
+    <!-- Auth / Login -->
+    <div id="auth-card" class="card">
+      <h3 style="margin:0 0 8px 0">Sign in / Register</h3>
+      <div class="muted">Use real email/password (Firebase Auth)</div>
+      <div style="margin-top:8px" class="row">
+        <input id="email" class="input" placeholder="email" />
+        <input id="password" class="input" placeholder="password" type="password" />
+        <button id="btn-login" class="btn">Sign in</button>
+        <button id="btn-register" class="btn ghost">Register</button>
+      </div>
+    </div>
+
+    <!-- Main area -->
+    <div id="main-area" style="display:none">
+      <div class="grid">
+        <div>
+          <div id="user-card" class="card" style="display:none">
+            <h3 style="margin:0 0 8px 0">User Dashboard</h3>
+            <div class="muted">Realtime: your transactions & accounts</div>
+
+            <div style="margin-top:12px">
+              <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+                <button id="btn-buy" class="btn">Buy Challenge (create tx)</button>
+                <div class="muted small">Click to simulate payment flow (creates `transactions` doc)</div>
+              </div>
+
+              <table class="table" id="tx-table">
+                <thead><tr><th>Tx ID</th><th>Price</th><th>Status</th><th>Account</th></tr></thead>
+                <tbody id="tx-tbody"></tbody>
+              </table>
+
+              <h4 style="margin-top:12px">My Accounts</h4>
+              <div id="accounts-list"></div>
+            </div>
+          </div>
+
+          <div id="admin-card" class="card" style="display:none">
+            <h3 style="margin:0 0 8px 0">Admin Dashboard</h3>
+            <div class="muted">Admin realtime transactions</div>
+            <table class="table" id="admin-tx-table">
+              <thead><tr><th>Tx ID</th><th>User</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="admin-tx-tbody"></tbody>
+            </table>
+            <div style="margin-top:12px" class="muted small">Admin actions log (last 10):</div>
+            <pre id="admin-log" style="height:120px"></pre>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <h4 style="margin:0 0 8px 0">Info & Notes</h4>
+            <div class="muted small">Flow implemented in this demo:</div>
+            <ol class="small muted">
+              <li>User creates transaction (`status = pending`).</li>
+              <li>Admin confirms (sets `status = paid`).</li>
+              <li>Client detects `paid` and auto-creates `accounts/{id}`, `trading_histories/{id}` and `admin_actions` log.</li>
+            </ol>
+            <div style="margin-top:8px" class="muted small">⚠️ In production: move account creation + history generation to a Cloud Function (server-side) and secure with Firestore rules.</div>
+          </div>
+
+          <div class="card" style="margin-top:12px">
+            <h4 style="margin:0 0 8px 0">Setup</h4>
+            <div class="small muted">1) Replace Firebase config below in the script. 2) Ensure Firestore `config/admins` exists (adminUids array). 3) Use emulator or secure rules before production.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:40px"></div>
+    <div class="muted small">Demo by ChatGPT — change to Cloud Functions for production.</div>
+  </div>
+
+  <!-- Firebase v9 modular via CDN (ES modules) -->
+  <script type="module">
+    // ====== Replace this firebaseConfig with your project's keys ======
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+    // =================================================================
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import {
+      getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import {
+      getFirestore, collection, addDoc, doc, setDoc, updateDoc, onSnapshot,
+      query, where, orderBy, serverTimestamp, getDoc, getDocs
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // ======= UI refs =======
+    const authArea = document.getElementById('auth-area');
+    const authCard = document.getElementById('auth-card');
+    const mainArea = document.getElementById('main-area');
+    const userCard = document.getElementById('user-card');
+    const adminCard = document.getElementById('admin-card');
+    const btnLogin = document.getElementById('btn-login');
+    const btnRegister = document.getElementById('btn-register');
+    const inputEmail = document.getElementById('email');
+    const inputPass = document.getElementById('password');
+    const btnBuy = document.getElementById('btn-buy');
+    const txTbody = document.getElementById('tx-tbody');
+    const accountsList = document.getElementById('accounts-list');
+    const adminTxTbody = document.getElementById('admin-tx-tbody');
+    const adminLog = document.getElementById('admin-log');
+
+    // Current state
+    let currentUser = null;
+    let isAdmin = false;
+    let unsubUserTx = null, unsubUserAcc = null, unsubAdminTx = null;
+
+    // ===== utility: fetch admin list from `config/admins` =====
+    async function isAdminUid(uid){
+      if(!uid) return false;
+      try{
+        const docRef = doc(db, 'config', 'admins');
+        const snap = await getDoc(docRef);
+        if(!snap.exists()) return false;
+        const d = snap.data();
+        return Array.isArray(d.adminUids) && d.adminUids.includes(uid);
+      }catch(e){
+        console.error('isAdminUid err', e);
+        return false;
+      }
+    }
+
+    // ===== auth handlers =====
+    btnLogin.addEventListener('click', async ()=> {
+      const email = inputEmail.value.trim();
+      const pass = inputPass.value;
+      if(!email || !pass) return alert('fill email & pass');
+      try{
+        await signInWithEmailAndPassword(auth, email, pass);
+      }catch(e){ alert('Login: '+e.message) }
+    });
+
+    btnRegister.addEventListener('click', async ()=> {
+      const email = inputEmail.value.trim();
+      const pass = inputPass.value;
+      if(!email || !pass) return alert('fill email & pass');
+      try{
+        await createUserWithEmailAndPassword(auth, email, pass);
+        alert('Registered — now sign in.');
+      }catch(e){ alert('Register: '+e.message) }
+    });
+
+    function showAuthUI(user){
+      authArea.innerHTML = '';
+      const span = document.createElement('div');
+      span.className = 'small';
+      span.textContent = `Signed in: ${user.email}`;
+      const btn = document.createElement('button');
+      btn.className = 'btn ghost';
+      btn.textContent = 'Sign out';
+      btn.onclick = ()=> signOut(auth);
+      authArea.append(span, btn);
+    }
+
+    // ===== on auth state change =====
+    onAuthStateChanged(auth, async user => {
+      currentUser = user;
+      if(user){
+        showAuthUI(user);
+        authCard.style.display = 'none';
+        mainArea.style.display = '';
+        // check admin
+        isAdmin = await isAdminUid(user.uid);
+        userCard.style.display = isAdmin ? 'none' : '';
+        adminCard.style.display = isAdmin ? '' : 'none';
+        // start listeners
+        startListeners();
+      } else {
+        authArea.innerHTML = '';
+        authCard.style.display = '';
+        mainArea.style.display = 'none';
+        stopListeners();
+      }
+    });
+
+    // ===== listeners =====
+    function startListeners(){
+      stopListeners();
+      if(!currentUser) return;
+      // user transactions
+      const txQ = query(collection(db, 'transactions'), where('uid','==', currentUser.uid), orderBy('createdAt','desc'));
+      unsubUserTx = onSnapshot(txQ, snap => {
+        const arr = [];
+        snap.forEach(d=> arr.push({ id:d.id, ...d.data() }));
+        renderUserTx(arr);
+      });
+      // user accounts
+      const accQ = query(collection(db,'accounts'), where('uid','==', currentUser.uid));
+      unsubUserAcc = onSnapshot(accQ, snap => {
+        const arr = [];
+        snap.forEach(d=> arr.push({ id:d.id, ...d.data() }));
+        renderAccounts(arr);
+      });
+
+      // admin listeners (if admin)
+      if(isAdmin){
+        const aQ = query(collection(db, 'transactions'), orderBy('createdAt','desc'));
+        unsubAdminTx = onSnapshot(aQ, snap => {
+          const arr = [];
+          snap.forEach(d=> arr.push({ id:d.id, ...d.data() }));
+          renderAdminTx(arr);
+        });
+        // small audit fetch
+        fetchAdminActions();
+      }
+
+      // Global: watch transactions collection -> if any tx becomes paid and has no accountId, create account+history
+      // NOTE: in real app, do this server-side (Cloud Function). This demo does it client-side for convenience.
+      const allQ = query(collection(db, 'transactions'), orderBy('createdAt','desc'));
+      // reuse unsubAdminTx? no, create separate small watcher
+      const unsubAuto = onSnapshot(allQ, snap => {
+        snap.forEach(async docSnap => {
+          const t = { id: docSnap.id, ...docSnap.data() };
+          if(t.status === 'paid' && !t.accountId){
+            // create account + trading history automatically (demo)
+            try{
+              console.log('Auto-creating account for tx', t.id);
+              const creds = makeCredentials();
+              const accRef = await addDoc(collection(db, 'accounts'), {
+                uid: t.uid,
+                challengeId: t.challengeId || 'demo-chal',
+                login: creds.login,
+                password: creds.password,
+                server: creds.server,
+                status: 'active',
+                createdAt: serverTimestamp()
+              });
+              // generate trading history
+              const trades = generateTradingHistoryData({ startingBalance:10000, days:10, avgDailyTrades:2 });
+              await setDoc(doc(db, 'trading_histories', accRef.id), { trades, generatedAt: serverTimestamp() });
+              // admin_actions log
+              await addDoc(collection(db, 'admin_actions'), {
+                adminUid: 'system-client-auto',
+                action: 'AUTO_CREATE_ACCOUNT_ON_PAID',
+                targetId: t.id,
+                accountId: accRef.id,
+                timestamp: serverTimestamp()
+              });
+              // link transaction -> accountId
+              await updateDoc(doc(db, 'transactions', t.id), { accountId: accRef.id });
+            }catch(e){
+              console.warn('auto create error', e);
+            }
+          }
+        });
+      });
+      // store unsub to stop later
+      window._unsubAuto = unsubAuto;
+    }
+
+    function stopListeners(){
+      if(unsubUserTx) { unsubUserTx(); unsubUserTx = null; }
+      if(unsubUserAcc) { unsubUserAcc(); unsubUserAcc = null; }
+      if(unsubAdminTx) { unsubAdminTx(); unsubAdminTx = null; }
+      if(window._unsubAuto){ window._unsubAuto(); window._unsubAuto = null; }
+    }
+
+    // ===== render helpers =====
+    function renderUserTx(arr){
+      txTbody.innerHTML = '';
+      if(arr.length === 0){
+        txTbody.innerHTML = '<tr><td colspan="4" class="muted small">No transactions yet</td></tr>';
+        return;
+      }
+      for(const tx of arr){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="small">${tx.id}</td>
+          <td>$${tx.price || '-'}</td>
+          <td><span class="pill ${tx.status==='paid'?'paid':'pending'}">${tx.status}</span></td>
+          <td>${tx.accountId ? '<span class="small">Linked: '+tx.accountId+'</span>' : '<span class="muted small">-</span>'}</td>
+        `;
+        txTbody.appendChild(tr);
+      }
+    }
+
+    function renderAccounts(arr){
+      accountsList.innerHTML = '';
+      if(arr.length === 0){ accountsList.innerHTML = '<div class="muted small">No accounts yet</div>'; return; }
+      for(const a of arr){
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.style.marginBottom = '8px';
+        div.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-weight:700">${a.login} <span class="muted small">(${a.server})</span></div>
+              <div class="muted small">Status: ${a.status}</div>
+            </div>
+            <div style="text-align:right">
+              <div class="small muted">Password</div>
+              <div style="font-weight:700">${a.password}</div>
+            </div>
+          </div>
+        `;
+        accountsList.appendChild(div);
+      }
+    }
+
+    function renderAdminTx(arr){
+      adminTxTbody.innerHTML = '';
+      if(arr.length === 0){ adminTxTbody.innerHTML = '<tr><td colspan="5" class="muted small">No transactions</td></tr>'; return; }
+      for(const tx of arr){
+        const tr = document.createElement('tr');
+        const actionsHtml = `
+          <div style="display:flex;gap:8px">
+            <button class="btn ghost" data-act="confirm" data-id="${tx.id}">Confirm</button>
+            <button class="btn" data-act="gen" data-uid="${tx.uid}">Gen Creds</button>
+          </div>`;
+        tr.innerHTML = `
+          <td class="small">${tx.id}</td>
+          <td class="small">${tx.uid}</td>
+          <td>$${tx.price || '-'}</td>
+          <td><span class="pill ${tx.status==='paid'?'paid':'pending'}">${tx.status}</span></td>
+          <td>${actionsHtml}</td>
+        `;
+        adminTxTbody.appendChild(tr);
+      }
+      // attach handlers
+      adminTxTbody.querySelectorAll('button[data-act]').forEach(btn=>{
+        btn.onclick = async (e)=>{
+          const act = btn.getAttribute('data-act');
+          if(act === 'confirm'){
+            const txId = btn.getAttribute('data-id');
+            if(!confirm('Mark tx '+txId+' as PAID?')) return;
+            try{
+              await updateDoc(doc(db,'transactions',txId), { status:'paid' });
+              await addDoc(collection(db,'admin_actions'), { adminUid: currentUser.uid, action:'CONFIRM_PAYMENT','targetId':txId, timestamp: serverTimestamp() });
+              fetchAdminActions();
+            }catch(e){ alert('Error: '+e.message) }
+          } else if(act === 'gen'){
+            const uid = btn.getAttribute('data-uid');
+            try{
+              // admin client creates creds directly (demo). In prod: call Cloud Function.
+              const creds = makeCredentials();
+              const accRef = await addDoc(collection(db,'accounts'), {
+                uid,
+                login:creds.login, password:creds.password, server:creds.server, status:'active', createdAt: serverTimestamp()
+              });
+              await addDoc(collection(db,'admin_actions'), { adminUid: currentUser.uid, action:'ADMIN_GENERATE_CREDENTIALS', targetId: uid, accountId: accRef.id, timestamp: serverTimestamp() });
+              alert('Generated account: ' + accRef.id);
+              fetchAdminActions();
+            }catch(e){ alert('err: '+e.message) }
+          }
+        }
+      });
+    }
+
+    async function fetchAdminActions(){
+      try{
+        const snap = await getDocs(query(collection(db,'admin_actions'), orderBy('timestamp','desc')));
+        const items = [];
+        let i=0;
+        snap.forEach(d=>{ if(i++<10) items.push(d.data()); });
+        adminLog.textContent = JSON.stringify(items, null, 2);
+      }catch(e){ console.warn(e) }
+    }
+
+    // ===== buy flow (user) =====
+    btnBuy.addEventListener('click', async ()=>{
+      if(!currentUser) return alert('Sign in first');
+      try{
+        const tx = { uid: currentUser.uid, challengeId:'demo-chal', price:25, status:'pending', createdAt: serverTimestamp() };
+        const ref = await addDoc(collection(db,'transactions'), tx);
+        alert('Transaction created: ' + ref.id + '\\nStatus: pending. Admin must confirm or webhook will mark paid.');
+      }catch(e){ alert('err: '+e.message) }
+    });
+
+    // ===== helpers: credentials + trade generator (same logic as earlier) =====
+    function makeCredentials(){
+      const login = 'FT-' + Math.random().toString(36).substring(2,9).toUpperCase();
+      const password = Math.random().toString(36).substring(2,10);
+      const server = 'Demo-Server-1';
+      return { login, password, server };
+    }
+
+    function generateTradingHistoryData({ startingBalance=10000, days=7, avgDailyTrades=2, winRate=0.6, avgReturn=0.01 } = {}){
+      const trades = [];
+      let balance = startingBalance;
+      const rand = ()=> Math.random();
+      for(let d=0; d<days; d++){
+        const dayStamp = Date.now() - (days-d)*24*60*60*1000;
+        const nTrades = Math.max(1, Math.round(avgDailyTrades + (rand()-0.5)*2));
+        for(let t=0; t<nTrades; t++){
+          const isWin = rand() < winRate;
+          const pct = avgReturn * (0.5 + rand());
+          const pnl = +(balance * pct * (isWin?1:-1)).toFixed(2);
+          balance += pnl;
+          trades.push({
+            entryTime: new Date(dayStamp + t*1000*60*30).toISOString(),
+            exitTime: new Date(dayStamp + t*1000*60*30 + 1000*60*15).toISOString(),
+            side: rand() < 0.5 ? 'buy' : 'sell',
+            size: +(0.01 + rand()*0.05).toFixed(4),
+            pnl,
+            balance: +balance.toFixed(2),
+            note: isWin ? 'win' : 'loss'
+          });
+        }
+      }
+      return trades;
+    }
+
+    // ===== init UI roles: show/hide cards based on admin flag =====
+    // onAuthStateChanged already handles starting listeners and showing/hiding cards. But we must set userCard/adminCard visible if appropriate
+    // We'll toggle when auth state changes; to be safe, poll currentUser for initial state
+    (async ()=>{
+      // if someone is already signed in (session), onAuthStateChanged will be called and handle UI
+    })();
+  </script>
+</body>
+</html>
