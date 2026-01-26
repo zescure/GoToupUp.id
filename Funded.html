@@ -1,478 +1,648 @@
-<!-- dashboard-demo-with-admin.html -->
+<!-- funded-minimal.html -->
 <!doctype html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Funded Trading Dashboard — Single File Demo (Admin UID included)</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Funded Dashboard — Minimal</title>
   <style>
-    /* ====== styles (same theme as earlier) ====== */
+    /* Minimal black / yellow / white theme */
     :root{
-      --bg:#0f1724;--card:#0b1220;--muted:#94a3b8;--accent:#7c3aed;
-      --success:#16a34a;--danger:#ef4444;--glass: rgba(255,255,255,0.03);
-      color-scheme: dark;
+      --bg:#000;
+      --card:#0a0a0a;
+      --muted:#e6e6e6;
+      --accent:#ffd400; /* yellow */
+      --white:#ffffff;
+      --danger:#ff4d4f;
     }
     *{box-sizing:border-box;font-family:Inter,system-ui,Roboto,Arial;}
-    body{margin:0;background:linear-gradient(180deg,#07112a,#021121);color:#e6eef8;min-height:100vh;padding:28px;}
-    .wrap{max-width:1100px;margin:0 auto;}
-    .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
-    .logo{display:flex;align-items:center;gap:12px}
-    .logo .mark{width:48px;height:48px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#0ea5e9);display:flex;align-items:center;justify-content:center;font-weight:700}
-    .card{background:var(--card);padding:16px;border-radius:10px;margin-bottom:12px;border:1px solid rgba(255,255,255,0.03)}
-    .row{display:flex;gap:8px;align-items:center}
-    .btn{background:linear-gradient(90deg,var(--accent),#0ea5e9);border:none;color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer}
-    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06)}
-    .input{background:var(--glass);border:1px solid rgba(255,255,255,0.03);padding:8px;border-radius:8px;color:inherit}
-    .muted{color:var(--muted);font-size:13px}
-    .small{font-size:13px;color:var(--muted)}
-    .grid{display:grid;grid-template-columns:1fr 340px;gap:16px}
-    .table{width:100%;border-collapse:collapse;margin-top:12px}
-    .table th{color:var(--muted);text-align:left;padding:8px 6px}
-    .table td{padding:8px 6px;border-top:1px dashed rgba(255,255,255,0.02)}
-    .pill{padding:6px 10px;border-radius:999px;font-weight:700;font-size:12px}
-    .pending{background:rgba(250,204,21,0.08);color:#f59e0b}
-    .paid{background:rgba(16,185,129,0.08);color:var(--success)}
-    pre{background:#071023;padding:10px;border-radius:8px;overflow:auto}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--white);}
+    .wrap{max-width:980px;margin:28px auto;padding:18px;}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+    .brand{font-weight:800;font-size:18px;}
+    .profile-btn{background:transparent;border:1px solid rgba(255,255,255,0.08);color:var(--white);padding:8px 12px;border-radius:8px;}
+    .card{background:var(--card);border:1px solid rgba(255,255,255,0.04);padding:16px;border-radius:10px;margin-bottom:12px;}
+    .muted{color:#cfcfcf;font-size:13px;}
+    .row{display:flex;gap:8px;align-items:center;}
+    button.btn{background:var(--accent);border:none;color:#000;padding:8px 12px;border-radius:8px;font-weight:700;cursor:pointer;}
+    button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--white);}
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:16px;}
+    .minimal-table{width:100%;border-collapse:collapse;margin-top:12px;}
+    .minimal-table th{text-align:left;font-size:13px;color:#ccc;padding:8px 6px}
+    .minimal-table td{padding:8px 6px;border-top:1px dashed rgba(255,255,255,0.03);font-size:14px}
+    .pill{padding:6px 10px;border-radius:999px;font-weight:700;font-size:12px;background:transparent;border:1px solid rgba(255,255,255,0.06)}
+    .pill.pending{color:var(--accent);border-color:rgba(255,212,0,0.2)}
+    .pill.success{color:#00ff9d;border-color:rgba(0,255,157,0.2)}
+    .hint{font-size:12px;color:#bbb;margin-top:6px}
+    input.input{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px;border-radius:8px;color:var(--white);width:100%}
+    label.small{font-size:12px;color:#bdbdbd}
+    .center{display:flex;justify-content:center;align-items:center;gap:8px}
+    .danger{background:var(--danger);color:#000}
+    .hide {display:none}
+    footer{margin-top:18px;color:#aaa;font-size:12px;text-align:center}
+    /* responsive */
+    @media(max-width:900px){
+      .grid{grid-template-columns:1fr}
+      .profile-btn{padding:6px 8px}
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="header">
-      <div class="logo">
-        <div class="mark">FT</div>
-        <div>
-          <div style="font-weight:800">Funded Trading Dashboard — Demo</div>
-          <div class="muted small">Single-file prototype — replace firebase config</div>
-        </div>
+    <header>
+      <div class="brand">Funded — Minimal</div>
+      <div class="row">
+        <div id="signed-as" class="muted"></div>
+        <button id="btn-profile" class="profile-btn hide">Profile</button>
+        <button id="btn-signout" class="profile-btn hide">Sign out</button>
       </div>
-      <div id="auth-area" class="row"></div>
-    </div>
+    </header>
 
-    <!-- Auth / Login -->
+    <!-- AUTH CARD -->
     <div id="auth-card" class="card">
-      <h3 style="margin:0 0 8px 0">Sign in / Register</h3>
-      <div class="muted">Use real email/password (Firebase Auth)</div>
-      <div style="margin-top:8px" class="row">
+      <div style="display:flex;gap:8px;align-items:center;">
         <input id="email" class="input" placeholder="email" />
-        <input id="password" class="input" placeholder="password" type="password" />
+        <input id="password" type="password" class="input" placeholder="password" />
         <button id="btn-login" class="btn">Sign in</button>
-        <button id="btn-register" class="btn ghost">Register</button>
+        <button id="btn-register" class="ghost">Register</button>
       </div>
+      <div class="hint">Use any email/password. Admin account must use UID: <strong class="muted">viCOsJo4wHVFmhtpmMx1Wd4sDF52</strong></div>
     </div>
 
-    <!-- Main area -->
-    <div id="main-area" style="display:none">
+    <!-- MAIN -->
+    <div id="main" class="hide">
       <div class="grid">
+        <!-- LEFT: User view or Admin main area -->
         <div>
-          <div id="user-card" class="card" style="display:none">
-            <h3 style="margin:0 0 8px 0">User Dashboard</h3>
-            <div class="muted">Realtime: your transactions & accounts</div>
-
-            <div style="margin-top:12px">
-              <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-                <button id="btn-buy" class="btn">Buy Challenge (create tx)</button>
-                <div class="muted small">Click to simulate payment flow (creates `transactions` doc)</div>
+          <!-- USER DASHBOARD -->
+          <div id="user-view" class="card hide">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-weight:700">Dashboard</div>
+                <div class="muted">Simple funded challenge store & account list</div>
               </div>
+              <div class="row">
+                <button id="btn-buy-challenge" class="btn">Buy Challenge</button>
+              </div>
+            </div>
 
-              <table class="table" id="tx-table">
-                <thead><tr><th>Tx ID</th><th>Price</th><th>Status</th><th>Account</th></tr></thead>
-                <tbody id="tx-tbody"></tbody>
+            <div style="margin-top:14px">
+              <div style="font-weight:700;margin-bottom:8px">My Purchased Accounts</div>
+              <table class="minimal-table" id="user-accounts-table">
+                <thead><tr><th>Type</th><th>Status</th><th>Info</th></tr></thead>
+                <tbody id="user-accounts-body"></tbody>
               </table>
-
-              <h4 style="margin-top:12px">My Accounts</h4>
-              <div id="accounts-list"></div>
+              <div class="hint">Click an account row to view details (login / history)</div>
             </div>
           </div>
 
-          <div id="admin-card" class="card" style="display:none">
-            <h3 style="margin:0 0 8px 0">Admin Dashboard</h3>
-            <div class="muted">Admin realtime transactions</div>
-            <table class="table" id="admin-tx-table">
-              <thead><tr><th>Tx ID</th><th>User</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
-              <tbody id="admin-tx-tbody"></tbody>
-            </table>
-            <div style="margin-top:12px" class="muted small">Admin actions log (last 10):</div>
-            <pre id="admin-log" style="height:120px"></pre>
+          <!-- ACCOUNT DETAILS MODAL (inline) -->
+          <div id="account-details" class="card hide">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div id="acc-type" style="font-weight:700"></div>
+                <div id="acc-rules" class="muted" style="font-size:13px;margin-top:4px"></div>
+              </div>
+              <div id="acc-status-pill" class="pill"></div>
+            </div>
+
+            <div style="margin-top:12px" id="acc-login-area">
+              <div style="display:flex;gap:8px">
+                <div style="flex:1">
+                  <label class="small">Login</label>
+                  <div id="acc-login" style="font-weight:700"></div>
+                </div>
+                <div style="flex:1">
+                  <label class="small">Password</label>
+                  <div id="acc-pass" style="font-weight:700"></div>
+                </div>
+                <div style="flex:1">
+                  <label class="small">Server</label>
+                  <div id="acc-server" style="font-weight:700"></div>
+                </div>
+              </div>
+            </div>
+
+            <div id="acc-history" style="margin-top:12px">
+              <div style="font-weight:700">Trading History</div>
+              <table class="minimal-table" id="acc-history-table">
+                <thead><tr><th>Time</th><th>Side</th><th>Size</th><th>PnL</th></tr></thead>
+                <tbody id="acc-history-body"></tbody>
+              </table>
+            </div>
+
+            <div style="margin-top:12px" class="center">
+              <button id="btn-back" class="ghost">Back</button>
+            </div>
+          </div>
+
+          <!-- ADMIN DASHBOARD (MINIMAL) -->
+          <div id="admin-view" class="card hide">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-weight:700">Admin Panel</div>
+                <div class="muted">Confirm / Cancel purchases — Enter login credentials — Generate history</div>
+              </div>
+            </div>
+
+            <div style="margin-top:12px">
+              <div style="font-weight:700;margin-bottom:8px">Pending Purchases</div>
+              <table class="minimal-table" id="admin-tx-table">
+                <thead><tr><th>Tx</th><th>User</th><th>Price</th><th>Action</th></tr></thead>
+                <tbody id="admin-tx-body"></tbody>
+              </table>
+            </div>
+
+            <div style="margin-top:12px">
+              <div style="font-weight:700;margin-bottom:8px">Manual Tools</div>
+              <div class="muted">Select a purchase then:</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+                <div>
+                  <label class="small">Login</label>
+                  <input id="admin-login" class="input" placeholder="login">
+                </div>
+                <div>
+                  <label class="small">Password</label>
+                  <input id="admin-pass" class="input" placeholder="password">
+                </div>
+                <div>
+                  <label class="small">Server</label>
+                  <input id="admin-server" class="input" placeholder="server">
+                </div>
+                <div>
+                  <label class="small">Result</label>
+                  <select id="admin-result" class="input">
+                    <option value="pass">Pass (create account)</option>
+                    <option value="fail">Fail (reject)</option>
+                  </select>
+                </div>
+              </div>
+              <div style="margin-top:8px" class="center">
+                <button id="admin-confirm" class="btn">Confirm / Apply</button>
+                <button id="admin-cancel" class="ghost">Clear</button>
+              </div>
+            </div>
+
+            <div style="margin-top:12px">
+              <div style="font-weight:700;margin-bottom:8px">Generate Trading History (for an active account)</div>
+              <div class="muted">Enter simple trade (lot, side, pnl)</div>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <input id="th-lot" class="input" placeholder="lot e.g. 0.10">
+                <select id="th-side" class="input">
+                  <option value="buy">buy</option><option value="sell">sell</option>
+                </select>
+                <input id="th-pnl" class="input" placeholder="pnl e.g. 12.34">
+                <button id="th-add" class="btn">Add</button>
+              </div>
+              <div class="hint" style="margin-top:8px">Trades added will appear instantly in user's account history.</div>
+            </div>
           </div>
         </div>
 
+        <!-- RIGHT: Catalog / Info -->
         <div>
-          <div class="card">
-            <h4 style="margin:0 0 8px 0">Info & Notes</h4>
-            <div class="muted small">Flow implemented in this demo:</div>
-            <ol class="small muted">
-              <li>User creates transaction (`status = pending`).</li>
-              <li>Admin confirms (sets `status = paid`).</li>
-              <li>Client detects `paid` and auto-creates `accounts/{id}`, `trading_histories/{id}` and `admin_actions` log.</li>
-            </ol>
-            <div style="margin-top:8px" class="muted small">⚠️ In production: move account creation + history generation to a Cloud Function (server-side) and secure with Firestore rules.</div>
+          <div id="catalog-card" class="card">
+            <div style="font-weight:700">Challenges</div>
+            <div class="muted" style="margin-top:6px">Choose a challenge and click Buy</div>
+
+            <div style="margin-top:12px">
+              <!-- sample challenge items -->
+              <div style="display:grid;gap:8px">
+                <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div style="font-weight:700">Bronze — $25</div>
+                    <div class="muted">Balance: $1,000 · Target 5% · Max DD 10% · Duration 7 days</div>
+                  </div>
+                  <div>
+                    <button class="btn buy-item" data-type="Bronze" data-price="25" data-balance="1000" data-target="5" data-dd="10">Buy</button>
+                  </div>
+                </div>
+
+                <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div style="font-weight:700">Silver — $50</div>
+                    <div class="muted">Balance: $2,500 · Target 5% · Max DD 8% · Duration 10 days</div>
+                  </div>
+                  <div>
+                    <button class="btn buy-item" data-type="Silver" data-price="50" data-balance="2500" data-target="5" data-dd="8">Buy</button>
+                  </div>
+                </div>
+
+                <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div style="font-weight:700">Gold — $100</div>
+                    <div class="muted">Balance: $5,000 · Target 5% · Max DD 6% · Duration 14 days</div>
+                  </div>
+                  <div>
+                    <button class="btn buy-item" data-type="Gold" data-price="100" data-balance="5000" data-target="5" data-dd="6">Buy</button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="card" style="margin-top:12px">
-            <h4 style="margin:0 0 8px 0">Setup</h4>
-            <div class="small muted">1) Replace Firebase config below in the script. 2) Ensure Firestore `config/admins` exists (adminUids array) if you switch back to Firestore-driven admin. 3) Use emulator or secure rules before production.</div>
+            <div style="font-weight:700">How it works</div>
+            <ol class="muted" style="margin-top:8px">
+              <li>User buys → opens payment page (simulated)</li>
+              <li>Payment writes a transaction with <code>status: pending</code></li>
+              <li>Admin confirms & supplies MT5 credentials (or fails)</li>
+              <li>User sees account + login info & generated history</li>
+            </ol>
           </div>
         </div>
       </div>
     </div>
 
-    <div style="height:40px"></div>
-    <div class="muted small">Demo by ChatGPT — change to Cloud Functions for production.</div>
+    <footer>Demo — move sensitive logic server-side before production</footer>
   </div>
 
-  <!-- Firebase v9 modular via CDN (ES modules) -->
+  <!-- firebase modules -->
   <script type="module">
-    // ====== Replace this firebaseConfig with your project's keys ======
+    // ---------------------------
+    //  CONFIG - replace with your Firebase project config
+    // ---------------------------
     const firebaseConfig = {
-      apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
-      authDomain: "zeepaylater-93a94.firebaseapp.com",
-      projectId: "zeepaylater-93a94",
-      storageBucket: "zeepaylater-93a94.appspot.com",
-      messagingSenderId: "358065954807",
-      appId: "1:358065954807:web:66619211fea82a4b2518f2"
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
-    // =================================================================
+    // ---------------------------
+    // ADMIN UID already requested
+    const ADMIN_UID = "viCOsJo4wHVFmhtpmMx1Wd4sDF52";
+    // ---------------------------
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import {
       getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut
     } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
     import {
-      getFirestore, collection, addDoc, doc, setDoc, updateDoc, onSnapshot,
-      query, where, orderBy, serverTimestamp, getDoc, getDocs
+      getFirestore, collection, addDoc, doc, updateDoc, setDoc, query, where, onSnapshot, orderBy, serverTimestamp, getDocs, getDoc
     } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // ======= UI refs =======
-    const authArea = document.getElementById('auth-area');
+    // UI refs
     const authCard = document.getElementById('auth-card');
-    const mainArea = document.getElementById('main-area');
-    const userCard = document.getElementById('user-card');
-    const adminCard = document.getElementById('admin-card');
+    const main = document.getElementById('main');
+    const userView = document.getElementById('user-view');
+    const adminView = document.getElementById('admin-view');
     const btnLogin = document.getElementById('btn-login');
     const btnRegister = document.getElementById('btn-register');
-    const inputEmail = document.getElementById('email');
-    const inputPass = document.getElementById('password');
-    const btnBuy = document.getElementById('btn-buy');
-    const txTbody = document.getElementById('tx-tbody');
-    const accountsList = document.getElementById('accounts-list');
-    const adminTxTbody = document.getElementById('admin-tx-tbody');
-    const adminLog = document.getElementById('admin-log');
+    const btnProfile = document.getElementById('btn-profile');
+    const btnSignout = document.getElementById('btn-signout');
+    const signedAs = document.getElementById('signed-as');
 
-    // Current state
+    const btnBuyChallenge = document.getElementById('btn-buy-challenge');
+    const buyButtons = document.querySelectorAll('.buy-item');
+
+    const userAccountsBody = document.getElementById('user-accounts-body');
+    const accountDetails = document.getElementById('account-details');
+    const accType = document.getElementById('acc-type');
+    const accRules = document.getElementById('acc-rules');
+    const accStatusPill = document.getElementById('acc-status-pill');
+    const accLogin = document.getElementById('acc-login');
+    const accPass = document.getElementById('acc-pass');
+    const accServer = document.getElementById('acc-server');
+    const accHistoryBody = document.getElementById('acc-history-body');
+    const btnBack = document.getElementById('btn-back');
+
+    const adminTxBody = document.getElementById('admin-tx-body');
+    const adminLogin = document.getElementById('admin-login');
+    const adminPass = document.getElementById('admin-pass');
+    const adminServer = document.getElementById('admin-server');
+    const adminResult = document.getElementById('admin-result');
+    const adminConfirm = document.getElementById('admin-confirm');
+    const adminCancel = document.getElementById('admin-cancel');
+
+    const thLot = document.getElementById('th-lot');
+    const thSide = document.getElementById('th-side');
+    const thPnl = document.getElementById('th-pnl');
+    const thAdd = document.getElementById('th-add');
+
+    // state
     let currentUser = null;
-    let isAdmin = false;
-    let unsubUserTx = null, unsubUserAcc = null, unsubAdminTx = null;
+    let selectedTx = null; // for admin confirm
+    let selectedAccountView = null; // account id currently opened in user details
 
-    // ===== HARD-CODED ADMIN UID (DEV/DEMO ONLY) =====
-    // Admin UID provided: viCOsJo4wHVFmhtpmMx1Wd4sDF52
-    // NOTE: This is frontend hardcode — use only for local/demo. For production, manage admins in Firestore or custom claims.
-    const ADMIN_UIDS = ["viCOsJo4wHVFmhtpmMx1Wd4sDF52"];
-
-    // ===== utility: admin check (uses hardcoded list) =====
-    async function isAdminUid(uid){
-      if(!uid) return false;
-      try{
-        // First check hardcoded list
-        if(Array.isArray(ADMIN_UIDS) && ADMIN_UIDS.includes(uid)) return true;
-        // Fallback: check Firestore config/admins (if you prefer dynamic admin list)
-        const docRef = doc(db, 'config', 'admins');
-        const snap = await getDoc(docRef);
-        if(!snap.exists()) return false;
-        const d = snap.data();
-        return Array.isArray(d.adminUids) && d.adminUids.includes(uid);
-      }catch(e){
-        console.error('isAdminUid err', e);
-        return false;
-      }
-    }
-
-    // ===== auth handlers =====
-    btnLogin.addEventListener('click', async ()=> {
-      const email = inputEmail.value.trim();
-      const pass = inputPass.value;
-      if(!email || !pass) return alert('fill email & pass');
-      try{
-        await signInWithEmailAndPassword(auth, email, pass);
-      }catch(e){ alert('Login: '+e.message) }
+    // AUTH actions
+    btnLogin.addEventListener('click', async ()=>{
+      const email = document.getElementById('email').value.trim();
+      const pass = document.getElementById('password').value;
+      if(!email || !pass) return alert('fill email + pass');
+      try{ await signInWithEmailAndPassword(auth, email, pass); }
+      catch(e){ alert('Login error: '+e.message); }
     });
-
-    btnRegister.addEventListener('click', async ()=> {
-      const email = inputEmail.value.trim();
-      const pass = inputPass.value;
-      if(!email || !pass) return alert('fill email & pass');
-      try{
-        await createUserWithEmailAndPassword(auth, email, pass);
-        alert('Registered — now sign in.');
-      }catch(e){ alert('Register: '+e.message) }
+    btnRegister.addEventListener('click', async ()=>{
+      const email = document.getElementById('email').value.trim();
+      const pass = document.getElementById('password').value;
+      if(!email || !pass) return alert('fill email + pass');
+      try{ await createUserWithEmailAndPassword(auth, email, pass); alert('Registered — sign in now'); }
+      catch(e){ alert('Register error: '+e.message); }
     });
+    btnSignout.addEventListener('click', ()=> signOut(auth));
 
-    function showAuthUI(user){
-      authArea.innerHTML = '';
-      const span = document.createElement('div');
-      span.className = 'small';
-      span.textContent = `Signed in: ${user.email}`;
-      const btn = document.createElement('button');
-      btn.className = 'btn ghost';
-      btn.textContent = 'Sign out';
-      btn.onclick = ()=> signOut(auth);
-      authArea.append(span, btn);
-    }
-
-    // ===== on auth state change =====
-    onAuthStateChanged(auth, async user => {
+    // auth state
+    onAuthStateChanged(auth, async user=>{
       currentUser = user;
       if(user){
-        showAuthUI(user);
-        authCard.style.display = 'none';
-        mainArea.style.display = '';
-        // check admin
-        isAdmin = await isAdminUid(user.uid);
-        userCard.style.display = isAdmin ? 'none' : '';
-        adminCard.style.display = isAdmin ? '' : 'none';
-        // start listeners
-        startListeners();
+        signedAs.textContent = user.email||user.uid;
+        authCard.classList.add('hide');
+        main.classList.remove('hide');
+        btnProfile.classList.remove('hide');
+        btnSignout.classList.remove('hide');
+
+        if(user.uid === ADMIN_UID){
+          // admin view
+          userView.classList.add('hide');
+          adminView.classList.remove('hide');
+          accountDetails.classList.add('hide');
+          startAdminListeners();
+        } else {
+          // normal user
+          adminView.classList.add('hide');
+          userView.classList.remove('hide');
+          accountDetails.classList.add('hide');
+          startUserListeners();
+        }
       } else {
-        authArea.innerHTML = '';
-        authCard.style.display = '';
-        mainArea.style.display = 'none';
+        signedAs.textContent = '';
+        authCard.classList.remove('hide');
+        main.classList.add('hide');
+        btnProfile.classList.add('hide');
+        btnSignout.classList.add('hide');
         stopListeners();
       }
     });
 
-    // ===== listeners =====
-    function startListeners(){
+    // ---------- LISTENERS ----------
+    let unsubUserTx = null, unsubUserAcc = null, unsubAdminTx = null;
+    function stopListeners(){
+      if(unsubUserTx){unsubUserTx(); unsubUserTx=null;}
+      if(unsubUserAcc){unsubUserAcc(); unsubUserAcc=null;}
+      if(unsubAdminTx){unsubAdminTx(); unsubAdminTx=null;}
+    }
+
+    // user listeners: accounts for this user
+    function startUserListeners(){
       stopListeners();
       if(!currentUser) return;
-      // user transactions
-      const txQ = query(collection(db, 'transactions'), where('uid','==', currentUser.uid), orderBy('createdAt','desc'));
-      unsubUserTx = onSnapshot(txQ, snap => {
+      const qAcc = query(collection(db,'accounts'), where('uid','==', currentUser.uid), orderBy('createdAt','desc'));
+      unsubUserAcc = onSnapshot(qAcc, snap=>{
         const arr = [];
-        snap.forEach(d=> arr.push({ id:d.id, ...d.data() }));
-        renderUserTx(arr);
+        snap.forEach(d => arr.push({ id:d.id, ...d.data() }));
+        renderUserAccounts(arr);
       });
-      // user accounts
-      const accQ = query(collection(db,'accounts'), where('uid','==', currentUser.uid));
-      unsubUserAcc = onSnapshot(accQ, snap => {
-        const arr = [];
-        snap.forEach(d=> arr.push({ id:d.id, ...d.data() }));
-        renderAccounts(arr);
-      });
-
-      // admin listeners (if admin)
-      if(isAdmin){
-        const aQ = query(collection(db, 'transactions'), orderBy('createdAt','desc'));
-        unsubAdminTx = onSnapshot(aQ, snap => {
-          const arr = [];
-          snap.forEach(d=> arr.push({ id:d.id, ...d.data() }));
-          renderAdminTx(arr);
-        });
-        // small audit fetch
-        fetchAdminActions();
-      }
-
-      // Global: watch transactions collection -> if any tx becomes paid and has no accountId, create account+history
-      // NOTE: in real app, do this server-side (Cloud Function). This demo does it client-side for convenience.
-      const allQ = query(collection(db, 'transactions'), orderBy('createdAt','desc'));
-      const unsubAuto = onSnapshot(allQ, snap => {
-        snap.forEach(async docSnap => {
-          const t = { id: docSnap.id, ...docSnap.data() };
-          if(t.status === 'paid' && !t.accountId){
-            // create account + trading history automatically (demo)
-            try{
-              console.log('Auto-creating account for tx', t.id);
-              const creds = makeCredentials();
-              const accRef = await addDoc(collection(db, 'accounts'), {
-                uid: t.uid,
-                challengeId: t.challengeId || 'demo-chal',
-                login: creds.login,
-                password: creds.password,
-                server: creds.server,
-                status: 'active',
-                createdAt: serverTimestamp()
-              });
-              // generate trading history
-              const trades = generateTradingHistoryData({ startingBalance:10000, days:10, avgDailyTrades:2 });
-              await setDoc(doc(db, 'trading_histories', accRef.id), { trades, generatedAt: serverTimestamp() });
-              // admin_actions log
-              await addDoc(collection(db, 'admin_actions'), {
-                adminUid: 'system-client-auto',
-                action: 'AUTO_CREATE_ACCOUNT_ON_PAID',
-                targetId: t.id,
-                accountId: accRef.id,
-                timestamp: serverTimestamp()
-              });
-              // link transaction -> accountId
-              await updateDoc(doc(db, 'transactions', t.id), { accountId: accRef.id });
-            }catch(e){
-              console.warn('auto create error', e);
-            }
-          }
-        });
-      });
-      // store unsub to stop later
-      window._unsubAuto = unsubAuto;
     }
 
-    function stopListeners(){
-      if(unsubUserTx) { unsubUserTx(); unsubUserTx = null; }
-      if(unsubUserAcc) { unsubUserAcc(); unsubUserAcc = null; }
-      if(unsubAdminTx) { unsubAdminTx(); unsubAdminTx = null; }
-      if(window._unsubAuto){ window._unsubAuto(); window._unsubAuto = null; }
+    // admin listeners: pending transactions
+    function startAdminListeners(){
+      stopListeners();
+      const q = query(collection(db,'transactions'), orderBy('createdAt','desc'));
+      unsubAdminTx = onSnapshot(q, snap=>{
+        const arr = [];
+        snap.forEach(d => arr.push({ id:d.id, ...d.data() }));
+        renderAdminTx(arr);
+      });
     }
 
-    // ===== render helpers =====
-    function renderUserTx(arr){
-      txTbody.innerHTML = '';
-      if(arr.length === 0){
-        txTbody.innerHTML = '<tr><td colspan="4" class="muted small">No transactions yet</td></tr>';
+    // ---------- RENDERS ----------
+    function renderUserAccounts(accounts){
+      userAccountsBody.innerHTML = '';
+      if(accounts.length===0){
+        userAccountsBody.innerHTML = '<tr><td colspan="3" class="muted">No purchased accounts</td></tr>';
         return;
       }
-      for(const tx of arr){
+      accounts.forEach(a=>{
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="small">${tx.id}</td>
-          <td>$${tx.price || '-'}</td>
-          <td><span class="pill ${tx.status==='paid'?'paid':'pending'}">${tx.status}</span></td>
-          <td>${tx.accountId ? '<span class="small">Linked: '+tx.accountId+'</span>' : '<span class="muted small">-</span>'}</td>
-        `;
-        txTbody.appendChild(tr);
-      }
-    }
-
-    function renderAccounts(arr){
-      accountsList.innerHTML = '';
-      if(arr.length === 0){ accountsList.innerHTML = '<div class="muted small">No accounts yet</div>'; return; }
-      for(const a of arr){
-        const div = document.createElement('div');
-        div.className = 'card';
-        div.style.marginBottom = '8px';
-        div.innerHTML = `
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <div style="font-weight:700">${a.login} <span class="muted small">(${a.server})</span></div>
-              <div class="muted small">Status: ${a.status}</div>
-            </div>
-            <div style="text-align:right">
-              <div class="small muted">Password</div>
-              <div style="font-weight:700">${a.password}</div>
-            </div>
-          </div>
-        `;
-        accountsList.appendChild(div);
-      }
-    }
-
-    function renderAdminTx(arr){
-      adminTxTbody.innerHTML = '';
-      if(arr.length === 0){ adminTxTbody.innerHTML = '<tr><td colspan="5" class="muted small">No transactions</td></tr>'; return; }
-      for(const tx of arr){
-        const tr = document.createElement('tr');
-        const actionsHtml = `
-          <div style="display:flex;gap:8px">
-            <button class="btn ghost" data-act="confirm" data-id="${tx.id}">Confirm</button>
-            <button class="btn" data-act="gen" data-uid="${tx.uid}">Gen Creds</button>
-          </div>`;
-        tr.innerHTML = `
-          <td class="small">${tx.id}</td>
-          <td class="small">${tx.uid}</td>
-          <td>$${tx.price || '-'}</td>
-          <td><span class="pill ${tx.status==='paid'?'paid':'pending'}">${tx.status}</span></td>
-          <td>${actionsHtml}</td>
-        `;
-        adminTxTbody.appendChild(tr);
-      }
-      // attach handlers
-      adminTxTbody.querySelectorAll('button[data-act]').forEach(btn=>{
-        btn.onclick = async (e)=>{
-          const act = btn.getAttribute('data-act');
-          if(act === 'confirm'){
-            const txId = btn.getAttribute('data-id');
-            if(!confirm('Mark tx '+txId+' as PAID?')) return;
-            try{
-              await updateDoc(doc(db,'transactions',txId), { status:'paid' });
-              await addDoc(collection(db,'admin_actions'), { adminUid: currentUser.uid, action:'CONFIRM_PAYMENT','targetId':txId, timestamp: serverTimestamp() });
-              fetchAdminActions();
-            }catch(e){ alert('Error: '+e.message) }
-          } else if(act === 'gen'){
-            const uid = btn.getAttribute('data-uid');
-            try{
-              // admin client creates creds directly (demo). In prod: call Cloud Function.
-              const creds = makeCredentials();
-              const accRef = await addDoc(collection(db,'accounts'), {
-                uid,
-                login:creds.login, password:creds.password, server:creds.server, status:'active', createdAt: serverTimestamp()
-              });
-              await addDoc(collection(db,'admin_actions'), { adminUid: currentUser.uid, action:'ADMIN_GENERATE_CREDENTIALS', targetId: uid, accountId: accRef.id, timestamp: serverTimestamp() });
-              alert('Generated account: ' + accRef.id);
-              fetchAdminActions();
-            }catch(e){ alert('err: '+e.message) }
-          }
-        }
+        tr.innerHTML = `<td>${a.type || '—'}</td>
+                        <td><span class="pill ${a.status==='active'?'success':'pending'}">${a.status}</span></td>
+                        <td>${a.status==='active'? 'Click to view' : (a.status==='failed' ? 'Not passed' : 'Pending')}</td>`;
+        tr.style.cursor = 'pointer';
+        tr.onclick = ()=> openAccountDetails(a.id);
+        userAccountsBody.appendChild(tr);
       });
     }
 
-    async function fetchAdminActions(){
-      try{
-        const snap = await getDocs(query(collection(db,'admin_actions'), orderBy('timestamp','desc')));
-        const items = [];
-        let i=0;
-        snap.forEach(d=>{ if(i++<10) items.push(d.data()); });
-        adminLog.textContent = JSON.stringify(items, null, 2);
-      }catch(e){ console.warn(e) }
+    function renderAdminTx(txs){
+      adminTxBody.innerHTML = '';
+      const pending = txs.filter(t=> t.status === 'pending');
+      if(pending.length === 0){
+        adminTxBody.innerHTML = '<tr><td colspan="4" class="muted">No pending purchases</td></tr>';
+        return;
+      }
+      pending.forEach(t=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td style="font-size:13px">${t.id}</td>
+                        <td style="font-size:13px">${t.uid}</td>
+                        <td style="font-size:13px">$${t.price || '-'}</td>
+                        <td><div style="display:flex;gap:8px">
+                          <button class="ghost" data-id="${t.id}" data-uid="${t.uid}" onclick="window._admin_select_tx(event)">Select</button>
+                        </div></td>`;
+        adminTxBody.appendChild(tr);
+      });
+      // store events via global function because dynamic inline
     }
 
-    // ===== buy flow (user) =====
-    btnBuy.addEventListener('click', async ()=>{
-      if(!currentUser) return alert('Sign in first');
-      try{
-        const tx = { uid: currentUser.uid, challengeId:'demo-chal', price:25, status:'pending', createdAt: serverTimestamp() };
-        const ref = await addDoc(collection(db,'transactions'), tx);
-        alert('Transaction created: ' + ref.id + '\nStatus: pending. Admin must confirm or webhook will mark paid.');
-      }catch(e){ alert('err: '+e.message) }
-    });
+    // connect admin select button globally
+    window._admin_select_tx = function(e){
+      e.stopPropagation();
+      const btn = e.currentTarget;
+      const txId = btn.dataset.id;
+      const uid = btn.dataset.uid;
+      selectedTx = { id: txId, uid };
+      adminLogin.value = '';
+      adminPass.value = '';
+      adminServer.value = '';
+      adminResult.value = 'pass';
+      alert('Selected tx: ' + txId + '\nEnter credentials (or fail) then click Confirm');
+    };
 
-    // ===== helpers: credentials + trade generator (same logic as earlier) =====
-    function makeCredentials(){
-      const login = 'FT-' + Math.random().toString(36).substring(2,9).toUpperCase();
-      const password = Math.random().toString(36).substring(2,10);
-      const server = 'Demo-Server-1';
-      return { login, password, server };
-    }
-
-    function generateTradingHistoryData({ startingBalance=10000, days=7, avgDailyTrades=2, winRate=0.6, avgReturn=0.01 } = {}){
-      const trades = [];
-      let balance = startingBalance;
-      const rand = ()=> Math.random();
-      for(let d=0; d<days; d++){
-        const dayStamp = Date.now() - (days-d)*24*60*60*1000;
-        const nTrades = Math.max(1, Math.round(avgDailyTrades + (rand()-0.5)*2));
-        for(let t=0; t<nTrades; t++){
-          const isWin = rand() < winRate;
-          const pct = avgReturn * (0.5 + rand());
-          const pnl = +(balance * pct * (isWin?1:-1)).toFixed(2);
-          balance += pnl;
-          trades.push({
-            entryTime: new Date(dayStamp + t*1000*60*30).toISOString(),
-            exitTime: new Date(dayStamp + t*1000*60*30 + 1000*60*15).toISOString(),
-            side: rand() < 0.5 ? 'buy' : 'sell',
-            size: +(0.01 + rand()*0.05).toFixed(4),
-            pnl,
-            balance: +balance.toFixed(2),
-            note: isWin ? 'win' : 'loss'
+    // ---------- ACCOUNT DETAILS (user) ----------
+    async function openAccountDetails(accountId){
+      selectedAccountView = accountId;
+      accountDetails.classList.remove('hide');
+      // fetch account and history
+      const accSnap = await getDoc(doc(db,'accounts',accountId));
+      if(!accSnap.exists()){ alert('Account not found'); return; }
+      const a = accSnap.data();
+      accType.textContent = a.type || 'Challenge Account';
+      accRules.textContent = `Balance $${a.balance || '-'} · Target ${a.target || '-'}% · Max DD ${a.maxDD || '-'}%`;
+      accStatusPill.textContent = a.status || 'pending';
+      accStatusPill.className = 'pill ' + (a.status === 'active' ? 'success' : 'pending');
+      if(a.status === 'active'){
+        accLogin.textContent = a.login;
+        accPass.textContent = a.password;
+        accServer.textContent = a.server;
+        document.getElementById('acc-login-area').style.display = '';
+      } else {
+        // hide login if failed
+        document.getElementById('acc-login-area').style.display = a.status === 'active' ? '' : 'none';
+      }
+      // history
+      const thSnap = await getDoc(doc(db,'trading_histories', accountId));
+      accHistoryBody.innerHTML = '';
+      if(thSnap.exists()){
+        const trades = thSnap.data().trades || [];
+        if(trades.length === 0){ accHistoryBody.innerHTML = '<tr><td colspan="4" class="muted">No trades yet</td></tr>'; }
+        else {
+          trades.forEach(tr=>{
+            const trEl = document.createElement('tr');
+            trEl.innerHTML = `<td style="font-size:13px">${new Date(tr.entryTime).toLocaleString()}</td>
+                              <td style="font-size:13px">${tr.side}</td>
+                              <td style="font-size:13px">${tr.size}</td>
+                              <td style="font-size:13px">${tr.pnl}</td>`;
+            accHistoryBody.appendChild(trEl);
           });
         }
+      } else {
+        accHistoryBody.innerHTML = '<tr><td colspan="4" class="muted">No trading history</td></tr>';
       }
-      return trades;
+      // hide main user card
+      userView.classList.add('hide');
+    }
+    btnBack.addEventListener('click', ()=>{
+      accountDetails.classList.add('hide');
+      userView.classList.remove('hide');
+      selectedAccountView = null;
+    });
+
+    // ---------- BUY FLOW (open custom payment window simulated) ----------
+    buyButtons.forEach(btn=>{
+      btn.addEventListener('click', (ev)=>{
+        const t = ev.currentTarget.dataset;
+        openPaymentWindow(t);
+      });
+    });
+
+    function openPaymentWindow(data){
+      // Simulate custom payment page in a popup window that writes tx (status pending)
+      const popup = window.open('', 'paywin', 'width=520,height=420');
+      if(!popup) return alert('Popup blocked. Allow popups for this site.');
+      popup.document.body.style.background = '#000';
+      popup.document.body.style.color = '#fff';
+      popup.document.title = 'Custom Payment';
+      popup.document.body.innerHTML = `
+        <div style="font-family:Inter,system-ui,Roboto,Arial;padding:20px">
+          <h2 style="color:var(--accent);font-weight:800">Pay ${data.type} — $${data.price}</h2>
+          <p style="color:#ccc">Balance: $${data.balance} · Target ${data.target}% · Max DD ${data.dd}%</p>
+          <div style="margin-top:20px">
+            <button id="doPay" style="background:#ffd400;border:none;padding:12px;border-radius:8px;font-weight:700;cursor:pointer">Pay Now (simulate)</button>
+            <button id="close" style="margin-left:8px;background:transparent;border:1px solid #fff;padding:8px;border-radius:8px;color:#fff">Close</button>
+          </div>
+        </div>
+      `;
+      // pass info back to opener
+      popup.document.getElementById('doPay').onclick = async ()=>{
+        // create transaction doc in Firestore with status 'pending'
+        try{
+          if(!currentUser) {
+            alert('You must be signed in in the main window');
+            return;
+          }
+          const tx = {
+            uid: currentUser.uid,
+            type: data.type,
+            price: Number(data.price),
+            balance: Number(data.balance),
+            target: Number(data.target),
+            maxDD: Number(data.dd),
+            status: 'pending',
+            createdAt: serverTimestamp()
+          };
+          const ref = await addDoc(collection(db,'transactions'), tx);
+          alert('Payment simulated. Transaction created: ' + ref.id + '\\nStatus: pending. Close this window.');
+          popup.close();
+        }catch(e){
+          alert('Payment error: '+e.message);
+        }
+      };
+      popup.document.getElementById('close').onclick = ()=> popup.close();
     }
 
-    // ===== init UI roles: show/hide cards based on admin flag =====
-    (async ()=>{
-      // if someone is already signed in (session), onAuthStateChanged will be called and handle UI
+    // ---------- ADMIN: confirm / fail and create account ----------
+    adminConfirm.addEventListener('click', async ()=>{
+      if(!selectedTx) return alert('Select a pending transaction first from the table (Select button).');
+      const res = adminResult.value;
+      try{
+        if(res === 'fail'){
+          // mark transaction as failed and create a record in accounts with status failed
+          await updateDoc(doc(db,'transactions',selectedTx.id), { status: 'failed', adminUid: currentUser.uid, resolvedAt: serverTimestamp() });
+          // create an account record with status failed for clarity
+          const accRef = await addDoc(collection(db,'accounts'), {
+            uid: selectedTx.uid,
+            type: 'failed',
+            status: 'failed',
+            createdAt: serverTimestamp()
+          });
+          alert('Transaction marked failed. User will see "not passed".');
+        } else {
+          // pass -> admin must provide login/pass/server
+          const login = adminLogin.value.trim();
+          const pass = adminPass.value.trim();
+          const server = adminServer.value.trim();
+          if(!login || !pass || !server) return alert('Fill login/password/server for account creation.');
+          // create account document and link to transaction
+          const accRef = await addDoc(collection(db,'accounts'), {
+            uid: selectedTx.uid,
+            type: (await getDoc(doc(db,'transactions',selectedTx.id))).data().type || 'Challenge',
+            login, password: pass, server, balance: (await getDoc(doc(db,'transactions',selectedTx.id))).data().balance || 0,
+            target: (await getDoc(doc(db,'transactions',selectedTx.id))).data().target || null,
+            maxDD: (await getDoc(doc(db,'transactions',selectedTx.id))).data().maxDD || null,
+            status: 'active',
+            createdAt: serverTimestamp()
+          });
+          // link account to tx & set tx status to success
+          await updateDoc(doc(db,'transactions',selectedTx.id), { status: 'paid', accountId: accRef.id, adminUid: currentUser.uid, resolvedAt: serverTimestamp() });
+          // create empty trading_history doc
+          await setDoc(doc(db,'trading_histories', accRef.id), { trades: [], generatedAt: serverTimestamp() });
+          alert('Account created & transaction confirmed. User will see login info.');
+        }
+        // clear selection
+        selectedTx = null;
+      }catch(e){
+        alert('Admin confirm error: '+e.message);
+      }
+    });
+    adminCancel.addEventListener('click', ()=>{ selectedTx=null; adminLogin.value=''; adminPass.value=''; adminServer.value=''; adminResult.value='pass'; alert('Cleared selection'); });
+
+    // ---------- ADMIN: add trade to an account's history ----------
+    thAdd.addEventListener('click', async ()=>{
+      const lot = thLot.value.trim();
+      const side = thSide.value;
+      const pnl = Number(thPnl.value);
+      if(!selectedAccountView) return alert('Open an account details (as user) to know which account to add trades to. Admin can also set selectedAccountView by clicking user account in DB viewer.');
+      if(!lot || isNaN(pnl)) return alert('Fill lot and pnl correctly.');
+      try{
+        // append trade to trading_histories/{accountId}
+        const thRef = doc(db,'trading_histories', selectedAccountView);
+        const thSnap = await getDoc(thRef);
+        let trades = [];
+        if(thSnap.exists()) trades = thSnap.data().trades || [];
+        trades.push({ entryTime: new Date().toISOString(), side, size: lot, pnl, balance: (trades.length? trades[trades.length-1].balance + pnl : pnl), note: 'admin-added' });
+        await setDoc(thRef, { trades, generatedAt: serverTimestamp() });
+        alert('Trade added to account history.');
+        // refresh account details if currently open
+        if(accountDetails.classList.contains('hide') === false){
+          openAccountDetails(selectedAccountView);
+        }
+      }catch(e){ alert('Add trade error: '+e.message); }
+    });
+
+    // ---------- helper small: render initial empty tables if no data ----------
+    (function initPlaceholders(){
+      userAccountsBody.innerHTML = '<tr><td colspan="3" class="muted">No purchased accounts</td></tr>';
+      adminTxBody.innerHTML = '<tr><td colspan="4" class="muted">No pending purchases</td></tr>';
     })();
+
+    // ---------- note ----------
+    // This demo does client-side auto-creation & history updates for quick testing.
+    // Move these procedures to Cloud Functions for security.
   </script>
 </body>
 </html>
