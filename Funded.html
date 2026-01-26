@@ -1,10 +1,10 @@
-<!-- dashboard-demo.html -->
+<!-- dashboard-demo-with-admin.html -->
 <!doctype html>
 <html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Funded Trading Dashboard — Single File Demo</title>
+  <title>Funded Trading Dashboard — Single File Demo (Admin UID included)</title>
   <style>
     /* ====== styles (same theme as earlier) ====== */
     :root{
@@ -110,7 +110,7 @@
 
           <div class="card" style="margin-top:12px">
             <h4 style="margin:0 0 8px 0">Setup</h4>
-            <div class="small muted">1) Replace Firebase config below in the script. 2) Ensure Firestore `config/admins` exists (adminUids array). 3) Use emulator or secure rules before production.</div>
+            <div class="small muted">1) Replace Firebase config below in the script. 2) Ensure Firestore `config/admins` exists (adminUids array) if you switch back to Firestore-driven admin. 3) Use emulator or secure rules before production.</div>
           </div>
         </div>
       </div>
@@ -124,13 +124,13 @@
   <script type="module">
     // ====== Replace this firebaseConfig with your project's keys ======
     const firebaseConfig = {
-  apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
-  authDomain: "zeepaylater-93a94.firebaseapp.com",
-  projectId: "zeepaylater-93a94",
-  storageBucket: "zeepaylater-93a94.appspot.com",
-  messagingSenderId: "358065954807",
-  appId: "1:358065954807:web:66619211fea82a4b2518f2"
-};
+      apiKey: "AIzaSyDVUEZ3ZVmH4ld7LVnEq_L368wEJpEs-l8",
+      authDomain: "zeepaylater-93a94.firebaseapp.com",
+      projectId: "zeepaylater-93a94",
+      storageBucket: "zeepaylater-93a94.appspot.com",
+      messagingSenderId: "358065954807",
+      appId: "1:358065954807:web:66619211fea82a4b2518f2"
+    };
     // =================================================================
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
@@ -167,10 +167,18 @@
     let isAdmin = false;
     let unsubUserTx = null, unsubUserAcc = null, unsubAdminTx = null;
 
-    // ===== utility: fetch admin list from `config/admins` =====
+    // ===== HARD-CODED ADMIN UID (DEV/DEMO ONLY) =====
+    // Admin UID provided: viCOsJo4wHVFmhtpmMx1Wd4sDF52
+    // NOTE: This is frontend hardcode — use only for local/demo. For production, manage admins in Firestore or custom claims.
+    const ADMIN_UIDS = ["viCOsJo4wHVFmhtpmMx1Wd4sDF52"];
+
+    // ===== utility: admin check (uses hardcoded list) =====
     async function isAdminUid(uid){
       if(!uid) return false;
       try{
+        // First check hardcoded list
+        if(Array.isArray(ADMIN_UIDS) && ADMIN_UIDS.includes(uid)) return true;
+        // Fallback: check Firestore config/admins (if you prefer dynamic admin list)
         const docRef = doc(db, 'config', 'admins');
         const snap = await getDoc(docRef);
         if(!snap.exists()) return false;
@@ -269,7 +277,6 @@
       // Global: watch transactions collection -> if any tx becomes paid and has no accountId, create account+history
       // NOTE: in real app, do this server-side (Cloud Function). This demo does it client-side for convenience.
       const allQ = query(collection(db, 'transactions'), orderBy('createdAt','desc'));
-      // reuse unsubAdminTx? no, create separate small watcher
       const unsubAuto = onSnapshot(allQ, snap => {
         snap.forEach(async docSnap => {
           const t = { id: docSnap.id, ...docSnap.data() };
@@ -424,7 +431,7 @@
       try{
         const tx = { uid: currentUser.uid, challengeId:'demo-chal', price:25, status:'pending', createdAt: serverTimestamp() };
         const ref = await addDoc(collection(db,'transactions'), tx);
-        alert('Transaction created: ' + ref.id + '\\nStatus: pending. Admin must confirm or webhook will mark paid.');
+        alert('Transaction created: ' + ref.id + '\nStatus: pending. Admin must confirm or webhook will mark paid.');
       }catch(e){ alert('err: '+e.message) }
     });
 
@@ -463,8 +470,6 @@
     }
 
     // ===== init UI roles: show/hide cards based on admin flag =====
-    // onAuthStateChanged already handles starting listeners and showing/hiding cards. But we must set userCard/adminCard visible if appropriate
-    // We'll toggle when auth state changes; to be safe, poll currentUser for initial state
     (async ()=>{
       // if someone is already signed in (session), onAuthStateChanged will be called and handle UI
     })();
