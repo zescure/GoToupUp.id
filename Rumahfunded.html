@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Challenges — Funded Trader</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-top">
+    <div class="wrap">
+      <div class="brand">
+        <div class="logo">FT</div>
+        <div class="brand-text">
+          <div class="name">Funded Trader</div>
+          <div class="tag">Simulated Trading Challenges</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="#" class="active">Challenges</a>
+        <a href="#">Pricing</a>
+        <a href="#">Rules</a>
+        <a href="#">Testimoni</a>
+        <button id="btnJoin" class="btn btn-cta">Join Now</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HERO (not home, but product intro) -->
+  <section class="hero">
+    <div class="hero-bg">
+      <!-- gunakan file hero.jpg -->
+      <img src="hero.jpg" alt="Hero" class="hero-image">
+      <div class="hero-overlay"></div>
+    </div>
+
+    <div class="wrap hero-content">
+      <div class="left">
+        <h1>Challenge trading terstruktur untuk jadi funded trader</h1>
+        <p class="lead">Latihan di lingkungan simulasi yang realistis, aturan jelas, feedback otomatis, dan peluang dapat funding setelah lulus.</p>
+        <div class="cta-row">
+          <button id="exploreBtn" class="btn btn-outline">Explore Challenges</button>
+          <button id="buyNow" class="btn btn-cta">Beli Challenge</button>
+        </div>
+
+        <ul class="quick-feat">
+          <li><strong>Verifikasi cepat</strong> — Akun MT5 di-generate oleh admin</li>
+          <li><strong>Profil evaluasi</strong> — Statistik trade & risk report</li>
+          <li><strong>Community</strong> — Grup support & sinyal edukatif</li>
+        </ul>
+      </div>
+
+      <div class="right">
+        <div class="price-card highlight">
+          <div class="pc-title">Starter</div>
+          <div class="pc-amt">Rp50.000</div>
+          <div class="pc-sub">Simulasi 10k • target 8%</div>
+          <div class="pc-cta"><button class="btn btn-ghost" onclick="openBuyModal('Starter')">Beli</button></div>
+        </div>
+        <div class="price-card">
+          <div class="pc-title">Pro</div>
+          <div class="pc-amt">Rp120.000</div>
+          <div class="pc-sub">Simulasi 25k • target 6%</div>
+          <div class="pc-cta"><button class="btn btn-ghost" onclick="openBuyModal('Pro')">Beli</button></div>
+        </div>
+        <div class="price-card">
+          <div class="pc-title">Elite</div>
+          <div class="pc-amt">Rp240.000</div>
+          <div class="pc-sub">Simulasi 50k • target 5%</div>
+          <div class="pc-cta"><button class="btn btn-ghost" onclick="openBuyModal('Elite')">Beli</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Experience / Program -->
+  <section class="wrap program">
+    <h2>Pengalaman Program</h2>
+    <p class="muted">Flow yang dirancang untuk melatih konsistensi risk management dan execution.</p>
+
+    <div class="timeline">
+      <div class="step">
+        <div class="num">1</div>
+        <div>
+          <h4>Onboarding & Kartu Risiko</h4>
+          <p>Registrasi, verifikasi, dan penjelasan aturan challenge. Kita set risk profilemu.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">2</div>
+        <div>
+          <h4>Simulasi & Monitoring</h4>
+          <p>Trading di akun demo MT5, sistem merekam semua aktivitas, dashboard review otomatis.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">3</div>
+        <div>
+          <h4>Evaluasi & Feedback</h4>
+          <p>Analisis performance, saran perbaikan, dan checklist kriteria lulus challenge.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">4</div>
+        <div>
+          <h4>Funding atau Re-challenge</h4>
+          <p>Jika lulus, dapat akun funded; jika belum, opsi re-challenge dengan diskon.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rules -->
+  <section class="wrap rules">
+    <h2>Rules & Ketentuan</h2>
+    <div class="rules-grid">
+      <div class="rule-card">
+        <h4>Drawdown Maksimum</h4>
+        <p>Drawdown harian dan total tidak boleh melebihi batas paket (lihat detail paket).</p>
+      </div>
+      <div class="rule-card">
+        <h4>Stop-loss wajib</h4>
+        <p>Setiap entry harus memiliki SL; no revenge trading policy.</p>
+      </div>
+      <div class="rule-card">
+        <h4>Waktu Challenge</h4>
+        <p>Periode 14 hari untuk starter — lihat paket untuk varian lain.</p>
+      </div>
+      <div class="rule-card">
+        <h4>Larangan</h4>
+        <p>Tidak boleh menggunakan EA/panel otomatis yang melanggar aturan. Scalping diperbolehkan sesuai paket.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing detail -->
+  <section class="wrap pricing">
+    <h2>Detail Harga & Akun</h2>
+    <div class="pricing-grid">
+      <div class="pkg">
+        <h3>Starter — 10k</h3>
+        <div class="price">Rp50.000</div>
+        <ul>
+          <li>Max drawdown: 8%</li>
+          <li>Target profit: 6%</li>
+          <li>Waktu: 14 hari</li>
+        </ul>
+        <button class="btn btn-ghost" onclick="openBuyModal('Starter')">Pilih Starter</button>
+      </div>
+
+      <div class="pkg featured">
+        <h3>Pro — 25k</h3>
+        <div class="price">Rp120.000</div>
+        <ul>
+          <li>Max drawdown: 6%</li>
+          <li>Target profit: 8%</li>
+          <li>Waktu: 21 hari</li>
+        </ul>
+        <button class="btn btn-ghost" onclick="openBuyModal('Pro')">Pilih Pro</button>
+      </div>
+
+      <div class="pkg">
+        <h3>Elite — 50k</h3>
+        <div class="price">Rp240.000</div>
+        <ul>
+          <li>Max drawdown: 5%</li>
+          <li>Target profit: 10%</li>
+          <li>Waktu: 30 hari</li>
+        </ul>
+        <button class="btn btn-ghost" onclick="openBuyModal('Elite')">Pilih Elite</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section class="wrap testimonials">
+    <h2>Testimoni</h2>
+    <div class="testi-wrap">
+      <button class="slick prev" onclick="moveTesti(-1)">‹</button>
+      <div class="testi-card" id="testiCard">
+        <!-- diisi oleh JS -->
+      </div>
+      <button class="slick next" onclick="moveTesti(1)">›</button>
+    </div>
+    <div class="testi-dots" id="dots"></div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="wrap faq">
+    <h2>FAQ</h2>
+    <details open>
+      <summary>Bagaimana proses konfirmasi setelah beli?</summary>
+      <p>Setelah pembayaran diverifikasi, admin generate login MT5 dan status berubah di histori akunmu.</p>
+    </details>
+    <details>
+      <summary>Apa yang terjadi bila break rules?</summary>
+      <p>Pelanggaran rules akan mengakibatkan diskualifikasi tanpa refund (lihat S&K lengkap).</p>
+    </details>
+  </section>
+
+  <footer class="site-foot">
+    <div class="wrap foot-grid">
+      <div>© 2026 Funded Trader • All rights reserved</div>
+      <div class="foot-links">
+        <a href="#">Terms</a><a href="#">Privacy</a><a href="#">Support</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal Buy -->
+  <div class="modal" id="buyModal" aria-hidden="true">
+    <div class="modal-card">
+      <h3 id="modalTitle">Beli Challenge</h3>
+      <p id="modalDesc">Detail paket</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">Batal</button>
+        <button class="btn btn-cta" onclick="confirmBuy()">Konfirmasi & Bayar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="challenges.js"></script>
+</body>
+</html>
