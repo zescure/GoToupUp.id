@@ -102,23 +102,25 @@
     }
     #adminAdjust button.danger{background:#e74c3c;}
     #adminAdjust small{color:#ccc;}
-  
-    .economy-row strong.marquee {
-  display: inline-block;
-  white-space: nowrap;
-  animation: slideText 6s linear infinite;
-}
 
-@keyframes slideText {
-  from { transform: translateX(100%); }
-  to { transform: translateX(-100%); }
-}
+    /* admin pending confirms */
+    #adminPending { margin-top:8px; max-height:220px; overflow:auto; border:1px solid #2c3e50; padding:8px; border-radius:6px; background:#0f1724; }
+    #adminPending .item { padding:8px; border-bottom:1px solid #233045; display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+    #adminPending .meta { font-size:12px; color:#ccc; }
+    #adminPending button { margin-left:6px; padding:6px 8px; border-radius:6px; border:none; background:#4c8bf5; color:#fff; cursor:pointer; }
+
+    .economy-row strong.marquee {
+      display: inline-block;
+      white-space: nowrap;
+      animation: slideText 6s linear infinite;
+    }
+    @keyframes slideText {
+      from { transform: translateX(100%); }
+      to { transform: translateX(-100%); }
+    }
   </style>
 </head>
 <body>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9953411399547795"
-     crossorigin="anonymous"></script>
-
   <header>
     <div class="logo">ZESTORE.ID</div>
     <button class="menu-btn" id="toggleMenu">&#9776;</button>
@@ -152,9 +154,7 @@
   <div class="card economy-box">
     <h3>Ekonomi Koin ZRC Zestore</h3>
     <div class="economy-row"><span>Kurs Tetap</span><strong>10 koin = Rp 10</strong></div>
-    <!-- NEW: Kurs dinamis -->
     <div class="economy-row"><span>Kurs Dinamis (real-time)</span><strong id="dynamicRate">10 koin ≈ Rp 10</strong></div>
-
     <div class="economy-row"><span>Total Suplai</span><strong id="totalSupply">0</strong></div>
     <div class="economy-row"><span>Koin Beredar</span><strong id="circulating">0</strong></div>
     <div class="economy-row"><span>Koin Terkunci</span><strong id="locked">0</strong></div>
@@ -186,6 +186,12 @@
     <ul id="txHistory"></ul>
   </div>
 
+  <!-- NEW: User Trade History -->
+  <div class="card history-box">
+    <h3>Histori Perdagangan</h3>
+    <ul id="tradeHistory" style="list-style:none;max-height:220px;overflow:auto;padding-left:0;"></ul>
+  </div>
+
   <!-- ===================== ADMIN DASHBOARD (HIDDEN DEFAULT) ===================== -->
   <div class="card" id="adminBox" style="display:none;">
     <h2>Dashboard Admin</h2>
@@ -199,6 +205,13 @@
     <p class="mini-title">Histori transaksi user terpilih</p>
     <div id="adminTx"></div>
     <p id="adminStatus" style="margin-top:8px;color:#ccc;font-size:.85rem;"></p>
+
+    <hr style="border:0;border-top:1px solid #2c3e50;margin:15px 0;">
+
+    <h3 style="margin-bottom:10px;">Pending Confirmations (Buy / Refund)</h3>
+    <div id="adminPending">
+      <!-- Items will be injected here -->
+    </div>
 
     <hr style="border:0;border-top:1px solid #2c3e50;margin:15px 0;">
 
@@ -222,8 +235,9 @@
   import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
   import {
     getFirestore, doc, getDoc, runTransaction,
-    collection, query, orderBy, limit, getDocs,
-    serverTimestamp, setDoc, updateDoc
+    collection, collectionGroup, query, where,
+    orderBy, limit, getDocs,
+    serverTimestamp, setDoc, updateDoc, increment
   } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
   // ----------------- FIREBASE INIT -----------------
@@ -247,7 +261,7 @@
 
   // PISAH antara admin & fee receiver
   const ADMIN_UID        = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52';
-  const FEE_RECEIVER_UID = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52'; // bisa kamu ganti kapan saja, tdk terkait admin
+  const FEE_RECEIVER_UID = 'viCOsJo4wHVFmhtpmMx1Wd4sDF52';
 
   const DYN_UPDATE_MS = 5000;
 
@@ -259,6 +273,7 @@
   const coinEl        = document.getElementById('coinBalance');
   const coinIDREl     = document.getElementById('coinBalanceIDR');
   const txHistoryUl   = document.getElementById('txHistory');
+  const tradeHistoryUl= document.getElementById('tradeHistory');
 
   const totalSupplyEl = document.getElementById('totalSupply');
   const circulatingEl = document.getElementById('circulating');
@@ -278,6 +293,7 @@
   const adminUsersUl  = document.getElementById('adminUsers');
   const adminTxDiv    = document.getElementById('adminTx');
   const adminStatus   = document.getElementById('adminStatus');
+  const adminPending  = document.getElementById('adminPending');
 
   const admTargetUid  = document.getElementById('admTargetUid');
   const admAmount     = document.getElementById('admAmount');
@@ -298,11 +314,10 @@
         totalSupply: TOTAL_SUPPLY,
         circulatingSupply: 0,
         rate: { coins: RATE_COINS, idr: RATE_IDR },
-        bankLiquidityIDR: 150000,              // default liquidity
-        dynamicRatePer10: 10                   // default awal
+        bankLiquidityIDR: 150000,
+        dynamicRatePer10: 10
       });
     }else{
-      // Pastikan field-field baru ada
       const d = snap.data();
       const needs = {};
       if(typeof d.bankLiquidityIDR !== 'number') needs.bankLiquidityIDR = 150000;
@@ -320,7 +335,7 @@
     const circ  = data.circulatingSupply || 0;
     totalSupplyEl.textContent = nf(total);
     circulatingEl.textContent = nf(circ);
-    lockedEl.textContent      = nf(total - circ);
+    lockedEl.textContent      = nf(Math.max(0, total - circ));
   }
 
   async function updateDynamicRate(){
@@ -338,7 +353,6 @@
       ratePer10 = Math.max(0, Math.round((bank / circ) * 10));
     }
 
-    // Simpan balik agar semua klien melihat angka yang sama (opsional, bisa dihapus kalau mau read-only)
     if(d.dynamicRatePer10 !== ratePer10){
       try{ await updateDoc(ECON_REF, { dynamicRatePer10: ratePer10 }); }catch(e){}
     }
@@ -361,16 +375,44 @@
 
   async function loadHistory(uid){
     txHistoryUl.innerHTML = '';
-    const q = query(collection(db,'users',uid,'transactions'),
-                    orderBy('timestamp','desc'), limit(50));
-    const snaps = await getDocs(q);
-    snaps.forEach(d => {
-      const data = d.data();
-      const dt   = data.timestamp?.toDate?.().toLocaleString('id-ID') || '-';
-      const am   = data.amount;
-      const cls  = am>0?'positive':'negative';
-      txHistoryUl.innerHTML += `<li class="${cls}">${dt} → ${am>0?'+':''}${nf(am)} koin</li>`;
-    });
+    try{
+      const q = query(collection(db,'users',uid,'transactions'),
+                      orderBy('timestamp','desc'), limit(50));
+      const snaps = await getDocs(q);
+      snaps.forEach(d => {
+        const data = d.data();
+        const dt   = data.timestamp?.toDate?.().toLocaleString('id-ID') || '-';
+        const am   = data.amount || 0;
+        const cls  = am>0?'positive':'negative';
+        txHistoryUl.innerHTML += `<li class="${cls}">${dt} → ${am>0?'+':''}${nf(am)} koin (${data.type||'-'})</li>`;
+      });
+    }catch(e){
+      txHistoryUl.innerHTML = `<li class="negative">Gagal muat histori: ${e.message||e}</li>`;
+    }
+  }
+
+  // ---------- USER TRADE HISTORY ----------
+  async function loadUserTrades(uid){
+    tradeHistoryUl.innerHTML = '';
+    try{
+      const q = query(collectionGroup(db,'trades'), where('userUID','==',uid), orderBy('ts','desc'), limit(100));
+      const snaps = await getDocs(q);
+      if(snaps.empty){
+        tradeHistoryUl.innerHTML = '<li><em>Belum ada perdagangan</em></li>';
+        return;
+      }
+      snaps.forEach(d=>{
+        const t = d.data();
+        const time = t.ts?.toDate?.().toLocaleString('id-ID') || '-';
+        const type = t.type || '-';
+        const label = `${time} → ${type} ${t.shares || 0} lembar @ ${Number(t.price||0).toFixed(2)} • ${d.ref.parent.parent.id}`;
+        const li = document.createElement('li');
+        li.innerHTML = `<div style="font-weight:700">${type}</div><div class="small" style="color:#ccc">${label}</div>`;
+        tradeHistoryUl.appendChild(li);
+      });
+    }catch(e){
+      tradeHistoryUl.innerHTML = `<li class="negative">Gagal muat histori perdagangan: ${e.message||e}</li>`;
+    }
   }
 
   // ---------- ADMIN HELPERS ----------
@@ -386,7 +428,7 @@
     usersSnap.forEach(d=>{
       totalUser++;
       const data = d.data();
-      const bal  = data.coinBalance || 0;
+      const bal  = Number(data.coinBalance || 0);
       totalCoins += bal;
       arr.push({ uid:d.id, email:data.email || '-', coinBalance:bal });
     });
@@ -435,7 +477,7 @@
       html += '</ul>';
       adminTxDiv.innerHTML = html;
     }catch(e){
-      adminTxDiv.innerHTML = 'Gagal memuat transaksi: ' + e;
+      adminTxDiv.innerHTML = 'Gagal memuat transaksi: ' + (e.message || e);
     }
   }
 
@@ -503,16 +545,17 @@
     await Promise.all([
       loadEconomy(),
       loadBalance(user.uid),
-      loadHistory(user.uid)
+      loadHistory(user.uid),
+      loadUserTrades(user.uid)
     ]);
 
-    // mulai ticker kurs dinamis
     startDynamicTicker();
 
     // tampilkan admin dashboard kalau uid = admin
     if(user.uid === ADMIN_UID){
       adminBox.style.display = 'block';
       await loadAdminDashboard();
+      await loadAdminPending(); // load pending confirms
     }else{
       adminBox.style.display = 'none';
     }
@@ -559,7 +602,7 @@
 
     let lastTx = [];
     try {
-      const qTx = query(collection(rRef, 'transactions'), orderBy('timestamp', 'desc'), limit(3));
+      const qTx = query(collection(db,'users',uid,'transactions'), orderBy('timestamp', 'desc'), limit(3));
       const qs  = await getDocs(qTx);
       lastTx = qs.docs.map(d => {
         const x = d.data();
@@ -608,7 +651,7 @@
       }
       transferStatus.textContent='Memproses transfer...';
 
-      await runTransaction(db, async tx=>{
+      await runTransaction(db, async (tx)=>{
         const sRef = doc(db,'users',currentUser.uid);
         const rRef = doc(db,'users',toUid);
         const fRef = doc(db,'users',FEE_RECEIVER_UID);
@@ -639,7 +682,7 @@
       });
 
       transferStatus.textContent='Transfer berhasil!';
-      await Promise.all([ loadBalance(currentUser.uid), loadHistory(currentUser.uid) ]);
+      await Promise.all([ loadBalance(currentUser.uid), loadHistory(currentUser.uid), loadUserTrades(currentUser.uid) ]);
       if(currentUser.uid === ADMIN_UID){
         await loadAdminDashboard();
       }
@@ -648,6 +691,159 @@
       transferStatus.textContent = 'Error: ' + (e?.message || e);
     }
   };
+
+  /* ----------------- ADMIN PENDING CONFIRMS ----------------- */
+  async function loadAdminPending(){
+    adminPending.innerHTML = '<div style="color:#ccc">Memuat...</div>';
+    try{
+      // 1) Positions requiring Buy confirmation (escrow held by admin and not confirmed)
+      const qBuy = query(collectionGroup(db,'positions'),
+                         where('escrowHolder','==', ADMIN_UID),
+                         where('adminConfirmedBuy','==', false),
+                         orderBy('createdAt','asc'),
+                         limit(100));
+      const snapBuy = await getDocs(qBuy);
+
+      // 2) Positions with refundAmount > 0 and not processed
+      const qRefund = query(collectionGroup(db,'positions'),
+                            where('refundAmount','>', 0),
+                            where('adminRefundProcessed','==', false),
+                            orderBy('createdAt','asc'),
+                            limit(100));
+      const snapRefund = await getDocs(qRefund);
+
+      adminPending.innerHTML = '';
+
+      if(snapBuy.empty && snapRefund.empty){
+        adminPending.innerHTML = '<div style="color:#ccc"><em>Tidak ada pending confirmations</em></div>';
+      }
+
+      snapBuy.forEach(docSnap=>{
+        const p = docSnap.data();
+        const idPath = docSnap.ref.path;
+        const who = p.userUID || p.deviceId || 'anon';
+        const created = p.createdAt?.toDate?.().toLocaleString('id-ID') || '-';
+        const price = Number(p.avgPrice || 0).toFixed(2);
+        const shares = Number(p.shares || 0);
+        const html = document.createElement('div');
+        html.className = 'item';
+        html.innerHTML = `<div>
+          <div style="font-weight:700">Buy (Confirm)</div>
+          <div class="meta">UID: <code>${who}</code><br/>Market: ${p.marketId} • ${shares} lembar @ ${price}<br/>Created: ${created}</div>
+        </div>
+        <div>
+          <button data-path="${idPath}" data-action="confirmBuy">Confirm Buy</button>
+        </div>`;
+        adminPending.appendChild(html);
+        html.querySelector('button[data-action="confirmBuy"]').addEventListener('click', async (e)=>{
+          const path = e.currentTarget.dataset.path;
+          await confirmBuyPosition(path);
+          await loadAdminPending();
+        });
+      });
+
+      snapRefund.forEach(docSnap=>{
+        const p = docSnap.data();
+        const idPath = docSnap.ref.path;
+        const who = p.userUID || p.deviceId || 'anon';
+        const amt  = Number(p.refundAmount || 0);
+        const created = p.createdAt?.toDate?.().toLocaleString('id-ID') || '-';
+        const html = document.createElement('div');
+        html.className = 'item';
+        html.innerHTML = `<div>
+          <div style="font-weight:700">Refund (Process)</div>
+          <div class="meta">UID: <code>${who}</code><br/>Market: ${p.marketId} • Refund: ${nf(amt)} koin<br/>Created: ${created}</div>
+        </div>
+        <div>
+          <button data-path="${idPath}" data-uid="${who}" data-action="processRefund">Process Refund</button>
+        </div>`;
+        adminPending.appendChild(html);
+        html.querySelector('button[data-action="processRefund"]').addEventListener('click', async (e)=>{
+          const path = e.currentTarget.dataset.path;
+          const uid = e.currentTarget.dataset.uid;
+          const ok = confirm(`Proses refund untuk ${uid} (pos: ${path}) ?`);
+          if(!ok) return;
+          await processRefundForPosition(path, uid);
+          await loadAdminPending();
+        });
+      });
+
+    }catch(e){
+      adminPending.innerHTML = `<div class="negative">Gagal memuat pending: ${e.message||e}</div>`;
+      console.error('loadAdminPending err', e);
+    }
+  }
+
+  // confirm buy: just mark adminConfirmedBuy true and record timestamp
+  async function confirmBuyPosition(positionPath){
+    try{
+      await updateDoc(doc(db, ...positionPath.split('/')), { adminConfirmedBuy: true, adminConfirmedAt: serverTimestamp() });
+      alert('Buy confirmed');
+    }catch(e){
+      console.error('confirmBuyPosition err', e);
+      alert('Gagal confirm buy: ' + (e.message||e));
+    }
+  }
+
+  // process refund: atomic transfer admin -> user using transaction, mark position adminRefundProcessed true
+  async function processRefundForPosition(positionPath, userUid){
+    try{
+      await runTransaction(db, async (tx)=>{
+        const posRef = doc(db, ...positionPath.split('/'));
+        const posSnap = await tx.get(posRef);
+        if(!posSnap.exists()) throw new Error('Position tidak ditemukan');
+        const pos = posSnap.data();
+        const amt = Number(pos.refundAmount || 0);
+        if(!amt || amt <= 0) throw new Error('Tidak ada refund pada posisi ini');
+
+        const adminRef = doc(db,'users',ADMIN_UID);
+        const userRef  = doc(db,'users',userUid);
+        const adminSnap = await tx.get(adminRef);
+        const userSnap  = await tx.get(userRef);
+        if(!adminSnap.exists()) throw new Error('Akun admin tidak ditemukan');
+        if(!userSnap.exists()) throw new Error('Akun user tidak ditemukan');
+
+        const aBal = Number(adminSnap.data().coinBalance || 0);
+        const uBal = Number(userSnap.data().coinBalance || 0);
+        if(aBal < amt) throw new Error('Saldo admin tidak cukup untuk refund');
+
+        tx.update(adminRef, { coinBalance: aBal - amt });
+        tx.update(userRef,  { coinBalance: uBal + amt });
+
+        const ts = serverTimestamp();
+        tx.set(doc(collection(adminRef,'transactions')), {
+          timestamp: ts, amount: -amt, type: 'refund-processed', to: userUid, note: `Refund for ${positionPath}`
+        });
+        tx.set(doc(collection(userRef,'transactions')), {
+          timestamp: ts, amount: +amt, type: 'refund-received', from: ADMIN_UID, note: `Refund for ${positionPath}`
+        });
+
+        tx.update(posRef, { adminRefundProcessed: true, adminRefundedAt: ts });
+      });
+      alert('Refund berhasil diproses');
+    }catch(e){
+      console.error('processRefundForPosition err', e);
+      alert('Gagal proses refund: ' + (e.message || e));
+    }
+  }
+
+  // utility helper to create doc ref from path string
+  function docPathToRef(pathStr){
+    const parts = pathStr.split('/');
+    return doc(db, ...parts);
+  }
+
+  // ----------------- small helpers to keep UI in sync -----------------
+  // reload admin pending periodically if admin
+  setInterval(async ()=>{
+    if(currentUser && currentUser.uid === ADMIN_UID){
+      await loadAdminPending().catch(()=>{});
+    }
+  }, 10000);
+
+  // ----------------- initial trigger for admin pending when admin logs in -----------------
+  // (already called on auth state changed)
+
   </script>
 </body>
 </html>
