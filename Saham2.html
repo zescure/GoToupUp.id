@@ -287,6 +287,7 @@ let balance = parseFloat(localStorage.getItem(balanceKey)) || 10000.0;
 document.getElementById('bal').innerText = balance.toFixed(2);
 
 /* --------------- canvas/chart --------------- */
+// (tidak diubah)
 const canvas = document.getElementById('chartCanvas');
 const ctx = canvas.getContext('2d');
 let DPR = window.devicePixelRatio || 1;
@@ -346,21 +347,28 @@ const provider = new firebase.auth.GoogleAuthProvider();
 document.getElementById('btnSignIn').addEventListener('click', ()=> auth.signInWithPopup(provider).catch(e=>alert(e.message)));
 document.getElementById('btnSignOut').addEventListener('click', ()=> auth.signOut());
 
-// apply remote balance override (if any) - checks uid first then deviceId
+/* ----------------- Apply remote balance (updated: prefer users/{uid}.coinBalance) --------------- */
 async function applyRemoteBalanceIfExists(){
   try{
+    // jika user login: pakai users/{uid}.coinBalance
     if(currentUser && currentUser.uid){
+      const userDoc = await db.collection('users').doc(currentUser.uid).get();
+      if(userDoc.exists && typeof userDoc.data().coinBalance === 'number'){
+        balance = Number(userDoc.data().coinBalance);
+        localStorage.setItem(balanceKey, balance);
+        document.getElementById('bal').innerText = balance.toFixed(2);
+        return;
+      }
+      // fallback ke balances collection uid_
       const udoc = await db.collection('balances').doc('uid_'+currentUser.uid).get();
-      if(udoc.exists){
-        const data = udoc.data();
-        if(data && typeof data.amount === 'number'){
-          balance = data.amount;
-          localStorage.setItem(balanceKey, balance);
-          document.getElementById('bal').innerText = balance.toFixed(2);
-          return;
-        }
+      if(udoc.exists && typeof udoc.data().amount === 'number'){
+        balance = udoc.data().amount;
+        localStorage.setItem(balanceKey, balance);
+        document.getElementById('bal').innerText = balance.toFixed(2);
+        return;
       }
     }
+    // device-level fallback (existing behavior)
     const ddoc = await db.collection('balances').doc(deviceId).get();
     if(ddoc.exists){
       const data = ddoc.data();
@@ -414,6 +422,85 @@ async function creditProfitAndReduceSupply(uid, profit){
     });
   }catch(err){
     console.warn('creditProfitAndReduceSupply err', err);
+  }
+}
+
+/* ----------------- utility: transfer from user to admin (atomic) ----------------- */
+/* returns true if success, false otherwise */
+async function transferUserToAdmin(uid, amount){
+  if(!uid || !amount || amount <= 0) return false;
+  const userRef = db.collection('users').doc(uid);
+  const adminRef = db.collection('users').doc(ADMIN_UID);
+  try{
+    await db.runTransaction(async (tx) => {
+      const uSnap = await tx.get(userRef);
+      const aSnap = await tx.get(adminRef);
+      const uBal = uSnap.exists ? Number(uSnap.data().coinBalance || 0) : 0;
+      const aBal = aSnap.exists ? Number(aSnap.data().coinBalance || 0) : 0;
+      if(uBal < amount) throw new Error('Saldo user tidak cukup');
+      tx.update(userRef, { coinBalance: uBal - amount });
+      tx.update(adminRef, { coinBalance: aBal + amount });
+      // catat transaksi di kedua akun
+      const userTx = db.collection('users').doc(uid).collection('transactions').doc();
+      tx.set(userTx, {
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        amount: -amount,
+        type: 'buy-escrow',
+        note: `Escrow transfer ke admin (posisi)`
+      });
+      const adminTx = db.collection('users').doc(ADMIN_UID).collection('transactions').doc();
+      tx.set(adminTx, {
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        amount: +amount,
+        type: 'escrow-received',
+        from: uid,
+        note: `Escrow for user position`
+      });
+    });
+    return true;
+  }catch(e){
+    console.warn('transferUserToAdmin err', e);
+    return false;
+  }
+}
+
+/* ----------------- utility: admin -> user refund (atomic) ----------------- */
+/* adminBalance reduced, userBalance increased; returns true/false */
+async function adminRefundToUser(userUid, amount, positionRefPath){
+  if(!userUid || !amount || amount <= 0) return false;
+  const adminRef = db.collection('users').doc(ADMIN_UID);
+  const userRef = db.collection('users').doc(userUid);
+  try{
+    await db.runTransaction(async (tx) => {
+      const aSnap = await tx.get(adminRef);
+      const uSnap = await tx.get(userRef);
+      const aBal = aSnap.exists ? Number(aSnap.data().coinBalance || 0) : 0;
+      const uBal = uSnap.exists ? Number(uSnap.data().coinBalance || 0) : 0;
+      if(aBal < amount) throw new Error('Admin balance tidak cukup untuk refund');
+      tx.update(adminRef, { coinBalance: aBal - amount });
+      tx.update(userRef, { coinBalance: uBal + amount });
+
+      const adminTx = db.collection('users').doc(ADMIN_UID).collection('transactions').doc();
+      tx.set(adminTx, {
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        amount: -amount,
+        type: 'refund-to-user',
+        to: userUid,
+        note: `Refund for position ${positionRefPath || ''}`
+      });
+      const userTx = db.collection('users').doc(userUid).collection('transactions').doc();
+      tx.set(userTx, {
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        amount: +amount,
+        type: 'refund-received',
+        from: ADMIN_UID,
+        note: `Refund for closed position ${positionRefPath || ''}`
+      });
+    });
+    return true;
+  }catch(e){
+    console.warn('adminRefundToUser err', e);
+    return false;
   }
 }
 
@@ -772,20 +859,70 @@ async function isSellLockedFor(marketId, ownerId){
   }catch(e){ console.warn('isSellLockedFor err', e); return false; }
 }
 
+/* ----------------- BUY: now uses Firestore user coinBalance and transfers to admin (escrow) ----------------- */
 async function buyShares(){
   if(!currentMarketId || !currentMarket) return alert('Pilih market');
   const shares = Math.max(0, Math.floor(Number(document.getElementById('buyShares').value) || 0));
   if(isNaN(shares) || shares < 100) return alert('Minimal pembelian 100 lembar');
   const cost = shares * currentMarket.price;
+
+  // if user logged in -> use users/{uid}.coinBalance and transfer to admin atomically
+  if(currentUser && currentUser.uid){
+    try{
+      // transaksi transfer user -> admin
+      const ok = await transferUserToAdmin(currentUser.uid, cost);
+      if(!ok) return alert('Transfer ke admin gagal (saldo mungkin tidak cukup)');
+      // buat posisi dengan escrowAmount
+      const coll = db.collection('markets').doc(currentMarketId).collection('positions');
+      await coll.add({
+        userUID: currentUser.uid,
+        deviceId,
+        marketId: currentMarketId,
+        marketName: currentMarket.name,
+        shares,
+        avgPrice: currentMarket.price,
+        status:'open',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        escrowAmount: cost,
+        escrowHolder: ADMIN_UID,
+        adminConfirmedBuy: false,
+        adminRefundProcessed: false
+      });
+      // catat trade
+      await db.collection('markets').doc(currentMarketId).collection('trades').add({
+        type:'BUY',
+        userUID: currentUser.uid,
+        deviceId,
+        shares,
+        price: currentMarket.price,
+        ts: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      // sync local display balance from users doc
+      try{
+        const udoc = await db.collection('users').doc(currentUser.uid).get();
+        const coin = udoc.exists && typeof udoc.data().coinBalance === 'number' ? Number(udoc.data().coinBalance) : 0;
+        balance = coin;
+        localStorage.setItem(balanceKey, balance);
+        document.getElementById('bal').innerText = balance.toFixed(2);
+      }catch(e){}
+      alert(`Beli ${shares} lembar @ ${formatPrice(currentMarket.price)} — saldo terpotong dan dikirim ke admin (escrow).`);
+    }catch(e){
+      console.error('buy err', e);
+      alert('Gagal beli: ' + (e.message || e));
+    }
+    return;
+  }
+
+  // fallback: anonymous/device flow (kek sebelumnya, simpan di balances collection + local)
   if(cost > balance) return alert('Saldo tidak cukup');
   balance -= cost; localStorage.setItem(balanceKey, balance); document.getElementById('bal').innerText = balance.toFixed(2);
   const coll = db.collection('markets').doc(currentMarketId).collection('positions');
-  await coll.add({ userUID: currentUser?currentUser.uid:'anon', deviceId, marketId: currentMarketId, marketName: currentMarket.name, shares, avgPrice: currentMarket.price, status:'open', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  await coll.add({ userUID: currentUser?currentUser.uid:'anon', deviceId, marketId: currentMarketId, marketName: currentMarket.name, shares, avgPrice: currentMarket.price, status:'open', createdAt: firebase.firestore.FieldValue.serverTimestamp(), escrowAmount: cost, escrowHolder: 'device', adminConfirmedBuy:false, adminRefundProcessed:false });
   await db.collection('markets').doc(currentMarketId).collection('trades').add({ type:'BUY', userUID: currentUser?currentUser.uid:'anon', deviceId, shares, price: currentMarket.price, ts: firebase.firestore.FieldValue.serverTimestamp() });
-  alert(`Beli ${shares} lembar @ ${formatPrice(currentMarket.price)} berhasil`);
+  alert(`Beli ${shares} lembar @ ${formatPrice(currentMarket.price)} berhasil (device wallet).`);
 }
 
-/* ----------------- SELL: modified to accumulate profit and credit economy ----------------- */
+/* ----------------- SELL: modified to not auto-credit admin-escrow back; compute P/L and mark refunds if loss ----------------- */
 async function sellShares(){
   if(!currentMarketId || !currentMarket) return alert('Pilih market');
   const sellShares = Math.max(0, Math.floor(Number(document.getElementById('buyShares').value) || 0));
@@ -800,10 +937,16 @@ async function sellShares(){
   const coll = db.collection('markets').doc(currentMarketId).collection('positions');
   const snap = await coll.where('status','==','open').where('deviceId','==',deviceId).get();
   let available = 0; const docs = [];
-  snap.forEach(d=>{ const p = d.data(); p._id = d.id; docs.push({ref:d.ref, data:p}); available += p.shares; });
+  snap.forEach(d=>{ const p = d.data(); p._id = d.id; p._ref = d.ref; docs.push({ref:d.ref, data:p}); available += p.shares; });
   if(available < sellShares) return alert('Tidak cukup lembar untuk dijual');
-  let remaining = sellShares; const batch = db.batch();
-  let totalProfitAdded = 0;
+  let remaining = sellShares;
+
+  // We'll update each position doc, compute pl per position.
+  const batch = db.batch();
+  let totalProfitAdded = 0; // for pl > 0 credits
+  let totalCashReturnToDevice = 0; // for device fallback (immediate credit)
+  const refundsToProcess = []; // positions with refundAmount to be processed by admin
+
   for(const item of docs){
     if(remaining <= 0) break;
     const p = item.data; const take = Math.min(p.shares, remaining);
@@ -816,18 +959,45 @@ async function sellShares(){
       batch.update(item.ref, { shares: newShares, pl: (p.pl||0)+pl });
     }
     remaining -= take;
-    balance += take * sellPrice;
-    if(pl > 0) totalProfitAdded += pl;
+
+    // Handle P/L cases:
+    if(pl > 0){
+      // credit profit to user (if logged) via economy mechanism
+      if(currentUser && currentUser.uid){
+        totalProfitAdded += pl;
+      } else {
+        // device fallback: credit local balance immediately
+        totalCashReturnToDevice += pl + 0; // profit as cash for device
+      }
+    }
+
+    // For escrow principal: if position had escrow (buy transferred funds to admin), we need to compute refund if loss.
+    // If p.escrowAmount exists and there is a loss (pl < 0), compute refundAmount = max(0, escrowAmount + pl)
+    if(p.escrowAmount && pl < 0){
+      const refundAmt = Math.max(0, (p.escrowAmount || (p.shares * p.avgPrice)) + pl); // pl negative so subtract loss
+      // save refund info into position for admin processing
+      batch.update(item.ref, { refundAmount: refundAmt, adminRefundProcessed: false });
+      refundsToProcess.push({ refPath: item.ref.path, uid: p.userUID, refundAmt });
+    } else {
+      // if profit or no escrow, mark no refund
+      batch.update(item.ref, { refundAmount: 0 });
+    }
+
+    // For device fallback (no admin escrow), return sale proceeds to device local balance immediately
+    if(!p.userUID || p.userUID === 'anon' || !p.userUID && !currentUser){
+      totalCashReturnToDevice += take * sellPrice;
+    }
   }
+
   await batch.commit();
-  localStorage.setItem(balanceKey, balance);
-  document.getElementById('bal').innerText = balance.toFixed(2);
+
+  // log trade
   await db.collection('markets').doc(currentMarketId).collection('trades').add({ type:'SELL', userUID: currentUser?currentUser.uid:'anon', deviceId, shares: sellShares, price: currentMarket.price, ts: firebase.firestore.FieldValue.serverTimestamp() });
-  
-  // kredit profit ke economy jika ada profit dan user login
+
+  // for logged in users: credit profit via economy function (atomic)
   if(totalProfitAdded > 0 && currentUser && currentUser.uid){
     await creditProfitAndReduceSupply(currentUser.uid, totalProfitAdded);
-    // reload balance dari firestore agar konsisten
+    // sync local display balance from users doc
     try{
       const udoc = await db.collection('users').doc(currentUser.uid).get();
       const coin = udoc.exists && typeof udoc.data().coinBalance === 'number' ? Number(udoc.data().coinBalance) : balance;
@@ -837,7 +1007,28 @@ async function sellShares(){
     }catch(e){}
   }
 
-  alert(`Jual ${sellShares} lembar berhasil`);
+  // device fallback immediate credit
+  if(totalCashReturnToDevice > 0){
+    balance += totalCashReturnToDevice;
+    localStorage.setItem(balanceKey, balance);
+    document.getElementById('bal').innerText = balance.toFixed(2);
+  }
+
+  // If there are refunds to be processed, admin must later run refund. We'll notify admin by adding a quick "pending refund" doc
+  if(refundsToProcess.length > 0){
+    // create a simple doc to track pending refunds (admin UI will scan positions->refundAmount fields too)
+    refundsToProcess.forEach(r=>{
+      db.collection('pendingRefunds').add({
+        positionRef: r.refPath,
+        userUid: r.uid,
+        amount: r.refundAmt,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        processed: false
+      }).catch(()=>{});
+    });
+  }
+
+  alert(`Jual ${sellShares} lembar berhasil. Profit: ${totalProfitAdded.toFixed(2)}. Jika ada refund, admin akan proses.`);
 }
 
 /* ----------------- subscribe positions for this user/device (collectionGroup) for realtime PnL ----------------- */
@@ -894,7 +1085,7 @@ window.attemptClosePositionPath = async (path) => {
   await closePositionPath(path);
 };
 
-/* ----------------- closePositionPath: modified to credit profit if pl>0 ----------------- */
+/* ----------------- closePositionPath: modified to credit profit if pl>0 and mark refunds if loss ----------------- */
 window.closePositionPath = async (path)=>{
   const ref = db.doc(path);
   const docSnap = await ref.get(); if(!docSnap.exists) return alert('Position not found');
@@ -903,14 +1094,22 @@ window.closePositionPath = async (path)=>{
   const sellPrice = (marketsCache[p.marketId] && marketsCache[p.marketId].price) ? marketsCache[p.marketId].price : p.avgPrice;
   const pl = p.shares * (sellPrice - p.avgPrice);
 
+  // update position closed
   await ref.update({ status:'closed', closedAt: firebase.firestore.FieldValue.serverTimestamp(), closePrice: sellPrice, reason:'sell-manual', pl });
 
-  if(p.deviceId === deviceId){ balance += p.shares * sellPrice; localStorage.setItem(balanceKey, balance); document.getElementById('bal').innerText = balance.toFixed(2); }
+  // Device fallback: immediate credit of proceeds if this was device-only
+  if(p.deviceId === deviceId && (!p.userUID || p.userUID === 'anon') ){
+    balance += p.shares * sellPrice;
+    localStorage.setItem(balanceKey, balance);
+    document.getElementById('bal').innerText = balance.toFixed(2);
+  }
 
+  // If profit -> credit via economy flow
   if(pl > 0){
     const uidToCredit = p.userUID || (currentUser ? currentUser.uid : null);
     if(uidToCredit){
       await creditProfitAndReduceSupply(uidToCredit, pl);
+      // sync user displayed balance if same
       if(currentUser && currentUser.uid === uidToCredit){
         try{ 
           const udoc = await db.collection('users').doc(uidToCredit).get();
@@ -920,6 +1119,20 @@ window.closePositionPath = async (path)=>{
           document.getElementById('bal').innerText = balance.toFixed(2);
         }catch(e){}
       }
+    }
+  } else {
+    // loss => compute refund amount (escrow - loss) and mark adminRefundProcessed=false
+    if(p.escrowAmount){
+      const refundAmt = Math.max(0, (p.escrowAmount || (p.shares*p.avgPrice)) + pl); // pl negative -> subtract loss
+      await ref.update({ refundAmount: refundAmt || 0, adminRefundProcessed: false });
+      // create pendingRefund doc for admin convenience
+      await db.collection('pendingRefunds').add({
+        positionRef: path,
+        userUid: p.userUID || null,
+        amount: refundAmt,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        processed: false
+      });
     }
   }
 
@@ -1117,7 +1330,7 @@ btnManageBalances.addEventListener('click', async ()=>{
   await refreshList();
 });
 
-/* ----------------- Admin: View All Trades & Lock/Unlock sells ----------------- */
+/* ----------------- Admin: View All Trades & Lock/Unlock sells (EXTENDED: Confirm Buy & Process Refund) ----------------- */
 btnViewAllTrades.addEventListener('click', async ()=>{
   if(!currentUser || currentUser.uid !== ADMIN_UID) return alert('Only admin');
   const root = document.getElementById('modalRoot'); root.innerHTML=''; root.style.display='block';
@@ -1167,23 +1380,51 @@ btnViewAllTrades.addEventListener('click', async ()=>{
     });
   });
 
-  adminPositionsUnsub = db.collectionGroup('positions').where('status','==','open').orderBy('createdAt','desc').limit(200).onSnapshot(snap=>{
+  adminPositionsUnsub = db.collectionGroup('positions').orderBy('createdAt','desc').limit(200).onSnapshot(snap=>{
     positionsEl.innerHTML = '';
     snap.forEach(d=>{
-      const p = d.data(); const id = d.id;
+      const p = d.data(); p._path = d.ref.path; p._id = d.id;
       const who = p.userUID || p.deviceId || 'anon';
       const marketId = p.marketId || (d.ref.parent.parent.id);
       const row = document.createElement('div'); row.className='list-item';
+      // extra admin actions: Confirm Buy, Process Refund (if refundAmount > 0 && not processed)
+      const confirmBtn = `<button class="btn btn-ghost" data-confirm="${p._path}">Confirm Buy</button>`;
+      const refundBtn = (p.refundAmount && p.refundAmount > 0 && !p.adminRefundProcessed) ? `<button class="btn btn-ghost" data-refund="${p._path}" data-uid="${p.userUID}">Process Refund (${p.refundAmount.toFixed? p.refundAmount.toFixed(2) : p.refundAmount})</button>` : '';
       row.innerHTML = `<div><div style="font-weight:700">${p.shares} lembar • ${marketId}</div><div class="small muted">${who} • Avg ${formatPrice(p.avgPrice)} • Opened ${p.createdAt && p.createdAt.toDate? p.createdAt.toDate().toLocaleString():''}</div></div>
-        <div style="text-align:right"><button class="btn btn-ghost" data-market="${marketId}" data-owner="${who}" data-lock>Lock Sell</button></div>`;
+        <div style="text-align:right">${confirmBtn} ${refundBtn}</div>`;
       positionsEl.appendChild(row);
-      row.querySelector('button[data-lock]').addEventListener('click', async ()=>{
-        const owner = row.querySelector('button[data-lock]').dataset.owner;
-        const mid = row.querySelector('button[data-lock]').dataset.market;
-        await db.collection('locks').doc(`${mid}_${owner}`).set({ locked:true, by: currentUser.uid, at: firebase.firestore.FieldValue.serverTimestamp() });
-        alert('Sell locked for ' + owner + ' on ' + mid);
-        refreshLocks();
-      });
+
+      const cb = row.querySelector('button[data-confirm]');
+      if(cb){
+        cb.addEventListener('click', async ()=>{
+          const path = cb.dataset.confirm;
+          try{
+            await db.doc(path).update({ adminConfirmedBuy: true, adminConfirmedAt: firebase.firestore.FieldValue.serverTimestamp() });
+            alert('Buy confirmed for ' + path);
+          }catch(e){ console.error(e); alert('Gagal confirm: ' + e.message); }
+        });
+      }
+      const rb = row.querySelector('button[data-refund]');
+      if(rb){
+        rb.addEventListener('click', async ()=>{
+          const path = rb.dataset.refund;
+          const uid = rb.dataset.uid;
+          // read position to get refund amount
+          const posDoc = await db.doc(path).get(); if(!posDoc.exists) return alert('Position not found');
+          const pdata = posDoc.data();
+          const amt = Number(pdata.refundAmount || 0);
+          if(!amt || amt <= 0) return alert('Tidak ada refund untuk diproses');
+          if(!confirm(`Process refund ${amt.toFixed(2)} to user ${uid}?`)) return;
+          const ok = await adminRefundToUser(uid, amt, path);
+          if(!ok) return alert('Refund gagal (cek admin balance)');
+          // mark position refund processed
+          await db.doc(path).update({ adminRefundProcessed: true, adminRefundedAt: firebase.firestore.FieldValue.serverTimestamp() });
+          // update pendingRefunds doc if exists
+          const pend = await db.collection('pendingRefunds').where('positionRef','==',path).where('processed','==',false).get();
+          pend.forEach(d=> d.ref.update({ processed:true, processedAt: firebase.firestore.FieldValue.serverTimestamp(), processedBy: currentUser.uid }).catch(()=>{}));
+          alert('Refund processed');
+        });
+      }
     });
   });
 
@@ -1211,6 +1452,6 @@ btnViewAllTrades.addEventListener('click', async ()=>{
 
 /* ----------------- helper: when marketsCache changes recompute PnL automatically ----------------- */
 setInterval(()=>{ computeAndRenderPnL(); }, 1000);
-  </script>
+</script>
 </body>
 </html>
