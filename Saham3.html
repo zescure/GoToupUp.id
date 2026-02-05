@@ -71,6 +71,16 @@
   .pnl-positive{color:green;font-weight:700}
   .pnl-negative{color:var(--danger);font-weight:700}
 
+  /* orderbook */
+  .orderbook {margin-top:12px;padding:8px;border-radius:12px;border:1px solid rgba(0,0,0,0.04);background:linear-gradient(180deg,#fff,#fff)}
+  .orderbook-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .orderbook-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .book-side{padding:8px;border-radius:10px;background:rgba(0,0,0,0.02)}
+  .order-row{display:flex;justify-content:space-between;padding:6px 8px;border-radius:8px;margin-bottom:6px;font-weight:700}
+  .bid {color:green}
+  .ask {color:var(--danger)}
+  .book-mini{font-size:12px;color:var(--muted);margin-top:6px}
+
   .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center;z-index:2000}
   .modal{width:100%;max-width:420px;background:var(--card-bg);padding:14px;border-radius:18px 18px 0 0;color:#111;max-height:92vh;overflow:auto}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -131,7 +141,7 @@
 
   </div>
 
-  <!-- MARKET LIST -->
+  <!-- MARKET LIST (tetap ditampilkan kecuali user pilih portfolio / events) -->
   <div id="page-home" class="card">
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div><div style="font-weight:800">Daftar Market</div><div class="muted">Pilih untuk lihat detail</div></div>
@@ -182,6 +192,19 @@
       <div style="display:flex;flex-direction:column;gap:8px;width:120px">
         <button id="btnBuy" class="btn btn-primary">Beli</button>
         <button id="btnSell" class="btn btn-danger">Jual</button>
+      </div>
+    </div>
+
+    <!-- ORDERBOOK (fake / realtime) -->
+    <div id="orderbook" class="orderbook" style="display:block">
+      <div class="orderbook-title"><div style="font-weight:800">Orderbook (Fake Realtime)</div><div class="book-mini" id="orderbookSummary">—</div></div>
+      <div class="orderbook-grid">
+        <div class="book-side" id="book-asks">
+          <!-- asks inserted here -->
+        </div>
+        <div class="book-side" id="book-bids">
+          <!-- bids inserted here -->
+        </div>
       </div>
     </div>
 
@@ -291,6 +314,7 @@ let userTfOverride = false;
 
 /* derived fake data storage */
 let marketsDerived = {}; // id -> { volume, bid, ask, spread }
+let marketsOrderbook = {}; // id -> { bids:[], asks:[] }
 
 /* pan/zoom */
 let visibleSlots = null;
@@ -314,11 +338,7 @@ const marketListEl = document.getElementById('marketList');
 const positionsListEl = document.getElementById('positionsList');
 const tradesListEl = document.getElementById('tradesList');
 const eventsListEl = document.getElementById('eventsList');
-const adminControlsEl = document.getElementById('adminControls');
-const adminVolListEl = document.getElementById('adminVolList');
 const btnOpenAddEvent = document.getElementById('btnOpenAddEvent');
-const btnManageBalances = document.getElementById('btnManageBalances');
-const btnViewAllTrades = document.getElementById('btnViewAllTrades');
 
 /* ----------------- helpers ----------------- */
 function formatPrice(p){ return Number(p).toFixed(2); }
@@ -368,11 +388,13 @@ auth.onAuthStateChanged(async user=>{
     document.getElementById('btnSignIn').style.display = 'none';
     document.getElementById('btnSignOut').style.display = 'inline-block';
     if(user.uid === ADMIN_UID){
+      const adminControlsEl = document.getElementById('adminControls');
       if (adminControlsEl) adminControlsEl.style.display = 'flex';
       const adminHintEl = document.getElementById('adminHint');
       if (adminHintEl) adminHintEl.style.display = 'none';
       if(btnOpenAddEvent) btnOpenAddEvent.style.display = 'inline-block';
     } else {
+      const adminControlsEl = document.getElementById('adminControls');
       if (adminControlsEl) adminControlsEl.style.display = 'none';
       const adminHintEl = document.getElementById('adminHint');
       if (adminHintEl) adminHintEl.style.display = 'block';
@@ -382,6 +404,7 @@ auth.onAuthStateChanged(async user=>{
     document.getElementById('userInfo').innerText = 'not signed';
     document.getElementById('btnSignIn').style.display = 'inline-block';
     document.getElementById('btnSignOut').style.display = 'none';
+    const adminControlsEl = document.getElementById('adminControls');
     if (adminControlsEl) adminControlsEl.style.display = 'none';
     const adminHintEl = document.getElementById('adminHint');
     if (adminHintEl) adminHintEl.style.display = 'block';
@@ -392,43 +415,53 @@ auth.onAuthStateChanged(async user=>{
   await applyRemoteBalanceIfExists();
 });
 
-/* ----------------- SPA nav ----------------- */
-document.querySelectorAll('.nav-btn').forEach(b=>{
-  b.addEventListener('click', ()=> {
-    document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active');
-    const page = b.dataset.page;
-    showPage(page);
-  });
-});
+/* ----------------- SPA nav (ubah showPage supaya market list tetap tampil kecuali portfolio/events) ----------------- */
+document.getElementById('btnMarkets').addEventListener('click', ()=> showPage('markets'));
+document.getElementById('btnPortfolio').addEventListener('click', ()=> showPage('portfolio'));
+document.getElementById('btnDeposit').addEventListener('click', ()=> showPage('home'));
+document.getElementById('btnWithdraw').addEventListener('click', ()=> showPage('home'));
 function showPage(name){
-  const pages = ['page-home','page-market','page-portfolio','page-events'];
-  pages.forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.style.display='none';
-  });
-  if(name==='home') { const el = document.getElementById('page-home'); if(el) el.style.display='block'; }
-  else if(name==='markets') { const el = document.getElementById('page-market'); if(el) el.style.display='block'; }
-  else if(name==='portfolio') { const el = document.getElementById('page-portfolio'); if(el) el.style.display='block'; }
-  else if(name==='events') { const el = document.getElementById('page-events'); if(el) el.style.display='block'; }
+  // pages: page-home (market list), page-market (detail), page-portfolio, page-events
+  // requirement: daftar market (page-home) tetap terlihat saat user membuka market (page-market).
+  const pageHome = document.getElementById('page-home');
+  const pageMarket = document.getElementById('page-market');
+  const pagePortfolio = document.getElementById('page-portfolio');
+  const pageEvents = document.getElementById('page-events');
+
+  // default hide all detail pages
+  if(pageMarket) pageMarket.style.display = 'none';
+  if(pagePortfolio) pagePortfolio.style.display = 'none';
+  if(pageEvents) pageEvents.style.display = 'none';
+
+  if(name === 'home'){
+    if(pageHome) pageHome.style.display = 'block';
+    if(pageMarket) pageMarket.style.display = 'none';
+  } else if(name === 'markets'){
+    // show market detail but keep market list visible
+    if(pageHome) pageHome.style.display = 'block';
+    if(pageMarket) pageMarket.style.display = 'block';
+  } else if(name === 'portfolio'){
+    // hide market list when visiting portfolio
+    if(pageHome) pageHome.style.display = 'none';
+    if(pagePortfolio) pagePortfolio.style.display = 'block';
+  } else if(name === 'events'){
+    if(pageHome) pageHome.style.display = 'none';
+    if(pageEvents) pageEvents.style.display = 'block';
+  }
 }
 
 /* ----------------- derived market helpers ----------------- */
 /* compute fake spread/volume based on market price & volatility */
 function computeDerivedForMarket(m){
   const id = m.id || m._id || m.symbol || JSON.stringify(m).slice(0,6);
-  // keep previous if exists for continuity
   const prev = marketsDerived[id] || {};
   const volBase = (m.baseVolume && Number(m.baseVolume)) || Math.max(5000, Math.round(10000 / (m.price||1)));
-  // random walk for volume influenced by volatility
   const volNoise = ((Math.random()-0.5) * (m.volatility||1) * 500);
   const prevVol = prev.volume || volBase;
   let newVol = Math.round(Math.max(100, prevVol * (0.96 + Math.random()*0.08) + volNoise));
-  // keep a ceiling relative to price (just aesthetic)
   newVol = Math.round(clamp(newVol, 100, Math.max(1000, volBase*10)));
 
-  // spread: proportional to volatility and price, but small
-  const baseSpreadPct = 0.0005 * (m.volatility || 1); // 0.05% default*vol
+  const baseSpreadPct = 0.0005 * (m.volatility || 1);
   const jitter = (Math.random()*0.001) * (m.volatility||1);
   const spread = Math.max(0.01, (baseSpreadPct + jitter) * (m.price || 1));
   const bid = Math.max(0.01, (m.price || 1) - spread/2);
@@ -438,13 +471,65 @@ function computeDerivedForMarket(m){
   return marketsDerived[id];
 }
 
-/* update DOM for derived fields (list items + market detail) */
+/* compute fake orderbook (bids & asks) based on derived bid/ask and volume */
+function computeOrderbookForMarket(m, depth = 8){
+  const id = m.id || m._id || m.symbol || JSON.stringify(m).slice(0,6);
+  const d = marketsDerived[id] || computeDerivedForMarket(m);
+  const bids = [];
+  const asks = [];
+  // step based on spread magnitude
+  const step = Math.max(0.01, d.spread * 0.6);
+  // produce 'depth' orders around bid/ask
+  let cumulative = 0;
+  for(let i=0;i<depth;i++){
+    // bids descending prices below bid
+    const priceBid = Math.max(0.01, d.bid - step * i * (0.6 + Math.random()*0.8));
+    const sizeBid = Math.max(10, Math.round((d.volume/(5 + Math.random()*10)) * (0.6 + Math.random()*1.8)));
+    bids.push({ price: Number(priceBid.toFixed(2)), size: sizeBid });
+    // asks ascending prices above ask
+    const priceAsk = d.ask + step * i * (0.6 + Math.random()*0.8);
+    const sizeAsk = Math.max(10, Math.round((d.volume/(5 + Math.random()*10)) * (0.6 + Math.random()*1.8)));
+    asks.push({ price: Number(priceAsk.toFixed(2)), size: sizeAsk });
+    cumulative += sizeBid + sizeAsk;
+  }
+  marketsOrderbook[id] = { bids, asks };
+  return marketsOrderbook[id];
+}
+
+/* render orderbook to DOM for current market */
+function renderOrderbook(mid){
+  const ob = marketsOrderbook[mid];
+  const asksEl = document.getElementById('book-asks');
+  const bidsEl = document.getElementById('book-bids');
+  const summaryEl = document.getElementById('orderbookSummary');
+  if(!asksEl || !bidsEl || !summaryEl){ return; }
+  asksEl.innerHTML = '<div style="font-weight:700;margin-bottom:6px">Asks (sell)</div>';
+  bidsEl.innerHTML = '<div style="font-weight:700;margin-bottom:6px">Bids (buy)</div>';
+  if(!ob){ asksEl.innerHTML += '<div class="book-mini">—</div>'; bidsEl.innerHTML += '<div class="book-mini">—</div>'; summaryEl.innerText = '—'; return; }
+  // asks: show top 6 (lowest ask first)
+  const asks = ob.asks.slice(0,6).sort((a,b)=>a.price - b.price);
+  const bids = ob.bids.slice(0,6).sort((a,b)=>b.price - a.price);
+  let totAsk = 0, totBid = 0;
+  asks.forEach(a=>{
+    totAsk += a.size;
+    const row = document.createElement('div'); row.className = 'order-row ask';
+    row.innerHTML = `<div>${formatPrice(a.price)}</div><div>${a.size.toLocaleString()}</div>`;
+    asksEl.appendChild(row);
+  });
+  bids.forEach(b=>{
+    totBid += b.size;
+    const row = document.createElement('div'); row.className = 'order-row bid';
+    row.innerHTML = `<div>${formatPrice(b.price)}</div><div>${b.size.toLocaleString()}</div>`;
+    bidsEl.appendChild(row);
+  });
+  summaryEl.innerText = `BidSize ${totBid.toLocaleString()} • AskSize ${totAsk.toLocaleString()}`;
+}
+
+/* update DOM for derived fields (list items + market detail + orderbook) */
 function updateDerivedMarketUI(){
-  // update market list items
   for(const id in marketsCache){
     const m = marketsCache[id];
     const d = computeDerivedForMarket({...m, id});
-    // market list item: find by data-mid
     const el = document.querySelector(`.list-item[data-mid="${id}"]`);
     if(el){
       const volEl = el.querySelector('.m-vol');
@@ -453,10 +538,10 @@ function updateDerivedMarketUI(){
       if(volEl) volEl.innerText = d.volume.toLocaleString();
       if(bidEl) bidEl.innerText = formatPrice(d.bid);
       if(askEl) askEl.innerText = formatPrice(d.ask);
-      // price already updated via snapshot, but ensure price color / tiny arrow maybe later
     }
+    // compute orderbook for each market for realism
+    computeOrderbookForMarket(m, 10);
   }
-  // update market detail if open
   if(currentMarket){
     const id = currentMarketId;
     const d = computeDerivedForMarket({...currentMarket, id});
@@ -468,6 +553,8 @@ function updateDerivedMarketUI(){
     if(bidEl) bidEl.innerText = formatPrice(d.bid);
     if(askEl) askEl.innerText = formatPrice(d.ask);
     if(volDisplay) volDisplay.innerText = 'Vol x' + (currentMarket.volatility||1);
+    // render its orderbook
+    renderOrderbook(id);
   }
 }
 
@@ -480,7 +567,6 @@ async function subscribeMarketsListRealtime(){
     marketsCache = {};
     snap.forEach(doc=>{
       const m = doc.data(); m.id = doc.id; marketsCache[m.id] = m;
-      // create list item with data-mid attribute for derived updates
       const el = document.createElement('div'); el.className='list-item'; el.setAttribute('data-mid', m.id);
       el.innerHTML = `<div class="meta">
           <div style="font-weight:700">${m.name}</div>
@@ -495,16 +581,15 @@ async function subscribeMarketsListRealtime(){
       el.querySelector('button').addEventListener('click', ()=>selectMarket(m.id));
       marketListEl.appendChild(el);
     });
-    renderAdminVolList();
-    // update PnL view (prices changed)
+    renderAdminVolList && renderAdminVolList();
     computeAndRenderPnL();
-    // update derived UI immediately after snapshot
     updateDerivedMarketUI();
   });
 }
 
 /* ----------------- render admin volatility editor ----------------- */
 function renderAdminVolList(){
+  const adminVolListEl = document.getElementById('adminVolList');
   if(!adminVolListEl) return;
   adminVolListEl.innerHTML = '';
   for(const id in marketsCache){
@@ -553,7 +638,7 @@ async function selectMarket(marketId){
   });
   // load events for this market
   await loadEventsForMarket(marketId);
-  // show market page
+  // show market page but keep market list visible (per request)
   const el = document.getElementById('page-market'); if(el) el.style.display='block';
   showPage('markets');
 
@@ -1027,11 +1112,9 @@ async function ensureDefaultMarket(){
 /* ----------------- event loading for all markets on boot (periodic) ----------------- */
 setInterval(async ()=>{ try{ for(const id in marketsCache) await loadEventsForMarket(id); }catch(e){} }, 60000);
 
-/* ----------------- helpers to show pages from quick buttons ----------------- */
-document.getElementById('btnMarkets').addEventListener('click', ()=> showPage('markets'));
-document.getElementById('btnPortfolio').addEventListener('click', ()=> showPage('portfolio'));
-document.getElementById('btnGotoPortfolio').addEventListener('click', ()=> showPage('portfolio'));
-document.getElementById('btnGotoMarket').addEventListener('click', ()=> { if(currentMarketId) selectMarket(currentMarketId); else alert('Pilih market dulu'); });
+/* ----------------- helpers to show pages from quick buttons (keamanan) ----------------- */
+document.getElementById('btnGotoPortfolio') && document.getElementById('btnGotoPortfolio').addEventListener('click', ()=> showPage('portfolio'));
+document.getElementById('btnGotoMarket') && document.getElementById('btnGotoMarket').addEventListener('click', ()=> { if(currentMarketId) selectMarket(currentMarketId); else alert('Pilih market dulu'); });
 
 /* ----------------- Deposit / Withdraw => WhatsApp redirect (sementara) ----------------- */
 document.getElementById('btnDeposit').addEventListener('click', ()=>{
@@ -1045,8 +1128,7 @@ document.getElementById('btnWithdraw').addEventListener('click', ()=>{
   window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
 });
 
-/* ----------------- Admin: Manage Balances modal (unchanged) ----------------- */
-/* ----------------- Admin: View All Trades & Lock/Unlock sells (unchanged) ----------------- */
+/* ----------------- Admin: Manage Balances modal (unchanged) & Admin View All Trades (unchanged) ----------------- */
 /* (Everything admin-related kept identical from original, including collectionGroup('trades')) */
 
 /* ----------------- helper: when marketsCache changes recompute PnL automatically ----------------- */
