@@ -23,8 +23,9 @@
   }
 
   *{box-sizing:border-box;font-family:Inter,system-ui,Arial;text-rendering:optimizeLegibility}
-  html,body{height:100%;margin:0;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
-  .app{max-width:420px;margin:0 auto;padding:14px 14px 96px;display:flex;flex-direction:column;gap:14px}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+  /* make app full width to avoid horizontal spaces */
+  .app{width:100%;max-width:100%;margin:0 auto;padding:12px 12px 96px;display:flex;flex-direction:column;gap:14px}
 
   header{
     display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -56,7 +57,7 @@
   .list-item .subsmall{font-size:12px;color:var(--muted);margin-top:6px}
 
   .chart-card{height:320px;border-radius:12px;overflow:hidden;padding:8px;background:linear-gradient(180deg,#fff,#fff);display:flex;flex-direction:column;gap:8px}
-  canvas{width:100%;height:100%;display:block;border-radius:8px;touch-action:none}
+  canvas{width:100%;height:100%;display:block;border-radius:8px;touch-action:none;max-width:100%}
 
   .trade-row{display:flex;gap:10px;align-items:center;margin-top:8px}
   .trade-left{flex:1}
@@ -287,9 +288,26 @@ const db = firebase.firestore();
 /* --------------- device & balance --------------- */
 let deviceId = localStorage.getItem('device_id');
 if(!deviceId){ deviceId = 'dev-' + Math.floor(Math.random()*10000000); localStorage.setItem('device_id', deviceId); }
+
+// balance storage key (we'll still cache locally but prefer uid doc when logged in)
 let balanceKey = 'balance_' + deviceId;
 let balance = parseFloat(localStorage.getItem(balanceKey)) || 10000.0;
-document.getElementById('bal').innerText = balance.toFixed(2);
+
+/* format to IDR string */
+function formatIDR(amount){
+  try{
+    return 'IDR ' + Number(amount).toLocaleString('id-ID', {minimumFractionDigits:2, maximumFractionDigits:2});
+  }catch(e){
+    return 'IDR ' + Number(amount).toFixed(2);
+  }
+}
+
+/* write balance display (IDR) */
+function renderBalance(){
+  const el = document.getElementById('bal');
+  if(el) el.innerText = formatIDR(balance);
+}
+renderBalance();
 
 /* --------------- chart & canvas --------------- */
 const canvas = document.getElementById('chartCanvas');
@@ -351,7 +369,30 @@ const provider = new firebase.auth.GoogleAuthProvider();
 document.getElementById('btnSignIn').addEventListener('click', ()=> auth.signInWithPopup(provider).catch(e=>alert(e.message)));
 document.getElementById('btnSignOut').addEventListener('click', ()=> auth.signOut());
 
-// apply remote balance override (if any) - checks uid first then deviceId
+/* ensure user balance doc exists; migrate local -> uid if needed */
+async function ensureUserBalanceAndMigrate(){
+  if(!currentUser || !currentUser.uid) return;
+  try{
+    const uidDocRef = db.collection('balances').doc('uid_'+currentUser.uid);
+    const doc = await uidDocRef.get();
+    if(!doc.exists){
+      // create with current local balance as starting point
+      await uidDocRef.set({ amount: balance, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    } else {
+      const data = doc.data();
+      if(data && typeof data.amount === 'number'){
+        balance = data.amount;
+      }
+    }
+    // update local cache and UI
+    localStorage.setItem(balanceKey, balance);
+    renderBalance();
+  }catch(e){
+    console.warn('ensureUserBalanceAndMigrate err', e);
+  }
+}
+
+/* apply remote balance override (checks uid first then deviceId) */
 async function applyRemoteBalanceIfExists(){
   try{
     // check uid override
@@ -362,7 +403,7 @@ async function applyRemoteBalanceIfExists(){
         if(data && typeof data.amount === 'number'){
           balance = data.amount;
           localStorage.setItem(balanceKey, balance);
-          document.getElementById('bal').innerText = balance.toFixed(2);
+          renderBalance();
           return;
         }
       }
@@ -374,13 +415,40 @@ async function applyRemoteBalanceIfExists(){
       if(data && typeof data.amount === 'number'){
         balance = data.amount;
         localStorage.setItem(balanceKey, balance);
-        document.getElementById('bal').innerText = balance.toFixed(2);
+        renderBalance();
         return;
       }
     }
   }catch(e){ console.warn('applyRemoteBalanceIfExists err', e); }
 }
 
+/* helper: write uid balance doc after local change */
+async function persistBalanceForUser(){
+  try{
+    if(currentUser && currentUser.uid){
+      await db.collection('balances').doc('uid_'+currentUser.uid).set({ amount: balance, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    } else {
+      // also keep device-level doc for offline/dev fallback
+      await db.collection('balances').doc(deviceId).set({ amount: balance, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    }
+  }catch(e){ console.warn('persistBalanceForUser err', e); }
+}
+
+/* helper: write transaction into users/{uid}/transactions for cross-page realtime */
+async function writeUserTransaction(type, payload){
+  try{
+    if(currentUser && currentUser.uid){
+      const tx = {
+        type,
+        ts: firebase.firestore.FieldValue.serverTimestamp(),
+        ...payload
+      };
+      await db.collection('users').doc(currentUser.uid).collection('transactions').add(tx);
+    }
+  }catch(e){ console.warn('writeUserTransaction err', e); }
+}
+
+/* auth state changes */
 auth.onAuthStateChanged(async user=>{
   currentUser = user;
   if(user){
@@ -413,6 +481,12 @@ auth.onAuthStateChanged(async user=>{
 
   // always apply remote balance overrides on login state change
   await applyRemoteBalanceIfExists();
+
+  // if user logged in ensure they have a balance doc (migrate)
+  if(currentUser && currentUser.uid){
+    await ensureUserBalanceAndMigrate();
+  }
+
 });
 
 /* ----------------- SPA nav (ubah showPage supaya market list tetap tampil kecuali portfolio/events) ----------------- */
@@ -896,10 +970,44 @@ async function buyShares(){
   if(isNaN(shares) || shares < 100) return alert('Minimal pembelian 100 lembar');
   const cost = shares * currentMarket.price;
   if(cost > balance) return alert('Saldo tidak cukup');
-  balance -= cost; localStorage.setItem(balanceKey, balance); document.getElementById('bal').innerText = balance.toFixed(2);
+  balance -= cost;
+  // persist locally and for user if logged in
+  localStorage.setItem(balanceKey, balance);
+  renderBalance();
+  await persistBalanceForUser();
+
+  // original writes (positions + trades under market)
   const coll = db.collection('markets').doc(currentMarketId).collection('positions');
-  await coll.add({ userUID: currentUser?currentUser.uid:'anon', deviceId, marketId: currentMarketId, marketName: currentMarket.name, shares, avgPrice: currentMarket.price, status:'open', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  const posRef = await coll.add({ userUID: currentUser?currentUser.uid:'anon', deviceId, marketId: currentMarketId, marketName: currentMarket.name, shares, avgPrice: currentMarket.price, status:'open', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
   await db.collection('markets').doc(currentMarketId).collection('trades').add({ type:'BUY', userUID: currentUser?currentUser.uid:'anon', deviceId, shares, price: currentMarket.price, ts: firebase.firestore.FieldValue.serverTimestamp() });
+
+  // additionally write per-user transaction and (optional) per-user-positions for cross-page realtime
+  if(currentUser && currentUser.uid){
+    try{
+      await db.collection('users').doc(currentUser.uid).collection('transactions').add({
+        type: 'BUY',
+        marketId: currentMarketId,
+        marketName: currentMarket.name,
+        shares,
+        price: currentMarket.price,
+        deviceId,
+        ts: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      // store a lightweight per-user position pointer (not changing existing market positions)
+      await db.collection('users').doc(currentUser.uid).collection('positions').add({
+        marketId: currentMarketId,
+        marketName: currentMarket.name,
+        shares,
+        avgPrice: currentMarket.price,
+        status: 'open',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        marketPositionRef: posRef.path
+      });
+      // update centralized balance doc for uid
+      await persistBalanceForUser();
+    }catch(e){ console.warn('user write buy err', e); }
+  }
+
   alert(`Beli ${shares} lembar @ ${formatPrice(currentMarket.price)} berhasil`);
 }
 
@@ -913,9 +1021,27 @@ async function sellShares(){
     return alert('Penjualan saham gagal, liquidity tidak terpenuhi. Mohon bersabar untuk tindak lanjut kami.');
   }
   const coll = db.collection('markets').doc(currentMarketId).collection('positions');
-  const snap = await coll.where('status','==','open').where('deviceId','==',deviceId).get();
+  // NOTE: original logic queries by deviceId; keep that but also try to include userUID positions
+  // to not break functionality we do both queries and combine results while keeping original behavior intact.
+  let snap;
+  try{
+    snap = await coll.where('status','==','open').where('deviceId','==',deviceId).get();
+  }catch(e){
+    console.warn('sell query device err', e);
+    snap = await coll.where('status','==','open').get();
+  }
+
   let available = 0; const docs = [];
   snap.forEach(d=>{ const p = d.data(); p._id = d.id; docs.push({ref:d.ref, data:p}); available += p.shares; });
+
+  // if user logged in and not enough via device, try collecting by userUID
+  if(available < sellShares && currentUser && currentUser.uid){
+    try{
+      const snap2 = await coll.where('status','==','open').where('userUID','==',currentUser.uid).get();
+      snap2.forEach(d=>{ const p = d.data(); p._id = d.id; docs.push({ref:d.ref, data:p}); available += p.shares; });
+    }catch(e){ /* ignore */ }
+  }
+
   if(available < sellShares) return alert('Tidak cukup lembar untuk dijual');
   let remaining = sellShares; const batch = db.batch();
   for(const item of docs){
@@ -933,9 +1059,31 @@ async function sellShares(){
     balance += take * sellPrice;
   }
   await batch.commit();
+
+  // persist local and uid balance
   localStorage.setItem(balanceKey, balance);
-  document.getElementById('bal').innerText = balance.toFixed(2);
+  renderBalance();
+  await persistBalanceForUser();
+
   await db.collection('markets').doc(currentMarketId).collection('trades').add({ type:'SELL', userUID: currentUser?currentUser.uid:'anon', deviceId, shares: sellShares, price: currentMarket.price, ts: firebase.firestore.FieldValue.serverTimestamp() });
+
+  // write per-user transaction
+  if(currentUser && currentUser.uid){
+    try{
+      await db.collection('users').doc(currentUser.uid).collection('transactions').add({
+        type: 'SELL',
+        marketId: currentMarketId,
+        marketName: currentMarket.name,
+        shares: sellShares,
+        price: currentMarket.price,
+        deviceId,
+        ts: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      // update per-user positions: naive approach - add a history record. (Detailed sync of positions left as separate admin task)
+      await persistBalanceForUser();
+    }catch(e){ console.warn('user write sell err', e); }
+  }
+
   alert(`Jual ${sellShares} lembar berhasil`);
 }
 
@@ -1002,7 +1150,32 @@ window.closePositionPath = async (path)=>{
   const sellPrice = (marketsCache[p.marketId] && marketsCache[p.marketId].price) ? marketsCache[p.marketId].price : p.avgPrice;
   const pl = p.shares * (sellPrice - p.avgPrice);
   await ref.update({ status:'closed', closedAt: firebase.firestore.FieldValue.serverTimestamp(), closePrice: sellPrice, reason:'sell-manual', pl });
-  if(p.deviceId === deviceId){ balance += p.shares * sellPrice; localStorage.setItem(balanceKey, balance); document.getElementById('bal').innerText = balance.toFixed(2); }
+  // if this position belongs to current device -> reimburse local balance
+  if(p.deviceId === deviceId){
+    balance += p.shares * sellPrice;
+    localStorage.setItem(balanceKey, balance);
+    renderBalance();
+    await persistBalanceForUser();
+  }
+  // if position had userUID, also record a transaction into user's collection and update user's balance doc if same user
+  if(p.userUID){
+    try{
+      await db.collection('users').doc(p.userUID).collection('transactions').add({
+        type: 'CLOSE_POSITION',
+        marketId: p.marketId,
+        marketName: p.marketName || p.marketId,
+        shares: p.shares,
+        price: sellPrice,
+        pl: pl,
+        ts: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      // if the closed position belongs to the current logged-in user, update their balances doc
+      if(currentUser && currentUser.uid === p.userUID){
+        balance = Number(balance); // already adjusted above if device matched; otherwise fetch fresh
+        await persistBalanceForUser();
+      }
+    }catch(e){ console.warn('user close pos err', e); }
+  }
   alert('Position closed');
 };
 
