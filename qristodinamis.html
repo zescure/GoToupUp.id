@@ -3,210 +3,283 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Checkout — NUBIASTORE</title>
+<title>Ubah Foto QRIS Statis → Dinamis (demo)</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
-  body{font-family:Inter,Segoe UI,system-ui; background:#f6f7f9; color:#111; padding:16px;}
-  .card{max-width:720px;margin:24px auto;background:#fff;border-radius:8px;padding:18px;box-shadow:0 6px 18px rgba(0,0,0,0.06);}
-  h1{color:#16a34a;margin-bottom:6px}
-  .row{display:flex;gap:12px;flex-wrap:wrap}
-  .col{flex:1;min-width:220px}
-  .field{margin:.6rem 0}
-  .muted{color:#666;font-size:.95rem}
-  .amount{font-weight:700;font-size:1.2rem;color:#0f172a}
-  .qr{max-width:320px;width:100%;display:block;margin:12px auto}
-  .btn{display:inline-block;padding:.6rem 1rem;background:#16a34a;color:#fff;border-radius:6px;text-decoration:none}
-  .copy{margin-left:8px;padding:.3rem .6rem;background:#111;color:#fff;border-radius:6px;cursor:pointer}
-  .status{display:inline-block;padding:.25rem .6rem;border-radius:6px;font-weight:600}
-  .status.initiated{background:#fef3c7;color:#92400e}
-  .status.pending{background:#e0f2fe;color:#0369a1}
-  .status.completed{background:#dcfce7;color:#166534}
-  .status.cancelled{background:#fee2e2;color:#7f1d1d}
-  .note{background:#fff7ed;padding:8px;border-left:4px solid #f59e0b;color:#92400e;margin-top:12px}
+  body{background:#0b1020;color:#e6eef8;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;}
+  .card{background:#0f1a2b;border:1px solid rgba(255,255,255,0.04)}
+  .qr-canvas{background:#fff;padding:12px;border-radius:8px;display:inline-block;}
+  .small-muted{color:#9fb0d6;font-size:0.9rem}
+  img#originalPreview{max-width:280px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)}
+  #resultQR{max-width:280px}
 </style>
 </head>
-<body>
-  <div class="card">
-    <h1>Checkout</h1>
-    <div id="loading" class="muted">Mencari invoice...</div>
+<body class="p-4">
+  <div class="container">
+    <h3>Ubah Foto QRIS Statis → Dinamis (demo)</h3>
+    <p class="small-muted">Upload foto QR, decode payload, masukkan nominal, lalu generate QR baru (coba dulu di sandbox/uang kecil).</p>
 
-    <div id="notfound" style="display:none;">
-      <p>Invoice tidak ditemukan. Pastikan URL berformat <code>?invoice=INVC-... </code></p>
-    </div>
-
-    <div id="orderBox" style="display:none;">
-      <div class="row">
-        <div class="col">
-          <div class="field"><span class="muted">Invoice</span><div id="invoiceTxt" style="font-weight:700"></div></div>
-          <div class="field"><span class="muted">Game</span><div id="gameTxt">—</div></div>
-          <div class="field"><span class="muted">ID Akun</span><div id="idTxt">—</div></div>
-          <div class="field"><span class="muted">Server</span><div id="srvTxt">—</div></div>
-          <div class="field"><span class="muted">No. WA</span><div id="waTxt">—</div></div>
+    <div class="row g-3">
+      <div class="col-md-5">
+        <div class="card p-3 mb-3">
+          <label class="form-label">Upload foto QR (PNG/JPG)</label>
+          <input id="fileInput" type="file" accept="image/*" class="form-control mb-2"/>
+          <div class="d-flex gap-2 align-items-center">
+            <img id="originalPreview" alt="preview" src="" />
+            <div>
+              <div><strong>Payload decoded:</strong></div>
+              <textarea id="payloadText" class="form-control" rows="6" readonly style="background:#071029;color:#dff0ff"></textarea>
+            </div>
+          </div>
+          <div class="form-text small-muted mt-2">
+            Kalau decode gagal, bisa jadi foto blur / QR rusak.
+          </div>
         </div>
 
-        <div class="col">
-          <div class="field"><span class="muted">Nominal</span><div id="nominalTxt">—</div></div>
-          <div class="field"><span class="muted">Harga</span><div id="priceTxt">—</div></div>
-          <div class="field"><span class="muted">Admin fee</span><div id="adminTxt">—</div></div>
-          <div class="field"><span class="muted">Total bayar</span><div class="amount" id="totalTxt">—</div></div>
-          <div class="field"><span class="muted">Metode</span><div id="methodTxt">—</div></div>
-          <div class="field">Status: <span id="statusBadge" class="status initiated">—</span></div>
+        <div class="card p-3">
+          <label class="form-label">Masukkan nominal (Rp)</label>
+          <div class="input-group mb-2">
+            <span class="input-group-text">Rp</span>
+            <input id="amountInput" type="number" min="0" step="1" class="form-control" placeholder="contoh: 12500" />
+          </div>
+
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" id="visualOnly" />
+            <label class="form-check-label" for="visualOnly">Hanya overlay teks di gambar (⚠ tidak mengubah payload)</label>
+          </div>
+
+          <button id="makeBtn" class="btn btn-primary">Buat QR DINAMIS</button>
+          <button id="overlayBtn" class="btn btn-outline-secondary">Overlay Nominal di Foto</button>
+
+          <div class="mt-2 small-muted">
+            Catatan: Skrip ini <em>mencoba</em> memasukkan tag EMV '54' (amount). Tidak ada jaminan semua merchant/e-wallet akan menerima hasilnya. Uji terlebih dahulu.
+          </div>
         </div>
       </div>
 
-      <hr style="margin:14px 0">
+      <div class="col-md-7">
+        <div class="card p-3 mb-3">
+          <h5>Hasil</h5>
+          <div class="d-flex gap-3 align-items-start">
+            <div>
+              <div class="small-muted">QR baru / regenerasi</div>
+              <canvas id="resultQR" class="qr-canvas"></canvas>
+            </div>
+            <div>
+              <div class="small-muted">Payload baru (EMV TLV)</div>
+              <textarea id="newPayload" class="form-control" rows="8" readonly style="background:#071029;color:#dff0ff"></textarea>
+              <div class="mt-2">
+                <button id="downloadBtn" class="btn btn-sm btn-success">Download QR (png)</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      <div id="paymentUI">
-        <!-- will be rendered here: QR or VA -->
-      </div>
-
-      <div id="actions" style="margin-top:16px;">
-        <button id="btnCopyInvoice" class="copy">Salin Invoice</button>
-        <a id="btnShareWA" class="btn" href="#" target="_blank">Laporkan/Share via WA</a>
-      </div>
-
-      <div id="adminNote" class="note" style="display:none;">
-        Admin belum memproses pembayaran. Jika sudah bayar, tunggu update status "completed".
+        <div class="card p-3">
+          <h6>Log</h6>
+          <pre id="log" style="background:#071029;color:#bfe0ff;padding:12px;height:160px;overflow:auto"></pre>
+        </div>
       </div>
     </div>
   </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  <!-- Libraries: qr-scanner (decode) & qrcode (generate) -->
+  <script src="https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyA3KhNSK0AaKYvXuZE9hi0ZRN9Ysmh9aXc",
-  authDomain: "zestoreid-f9e85.firebaseapp.com",
-  projectId: "zestoreid-f9e85",
-  storageBucket: "zestoreid-f9e85.firebasestorage.app",
-  messagingSenderId: "426093692154",
-  appId: "1:426093692154:web:38c6e9c143af626a623543",
-  measurementId: "G-TS0YB9NYW8"
-};
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+<script>
+/*
+  Flow:
+  - decode uploaded image with QRScanner -> payload string
+  - parse EMV TLV simple parser (BER-TLV style)
+  - set tag "54" with formatted amount (xxxx.yy as string without decimal point? we keep two decimals with dot)
+  - rebuild TLV into string
+  - generate QR from rebuilt string
+  - overlay option simply draws text above original image
+*/
 
-// simple mapping fallback (jika server belum mengisi payment_data)
-const FALLBACK_QR = {
-  "DANA": "https://example.com/fallback-qris-dana.png",
-  "GOPAY": "https://example.com/fallback-qris-gopay.png",
-  "QRIS": "https://example.com/fallback-qris-generic.png"
-};
-const FALLBACK_VA = {
-  VA_BRI: { bank: "BRI", number: "5790-8569-7747-768" },
-  VA_BNI: { bank: "BNI", number: "9888-3081-0216-1147" },
-  VA_MANDIRI: { bank: "Mandiri", number: "8889-8285-6977-4776-8" }
-};
+/* util: log */
+const logEl = document.getElementById('log');
+function log(s){ logEl.textContent += s + "\\n"; logEl.scrollTop = logEl.scrollHeight; }
 
-function el(id){ return document.getElementById(id); }
-function fmtRp(n){ return typeof n === 'number' ? n.toLocaleString('id') : n; }
+/* File input */
+const fileInput = document.getElementById('fileInput');
+const originalPreview = document.getElementById('originalPreview');
+const payloadText = document.getElementById('payloadText');
+const amountInput = document.getElementById('amountInput');
+const makeBtn = document.getElementById('makeBtn');
+const overlayBtn = document.getElementById('overlayBtn');
+const resultQR = document.getElementById('resultQR');
+const newPayload = document.getElementById('newPayload');
+const downloadBtn = document.getElementById('downloadBtn');
+const visualOnly = document.getElementById('visualOnly');
 
-const params = new URLSearchParams(location.search);
-const invoice = params.get('invoice');
+let lastPayload = null;
+let lastImage = null;
 
-if(!invoice){
-  el('loading').textContent = 'Invoice kosong. Contoh: /checkout?invoice=INVC-ML-...';
-  el('notfound').style.display = 'block';
-  throw new Error('no-invoice');
-}
-
-el('loading').textContent = `Menunggu data order ${invoice}...`;
-
-const orderRef = doc(db, 'orders', invoice);
-
-// realtime listener
-const unsub = onSnapshot(orderRef, (snap) => {
-  if(!snap.exists()){
-    el('loading').style.display = 'none';
-    el('notfound').style.display = 'block';
-    return;
+fileInput.addEventListener('change', async (e)=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  const url = URL.createObjectURL(f);
+  originalPreview.src = url;
+  lastImage = url;
+  payloadText.value = "Decoding…";
+  log("File uploaded, mencoba decode QR...");
+  try{
+    const result = await QrScanner.scanImage(f, {returnDetailedScanResult: false});
+    lastPayload = result;
+    payloadText.value = result;
+    log("Decode sukses.");
+  }catch(err){
+    lastPayload = null;
+    payloadText.value = "Gagal decode: " + (err && err.message ? err.message : String(err));
+    log("Decode gagal: " + String(err));
   }
-  el('loading').style.display = 'none';
-  el('notfound').style.display = 'none';
-  el('orderBox').style.display = 'block';
-
-  const d = snap.data();
-  renderOrder(d);
-}, (err) => {
-  console.error('snapshot error', err);
-  el('loading').textContent = 'Gagal mengambil data order.';
 });
 
-// render function
-function renderOrder(d){
-  el('invoiceTxt').textContent = d.invoice || invoice;
-  el('gameTxt').textContent = d.game || '-';
-  el('idTxt').textContent = d.game_id || '-';
-  el('srvTxt').textContent = d.server || '-';
-  el('waTxt').textContent = d.noWA || '-';
-  el('nominalTxt').textContent = (d.nominalValue ?? '-') + (d.nominalValue && typeof d.nominalValue !== 'string' ? ' 💎' : '');
-  el('priceTxt').textContent = 'Rp ' + fmtRp(d.price || '-');
-  el('adminTxt').textContent = 'Rp ' + fmtRp(d.adminFee || 0);
-  el('totalTxt').textContent = 'Rp ' + fmtRp(d.amount_total || '-');
-  el('methodTxt').textContent = (d.payment_method || '-').replace('_',' ');
-  setStatusBadge(d.status || 'initiated');
+/* Simple BER-TLV parser for QR payload (strings) */
+function hexToBytes(hex){
+  const bytes = [];
+  for(let i=0;i<hex.length;i+=2) bytes.push(parseInt(hex.substr(i,2),16));
+  return bytes;
+}
+function bytesToHex(bytes){
+  return bytes.map(b => b.toString(16).padStart(2,'0')).join('').toUpperCase();
+}
+// But QRIS EMV payload is ASCII TLV, not hex. So we will parse ASCII TLV where tag is 2 chars, length 2 chars, then value length as integer.
+function parseEMVTLV(payload){
+  // payload is ASCII like "000201010212...5405...6304...."
+  const out = {};
+  let i = 0;
+  while(i+4 <= payload.length){
+    const tag = payload.substr(i,2); // assume 2-char tag
+    const len = parseInt(payload.substr(i+2,2),10);
+    if(isNaN(len)) break;
+    const value = payload.substr(i+4,len);
+    out[tag] = value;
+    i += 4 + len;
+  }
+  return out;
+}
+function buildEMVTLV(map){
+  // map: tag->value (tags 2-char)
+  let s = "";
+  // Keep tags sorted by tag numeric for deterministic result
+  const tags = Object.keys(map).sort();
+  for(const t of tags){
+    const v = String(map[t]||"");
+    const l = v.length.toString().padStart(2,'0');
+    s += t + l + v;
+  }
+  return s;
+}
 
-  // payment UI
-  const paymentUI = el('paymentUI');
-  paymentUI.innerHTML = ''; // reset
+/* Format amount: QRIS typically uses decimal with 2 decimals, but EMV tag 54 often stores numeric with decimal point allowed.
+   We'll format as: "1234.56" for Rp 1234.56. For rupiah amounts (no cents), use "12500.00" or "12500". Many implementations expect "12500" or "12500.00".
+   We'll put without decimals if input is integer >0, else with .00
+*/
+function formatAmountIDR(v){
+  v = Number(v);
+  if(!isFinite(v) || v < 0) return null;
+  // treat input as whole rupiah
+  return Math.round(v).toString(); // e.g. "12500"
+}
 
-  const pm = d.payment_method || '';
-  const pd = d.payment_data || {};
-
-  if(pm.startsWith('VA_') || pm.startsWith('VA')) {
-    // show VA
-    const bankKey = pm; // e.g. VA_BRI
-    const vaNumber = pd.va_number || (FALLBACK_VA[bankKey] && FALLBACK_VA[bankKey].number) || 'N/A';
-    const bankName = pd.bank || (FALLBACK_VA[bankKey] && FALLBACK_VA[bankKey].bank) || bankKey;
-    paymentUI.innerHTML = `
-      <h3>Pembayaran via Virtual Account</h3>
-      <p class="muted">Bank: <strong>${bankName}</strong></p>
-      <p class="muted">No. VA: <strong id="vaNumber">${vaNumber}</strong>
-        <button id="copyVa" class="copy">Salin</button></p>
-      <p class="muted">Jumlah yang harus dibayar: <strong>Rp ${fmtRp(d.amount_total)}</strong></p>
-    `;
-    document.getElementById('copyVa').onclick = ()=> {
-      navigator.clipboard.writeText(vaNumber).then(()=> alert('No. VA disalin'));
-    };
-  } else {
-    // QR / manual transfer / link
-    const qrUrl = pd.qr_image_url || FALLBACK_QR[pm] || pd.qr || null;
-    if(qrUrl){
-      paymentUI.innerHTML = `
-        <h3>Instruksi Pembayaran (${(pm||'QR')})</h3>
-        <p class="muted">Scan QR berikut lalu bayar sejumlah: <strong>Rp ${fmtRp(d.amount_total)}</strong></p>
-        <img src="${qrUrl}" alt="QRIS" class="qr" />
-        <p class="muted">Atau gunakan aplikasi pembayaran sesuai metode.</p>
-      `;
-    } else {
-      paymentUI.innerHTML = `
-        <h3>Instruksi Pembayaran</h3>
-        <p class="muted">Instruksi pembayaran belum tersedia. Tunggu beberapa saat atau hubungi admin via WA.</p>
-      `;
-    }
+/* Main: make dynamic QR */
+makeBtn.addEventListener('click', async ()=>{
+  if(!lastPayload){
+    alert('Belum ada payload yang ter-decode. Upload foto QR dulu.');
+    return;
+  }
+  if(visualOnly.checked){
+    alert('Mode visual-only tercentang. Gunakan tombol Overlay jika mau hanya overlay teks di gambar.');
+    return;
+  }
+  const amount = amountInput.value;
+  if(!amount){
+    alert('Masukkan nominal (angka) dulu.');
+    return;
+  }
+  const amtStr = formatAmountIDR(amount);
+  if(!amtStr){
+    alert('Nominal tidak valid.');
+    return;
   }
 
-  // actions
-  const share = encodeURIComponent(
-    `Order #${d.invoice}\nGame:${d.game}\nID:${d.game_id}\nTotal: Rp ${fmtRp(d.amount_total)}\nStatus: ${d.status}\n\nCek: ${location.href}`
-  );
-  el('btnShareWA').href = `https://wa.me/6285697747768?text=${share}`;
+  log("Payload asli: " + lastPayload);
+  // Parse into simple TLV (2-char tags)
+  const parsed = parseEMVTLV(lastPayload);
+  log("Parsed tags: " + Object.keys(parsed).join(', '));
 
-  // admin note visibility
-  el('adminNote').style.display = (d.status === 'initiated' || d.status === 'pending') ? 'block' : 'none';
-}
+  // Insert/replace tag '54' with amount
+  // NOTE: This parser assumes tags are 2 chars and lengths encoded as 2-digit decimal.
+  parsed['54'] = amtStr; 
+  const rebuilt = buildEMVTLV(parsed);
+  newPayload.value = rebuilt;
+  log("Mencoba generate QR baru dengan tag 54=" + amtStr);
 
-function setStatusBadge(status){
-  const b = el('statusBadge');
-  b.className = 'status ' + (status || 'initiated');
-  b.textContent = (status || 'initiated').toUpperCase();
-}
+  // Generate QR
+  try{
+    await QRCode.toCanvas(resultQR, rebuilt, {errorCorrectionLevel:'M', margin:2, width:280});
+    log("QR baru berhasil digenerate.");
+  }catch(e){
+    log("Error generate QR: " + e);
+    alert('Gagal generate QR: ' + e);
+  }
+});
 
-// copy invoice quick
-el('btnCopyInvoice').onclick = ()=> {
-  navigator.clipboard.writeText(invoice).then(()=> alert('Invoice disalin'));
-};
+/* Overlay nominal text on original preview (visual only) */
+overlayBtn.addEventListener('click', ()=>{
+  if(!originalPreview.src){
+    alert('Upload dulu foto QR.');
+    return;
+  }
+  const amount = amountInput.value;
+  if(!amount){ alert('Masukkan nominal.'); return;}
+  // draw image to canvas and overlay text
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.src = originalPreview.src;
+  img.onload = ()=>{
+    const cvs = document.createElement('canvas');
+    const ctx = cvs.getContext('2d');
+    const W = Math.min(560, img.width);
+    const scale = W / img.width;
+    cvs.width = W;
+    cvs.height = img.height * scale + 60;
+    ctx.fillStyle = '#071029';
+    ctx.fillRect(0,0,cvs.width,cvs.height);
+    ctx.drawImage(img, 0, 0, img.width*scale, img.height*scale);
+    // overlay box
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(10, img.height*scale + 8, cvs.width - 20, 44);
+    ctx.font = '24px Inter, Arial';
+    ctx.fillStyle = '#fff';
+    ctx.fillText('Rp ' + Number(amount).toLocaleString('id-ID'), 18, img.height*scale + 38);
+    // show in result canvas
+    const outC = resultQR;
+    outC.width = cvs.width;
+    outC.height = cvs.height;
+    const outCtx = outC.getContext('2d');
+    outCtx.drawImage(cvs, 0, 0);
+    newPayload.value = '(visual overlay only)';
+    log('Overlay dibuat (visual only). Tidak mengubah payload QR asli.');
+  };
+});
 
+/* Download result canvas as PNG */
+downloadBtn.addEventListener('click', ()=>{
+  const c = resultQR;
+  if(!c || !c.toDataURL) { alert('Belum ada QR untuk didownload'); return; }
+  const url = c.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'qris_dynamic.png';
+  a.click();
+});
+
+/* Notes in UI about limitations */
+log("Tool siap. Upload foto QR untuk memulai.");
 </script>
 </body>
 </html>
