@@ -3,283 +3,211 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Ubah Foto QRIS Statis → Dinamis (demo)</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<title>QRIS Static → Dynamic (Amount)</title>
 <style>
-  body{background:#0b1020;color:#e6eef8;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;}
-  .card{background:#0f1a2b;border:1px solid rgba(255,255,255,0.04)}
-  .qr-canvas{background:#fff;padding:12px;border-radius:8px;display:inline-block;}
-  .small-muted{color:#9fb0d6;font-size:0.9rem}
-  img#originalPreview{max-width:280px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)}
-  #resultQR{max-width:280px}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;margin:18px;color:#111}
+  h1{font-size:20px;margin-bottom:6px}
+  p{margin:6px 0 14px 0;color:#333}
+  .wrap{display:flex;gap:18px;flex-wrap:wrap}
+  .card{border:1px solid #e6e6e6;padding:12px;border-radius:10px;flex:1;min-width:280px;box-shadow:0 2px 6px rgba(0,0,0,0.03)}
+  label{display:block;font-size:13px;margin-bottom:6px;color:#555}
+  input[type="text"], input[type="number"], textarea{width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;font-size:14px}
+  button{padding:10px 14px;border-radius:8px;border:0;background:#0b63d6;color:white;cursor:pointer;font-weight:600}
+  #qrcode{margin-top:12px}
+  .hint{font-size:13px;color:#666;margin-top:6px}
+  .row{display:flex;gap:8px}
+  .small{font-size:12px;color:#777}
+  #previewImg{max-width:100%;display:block;margin-top:8px;border-radius:6px;border:1px dashed #ddd}
+  footer{margin-top:14px;font-size:12px;color:#666}
 </style>
 </head>
-<body class="p-4">
-  <div class="container">
-    <h3>Ubah Foto QRIS Statis → Dinamis (demo)</h3>
-    <p class="small-muted">Upload foto QR, decode payload, masukkan nominal, lalu generate QR baru (coba dulu di sandbox/uang kecil).</p>
+<body>
+  <h1>QRIS Static → Dynamic (otomatis isi nominal)</h1>
+  <p>Upload foto QRIS statis atau tempel teks payload QR (hasil scan). Masukkan nominal, tekan Convert, QR dinamis akan muncul.</p>
 
-    <div class="row g-3">
-      <div class="col-md-5">
-        <div class="card p-3 mb-3">
-          <label class="form-label">Upload foto QR (PNG/JPG)</label>
-          <input id="fileInput" type="file" accept="image/*" class="form-control mb-2"/>
-          <div class="d-flex gap-2 align-items-center">
-            <img id="originalPreview" alt="preview" src="" />
-            <div>
-              <div><strong>Payload decoded:</strong></div>
-              <textarea id="payloadText" class="form-control" rows="6" readonly style="background:#071029;color:#dff0ff"></textarea>
-            </div>
-          </div>
-          <div class="form-text small-muted mt-2">
-            Kalau decode gagal, bisa jadi foto blur / QR rusak.
-          </div>
-        </div>
-
-        <div class="card p-3">
-          <label class="form-label">Masukkan nominal (Rp)</label>
-          <div class="input-group mb-2">
-            <span class="input-group-text">Rp</span>
-            <input id="amountInput" type="number" min="0" step="1" class="form-control" placeholder="contoh: 12500" />
-          </div>
-
-          <div class="form-check form-switch mb-2">
-            <input class="form-check-input" type="checkbox" id="visualOnly" />
-            <label class="form-check-label" for="visualOnly">Hanya overlay teks di gambar (⚠ tidak mengubah payload)</label>
-          </div>
-
-          <button id="makeBtn" class="btn btn-primary">Buat QR DINAMIS</button>
-          <button id="overlayBtn" class="btn btn-outline-secondary">Overlay Nominal di Foto</button>
-
-          <div class="mt-2 small-muted">
-            Catatan: Skrip ini <em>mencoba</em> memasukkan tag EMV '54' (amount). Tidak ada jaminan semua merchant/e-wallet akan menerima hasilnya. Uji terlebih dahulu.
-          </div>
-        </div>
+  <div class="wrap">
+    <div class="card">
+      <label>1) Upload foto QR (opsional)</label>
+      <input id="file" type="file" accept="image/*">
+      <img id="previewImg" alt="" />
+      <div class="hint">Atau jika sudah punya teks payload, langsung tempel di bawah.</div>
+      <hr style="margin:10px 0">
+      <label>2) Teks payload QR (hasil scan) — kalau ada</label>
+      <textarea id="payloadText" rows="4" placeholder="Jika lu udah scan QR pake hape, tempel payload / teksnya di sini"></textarea>
+      <div style="margin-top:8px" class="row">
+        <button id="decodeBtn">Scan dari Gambar</button>
+        <button id="convertBtn">Convert ke Dinamis</button>
       </div>
+      <div class="hint" id="status">Status: siap</div>
+    </div>
 
-      <div class="col-md-7">
-        <div class="card p-3 mb-3">
-          <h5>Hasil</h5>
-          <div class="d-flex gap-3 align-items-start">
-            <div>
-              <div class="small-muted">QR baru / regenerasi</div>
-              <canvas id="resultQR" class="qr-canvas"></canvas>
-            </div>
-            <div>
-              <div class="small-muted">Payload baru (EMV TLV)</div>
-              <textarea id="newPayload" class="form-control" rows="8" readonly style="background:#071029;color:#dff0ff"></textarea>
-              <div class="mt-2">
-                <button id="downloadBtn" class="btn btn-sm btn-success">Download QR (png)</button>
-              </div>
-            </div>
-          </div>
-        </div>
+    <div class="card">
+      <label>3) Nominal (IDR)</label>
+      <input id="amount" type="number" placeholder="Contoh: 15000" min="0" step="0.01">
+      <div class="hint small">Masukkan angka tanpa simbol. Contoh 15000 atau 15000.50</div>
 
-        <div class="card p-3">
-          <h6>Log</h6>
-          <pre id="log" style="background:#071029;color:#bfe0ff;padding:12px;height:160px;overflow:auto"></pre>
-        </div>
-      </div>
+      <label style="margin-top:10px">4) Hasil QR Dinamis</label>
+      <div id="qrcode"></div>
+      <div class="hint">Klik kanan pada QR untuk simpan gambar.</div>
+
+      <label style="margin-top:10px">Payload QR Dinamis (teks)</label>
+      <textarea id="outPayload" rows="4" readonly></textarea>
     </div>
   </div>
 
-  <!-- Libraries: qr-scanner (decode) & qrcode (generate) -->
-  <script src="https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <footer>Catatan: kode ini tidak memverifikasi kesesuaian penuh dengan sistem bank. Gunakan dengan hati-hati.</footer>
 
-<script>
-/*
-  Flow:
-  - decode uploaded image with QRScanner -> payload string
-  - parse EMV TLV simple parser (BER-TLV style)
-  - set tag "54" with formatted amount (xxxx.yy as string without decimal point? we keep two decimals with dot)
-  - rebuild TLV into string
-  - generate QR from rebuilt string
-  - overlay option simply draws text above original image
-*/
+  <!-- libs via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-/* util: log */
-const logEl = document.getElementById('log');
-function log(s){ logEl.textContent += s + "\\n"; logEl.scrollTop = logEl.scrollHeight; }
-
-/* File input */
-const fileInput = document.getElementById('fileInput');
-const originalPreview = document.getElementById('originalPreview');
-const payloadText = document.getElementById('payloadText');
-const amountInput = document.getElementById('amountInput');
-const makeBtn = document.getElementById('makeBtn');
-const overlayBtn = document.getElementById('overlayBtn');
-const resultQR = document.getElementById('resultQR');
-const newPayload = document.getElementById('newPayload');
-const downloadBtn = document.getElementById('downloadBtn');
-const visualOnly = document.getElementById('visualOnly');
-
-let lastPayload = null;
-let lastImage = null;
-
-fileInput.addEventListener('change', async (e)=>{
-  const f = e.target.files[0];
-  if(!f) return;
-  const url = URL.createObjectURL(f);
-  originalPreview.src = url;
-  lastImage = url;
-  payloadText.value = "Decoding…";
-  log("File uploaded, mencoba decode QR...");
-  try{
-    const result = await QrScanner.scanImage(f, {returnDetailedScanResult: false});
-    lastPayload = result;
-    payloadText.value = result;
-    log("Decode sukses.");
-  }catch(err){
-    lastPayload = null;
-    payloadText.value = "Gagal decode: " + (err && err.message ? err.message : String(err));
-    log("Decode gagal: " + String(err));
-  }
-});
-
-/* Simple BER-TLV parser for QR payload (strings) */
-function hexToBytes(hex){
-  const bytes = [];
-  for(let i=0;i<hex.length;i+=2) bytes.push(parseInt(hex.substr(i,2),16));
-  return bytes;
-}
-function bytesToHex(bytes){
-  return bytes.map(b => b.toString(16).padStart(2,'0')).join('').toUpperCase();
-}
-// But QRIS EMV payload is ASCII TLV, not hex. So we will parse ASCII TLV where tag is 2 chars, length 2 chars, then value length as integer.
-function parseEMVTLV(payload){
-  // payload is ASCII like "000201010212...5405...6304...."
-  const out = {};
-  let i = 0;
-  while(i+4 <= payload.length){
-    const tag = payload.substr(i,2); // assume 2-char tag
-    const len = parseInt(payload.substr(i+2,2),10);
-    if(isNaN(len)) break;
-    const value = payload.substr(i+4,len);
-    out[tag] = value;
-    i += 4 + len;
-  }
-  return out;
-}
-function buildEMVTLV(map){
-  // map: tag->value (tags 2-char)
-  let s = "";
-  // Keep tags sorted by tag numeric for deterministic result
-  const tags = Object.keys(map).sort();
-  for(const t of tags){
-    const v = String(map[t]||"");
-    const l = v.length.toString().padStart(2,'0');
-    s += t + l + v;
-  }
-  return s;
-}
-
-/* Format amount: QRIS typically uses decimal with 2 decimals, but EMV tag 54 often stores numeric with decimal point allowed.
-   We'll format as: "1234.56" for Rp 1234.56. For rupiah amounts (no cents), use "12500.00" or "12500". Many implementations expect "12500" or "12500.00".
-   We'll put without decimals if input is integer >0, else with .00
-*/
-function formatAmountIDR(v){
-  v = Number(v);
-  if(!isFinite(v) || v < 0) return null;
-  // treat input as whole rupiah
-  return Math.round(v).toString(); // e.g. "12500"
-}
-
-/* Main: make dynamic QR */
-makeBtn.addEventListener('click', async ()=>{
-  if(!lastPayload){
-    alert('Belum ada payload yang ter-decode. Upload foto QR dulu.');
-    return;
-  }
-  if(visualOnly.checked){
-    alert('Mode visual-only tercentang. Gunakan tombol Overlay jika mau hanya overlay teks di gambar.');
-    return;
-  }
-  const amount = amountInput.value;
-  if(!amount){
-    alert('Masukkan nominal (angka) dulu.');
-    return;
-  }
-  const amtStr = formatAmountIDR(amount);
-  if(!amtStr){
-    alert('Nominal tidak valid.');
-    return;
+  <script>
+  // helper: parse EMV TLV (tag 2 chars, length 2 chars, value length = length)
+  function parseTLV(s) {
+    const items = [];
+    let i = 0;
+    while (i + 4 <= s.length) {
+      const tag = s.substr(i,2);
+      const len = parseInt(s.substr(i+2,2), 10);
+      if (isNaN(len)) break;
+      const val = s.substr(i+4, len);
+      items.push({tag, len, value: val});
+      i += 4 + len;
+    }
+    return items;
   }
 
-  log("Payload asli: " + lastPayload);
-  // Parse into simple TLV (2-char tags)
-  const parsed = parseEMVTLV(lastPayload);
-  log("Parsed tags: " + Object.keys(parsed).join(', '));
-
-  // Insert/replace tag '54' with amount
-  // NOTE: This parser assumes tags are 2 chars and lengths encoded as 2-digit decimal.
-  parsed['54'] = amtStr; 
-  const rebuilt = buildEMVTLV(parsed);
-  newPayload.value = rebuilt;
-  log("Mencoba generate QR baru dengan tag 54=" + amtStr);
-
-  // Generate QR
-  try{
-    await QRCode.toCanvas(resultQR, rebuilt, {errorCorrectionLevel:'M', margin:2, width:280});
-    log("QR baru berhasil digenerate.");
-  }catch(e){
-    log("Error generate QR: " + e);
-    alert('Gagal generate QR: ' + e);
+  function buildTLV(items) {
+    return items.map(it => {
+      const val = it.value ?? '';
+      const len = String(val.length).padStart(2,'0');
+      return it.tag + len + val;
+    }).join('');
   }
-});
 
-/* Overlay nominal text on original preview (visual only) */
-overlayBtn.addEventListener('click', ()=>{
-  if(!originalPreview.src){
-    alert('Upload dulu foto QR.');
-    return;
+  // CRC16-CCITT (poly 0x1021, init 0xFFFF), compute over ASCII bytes
+  function crc16ccitt(str) {
+    const buf = new TextEncoder().encode(str);
+    let crc = 0xFFFF;
+    for (let b of buf) {
+      crc ^= (b << 8);
+      for (let i=0;i<8;i++) {
+        if (crc & 0x8000) crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
+        else crc = (crc << 1) & 0xFFFF;
+      }
+    }
+    return crc.toString(16).toUpperCase().padStart(4,'0');
   }
-  const amount = amountInput.value;
-  if(!amount){ alert('Masukkan nominal.'); return;}
-  // draw image to canvas and overlay text
-  const img = new Image();
-  img.crossOrigin = "anonymous";
-  img.src = originalPreview.src;
-  img.onload = ()=>{
-    const cvs = document.createElement('canvas');
-    const ctx = cvs.getContext('2d');
-    const W = Math.min(560, img.width);
-    const scale = W / img.width;
-    cvs.width = W;
-    cvs.height = img.height * scale + 60;
-    ctx.fillStyle = '#071029';
-    ctx.fillRect(0,0,cvs.width,cvs.height);
-    ctx.drawImage(img, 0, 0, img.width*scale, img.height*scale);
-    // overlay box
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.fillRect(10, img.height*scale + 8, cvs.width - 20, 44);
-    ctx.font = '24px Inter, Arial';
-    ctx.fillStyle = '#fff';
-    ctx.fillText('Rp ' + Number(amount).toLocaleString('id-ID'), 18, img.height*scale + 38);
-    // show in result canvas
-    const outC = resultQR;
-    outC.width = cvs.width;
-    outC.height = cvs.height;
-    const outCtx = outC.getContext('2d');
-    outCtx.drawImage(cvs, 0, 0);
-    newPayload.value = '(visual overlay only)';
-    log('Overlay dibuat (visual only). Tidak mengubah payload QR asli.');
-  };
-});
 
-/* Download result canvas as PNG */
-downloadBtn.addEventListener('click', ()=>{
-  const c = resultQR;
-  if(!c || !c.toDataURL) { alert('Belum ada QR untuk didownload'); return; }
-  const url = c.toDataURL('image/png');
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'qris_dynamic.png';
-  a.click();
-});
+  // Insert/replace tag 54 (amount) before CRC (tag 63)
+  function addAmountToPayload(payload, amountStr) {
+    // remove any existing CRC (tag 63)
+    // find 63 tag
+    let items = parseTLV(payload);
+    // filter out 63 if exists
+    items = items.filter(it => it.tag !== '63');
 
-/* Notes in UI about limitations */
-log("Tool siap. Upload foto QR untuk memulai.");
-</script>
+    // remove existing 54 if exists
+    items = items.filter(it => it.tag !== '54');
+
+    // amount formatting: must be like "15000.00" or "15000"
+    // ensure dot as decimal separator with 2 decimals if decimals present
+    let amt = amountStr.toString().trim();
+    if (amt === '') return null;
+    // If integer, leave as integer; but EMV usually supports decimals - we'll keep 2 decimals if contains decimal or decimals provided
+    if (amt.indexOf('.') === -1) {
+      // no dot -> keep as integer (no decimals)
+      // but many implementations use 2 decimals. We'll keep user's exact input. If you want always 2 decimals, use parseFloat(amt).toFixed(2)
+    } else {
+      // trim trailing zeros? keep two decimals if provided
+      // normalize: remove trailing zeros beyond 2 decimal places? we'll keep up to 2 decimals
+      amt = parseFloat(amt).toFixed(2).replace(/\.00$/,''); // drop .00 to match some systems
+    }
+
+    // insert as tag 54 somewhere before 63; we'll just append at end (before CRC)
+    items.push({tag: '54', value: amt});
+
+    // build without CRC, then append CRC tag + value computed on (full + "6304")
+    const withoutCrc = buildTLV(items);
+    const toCrc = withoutCrc + '6304';
+    const crc = crc16ccitt(toCrc);
+    const final = withoutCrc + '63' + '04' + crc;
+    return final;
+  }
+
+  // UI wiring
+  const fileInput = document.getElementById('file');
+  const previewImg = document.getElementById('previewImg');
+  const decodeBtn = document.getElementById('decodeBtn');
+  const convertBtn = document.getElementById('convertBtn');
+  const payloadText = document.getElementById('payloadText');
+  const amountInput = document.getElementById('amount');
+  const status = document.getElementById('status');
+  const outPayload = document.getElementById('outPayload');
+  const qrcodeContainer = document.getElementById('qrcode');
+
+  let lastQRCode = null;
+
+  fileInput.addEventListener('change', (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const url = URL.createObjectURL(f);
+    previewImg.src = url;
+    previewImg.onload = () => { URL.revokeObjectURL(url); }
+  });
+
+  decodeBtn.addEventListener('click', async () => {
+    status.textContent = 'Status: scanning gambar...';
+    const img = previewImg;
+    if (!img.src) {
+      status.textContent = 'Status: tidak ada gambar, atau upload dulu.';
+      return;
+    }
+    // draw to canvas
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = img.naturalWidth || img.width;
+    canvas.height = img.naturalHeight || img.height;
+    ctx.drawImage(img, 0, 0);
+    try {
+      const imageData = ctx.getImageData(0,0,canvas.width, canvas.height);
+      const code = jsQR(imageData.data, imageData.width, imageData.height);
+      if (!code) {
+        status.textContent = 'Status: gagal decode. Coba crop gambar QR atau paste teks payload manual.';
+        return;
+      }
+      payloadText.value = code.data;
+      status.textContent = 'Status: berhasil decode payload.';
+    } catch (err) {
+      console.error(err);
+      status.textContent = 'Status: error decode. Coba paste payload manual.';
+    }
+  });
+
+  convertBtn.addEventListener('click', () => {
+    status.textContent = 'Status: membuat QR dinamis...';
+    const raw = payloadText.value.trim();
+    const amt = amountInput.value.trim();
+    if (!raw) { status.textContent = 'Status: payload kosong. Scan atau paste payload QR statis dulu.'; return;}
+    if (!amt) { status.textContent = 'Status: nominal kosong. Isi nominal.'; return;}
+    try {
+      const newPayload = addAmountToPayload(raw, amt);
+      if (!newPayload) { status.textContent = 'Status: gagal buat payload. Cek input.'; return;}
+      outPayload.value = newPayload;
+      // generate QR
+      qrcodeContainer.innerHTML = '';
+      lastQRCode = new QRCode(qrcodeContainer, {
+        text: newPayload,
+        width: 260,
+        height: 260,
+        correctLevel: QRCode.CorrectLevel.H
+      });
+      status.textContent = 'Status: selesai — QR dinamis siap (klik kanan untuk simpan).';
+    } catch (err) {
+      console.error(err);
+      status.textContent = 'Status: error saat convert. Lihat console untuk detail.';
+    }
+  });
+  </script>
 </body>
 </html>
