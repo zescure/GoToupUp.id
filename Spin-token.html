@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spin Token - Zestore</title>
+
+<style>
+body{
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+margin:0;
+font-family:Arial;
+background:#0b0f0c;
+color:white;
+}
+
+.container{
+text-align:center;
+}
+
+#tokenBar{
+margin-bottom:15px;
+cursor:pointer;
+font-weight:bold;
+font-size:18px;
+color:#00ff7f;
+}
+
+.wheel-container{
+position:relative;
+width:320px;
+height:320px;
+margin:20px auto;
+}
+
+.wheel{
+width:100%;
+height:100%;
+border-radius:50%;
+transition:transform 4s cubic-bezier(0.17,0.67,0.12,0.99);
+overflow:hidden;
+position:relative;
+}
+
+.slice{
+position:absolute;
+width:50%;
+height:50%;
+transform-origin:100% 100%;
+left:50%;
+top:50%;
+margin-left:-50%;
+margin-top:-50%;
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:bold;
+font-size:14px;
+clip-path:polygon(120% 0,0 0,70% 110%);
+}
+
+.pointer{
+position:absolute;
+top:-20px;
+left:50%;
+transform:translateX(-50%);
+width:30px;
+height:30px;
+background:#00ff7f;
+clip-path:polygon(50% 100%,0 0,100% 0);
+z-index:2;
+}
+
+button{
+padding:10px 20px;
+background:#00ff7f;
+border:none;
+border-radius:6px;
+font-weight:bold;
+cursor:pointer;
+}
+
+button:disabled{
+background:#444;
+cursor:not-allowed;
+}
+
+.popup{
+display:none;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:#111;
+padding:20px;
+border-radius:10px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div id="tokenBar">
+🎟️ <span id="userTokens">0</span> Token
+</div>
+
+<h2>SPIN BERHADIAH</h2>
+
+<div class="wheel-container">
+<div class="pointer"></div>
+<div class="wheel" id="wheel"></div>
+</div>
+
+<button onclick="spin()" id="spinButton">SPIN</button>
+
+</div>
+
+<div id="popup" class="popup">
+<h3 id="popupText"></h3>
+<button onclick="closePopup()">Tutup</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyA3KhNSK0AaKYvXuZE9hi0ZRN9Ysmh9aXc",
+authDomain: "zestoreid-f9e85.firebaseapp.com",
+projectId: "zestoreid-f9e85"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser=null;
+let currentTokens=0;
+
+const tokenDisplay=document.getElementById("userTokens");
+const tokenBar=document.getElementById("tokenBar");
+
+tokenBar.onclick=()=>window.location.href="/tukar-token";
+
+onAuthStateChanged(auth,async(user)=>{
+if(!user){
+tokenDisplay.textContent="Login dulu";
+return;
+}
+
+currentUser=user;
+const snap=await getDoc(doc(db,"users",user.uid));
+currentTokens=snap.exists()? (snap.data().nubiTokens||0):0;
+tokenDisplay.textContent=currentTokens;
+});
+
+window.consumeToken=async function(){
+if(!currentUser){
+alert("Login dulu.");
+return false;
+}
+if(currentTokens<=0){
+alert("Token habis! Tukar dulu.");
+return false;
+}
+await updateDoc(doc(db,"users",currentUser.uid),{
+nubiTokens:increment(-1)
+});
+currentTokens--;
+tokenDisplay.textContent=currentTokens;
+return true;
+};
+</script>
+
+<script>
+const prizes=[
+{name:"Zonk",color:"#ff4d4d"},
+{name:"5 💎",color:"#4caf50"},
+{name:"WDP 7H",color:"#2196f3"},
+{name:"Epic Skin",color:"#ff9800"}
+];
+
+const wheel=document.getElementById("wheel");
+const sliceAngle=360/prizes.length;
+
+prizes.forEach((p,i)=>{
+const slice=document.createElement("div");
+slice.className="slice";
+slice.style.transform=`rotate(${sliceAngle*i}deg)`;
+slice.style.background=p.color;
+slice.textContent=p.name;
+wheel.appendChild(slice);
+});
+
+async function spin(){
+
+if(!(await window.consumeToken())) return;
+
+const spinButton=document.getElementById("spinButton");
+spinButton.disabled=true;
+
+const randomIndex=Math.floor(Math.random()*prizes.length);
+const extraSpins=5;
+const finalRotation=extraSpins*360+(360-(randomIndex*sliceAngle));
+
+wheel.style.transform=`rotate(${finalRotation}deg)`;
+
+setTimeout(()=>{
+spinButton.disabled=false;
+showPrize(prizes[randomIndex].name);
+},4000);
+}
+
+function showPrize(text){
+const popup=document.getElementById("popup");
+document.getElementById("popupText").innerText="Kamu dapat: "+text;
+popup.style.display="block";
+}
+
+function closePopup(){
+document.getElementById("popup").style.display="none";
+}
+</script>
+
+</body>
+</html>
